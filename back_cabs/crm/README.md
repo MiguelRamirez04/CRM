@@ -1,44 +1,77 @@
-# CRM - Estructura Simplificada
+# CRM - Sistema de Gestión de Clientes
 
-Este monorepo contiene un CRM con arquitectura hexagonal simplificada.
+Esta carpeta contiene toda la lógica del sistema CRM organizada de manera similar a un proyecto Node.js/JavaScript para facilitar la comprensión de los becarios.
 
-## Estructura Principal
+## 📁 Estructura de Carpetas
 
 ```
-crm/
-├── src/
-│   ├── Api/                     # API Web y SignalR 
-│   ├── Core/                    # Domain + Application (fusionados)
-│   └── Infrastructure/          # Persistencia y adaptadores
-├── tests/                       # Todas las pruebas
-└── docs/                        # Documentación
+CRM/
+├── controllers/      # Controladores de API (como Express.js)
+├── services/         # Lógica de negocio (como services en Node.js)
+├── models/          # Entidades de base de datos (como Mongoose models)
+├── DTOs/            # Data Transfer Objects (.NET específico)
+├── middleware/      # Middleware personalizado (como Express middleware)
+├── routes/          # Configuración de rutas (si es necesario)
+├── utils/           # Utilidades y helpers (como utils en JS)
+├── validators/      # Validadores con FluentValidation (.NET específico)
+├── enums/          # Enumeraciones (como enums en TS)
+├── scripts/        # Scripts de utilidad (como scripts en package.json)
+├── uploads/        # Archivos subidos por usuarios
+└── config/         # Configuraciones centralizadas
 ```
 
-## Principios de Arquitectura
+## 🔄 Flujo de Datos
 
-1. **Core (Domain + Application):** Lógica de negocio y casos de uso por módulo
-2. **Infrastructure:** Implementación de persistencia, notificaciones, etc.
-3. **Api:** Controllers, SignalR Hubs y configuración mínima
-4. **Tests:** Pruebas organizadas por módulo y tipo
+1. **Request** → **Controller** → **Service** → **Model/Database**
+2. **Database** → **Model** → **Service** → **DTO** → **Controller** → **Response**
 
-## Módulos CRM
+## 🎯 Módulos del Sistema
 
-- **Administracion:** Gestión de empleados y configuración
-- **Recepcion:** Creación y gestión inicial de pedidos  
-- **Soporte:** Cola de soporte y tiempo real (SignalR)
+### Administración
+- Gestión de empleados
+- Roles y permisos
+- Configuración del sistema
 
-## Para Empezar a Codificar
+### Recepción
+- Gestión de clientes
+- Creación y seguimiento de pedidos
+- Comunicación inicial
 
-1. Definir entidades en `Core/{Modulo}/Domain/`
-2. Crear comandos/queries en `Core/{Modulo}/Application/`
-3. Implementar repositorios en `Infrastructure/{Modulo}/`
-4. Crear controllers en `Api/Controllers/`
-5. Configurar hubs en `Api/Hubs/` (principalmente Soporte)
+### Soporte
+- Sistema de tickets
+- Chat en tiempo real
+- Resolución de problemas
 
-## Próximos Pasos
+## 🛠️ Tecnologías Integradas
 
-- [ ] Definir entidades de dominio con propiedades
-- [ ] Implementar handlers con lógica real
-- [ ] Configurar Entity Framework y migraciones
-- [ ] Implementar SignalR para tiempo real
-- [ ] Agregar validaciones y DTOs
+- **Entity Framework**: ORM para base de datos
+- **MediatR**: Patrón CQRS simplificado
+- **FluentValidation**: Validación de datos
+- **Serilog**: Logging estructurado
+- **JWT**: Autenticación
+- **SignalR**: Comunicación en tiempo real
+
+## 📝 Convenciones de Nomenclatura
+
+### Archivos
+- **Controllers**: `{Entidad}Controller.cs`
+- **Services**: `{Entidad}Service.cs`
+- **Models**: `{Entidad}.cs`
+- **DTOs**: `{Entidad}{Operacion}Dto.cs`
+- **Validators**: `{Dto}Validator.cs`
+
+### Métodos
+- **GET**: `Get{Entidades}`, `Get{Entidad}ById`
+- **POST**: `Create{Entidad}`
+- **PUT**: `Update{Entidad}`
+- **DELETE**: `Delete{Entidad}`
+
+## 🚀 Comenzando a Desarrollar
+
+1. **Definir modelo** en `models/{Modulo}/`
+2. **Crear DTOs** en `DTOs/{Modulo}/`
+3. **Implementar servicio** en `services/{Modulo}/`
+4. **Crear controlador** en `controllers/{Modulo}/`
+5. **Agregar validaciones** en `validators/`
+
+Consulta el README.md de cada carpeta para detalles específicos.
