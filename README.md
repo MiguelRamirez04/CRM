@@ -2,7 +2,7 @@
 
 ## ✅ Estado del Proyecto: LISTO PARA DESARROLLO
 
-Tu proyecto fullstack está completamente configurado con arquitectura de seguridad robusta y estructura familiar para desarrolladores JavaScript.
+Tu proyecto fullstack está completamente configurado con arquitectura de seguridad robusta y estructura familiar para quienes quienes vienen de Javascript
 
 ## 🛡️ Seguridad Implementada
 
@@ -151,7 +151,7 @@ this.http.get('/api/data', {
 
 ## 🎉 ¡Listos para Codificar!
 
-La estructura está **100% preparada** para que los becarios empiecen a desarrollar:
+La estructura está **100% preparada** para que empiecen a desarrollar:
 
 - ✅ Seguridad robusta implementada
 - ✅ Arquitectura limpia y familiar
@@ -166,7 +166,7 @@ Para dudas:
 1. Revisar `SECURITY.md` para temas de seguridad
 2. Revisar `README.md` de cada carpeta
 3. Consultar con el tech lead
-4. **NUNCA** implementar autenticación por cuenta propia
+4. **NUNCA** implementar autenticación por cuenta propia siempre platicarlo con el grupo tanto para back como para front
 
 ---
 
