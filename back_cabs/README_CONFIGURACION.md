@@ -92,3 +92,30 @@ back_cabs/
 - ✅ Validaciones automáticas
 
 ¡El proyecto está configurado y listo para que los becarios empiecen a desarrollar! 🚀
+
+## Pra realizacion de pruebas instalar la extension
+
+-Extension HTTLens para su ejecucion 
+* para que se pueda ejecutar entrar en el archivo y le das en el link de color azul arriba de esta peticion*
+
+la sintaxis de este es la siguiente :
+> @back_cabs_HostAddress = http://localhost:5176
+>
+># 
+>=====================================================================================
+># PRUEBAS DE AUTENTICACIÓN - CRM API
+> =====================================================================================
+
+>### 1. REGISTRO DE USUARIO - ADMINISTRADOR
+>POST {{back_cabs_HostAddress}}/api/Auth/registro
+>Content-Type: application/json
+>
+>{
+>  "nombreCompleto": "Juan Pérez Administrador",
+>  "email": "juan.perez@empresa.com",
+>  "contrasena": "AdminPass123!",
+>  "confirmarContrasena" : ""
+> "rol": "Administrador",
+>  "licenciaConducir": true,
+>  "transmisionHabilitada": "Ambas"
+}
