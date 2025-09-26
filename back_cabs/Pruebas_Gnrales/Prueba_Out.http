@@ -12,6 +12,7 @@ Content-Type: application/json
   "nombreCompleto": "Juan Pérez Administrador",
   "email": "juan.perez@empresa.com",
   "contrasena": "AdminPass123!",
+  "confirmarContrasena" : ""
   "rol": "Administrador",
   "licenciaConducir": true,
   "transmisionHabilitada": "Ambas"
@@ -27,6 +28,7 @@ Content-Type: application/json
   "nombreCompleto": "Ana Martínez Recepcionista",
   "email": "ana.martinez@empresa.com",
   "contrasena": "RecepcionPass123!",
+  "confirmarContrasena" : ""
   "rol": "Recepcion",
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
@@ -42,6 +44,7 @@ Content-Type: application/json
   "nombreCompleto": "Marta López Técnico",
   "email": "marta.lopez@empresa.com",
   "contrasena": "TecnicoPass123!",
+  "confirmarContrasena" : ""
   "rol": "Soporte",
   "licenciaConducir": true,
   "transmisionHabilitada": "Manual"
@@ -68,6 +71,7 @@ Content-Type: application/json
   "nombreCompleto": "Usuario Duplicado",
   "email": "marta.lopez@empresa.com",
   "contrasena": "Password123!",
+  "confirmarContrasena" : ""
   "rol": "Recepcion",
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
@@ -83,6 +87,7 @@ Content-Type: application/json
   "nombreCompleto": "Usuario Contraseña Débil",
   "email": "usuario.debil@empresa.com",
   "contrasena": "123",
+  "confirmarContrasena" : ""
   "rol": "Recepcion",
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
@@ -98,6 +103,7 @@ Content-Type: application/json
   "nombreCompleto": "Usuario Email Inválido",
   "email": "email-invalido",
   "contrasena": "ValidPass123!",
+  "confirmarContrasena" : ""
   "rol": "Recepcion",
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
@@ -113,6 +119,7 @@ Content-Type: application/json
   "nombreCompleto": "Usuario Rol Inválido",
   "email": "usuario.rol@empresa.com",
   "contrasena": "ValidPass123!",
+  "confirmarContrasena" : ""
   "rol": "RolQueNoExiste",
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
