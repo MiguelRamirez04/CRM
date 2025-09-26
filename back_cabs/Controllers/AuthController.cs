@@ -42,7 +42,6 @@ public class AuthController : ControllerBase
             SetAccessTokenCookie(tokens.AccessToken);
 
             _logger.LogInformation($"Usuario {user.Email} inició sesión exitosamente");
-
             return Ok(new
             {
                 user = new
