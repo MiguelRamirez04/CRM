@@ -2,6 +2,17 @@
 
 ## ✅ Estado del Proyecto: LISTO PARA DESARROLLO
 
+
+
+# idea principal / contexto del proyecto
+
+Elaborar un proyecto web para una empresa el cual cubrira y optimizar los procesos administrativos centrar la administracion en un CRM entre departamentos como recepcion/ssoporte/ administracion , en donde se vende software y hardware este software va a contar con 5 modulos clave el CRM/logistica interna y externa /Sistema punto de venta en ruta(POS)/finanzas
+
+
+
+
+
+
 Tu proyecto fullstack está completamente configurado con arquitectura de seguridad robusta y estructura familiar para quienes quienes vienen de Javascript
 
 ## 🛡️ Seguridad Implementada

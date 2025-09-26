@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using CRM.Contexts;
+using back_cabs.CRM.contexts;
 
 namespace CRM.Config;
 

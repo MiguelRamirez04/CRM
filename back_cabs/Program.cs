@@ -1,5 +1,7 @@
 using CRM.Config;
 using Serilog;
+using back_cabs.services;
+using back_cabs.middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,13 @@ builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 
 // Servicios básicos de ASP.NET Core
 builder.Services.AddControllers();
+
+// Registrar servicios personalizados
+builder.Services.AddScoped<ServicioJwt>();
+
+// Registrar servicios CRM de autenticación
+builder.Services.AddScoped<back_cabs.CRM.services.Auth.UsuarioAuthService>();
+builder.Services.AddScoped<back_cabs.CRM.validators.Auth.UsuarioRegistroValidator>();
 
 // CORS con configuración de seguridad avanzada
 builder.Services.AddCors(options =>
@@ -67,11 +76,17 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API V1");
         c.RoutePrefix = "swagger";
+        c.EnableTryItOutByDefault();
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
+        c.DefaultModelsExpandDepth(-1); // Ocultar modelos por defecto
     });
 }
 
 // Middleware pipeline con seguridad mejorada
 app.UseHttpsRedirection();
+
+// Middleware de manejo de errores
+app.UseMiddleware<MiddlewareManejoErrores>();
 
 // Headers de seguridad
 app.Use(async (context, next) =>

@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using back_cabs.CRM.enums;
+using back_cabs.CRM.services.Auth;
 
 namespace CRM.Controllers;
 
@@ -14,10 +16,12 @@ public class AuthController : ControllerBase
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
+    private readonly UsuarioAuthService _authService;
 
-    public AuthController(IConfiguration configuration, ILogger<AuthController> logger)
+    public AuthController(IConfiguration configuration, ILogger<AuthController> logger, UsuarioAuthService authService)
     {
         _configuration = configuration;
+        _authService = authService;
         _logger = logger;
     }
 
@@ -26,13 +30,21 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // TODO: Validar credenciales con base de datos
-            if (!IsValidUser(request.Email, request.Password))
+            // Validar credenciales con base de datos
+            var usuario = await _authService.ValidarCredencialesAsync(request.Email, request.Password);
+            if (usuario == null)
             {
                 return Unauthorized(new { message = "Credenciales inválidas" });
             }
 
-            var user = GetUserByEmail(request.Email); // TODO: Obtener de BD
+            var user = new User
+            {
+                Id = usuario.Id.ToString(),
+                Email = usuario.Email,
+                Name = usuario.NombreCompleto,
+                Role = usuario.Rol.ToLower(),
+                Permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol))
+            };
             var tokens = GenerateTokens(user);
 
             // Configurar cookie HttpOnly con el refresh token
@@ -53,8 +65,9 @@ public class AuthController : ControllerBase
                     role = user.Role,
                     permissions = user.Permissions
                 },
+                token = tokens.AccessToken, // JWT para usar en Swagger
+                refreshToken = tokens.RefreshToken,
                 expiresIn = 1800 // 30 minutos en segundos
-                // NO devolver tokens en la respuesta JSON por seguridad
             });
         }
         catch (Exception ex)
@@ -247,7 +260,7 @@ public class AuthController : ControllerBase
 
     private (string AccessToken, string RefreshToken) GenerateTokens(User user)
     {
-        var jwtSettings = _configuration.GetSection("JWT");
+        var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
         var issuer = jwtSettings["Issuer"];
         var audience = jwtSettings["Audience"];
@@ -287,7 +300,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var jwtSettings = _configuration.GetSection("JWT");
+            var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
             var key = Encoding.UTF8.GetBytes(secretKey);
 
@@ -329,22 +342,14 @@ public class AuthController : ControllerBase
 
     #region TODO: Métodos de Base de Datos (reemplazar con implementación real)
 
-    private bool IsValidUser(string email, string password)
+    private string[] GetPermissionsByRole(RolUsuario rol)
     {
-        // TODO: Validar con hash de contraseña en BD
-        return email == "admin@test.com" && password == "123456";
-    }
-
-    private User GetUserByEmail(string email)
-    {
-        // TODO: Obtener de BD
-        return new User
+        return rol switch
         {
-            Id = "1",
-            Email = email,
-            Name = "Usuario Admin",
-            Role = "admin",
-            Permissions = new[] { "administracion.read", "administracion.write", "recepcion.read", "soporte.read" }
+            RolUsuario.Administrador => new[] { "administracion.read", "administracion.write", "recepcion.read", "recepcion.write", "soporte.read", "soporte.write" },
+            RolUsuario.Recepcion => new[] { "recepcion.read", "recepcion.write", "soporte.read" },
+            RolUsuario.Soporte => new[] { "soporte.read", "soporte.write" },
+            _ => Array.Empty<string>()
         };
     }
 
@@ -399,3 +404,4 @@ public class User
 }
 
 #endregion
+

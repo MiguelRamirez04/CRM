@@ -1,6 +1,7 @@
+using back_cabs.CRM.models.Auth;
 using Microsoft.EntityFrameworkCore;
 
-namespace CRM.Contexts;
+namespace back_cabs.CRM.contexts;
 
 /// <summary>
 /// Contexto básico para operaciones de solo lectura (GET queries)
@@ -14,9 +15,24 @@ public class ReadOnlyContext : DbContext
         ChangeTracker.AutoDetectChangesEnabled = false;
     }
 
+    /// <summary>
+    /// Usuarios del sistema de autenticación
+    /// </summary>
+    public DbSet<UsuarioAuth> UsuariosAuth { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configuraciones se agregarán cuando se definan los modelos
         base.OnModelCreating(modelBuilder);
+
+        // Configuración de la entidad UsuarioAuth
+        modelBuilder.Entity<UsuarioAuth>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired();
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.NombreCompleto).IsRequired();
+            entity.Property(e => e.Rol).IsRequired();
+            entity.Property(e => e.ContrasenaHash).IsRequired();
+        });
     }
 }
