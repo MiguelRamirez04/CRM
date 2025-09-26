@@ -1,6 +1,140 @@
+
+
+
+
 @back_cabs_HostAddress = http://localhost:5176
 
-GET {{back_cabs_HostAddress}}/weatherforecast/
+# =====================================================================================
+# PRUEBAS DE AUTENTICACIÓN - CRM API
+# =====================================================================================
+
+### 1. REGISTRO DE USUARIO - ADMINISTRADOR
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Juan Pérez Administrador",
+  "email": "juan.perez@empresa.com",
+  "contrasena": "AdminPass123!",
+  "confirmarContrasena": "AdminPass123!",
+  "rol": "Administrador",
+  "licenciaConducir": true,
+  "transmisionHabilitada": "Ambas"
+}
+/*
+
+*/
+
+
+### 2. REGISTRO DE USUARIO - RECEPCIÓN
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Ana Martínez Recepcionista",
+  "email": "ana.martinez@empresa.com",
+  "contrasena": "RecepcionPass123!",
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 3. REGISTRO DE USUARIO - SOPORTE/TÉCNICO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Marta López Técnico",
+  "email": "marta.lopez@empresa.com",
+  "contrasena": "TecnicoPass123!",
+  "rol": "Soporte",
+  "licenciaConducir": true,
+  "transmisionHabilitada": "Manual"
+}
+
+###
+
+### 4. LOGIN - PRUEBA CON USUARIO REGISTRADO
+POST {{back_cabs_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "marta.lopez@empresa.com",
+  "password": "TecnicoPass123!"
+}
+
+###
+
+### 5. CASO DE ERROR - EMAIL DUPLICADO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Duplicado",
+  "email": "marta.lopez@empresa.com",
+  "contrasena": "Password123!",
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 6. CASO DE ERROR - CONTRASEÑA DÉBIL
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Contraseña Débil",
+  "email": "usuario.debil@empresa.com",
+  "contrasena": "123",
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 7. CASO DE ERROR - EMAIL INVÁLIDO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Email Inválido",
+  "email": "email-invalido",
+  "contrasena": "ValidPass123!",
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 8. CASO DE ERROR - ROL INVÁLIDO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Rol Inválido",
+  "email": "usuario.rol@empresa.com",
+  "contrasena": "ValidPass123!",
+  "rol": "RolQueNoExiste",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 9. OBTENER ROLES DISPONIBLES
+GET {{back_cabs_HostAddress}}/api/Auth/roles
+Accept: application/json
+
+###
+
+### 10. OBTENER TIPOS DE TRANSMISIÓN
+GET {{back_cabs_HostAddress}}/api/Auth/transmisiones
 Accept: application/json
 
 ###
