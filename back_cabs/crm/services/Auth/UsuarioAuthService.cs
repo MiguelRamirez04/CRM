@@ -254,5 +254,100 @@ namespace back_cabs.CRM.services.Auth
                 throw;
             }
         }
+
+        /// <summary>
+        /// Obtiene un usuario por su ID único
+        /// </summary>
+        /// <param name="id">ID único del usuario (Guid)</param>
+        /// <returns>Usuario si existe, null si no se encuentra</returns>
+        public async Task<UsuarioAuth?> ObtenerUsuarioPorIdAsync(Guid id)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuario por ID: {UserId}", id);
+
+                var usuario = await _readContext.UsuariosAuth
+                    .FirstOrDefaultAsync(u => u.Id == id && u.Activo);
+
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Usuario no encontrado con ID: {UserId}", id);
+                    return null;
+                }
+
+                _logger.LogInformation("Usuario encontrado: {UserId} - {Email}", usuario.Id, usuario.Email);
+                return usuario;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario por ID: {UserId}", id);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza la contraseña de un usuario
+        /// </summary>
+        /// <param name="userId">ID del usuario</param>
+        /// <param name="nuevaContrasena">Nueva contraseña en texto plano</param>
+        /// <returns>True si se actualizó correctamente, False si no</returns>
+        public async Task<bool> ActualizarContrasenaAsync(Guid userId, string nuevaContrasena)
+        {
+            try
+            {
+                _logger.LogInformation("Actualizando contraseña para usuario: {UserId}", userId);
+
+                // Validar que la nueva contraseña no esté vacía
+                if (string.IsNullOrWhiteSpace(nuevaContrasena))
+                {
+                    _logger.LogWarning("Nueva contraseña no puede estar vacía para usuario: {UserId}", userId);
+                    return false;
+                }
+
+                // Buscar el usuario
+                var usuario = await _writeContext.UsuariosAuth
+                    .FirstOrDefaultAsync(u => u.Id == userId && u.Activo);
+
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Usuario no encontrado para actualizar contraseña: {UserId}", userId);
+                    return false;
+                }
+
+                // Generar hash de la nueva contraseña
+                var nuevoHash = ApiUtilities.GenerateSha256Hash(nuevaContrasena);
+                
+                // Verificar que la nueva contraseña sea diferente a la actual
+                if (usuario.ContrasenaHash == nuevoHash)
+                {
+                    _logger.LogWarning("La nueva contraseña es igual a la actual para usuario: {UserId}", userId);
+                    return false;
+                }
+
+                // Actualizar la contraseña y fecha de modificación
+                usuario.ContrasenaHash = nuevoHash;
+                usuario.ActualizarFechaModificacion();
+
+                // Guardar cambios en la base de datos
+                var filasAfectadas = await _writeContext.SaveChangesAsync();
+                
+                if (filasAfectadas > 0)
+                {
+                    _logger.LogInformation("Contraseña actualizada exitosamente para usuario: {UserId} - {Email}", 
+                        usuario.Id, usuario.Email);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning("No se pudo actualizar la contraseña para usuario: {UserId}", userId);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar contraseña para usuario: {UserId}", userId);
+                throw;
+            }
+        }
     }
 }

@@ -1,4 +1,6 @@
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace CRM.Config;
 
@@ -16,14 +18,17 @@ public static class SwaggerConfiguration
                 Description = "API para el sistema CRM de gestión de clientes y soporte"
             });
 
-            // Configuración para JWT
+            // Configuración para JWT Bearer Token (automáticamente agrega 'Bearer')
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
+                Description = @"Ingresa SOLO el token JWT (sin 'Bearer'). 
+                      El prefijo 'Bearer' se agregará automáticamente.
+                      Ejemplo: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
                 Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer"
+                Scheme = "Bearer",
+                BearerFormat = "JWT"
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -40,8 +45,45 @@ public static class SwaggerConfiguration
                     Array.Empty<string>()
                 }
             });
+
+            // Configuración adicional para manejo automático de Bearer
+            options.OperationFilter<AuthorizeCheckOperationFilter>();
         });
 
         return services;
+    }
+}
+
+public class AuthorizeCheckOperationFilter : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        var authAttributes = context.MethodInfo
+            .GetCustomAttributes(true)
+            .OfType<AuthorizeAttribute>()
+            .Distinct();
+
+        if (authAttributes.Any())
+        {
+            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+            operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+
+            var bearerScheme = new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            };
+
+            operation.Security = new List<OpenApiSecurityRequirement>
+            {
+                new OpenApiSecurityRequirement
+                {
+                    [bearerScheme] = new List<string>()
+                }
+            };
+        }
     }
 }

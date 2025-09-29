@@ -1,7 +1,3 @@
-
-
-
-
 @back_cabs_HostAddress = http://localhost:5176
 
 # =====================================================================================
@@ -24,6 +20,8 @@ Content-Type: application/json
 /*
 
 */
+
+
 
 
 ### 2. REGISTRO DE USUARIO - RECEPCIÓN
@@ -136,5 +134,39 @@ Accept: application/json
 ### 10. OBTENER TIPOS DE TRANSMISIÓN
 GET {{back_cabs_HostAddress}}/api/Auth/transmisiones
 Accept: application/json
+
+###
+
+### 11. OBTENER INFORMACIÓN DEL USUARIO ACTUAL (/me)
+# Primero haz login (prueba #4) y copia el token de la respuesta
+GET {{back_cabs_HostAddress}}/api/Auth/me
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5ZDU0NmFkOC0zZjk1LTRmNjQtYjJhNS1lNzQxZmVhZmE4MTEiLCJlbWFpbCI6Im1pbHkucGVyZXpAZW1wcmVzYS5jb20iLCJ1bmlxdWVfbmFtZSI6Im1pbHkiLCJyb2xlIjoiYWRtaW5pc3RyYWRvciIsIm5iZiI6MTc1ODkyNjM1MCwiZXhwIjoxNzU4OTI4MTUwLCJpYXQiOjE3NTg5MjYzNTAsImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.lwHbciB4swxDtR-GOryJbejZ8HQdp3YO-Rikpv3oFCA
+
+###
+
+### 12. CAMBIAR CONTRASEÑA
+# Primero haz login (prueba #4) y copia el token de la respuesta
+POST {{back_cabs_HostAddress}}/api/Auth/change-password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5ZDU0NmFkOC0zZjk1LTRmNjQtYjJhNS1lNzQxZmVhZmE4MTEiLCJlbWFpbCI6Im1pbHkucGVyZXpAZW1wcmVzYS5jb20iLCJ1bmlxdWVfbmFtZSI6Im1pbHkiLCJyb2xlIjoiYWRtaW5pc3RyYWRvciIsIm5iZiI6MTc1ODkyNjM1MCwiZXhwIjoxNzU4OTI4MTUwLCJpYXQiOjE3NTg5MjYzNTAsImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.lwHbciB4swxDtR-GOryJbejZ8HQdp3YO-Rikpv3oFCA
+
+{
+  "oldPassword": "AdminPass123!",
+  "newPassword": "NuevaPass456!"
+}
+
+###
+
+### 13. REFRESH TOKEN
+# Utiliza las cookies automáticamente configuradas
+POST {{back_cabs_HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+###
+
+### 14. LOGOUT
+POST {{back_cabs_HostAddress}}/api/Auth/logout
+Content-Type: application/json
 
 ###

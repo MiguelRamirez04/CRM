@@ -103,12 +103,13 @@ app.Use(async (context, next) =>
     // Content Security Policy
     context.Response.Headers["Content-Security-Policy"] = 
         "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
-    
+
     // HSTS (solo en producción)
     if (app.Environment.IsProduction())
     {
-        context.Response.Headers["Strict-Transport-Security"] = 
+        context.Response.Headers["Strict-Transport-Security"] =
             "max-age=31536000; includeSubDomains";
+        
     }
     
     // Referrer Policy

@@ -88,13 +88,20 @@ export class GuestGuard implements CanActivate {
     private router: Router
   ) {}
 
-  canActivate(): boolean {
-    if (!this.authService.isAuthenticated()) {
-      return true;
-    }
-    
-    // Si ya está logueado, redirigir al dashboard
-    this.router.navigate(['/dashboard']);
-    return false;
+  canActivate(): Observable<boolean> {
+    return this.authService.checkAuthStatus().pipe(
+      map(isAuthenticated => {
+        if (isAuthenticated) {
+          // Si ya está logueado, redirigir al dashboard
+          this.router.navigate(['/dashboard']);
+          return false;
+        }
+        return true;
+      }),
+      catchError(() => {
+        // Si hay error verificando auth, permitir acceso a login
+        return of(true);
+      })
+    );
   }
 }

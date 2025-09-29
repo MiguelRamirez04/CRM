@@ -16,7 +16,7 @@ import { SecureAuthService } from '../../../../core/services/secure-auth.service
         <!-- Panel izquierdo con imagen/branding -->
         <div class="col-lg-6 d-none d-lg-block bg-primary bg-gradient position-relative">
           <div class="d-flex flex-column justify-content-center h-100 text-white px-5">
-            <h2 class="display-4 fw-bold mb-4">Bienvenido a CRM Sistema</h2>
+            <h2 class="display-4 fw-bold mb-4">Bienvenido a CRM CABS</h2>
             <p class="lead">Gestiona tu negocio de manera eficiente con nuestra plataforma integral.</p>
             <ul class="list-unstyled mt-4">
               <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Administración completa</li>

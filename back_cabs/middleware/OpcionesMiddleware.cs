@@ -11,7 +11,6 @@
 // ¿CÓMO SE USA?
 // - Se instancia y configura MiddlewareOptions en Program.cs o Startup.cs
 // - Se inyecta en los middlewares para modificar su comportamiento según entorno
-//
 // ¿EN QUÉ CASOS SE USA?
 // - Personalizar el nivel de detalle de errores en desarrollo vs producción
 // - Definir qué excepciones deben tratarse como críticas

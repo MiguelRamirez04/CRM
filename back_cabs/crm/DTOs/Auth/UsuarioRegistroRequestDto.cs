@@ -24,6 +24,8 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using back_cabs.CRM.Core.Validation;
+using back_cabs.CRM.enums;
 
 namespace back_cabs.CRM.DTOs.Auth
 {
@@ -65,28 +67,31 @@ namespace back_cabs.CRM.DTOs.Auth
         /// </summary>
         /// <example>MiContraseña123!</example>
         [Required(ErrorMessage = "La confirmación de contraseña es obligatoria")]
+        [Compare("Contrasena", ErrorMessage = "Las contraseñas no coinciden")]
         [JsonPropertyName("confirmarContrasena")]
         public string ConfirmarContrasena { get; set; } = string.Empty;
 
         /// <summary>
         /// Rol del usuario en el sistema
         /// </summary>
-        /// <example>Soporte</example>
+        /// <example>Conductor</example>
         [Required(ErrorMessage = "El rol es obligatorio")]
+        [EnumStringValue(typeof(RolUsuario))]
         [JsonPropertyName("rol")]
         public string Rol { get; set; } = string.Empty;
 
         /// <summary>
-        /// Indica si el usuario tiene licencia de conducir válida
+        /// Indica si el usuario tiene licencia de conducir válida. Requerido si el rol es Conductor.
         /// </summary>
         /// <example>true</example>
         [JsonPropertyName("licenciaConducir")]
         public bool LicenciaConducir { get; set; } = false;
 
         /// <summary>
-        /// Tipo de transmisión que puede manejar (Ninguna, Automatico, Manual, Ambas)
+        /// Tipo de transmisión que puede manejar. Requerido si el rol es Conductor.
         /// </summary>
-        /// <example>Ambas</example>
+        /// <example>Manual</example>
+        [EnumStringValue(typeof(TipoTransmision))]
         [JsonPropertyName("transmisionHabilitada")]
         public string TransmisionHabilitada { get; set; } = "Ninguna";
     }

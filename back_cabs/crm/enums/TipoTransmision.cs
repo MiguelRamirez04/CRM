@@ -52,6 +52,7 @@ namespace back_cabs.CRM.enums
         /// </summary>
         [Description("Ambas transmisiones (automática y manual)")]
         Ambas = 3
+        
     }
 
     /// <summary>

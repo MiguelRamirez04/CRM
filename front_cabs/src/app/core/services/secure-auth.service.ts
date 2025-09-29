@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, timer, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, timer, throwError, of } from 'rxjs';
 import { map, tap, catchError, switchMap, share } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
 import { environment } from '../../../environments/environment';
+import { RolUsuario } from '../enums/rol-usuario.enum';
+import { TipoTransmision } from '../enums/tipo-transmision.enum';
 
 export interface User {
   id: string;
@@ -19,17 +21,37 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  name: string;
+  nombreCompleto: string;
   email: string;
-  password: string;
-  confirmPassword: string;
+  contrasena: string;
+  confirmarContrasena: string; // Enviar confirmación (requerida por el backend)
+  rol: RolUsuario;
+  licenciaConducir: boolean;
+  transmisionHabilitada: TipoTransmision;
 }
 
+// Respuesta de login del backend (AuthController.Login)
 export interface AuthResponse {
   user: User;
-  accessToken?: string; // Solo para desarrollo, en producción no viene
+  token?: string;        // Backend devuelve 'token'
+  accessToken?: string;  // Compatibilidad si cambiamos nombre en el futuro
   refreshToken?: string; // Solo para desarrollo
   expiresIn: number;
+}
+
+// Respuesta de registro del backend (RegistroExitosoResponseDto)
+export interface RegistroResponse {
+  usuario: {
+    id: string;
+    email: string;
+    nombreCompleto?: string;
+    rol?: string;
+    permisos?: string[];
+  };
+  token?: string;
+  expiraEn?: string | Date | null;
+  exitoso?: boolean;
+  mensaje?: string;
 }
 
 export interface RefreshResponse {
@@ -86,18 +108,12 @@ export class SecureAuthService {
       );
   }
 
-  register(registerData: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, registerData)
+  register(registerData: RegisterRequest): Observable<RegistroResponse> {
+    return this.http.post<RegistroResponse>(`${this.baseUrl}/auth/registro`, registerData)
       .pipe(
         tap(response => {
-          // Guardar usuario en cookie
-          this.cookieService.set('user', JSON.stringify(response.user), {
-            path: '/',
-            secure: environment.production,
-            sameSite: 'Strict'
-          });
-
-          this.currentUserSubject.next(response.user);
+          // Opcional: Iniciar sesión automáticamente o manejar la respuesta
+          console.log('Registro exitoso:', response);
         }),
         catchError(this.handleError)
       );
@@ -162,7 +178,7 @@ export class SecureAuthService {
         }),
         catchError(() => {
           this.clearAuthData();
-          return [false];
+          return of(false);
         })
       );
   }
@@ -220,8 +236,11 @@ export class SecureAuthService {
       // Error del lado del cliente
       errorMessage = error.error.message;
     } else {
-      // Error del lado del servidor
+      // Error del lado del servidor o de red
       switch (error.status) {
+        case 0:
+          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté encendido en la URL configurada y que no haya bloqueos de CORS/firewall.';
+          break;
         case 400:
           errorMessage = error.error?.message || 'Datos inválidos';
           break;

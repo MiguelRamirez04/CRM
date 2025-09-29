@@ -1,0 +1,96 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2 class="register-title">Crear Cuenta</h2>
+
+    <div *ngIf="errorMessage" class="error-message">
+      <p>{{ errorMessage }}</p>
+      <button (click)="errorMessage = null" class="close-error-btn">&times;</button>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Nombre Completo -->
+      <div class="form-field">
+        <label for="nombreCompleto">Nombre Completo</label>
+        <input type="text" id="nombreCompleto" formControlName="nombreCompleto"
+          [class.invalid-input]="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched">
+        <div *ngIf="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched"
+          class="validation-error">
+          <small *ngIf="registerForm.get('nombreCompleto')?.errors?.['required']">El nombre es obligatorio.</small>
+          <small *ngIf="registerForm.get('nombreCompleto')?.errors?.['minlength']">Debe tener al menos 3
+            caracteres.</small>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-field">
+        <label for="email">Correo Electrónico</label>
+        <input type="email" id="email" formControlName="email"
+          [class.invalid-input]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="validation-error">
+          <small *ngIf="registerForm.get('email')?.errors?.['required']">El correo es obligatorio.</small>
+          <small *ngIf="registerForm.get('email')?.errors?.['email']">Formato de correo inválido.</small>
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="form-field">
+        <label for="contrasena">Contraseña</label>
+        <input type="password" id="contrasena" formControlName="contrasena"
+          [class.invalid-input]="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched">
+        <div *ngIf="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched"
+          class="validation-error">
+          <small *ngIf="registerForm.get('contrasena')?.errors?.['required']">La contraseña es obligatoria.</small>
+          <small *ngIf="registerForm.get('contrasena')?.errors?.['minlength']">Mínimo 8 caracteres.</small>
+        </div>
+      </div>
+
+      <!-- Confirmar Contraseña -->
+      <div class="form-field">
+        <label for="confirmarContrasena">Confirmar Contraseña</label>
+        <input type="password" id="confirmarContrasena" formControlName="confirmarContrasena"
+          [class.invalid-input]="registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched">
+        <div *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched"
+          class="validation-error">
+          Las contraseñas no coinciden.
+        </div>
+      </div>
+
+      <!-- Rol -->
+      <div class="form-field">
+        <label for="rol">Quiero registrarme como</label>
+        <select id="rol" formControlName="rol">
+          <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
+        </select>
+      </div>
+
+      <!-- Información de conducción (opcional para todos los roles) -->
+      <div class="conductor-section">
+        <hr>
+        <h3 class="conductor-title">Información de Conducción (Opcional)</h3>
+
+        <!-- Licencia de Conducir (opcional) -->
+        <div class="form-field-check">
+          <input type="checkbox" id="licenciaConducir" formControlName="licenciaConducir">
+          <label for="licenciaConducir">Tengo una licencia de conducir válida</label>
+        </div>
+
+        <!-- Transmisión Habilitada (opcional) -->
+        <div class="form-field">
+          <label for="transmisionHabilitada">Tipo de Transmisión que Manejo (Opcional)</label>
+          <select id="transmisionHabilitada" formControlName="transmisionHabilitada">
+            <option *ngFor="let transmision of transmisiones" [value]="transmision">{{ transmision }}</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading">
+        <span *ngIf="isLoading" class="spinner"></span>
+        {{ isLoading ? 'Creando cuenta...' : 'Crear Cuenta' }}
+      </button>
+
+      <div class="login-link">
+        <small>¿Ya tienes una cuenta? <a routerLink="/auth/login">Inicia Sesión</a></small>
+      </div>
+    </form>
+  </div>
+</div>

@@ -23,6 +23,7 @@
 using back_cabs.CRM.DTOs.Auth;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.services.Auth;
+using back_cabs.CRM.models.Auth;
 using back_cabs.middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
@@ -399,41 +400,52 @@ namespace back_cabs.CRM.controllers.Auth
         [HttpGet("me")]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
-        public Task<IActionResult> GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
-                var accessToken = Request.Cookies["AccessToken"];
+                // Extraer el ID del usuario desde el JWT Bearer token
+                var userId = await GetCurrentUserIdFromJwtAsync();
                 
-                if (string.IsNullOrEmpty(accessToken) || !IsValidAccessToken(accessToken))
+                if (string.IsNullOrEmpty(userId))
                 {
-                    return Task.FromResult<IActionResult>(Unauthorized(new { message = "Token de acceso inválido" }));
+                    return Unauthorized(new { message = "Token de acceso inválido o no proporcionado" });
                 }
 
-                var userId = GetUserIdFromAccessToken(accessToken);
-                var user = GetUserById(userId); // TODO: Obtener de BD
-
-                if (user == null)
+                // Obtener los datos reales del usuario desde la base de datos usando el ID
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return Task.FromResult<IActionResult>(Unauthorized(new { message = "Usuario no encontrado" }));
+                    return Unauthorized(new { message = "ID de usuario inválido en el token" });
                 }
 
-                return Task.FromResult<IActionResult>(Ok(new
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                if (usuario == null)
+                {
+                    return Unauthorized(new { message = "Usuario no encontrado" });
+                }
+
+                return Ok(new
                 {
                     user = new
                     {
-                        id = user.Id,
-                        email = user.Email,
-                        name = user.Name,
-                        role = user.Role,
-                        permissions = user.Permissions
+                        id = usuario.Id,
+                        email = usuario.Email,
+                        name = usuario.NombreCompleto,
+                        role = usuario.Rol.ToLower(),
+                        permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol)),
+                        fechaRegistro = usuario.CreadoEn,
+                        tipoTransmision = usuario.TransmisionHabilitada
                     }
-                }));
+                });
+            }
+            catch (FormatException)
+            {
+                return Unauthorized(new { message = "Token inválido" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener usuario actual");
-                return Task.FromResult<IActionResult>(Unauthorized(new { message = "Error de autenticación" }));
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
@@ -451,36 +463,64 @@ namespace back_cabs.CRM.controllers.Auth
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             try
             {
-                var accessToken = Request.Cookies["AccessToken"];
-                
-                if (string.IsNullOrEmpty(accessToken) || !IsValidAccessToken(accessToken))
+                // Validar el request
+                if (request == null || string.IsNullOrEmpty(request.OldPassword) || string.IsNullOrEmpty(request.NewPassword))
                 {
-                    return Task.FromResult<IActionResult>(Unauthorized());
+                    return BadRequest(new { message = "Contraseña actual y nueva contraseña son requeridas" });
                 }
 
-                var userId = GetUserIdFromAccessToken(accessToken);
+                // Extraer el ID del usuario desde el JWT Bearer token
+                var userId = await GetCurrentUserIdFromJwtAsync();
                 
-                // TODO: Validar contraseña actual y cambiar por la nueva
-                if (!ValidateCurrentPassword(userId, request.OldPassword))
+                if (string.IsNullOrEmpty(userId))
                 {
-                    return Task.FromResult<IActionResult>(BadRequest(new { message = "Contraseña actual incorrecta" }));
+                    return Unauthorized(new { message = "Token de acceso inválido o no proporcionado" });
                 }
 
-                // TODO: Cambiar contraseña en BD
-                UpdateUserPassword(userId, request.NewPassword);
+                // Convertir userId string a Guid
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return Unauthorized(new { message = "ID de usuario inválido en el token" });
+                }
 
-                _logger.LogInformation($"Usuario {userId} cambió su contraseña");
+                // Obtener el usuario por ID
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                if (usuario == null)
+                {
+                    return Unauthorized(new { message = "Usuario no encontrado" });
+                }
 
-                return Task.FromResult<IActionResult>(Ok(new { message = "Contraseña cambiada exitosamente" }));
+                // Validar la contraseña actual usando el servicio de autenticación
+                var credencialesValidas = await _usuarioAuthService.ValidarCredencialesAsync(usuario.Email, request.OldPassword);
+                if (credencialesValidas == null)
+                {
+                    _logger.LogWarning("Intento de cambio de contraseña con contraseña actual incorrecta para usuario: {UserId}", userId);
+                    return BadRequest(new { message = "Contraseña actual incorrecta" });
+                }
+
+                // Actualizar la contraseña usando el servicio
+                var actualizado = await _usuarioAuthService.ActualizarContrasenaAsync(userGuid, request.NewPassword);
+                if (!actualizado)
+                {
+                    return StatusCode(500, new { message = "Error al actualizar la contraseña" });
+                }
+
+                _logger.LogInformation("Usuario {UserId} - {Email} cambió su contraseña exitosamente", userId, usuario.Email);
+                
+                return Ok(new { message = "Contraseña cambiada exitosamente" });
+            }
+            catch (FormatException)
+            {
+                return Unauthorized(new { message = "Token inválido" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cambiar contraseña");
-                return Task.FromResult<IActionResult>(StatusCode(500, new { message = "Error al cambiar contraseña" }));
+                _logger.LogError(ex, "Error inesperado al cambiar contraseña");
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
@@ -612,6 +652,41 @@ namespace back_cabs.CRM.controllers.Auth
             return token.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         }
 
+        /// <summary>
+        /// Extrae el ID del usuario autenticado desde el JWT Bearer token de la request actual
+        /// </summary>
+        /// <returns>ID del usuario o null si no está autenticado</returns>
+        private Task<string?> GetCurrentUserIdFromJwtAsync()
+        {
+            try
+            {
+                // Primero intentar obtener el token del header Authorization Bearer
+                var authHeader = Request.Headers.Authorization.FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                {
+                    var token = authHeader.Substring("Bearer ".Length).Trim();
+                    if (IsValidAccessToken(token))
+                    {
+                        return Task.FromResult<string?>(GetUserIdFromAccessToken(token));
+                    }
+                }
+
+                // Si no hay Bearer token, intentar obtener de cookies (fallback)
+                var cookieToken = Request.Cookies["AccessToken"];
+                if (!string.IsNullOrEmpty(cookieToken) && IsValidAccessToken(cookieToken))
+                {
+                    return Task.FromResult<string?>(GetUserIdFromAccessToken(cookieToken));
+                }
+
+                return Task.FromResult<string?>(null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error al extraer user ID del JWT");
+                return Task.FromResult<string?>(null);
+            }
+        }
+
         #endregion
 
         #region TODO: Métodos de Base de Datos (reemplazar con implementación real)
@@ -627,29 +702,66 @@ namespace back_cabs.CRM.controllers.Auth
             };
         }
 
+        private async Task<User?> GetUserByIdAsync(string id)
+        {
+            try
+            {
+                if (!Guid.TryParse(id, out var userGuid))
+                {
+                    return null;
+                }
+
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                if (usuario == null)
+                {
+                    return null;
+                }
+
+                return new User
+                {
+                    Id = usuario.Id.ToString(),
+                    Email = usuario.Email,
+                    Name = usuario.NombreCompleto,
+                    Role = usuario.Rol.ToLower(),
+                    Permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol))
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario por ID: {UserId}", id);
+                return null;
+            }
+        }
+
+        // Método obsoleto mantenido para compatibilidad con refresh token (será refactorizado)
         private User GetUserById(string id)
         {
-            // TODO: Obtener de BD
-            return new User
+            // Este método será reemplazado gradualmente por GetUserByIdAsync
+            try
             {
-                Id = id,
-                Email = "admin@test.com",
-                Name = "Usuario Admin",
-                Role = "admin",
-                Permissions = new[] { "administracion.read", "administracion.write", "recepcion.read", "soporte.read" }
-            };
+                if (!int.TryParse(id, out var userId))
+                {
+                    return new User { Id = id, Email = "unknown", Name = "Unknown User", Role = "unknown", Permissions = Array.Empty<string>() };
+                }
+
+                // Por ahora devolvemos datos básicos, TODO: hacer asíncrono
+                return new User
+                {
+                    Id = id,
+                    Email = "user@temp.com",
+                    Name = "Usuario Temporal",
+                    Role = "user",
+                    Permissions = new[] { "basic.read" }
+                };
+            }
+            catch
+            {
+                return new User { Id = id, Email = "error", Name = "Error User", Role = "error", Permissions = Array.Empty<string>() };
+            }
         }
 
-        private bool ValidateCurrentPassword(string userId, string password)
-        {
-            // TODO: Validar con hash en BD
-            return password == "123456";
-        }
-
-        private void UpdateUserPassword(string userId, string newPassword)
-        {
-            // TODO: Hash y guardar nueva contraseña en BD
-        }
+        // Métodos ValidateCurrentPassword y UpdateUserPassword removidos
+        // Ahora se usa _usuarioAuthService.ValidarCredencialesAsync y _usuarioAuthService.ActualizarContrasenaAsync
 
         #endregion
     }
