@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
@@ -206,6 +206,7 @@ import { SecureAuthService } from '../../../../core/services/secure-auth.service
 })
 export class DashboardComponent {
   private authService = inject(SecureAuthService);
+  private router = inject(Router);
 
   currentUser = this.authService.getCurrentUser();
 
@@ -223,8 +224,13 @@ export class DashboardComponent {
   }
 
   logout(): void {
-    this.authService.logout().subscribe(() => {
-      // El guard redirigirá automáticamente al login
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/auth/login']);
+      },
+      error: () => {
+        this.router.navigate(['/auth/login']);
+      }
     });
   }
 }

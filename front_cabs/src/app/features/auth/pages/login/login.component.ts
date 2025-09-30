@@ -2,191 +2,172 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div class="container-fluid vh-100">
-      <div class="row h-100">
-        <!-- Panel izquierdo con imagen/branding -->
-        <div class="col-lg-6 d-none d-lg-block bg-primary bg-gradient position-relative">
-          <div class="d-flex flex-column justify-content-center h-100 text-white px-5">
-            <h2 class="display-4 fw-bold mb-4">Bienvenido a CRM CABS</h2>
-            <p class="lead">Gestiona tu negocio de manera eficiente con nuestra plataforma integral.</p>
-            <ul class="list-unstyled mt-4">
-              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Administración completa</li>
-              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Recepción optimizada</li>
-              <li class="mb-2"><i class="fas fa-check-circle me-2"></i>Soporte 24/7</li>
-            </ul>
+    <div class="min-h-screen bg-gray-50 flex">
+      <!-- Panel izquierdo con branding -->
+      <div class="hidden lg:flex w-1/2 bg-gradient-to-br from-[#667eea] to-[#764ba2] items-center justify-center p-12 text-white relative">
+        <div class="text-center">
+          <h1 class="text-5xl font-bold mb-4">Bienvenido a CRM CABS</h1>
+          <p class="text-xl opacity-90 mb-8">Gestiona tu negocio de manera eficiente con nuestra plataforma integral.</p>
+          <div class="space-y-4 text-left mx-auto max-w-md">
+            <div class="flex items-center bg-white/20 p-4 rounded-lg">
+              <i class="fas fa-check-circle text-2xl mr-4"></i>
+              <span class="text-lg">Administración completa</span>
+            </div>
+            <div class="flex items-center bg-white/20 p-4 rounded-lg">
+              <i class="fas fa-check-circle text-2xl mr-4"></i>
+              <span class="text-lg">Recepción optimizada</span>
+            </div>
+            <div class="flex items-center bg-white/20 p-4 rounded-lg">
+              <i class="fas fa-check-circle text-2xl mr-4"></i>
+              <span class="text-lg">Soporte 24/7</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Panel derecho con formulario -->
-        <div class="col-lg-6">
-          <div class="d-flex flex-column justify-content-center h-100 px-4 px-lg-5">
-            <div class="w-100" style="max-width: 400px; margin: 0 auto;">
-              <!-- Logo móvil -->
-              <div class="text-center mb-4 d-lg-none">
-                <h3 class="text-primary">CRM Sistema</h3>
+      <!-- Panel derecho con formulario -->
+      <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+        <div class="w-full max-w-md">
+          <div class="text-center mb-8 lg:hidden">
+            <h2 class="text-3xl font-bold text-[#667eea]">CRM CABS</h2>
+          </div>
+          
+          <h3 class="text-3xl font-bold text-gray-800 mb-2 text-center">Iniciar Sesión</h3>
+          <p class="text-gray-600 mb-8 text-center">Ingresa tus credenciales para acceder a tu cuenta.</p>
+
+          <!-- Alerts -->
+          <div *ngIf="errorMessage" class="bg-[#dc3545]/10 border-l-4 border-[#dc3545] text-[#dc3545] p-4 mb-6 rounded-md" role="alert">
+            <div class="flex">
+              <div class="py-1"><i class="fas fa-exclamation-triangle mr-3"></i></div>
+              <div>
+                <p class="font-bold">Error</p>
+                <p class="text-sm">{{ errorMessage }}</p>
               </div>
+              <button type="button" class="ml-auto -mx-1.5 -my-1.5" (click)="errorMessage = null">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
 
-              <h4 class="mb-4">Iniciar Sesión</h4>
-              
-              <!-- Alerts -->
-              <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                {{ errorMessage }}
-                <button type="button" class="btn-close" (click)="errorMessage = null"></button>
+          <div *ngIf="successMessage" class="bg-[#28a745]/10 border-l-4 border-[#28a745] text-[#28a745] p-4 mb-6 rounded-md" role="alert">
+            <p>{{ successMessage }}</p>
+          </div>
+
+          <!-- Formulario -->
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+              <div class="mt-1 relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-envelope text-gray-400"></i>
+                </div>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  placeholder="usuario@ejemplo.com"
+                  autocomplete="email"
+                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] sm:text-sm"
+                  [ngClass]="{'border-[#dc3545]': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}">
               </div>
-
-              <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                {{ successMessage }}
-                <button type="button" class="btn-close" (click)="successMessage = null"></button>
+              <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="mt-2 text-sm text-[#dc3545]">
+                <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo es requerido.</span>
+                <span *ngIf="loginForm.get('email')?.errors?.['email']">Formato de correo inválido.</span>
               </div>
+            </div>
 
-              <!-- Formulario -->
-              <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-                <div class="mb-3">
-                  <label for="email" class="form-label">Correo Electrónico</label>
-                  <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                    <input 
-                      type="email" 
-                      class="form-control"
-                      [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
-                      id="email" 
-                      formControlName="email"
-                      placeholder="usuario@ejemplo.com"
-                      autocomplete="email">
-                  </div>
-                  <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="invalid-feedback">
-                    <small *ngIf="loginForm.get('email')?.errors?.['required']">
-                      El correo es requerido
-                    </small>
-                    <small *ngIf="loginForm.get('email')?.errors?.['email']">
-                      Formato de correo inválido
-                    </small>
-                  </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+              <div class="mt-1 relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-lock text-gray-400"></i>
                 </div>
-
-                <div class="mb-3">
-                  <label for="password" class="form-label">Contraseña</label>
-                  <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                    <input 
-                      [type]="showPassword ? 'text' : 'password'" 
-                      class="form-control"
-                      [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                      id="password" 
-                      formControlName="password"
-                      placeholder="Tu contraseña"
-                      autocomplete="current-password">
-                    <button 
-                      type="button" 
-                      class="btn btn-outline-secondary"
-                      (click)="togglePassword()">
-                      <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                    </button>
-                  </div>
-                  <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="invalid-feedback">
-                    <small *ngIf="loginForm.get('password')?.errors?.['required']">
-                      La contraseña es requerida
-                    </small>
-                    <small *ngIf="loginForm.get('password')?.errors?.['minlength']">
-                      Mínimo 6 caracteres
-                    </small>
-                  </div>
+                <input 
+                  [type]="showPassword ? 'text' : 'password'" 
+                  id="password" 
+                  formControlName="password"
+                  placeholder="Tu contraseña"
+                  autocomplete="current-password"
+                  class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] sm:text-sm"
+                  [ngClass]="{'border-[#dc3545]': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <button 
+                    type="button" 
+                    (click)="togglePassword()"
+                    class="text-gray-400 hover:text-gray-500">
+                    <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                  </button>
                 </div>
+              </div>
+              <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="mt-2 text-sm text-[#dc3545]">
+                <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
+                <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</span>
+              </div>
+            </div>
 
-                <div class="mb-3 form-check">
-                  <input type="checkbox" class="form-check-input" id="rememberMe" formControlName="rememberMe">
-                  <label class="form-check-label" for="rememberMe">
-                    Recordarme
-                  </label>
-                </div>
-
-                <button 
-                  type="submit" 
-                  class="btn btn-primary w-100 mb-3"
-                  [disabled]="loginForm.invalid || isLoading">
-                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-                  <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
-                  {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-                </button>
-              </form>
-
-              <!-- Enlaces adicionales -->
-              <div class="text-center">
-                <a routerLink="/auth/forgot-password" class="text-decoration-none">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <input id="rememberMe" formControlName="rememberMe" type="checkbox" class="h-4 w-4 text-[#667eea] border-gray-300 rounded focus:ring-[#667eea]">
+                <label for="rememberMe" class="ml-2 block text-sm text-gray-900">Recordarme</label>
+              </div>
+              <div class="text-sm">
+                <a routerLink="/auth/forgot-password" class="font-medium text-[#667eea] hover:text-[#764ba2]">
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>
-
-              <hr class="my-4">
-
-              <div class="text-center">
-                <span class="text-muted">¿No tienes cuenta?</span>
-                <a routerLink="/auth/register" class="text-decoration-none ms-1">
-                  Regístrate aquí
-                </a>
-              </div>
-
-              <!-- Información de seguridad -->
-              <div class="mt-4 p-3 bg-light rounded">
-                <small class="text-muted">
-                  <i class="fas fa-shield-alt me-2 text-success"></i>
-                  Conexión segura con cookies HttpOnly y protección CSRF
-                </small>
-              </div>
             </div>
+
+            <div>
+              <button 
+                type="submit" 
+                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#764ba2] hover:to-[#667eea] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#667eea] disabled:opacity-50 transition-all duration-300"
+                [disabled]="loginForm.invalid || isLoading">
+                <span *ngIf="isLoading" class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                   <svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
+                <i *ngIf="!isLoading" class="fas fa-sign-in-alt mr-2"></i>
+                {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+              </button>
+            </div>
+          </form>
+
+          <div class="mt-6 relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-gray-50 text-gray-500">¿No tienes cuenta?</span>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <a routerLink="/auth/register" class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Regístrate aquí
+            </a>
+          </div>
+          
+          <div class="mt-8 text-center">
+            <p class="text-xs text-gray-500">
+              <i class="fas fa-shield-alt text-success"></i>
+              Conexión segura y protegida.
+            </p>
           </div>
         </div>
       </div>
     </div>
   `,
-  styles: [`
-    .bg-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    }
-    
-    .input-group-text {
-      background-color: #f8f9fa;
-      border-right: none;
-    }
-    
-    .form-control {
-      border-left: none;
-    }
-    
-    .form-control:focus {
-      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-      border-color: #86b7fe;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      padding: 12px;
-      font-weight: 500;
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    @media (max-width: 991.98px) {
-      .container-fluid {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-    }
-  `]
+  styles: []
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);

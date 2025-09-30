@@ -1,95 +1,123 @@
-<div class="register-container">
-  <div class="register-card">
-    <h2 class="register-title">Crear Cuenta</h2>
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Crear Cuenta</h2>
+    <p class="text-center text-gray-600 mb-8">Completa tus datos para registrarte en CRM CABS.</p>
 
-    <div *ngIf="errorMessage" class="error-message">
-      <p>{{ errorMessage }}</p>
-      <button (click)="errorMessage = null" class="close-error-btn">&times;</button>
+    <!-- Alertas de error -->
+  <div *ngIf="errorMessage" class="bg-[#dc3545]/10 border-l-4 border-[#dc3545] text-[#dc3545] p-4 mb-6 rounded-md" role="alert">
+      <div class="flex">
+        <div class="py-1"><i class="fas fa-exclamation-triangle mr-3"></i></div>
+        <div>
+          <p class="font-bold">Error</p>
+          <p class="text-sm">{{ errorMessage }}</p>
+        </div>
+        <button type="button" class="ml-auto -mx-1.5 -my-1.5" (click)="errorMessage = null">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
       <!-- Nombre Completo -->
-      <div class="form-field">
-        <label for="nombreCompleto">Nombre Completo</label>
+      <div>
+        <label for="nombreCompleto" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
         <input type="text" id="nombreCompleto" formControlName="nombreCompleto"
-          [class.invalid-input]="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched">
-        <div *ngIf="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched"
-          class="validation-error">
-          <small *ngIf="registerForm.get('nombreCompleto')?.errors?.['required']">El nombre es obligatorio.</small>
-          <small *ngIf="registerForm.get('nombreCompleto')?.errors?.['minlength']">Debe tener al menos 3
-            caracteres.</small>
+               placeholder="Juan Pérez"
+               class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+               [ngClass]="{'border-[#dc3545]': registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched}">
+  <div *ngIf="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched" class="mt-2 text-sm text-[#dc3545]">
+          <span *ngIf="registerForm.get('nombreCompleto')?.errors?.['required']">El nombre es obligatorio.</span>
+          <span *ngIf="registerForm.get('nombreCompleto')?.errors?.['minlength']">Debe tener al menos 3 caracteres.</span>
         </div>
       </div>
 
       <!-- Email -->
-      <div class="form-field">
-        <label for="email">Correo Electrónico</label>
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
         <input type="email" id="email" formControlName="email"
-          [class.invalid-input]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
-        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="validation-error">
-          <small *ngIf="registerForm.get('email')?.errors?.['required']">El correo es obligatorio.</small>
-          <small *ngIf="registerForm.get('email')?.errors?.['email']">Formato de correo inválido.</small>
+               placeholder="usuario@empresa.com"
+               autocomplete="email"
+               class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+               [ngClass]="{'border-[#dc3545]': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}">
+  <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="mt-2 text-sm text-[#dc3545]">
+          <span *ngIf="registerForm.get('email')?.errors?.['required']">El correo es obligatorio.</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['email']">Formato de correo inválido.</span>
         </div>
       </div>
 
-      <!-- Contraseña -->
-      <div class="form-field">
-        <label for="contrasena">Contraseña</label>
-        <input type="password" id="contrasena" formControlName="contrasena"
-          [class.invalid-input]="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched">
-        <div *ngIf="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched"
-          class="validation-error">
-          <small *ngIf="registerForm.get('contrasena')?.errors?.['required']">La contraseña es obligatoria.</small>
-          <small *ngIf="registerForm.get('contrasena')?.errors?.['minlength']">Mínimo 8 caracteres.</small>
+      <!-- Contraseña y Confirmación -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label for="contrasena" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input type="password" id="contrasena" formControlName="contrasena"
+                 placeholder="Mínimo 8 caracteres"
+                 autocomplete="new-password"
+                 class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+                 [ngClass]="{'border-[#dc3545]': registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched}">
+          <div *ngIf="registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched" class="mt-2 text-sm text-[#dc3545]">
+            <span *ngIf="registerForm.get('contrasena')?.errors?.['required']">La contraseña es obligatoria.</span>
+            <span *ngIf="registerForm.get('contrasena')?.errors?.['minlength']">Mínimo 8 caracteres.</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Confirmar Contraseña -->
-      <div class="form-field">
-        <label for="confirmarContrasena">Confirmar Contraseña</label>
-        <input type="password" id="confirmarContrasena" formControlName="confirmarContrasena"
-          [class.invalid-input]="registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched">
-        <div *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched"
-          class="validation-error">
-          Las contraseñas no coinciden.
+        <div>
+          <label for="confirmarContrasena" class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+          <input type="password" id="confirmarContrasena" formControlName="confirmarContrasena"
+                 autocomplete="new-password"
+                 class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+                 [ngClass]="{'border-[#dc3545]': registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched}">
+          <div *ngIf="registerForm.hasError('mismatch') && registerForm.get('confirmarContrasena')?.touched" class="mt-2 text-sm text-[#dc3545]">
+            Las contraseñas no coinciden.
+          </div>
         </div>
       </div>
 
       <!-- Rol -->
-      <div class="form-field">
-        <label for="rol">Quiero registrarme como</label>
-        <select id="rol" formControlName="rol">
+      <div>
+        <label for="rol" class="block text-sm font-medium text-gray-700">Quiero registrarme como</label>
+  <select id="rol" formControlName="rol"
+    class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300">
           <option *ngFor="let rol of roles" [value]="rol">{{ rol }}</option>
         </select>
       </div>
 
-      <!-- Información de conducción (opcional para todos los roles) -->
-      <div class="conductor-section">
-        <hr>
-        <h3 class="conductor-title">Información de Conducción (Opcional)</h3>
+      <!-- Información de Conducción (Opcional) -->
+      <div>
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-sm font-semibold text-gray-600 mb-4">Información de Conducción (Opcional)</h3>
 
-        <!-- Licencia de Conducir (opcional) -->
-        <div class="form-field-check">
-          <input type="checkbox" id="licenciaConducir" formControlName="licenciaConducir">
-          <label for="licenciaConducir">Tengo una licencia de conducir válida</label>
-        </div>
+          <div class="flex items-center mb-4">
+            <input type="checkbox" id="licenciaConducir" formControlName="licenciaConducir" class="h-4 w-4 text-[#667eea] border-gray-300 rounded focus:ring-[#667eea]">
+            <label for="licenciaConducir" class="ml-2 block text-sm text-gray-900">Tengo una licencia de conducir válida</label>
+          </div>
 
-        <!-- Transmisión Habilitada (opcional) -->
-        <div class="form-field">
-          <label for="transmisionHabilitada">Tipo de Transmisión que Manejo (Opcional)</label>
-          <select id="transmisionHabilitada" formControlName="transmisionHabilitada">
-            <option *ngFor="let transmision of transmisiones" [value]="transmision">{{ transmision }}</option>
-          </select>
+          <div>
+            <label for="transmisionHabilitada" class="block text-sm font-medium text-gray-700">Tipo de Transmisión (Opcional)</label>
+      <select id="transmisionHabilitada" formControlName="transmisionHabilitada"
+        class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300">
+              <option *ngFor="let transmision of transmisiones" [value]="transmision">{{ transmision }}</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading">
-        <span *ngIf="isLoading" class="spinner"></span>
-        {{ isLoading ? 'Creando cuenta...' : 'Crear Cuenta' }}
-      </button>
+      <div>
+  <button type="submit"
+    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:from-[#764ba2] hover:to-[#667eea] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#667eea] disabled:opacity-50 transition-all duration-300"
+                [disabled]="registerForm.invalid || isLoading">
+          <span *ngIf="isLoading" class="mr-2 inline-block">
+            <svg class="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </span>
+          {{ isLoading ? 'Creando cuenta...' : 'Crear Cuenta' }}
+        </button>
+      </div>
 
-      <div class="login-link">
-        <small>¿Ya tienes una cuenta? <a routerLink="/auth/login">Inicia Sesión</a></small>
+      <div class="text-center">
+        <small class="text-gray-600">¿Ya tienes una cuenta?
+          <a routerLink="/auth/login" class="font-medium text-[#667eea] hover:text-[#764ba2]">Inicia Sesión</a>
+        </small>
       </div>
     </form>
   </div>

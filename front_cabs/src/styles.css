@@ -1,7 +1,7 @@
 /* Global Styles - CRM Sistema */
+@import "tailwindcss";
 
-/* Bootstrap Import */
-@import 'bootstrap/dist/css/bootstrap.min.css';
+/* Tailwind colors are applied via classes. Custom theme tokens removed for compatibility. */
 
 /* FontAwesome Import */
 @import '@fortawesome/fontawesome-free/css/all.min.css';
