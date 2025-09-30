@@ -28,8 +28,43 @@ public static class AuthenticationConfiguration
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = issuer,
                 ValidAudience = audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                ClockSkew = TimeSpan.FromMinutes(5)
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            };
+
+            // Habilitar logging detallado para debugging
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    logger.LogError("JWT Authentication failed: {Exception}", context.Exception?.Message);
+                    if (context.Exception != null)
+                    {
+                        logger.LogError("JWT Exception details: {Details}", context.Exception.ToString());
+                    }
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    logger.LogInformation("JWT Token validated successfully for user: {User}", 
+                        context.Principal?.Identity?.Name ?? "Unknown");
+                    return Task.CompletedTask;
+                },
+                OnMessageReceived = context =>
+                {
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    var token = context.Token;
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        logger.LogInformation("JWT Token received, length: {Length}", token.Length);
+                    }
+                    else
+                    {
+                        logger.LogWarning("No JWT token received in Authorization header");
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
 
