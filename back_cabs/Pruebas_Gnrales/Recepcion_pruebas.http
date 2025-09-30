@@ -3,9 +3,25 @@
 # PRUEBAS DE RECEPCIÓN - CRM API
 # =====================================================================================
 
-### 1. METODO GET - DAHBOARD
+### 1. METODO GET - DASHBOARD
 GET {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: aplicattion/json 
 {
-    "cliente_id":"",
+    "cliente_id":"1",
+    "noCotizacion":"COT-001",
+    "fechaCotizacion":"2025-09-13",
+    "":"",
+    "":"",
+}
+
+
+### 2. METODO PUT - DASHBOARD
+GET {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: aplicattion/json 
+{
+    "cliente_id":"1",
+    "noCotizacion":"COT-001",
+    "fechaCotizacion":"2025-09-13",
+    "":"",
+    "":"",
 }

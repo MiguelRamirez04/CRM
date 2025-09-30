@@ -1,0 +1,4 @@
+/*
+aqui van a ir las peticiones http que se usaran para el CRMM
+las dos que se usaran seran em GET y EL POST
+*/
