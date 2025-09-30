@@ -1,0 +1,11 @@
+@back_cabs_HostAddress = http://localhost:5176
+# =====================================================================================
+# PRUEBAS DE RECEPCIÓN - CRM API
+# =====================================================================================
+
+### 1. METODO GET - DAHBOARD
+GET {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: aplicattion/json 
+{
+    "cliente_id":"",
+}
