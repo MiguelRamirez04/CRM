@@ -28,6 +28,7 @@ using back_cabs.middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -398,31 +399,37 @@ namespace back_cabs.CRM.controllers.Auth
         /// <response code="200">Usuario obtenido exitosamente</response>
         /// <response code="401">Token inválido o no proporcionado</response>
         [HttpGet("me")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
         public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
-                // Extraer el ID del usuario desde el JWT Bearer token
-                var userId = await GetCurrentUserIdFromJwtAsync();
+                // Usar la información del usuario ya autenticado por el middleware
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
-                if (string.IsNullOrEmpty(userId))
+                if (string.IsNullOrEmpty(userIdClaim))
                 {
-                    return Unauthorized(new { message = "Token de acceso inválido o no proporcionado" });
+                    _logger.LogWarning("Usuario autenticado pero sin claim NameIdentifier");
+                    return Unauthorized(new { message = "Token de acceso inválido - falta ID de usuario" });
                 }
 
                 // Obtener los datos reales del usuario desde la base de datos usando el ID
-                if (!Guid.TryParse(userId, out var userGuid))
+                if (!Guid.TryParse(userIdClaim, out var userGuid))
                 {
+                    _logger.LogWarning("ID de usuario inválido en claims: {UserId}", userIdClaim);
                     return Unauthorized(new { message = "ID de usuario inválido en el token" });
                 }
 
                 var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
                 if (usuario == null)
                 {
+                    _logger.LogWarning("Usuario no encontrado en BD para ID: {UserId}", userGuid);
                     return Unauthorized(new { message = "Usuario no encontrado" });
                 }
+
+                _logger.LogInformation("Usuario {Email} obtuvo su información exitosamente", usuario.Email);
 
                 return Ok(new
                 {
@@ -438,8 +445,9 @@ namespace back_cabs.CRM.controllers.Auth
                     }
                 });
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
+                _logger.LogError(ex, "Error de formato al procesar claims de usuario");
                 return Unauthorized(new { message = "Token inválido" });
             }
             catch (Exception ex)
@@ -459,6 +467,7 @@ namespace back_cabs.CRM.controllers.Auth
         /// <response code="401">Token inválido</response>
         /// <response code="500">Error interno del servidor</response>
         [HttpPost("change-password")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
@@ -627,8 +636,7 @@ namespace back_cabs.CRM.controllers.Auth
                     ValidIssuer = jwtSettings["Issuer"],
                     ValidateAudience = true,
                     ValidAudience = jwtSettings["Audience"],
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero
+                    ValidateLifetime = true
                 };
 
                 tokenHandler.ValidateToken(accessToken, validationParameters, out SecurityToken validatedToken);

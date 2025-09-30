@@ -18,16 +18,16 @@ public static class SwaggerConfiguration
                 Description = "API para el sistema CRM de gestión de clientes y soporte"
             });
 
-            // Configuración para JWT Bearer Token (automáticamente agrega 'Bearer')
+            // Configuración para JWT Bearer Token (automáticamente agrega 'Bearer ')
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = @"Ingresa SOLO el token JWT (sin 'Bearer'). 
-                      El prefijo 'Bearer' se agregará automáticamente.
+                      El prefijo 'Bearer ' se agregará automáticamente.
                       Ejemplo: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 Name = "Authorization",
                 In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
                 BearerFormat = "JWT"
             });
 
