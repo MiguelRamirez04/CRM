@@ -10,7 +10,6 @@ namespace back_cabs.CRM.models.Recepcion
         public DateTime? CitaProgramadaFin { get; set; }
         public string? Modalidad { get; set; }
         public string? TipoOrden { get; set; }
-        public int? ClienteRefId { get; set; }
         public string? Cotizaciones { get; set; }
         public int? LegacyClientId { get; set; }
         public int? Prioridad { get; set; }
@@ -24,6 +23,7 @@ namespace back_cabs.CRM.models.Recepcion
         public int? CostoReal { get; set; }
         public int? CostoEstimado { get; set; }
 
+        public int id_usuario { get; set; }
         // Propiedad de navegación para Entity Framework
         public virtual Cliente? Cliente { get; set; }
     }
