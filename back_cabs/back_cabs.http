@@ -9,8 +9,8 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Juan Pérez Administrador",
-  "email": "juan.perez@empresa.com",
+  "nombreCompleto": "Alejandro Alejo Admin",
+  "email": "alex.alejo@empresa.com",
   "contrasena": "AdminPass123!",
   "confirmarContrasena": "AdminPass123!",
   "rol": "Administrador",
@@ -18,7 +18,25 @@ Content-Type: application/json
   "transmisionHabilitada": "Ambas"
 }
 /*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Rol": [
+      "El valor 'string' no es válido. Valores permitidos: Administrador, Recepcion, Soporte."
+    ],
+    "ConfirmarContrasena": [
+      "Las contraseñas no coinciden"
+    ],
+    "TransmisionHabilitada": [
+      "El valor 'string' no es válido. Valores permitidos: Ninguna, Automatico, Manual, Ambas."
+    ]
+  },
+  "traceId": "00-30c34f4f9390981b465d3aabba4a7bc4-d54dec742415223c-00"
+}
 
+aqui las contraseñas no coinciden aparentemente por los string y los valores contenidos
 */
 
 
@@ -36,6 +54,22 @@ Content-Type: application/json
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-dd975df3bee48da7867eda6bb5e41108-aee211b76f8e41d1-00"
+}
+
+aparentemente un problema con el string pero parece que conecta bien
+*/
 
 ###
 
@@ -51,6 +85,21 @@ Content-Type: application/json
   "licenciaConducir": true,
   "transmisionHabilitada": "Manual"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-9ce3dd6ade5c01b3d168eee1b78664e6-c13de8f8297f096e-00"
+}
+igual que con recepcion
+*/
 
 ###
 
@@ -62,6 +111,12 @@ Content-Type: application/json
   "email": "marta.lopez@empresa.com",
   "password": "TecnicoPass123!"
 }
+/*
+{
+  "message": "Error interno del servidor"
+}
+conecta con servidor pero da error interno
+*/
 
 ###
 
@@ -77,6 +132,22 @@ Content-Type: application/json
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-6ec7fd4c6e02a97b89f38abb4c5511e6-016c6603a038c550-00"
+}
+
+no supe si esta bien o no pero dio 201, 400 y 500
+*/
 
 ###
 
@@ -92,6 +163,24 @@ Content-Type: application/json
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Contrasena": [
+      "La contraseña debe tener entre 8 y 100 caracteres"
+    ],
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-7ad1a4fd2d906af2d01b517c5c5dbce4-3945ad9d6588f9f3-00"
+}
+manda error por la contraseña que no cumple con los requisitos de seguridad
+*/
 
 ###
 
@@ -107,6 +196,24 @@ Content-Type: application/json
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Email": [
+      "Debe ser un email válido"
+    ],
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-a4ac29e1766e0bb75262086ecfde8a10-486a0e13dc5cb386-00"
+}
+da error por el email que no cumple con los requisitos de formato
+*/
 
 ###
 
@@ -122,18 +229,101 @@ Content-Type: application/json
   "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
+/*
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Rol": [
+      "El valor 'RolQueNoExiste' no es válido. Valores permitidos: Administrador, Recepcion, Soporte."
+    ],
+    "ConfirmarContrasena": [
+      "La confirmación de contraseña es obligatoria",
+      "Las contraseñas no coinciden"
+    ]
+  },
+  "traceId": "00-33356c9258bee777dfb026ea69369240-3ccd811fc9de5b03-00"
+}
+lanza error por el rol inexistente
+*/
 
 ###
 
 ### 9. OBTENER ROLES DISPONIBLES
 GET {{back_cabs_HostAddress}}/api/Auth/roles
 Accept: application/json
-
+{}
+/*
+{
+  "roles": [
+    {
+      "valor": "Administrador",
+      "descripcion": "Administrador del sistema con acceso completo",
+      "esAdministrativo": true,
+      "puedeGestionarClientes": true,
+      "puedeRealizarSoporte": true
+    },
+    {
+      "valor": "Recepcion",
+      "descripcion": "Personal de recepción - Gestión de clientes y tickets",
+      "esAdministrativo": false,
+      "puedeGestionarClientes": true,
+      "puedeRealizarSoporte": false
+    },
+    {
+      "valor": "Soporte",
+      "descripcion": "Personal de soporte técnico - Resolución de tickets",
+      "esAdministrativo": false,
+      "puedeGestionarClientes": false,
+      "puedeRealizarSoporte": true
+    }
+  ],
+  "total": 3,
+  "mensaje": "Roles obtenidos exitosamente"
+}
+trae todo correctamente
+*/
 ###
+
 
 ### 10. OBTENER TIPOS DE TRANSMISIÓN
 GET {{back_cabs_HostAddress}}/api/Auth/transmisiones
 Accept: application/json
+{}
+/*
+{
+  "transmisiones": [
+    {
+      "valor": "Ninguna",
+      "descripcion": "Sin habilitación para conducir",
+      "puedeManearAutomatico": false,
+      "puedeManearManual": false
+    },
+    {
+      "valor": "Automatico",
+      "descripcion": "Transmisión automática únicamente",
+      "puedeManearAutomatico": true,
+      "puedeManearManual": false
+    },
+    {
+      "valor": "Manual",
+      "descripcion": "Transmisión manual únicamente",
+      "puedeManearAutomatico": false,
+      "puedeManearManual": true
+    },
+    {
+      "valor": "Ambas",
+      "descripcion": "Ambas transmisiones (automática y manual)",
+      "puedeManearAutomatico": true,
+      "puedeManearManual": true
+    }
+  ],
+  "total": 4,
+  "mensaje": "Tipos de transmisión obtenidos exitosamente"
+}
+el get funciona correctamente
+*/
 
 ###
 
@@ -142,7 +332,10 @@ Accept: application/json
 GET {{back_cabs_HostAddress}}/api/Auth/me
 Accept: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5ZDU0NmFkOC0zZjk1LTRmNjQtYjJhNS1lNzQxZmVhZmE4MTEiLCJlbWFpbCI6Im1pbHkucGVyZXpAZW1wcmVzYS5jb20iLCJ1bmlxdWVfbmFtZSI6Im1pbHkiLCJyb2xlIjoiYWRtaW5pc3RyYWRvciIsIm5iZiI6MTc1ODkyNjM1MCwiZXhwIjoxNzU4OTI4MTUwLCJpYXQiOjE3NTg5MjYzNTAsImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.lwHbciB4swxDtR-GOryJbejZ8HQdp3YO-Rikpv3oFCA
+{}
+/*
 
+*/
 ###
 
 ### 12. CAMBIAR CONTRASEÑA
@@ -155,6 +348,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5ZDU0N
   "oldPassword": "AdminPass123!",
   "newPassword": "NuevaPass456!"
 }
+/*
+
+*/
 
 ###
 
@@ -162,11 +358,21 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5ZDU0N
 # Utiliza las cookies automáticamente configuradas
 POST {{back_cabs_HostAddress}}/api/Auth/refresh
 Content-Type: application/json
+{}
+/*
+
+*/
 
 ###
 
 ### 14. LOGOUT
 POST {{back_cabs_HostAddress}}/api/Auth/logout
 Content-Type: application/json
+{}
+/*
+{
+  "message": "Sesión cerrada exitosamente"
+}
+*/
 
 ###
