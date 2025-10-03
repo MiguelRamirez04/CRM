@@ -35,77 +35,111 @@ namespace back_cabs.CRM.models.Auth
     public class UsuarioAuth
     {
         /// <summary>
-        /// Identificador único del usuario
+        /// Identificador único del usuario (autoincremental)
         /// </summary>
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        /// <summary>
-        /// Rol del usuario en el sistema (Administrador, Recepcion, Soporte)
-        /// </summary>
-        [Required]
-        [StringLength(50)]
-        public string Rol { get; set; } = string.Empty;
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         /// <summary>
         /// Fecha y hora de creación del registro
         /// </summary>
         [Required]
+        [Column("creado_en")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Fecha y hora de última actualización del registro
         /// </summary>
-        [Required]
-        public DateTime ActualizadoEn { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// Nombre completo del usuario
-        /// </summary>
-        [Required]
-        [StringLength(200)]
-        public string NombreCompleto { get; set; } = string.Empty;
+        [Column("actualizado_en")]
+        public DateTime? ActualizadoEn { get; set; }
 
         /// <summary>
         /// Email único del usuario (usado para login)
         /// </summary>
         [Required]
-        [StringLength(255)]
+        [StringLength(150)]
+        [Column("email")]
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
-        /// Hash de la contraseña del usuario (nunca almacenar en texto plano)
+        /// Contraseña del usuario (almacenada temporalmente en texto plano para desarrollo)
+        /// TODO: Implementar hash en producción
         /// </summary>
         [Required]
-        [StringLength(500)]
-        public string ContrasenaHash { get; set; } = string.Empty;
+        [StringLength(255)]
+        [Column("password")]
+        public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Nombre del usuario
+        /// </summary>
+        [Required]
+        [StringLength(100)]
+        [Column("nombre")]
+        public string Nombre { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Apellido del usuario
+        /// </summary>
+        [Required]
+        [StringLength(100)]
+        [Column("apellido")]
+        public string Apellido { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Teléfono del usuario
+        /// </summary>
+        [Column("telefono")]
+        public int? Telefono { get; set; }
+
+        /// <summary>
+        /// Hash de la contraseña del usuario (para migración futura)
+        /// </summary>
+        [StringLength(255)]
+        [Column("contraseña_hash")]
+        public string? ContrasenaHash { get; set; }
+
+        /// <summary>
+        /// Rol del usuario en el sistema (valor numérico)
+        /// </summary>
+        [Column("rol")]
+        public int? Rol { get; set; }
 
         /// <summary>
         /// Indica si el usuario está activo en el sistema
         /// </summary>
         [Required]
+        [Column("activo")]
         public bool Activo { get; set; } = true;
 
         /// <summary>
-        /// Indica si el usuario tiene licencia de conducir válida
-        /// (necesario para usar vehículos de empresa en soportes presenciales)
+        /// Licencia de conducir del usuario
         /// </summary>
-        [Required]
-        public bool LicenciaConducir { get; set; } = false;
+        [StringLength(50)]
+        [Column("licencia_conducir")]
+        public string? LicenciaConducir { get; set; }
 
         /// <summary>
         /// Tipo de transmisión que el usuario puede manejar
-        /// (Automatico, Manual, Ambas) - para asignación de vehículos
         /// </summary>
-        [Required]
         [StringLength(50)]
-        public string TransmisionHabilitada { get; set; } = "Ninguna";
+        [Column("transmicion_habilitada")]
+        public string? TransmisionHabilitada { get; set; }
+
+        /// <summary>
+        /// Nombre completo del usuario (propiedad calculada)
+        /// </summary>
+        [NotMapped]
+        public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
 
         /// <summary>
         /// Valida si el usuario puede usar vehículos de empresa
         /// </summary>
         [NotMapped]
-        public bool PuedeUsarVehiculo => LicenciaConducir && TransmisionHabilitada != "Ninguna";
+        public bool PuedeUsarVehiculo => !string.IsNullOrWhiteSpace(LicenciaConducir) && 
+                                          !string.IsNullOrWhiteSpace(TransmisionHabilitada) && 
+                                          TransmisionHabilitada != "Ninguna";
 
         /// <summary>
         /// Actualiza la fecha de modificación

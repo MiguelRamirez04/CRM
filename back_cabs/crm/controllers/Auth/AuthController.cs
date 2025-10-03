@@ -276,13 +276,18 @@ namespace back_cabs.CRM.controllers.Auth
                     return Unauthorized(new { message = "Credenciales inválidas" });
                 }
 
+                // Determinar rol (por defecto Recepcion si no está definido)
+                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
+                    ? (RolUsuario)usuario.Rol.Value
+                    : RolUsuario.Recepcion;
+
                 var user = new User
                 {
                     Id = usuario.Id.ToString(),
                     Email = usuario.Email,
                     Name = usuario.NombreCompleto,
-                    Role = usuario.Rol.ToLower(),
-                    Permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol))
+                    Role = rolUsuario.ToString().ToLower(),
+                    Permissions = GetPermissionsByRole(rolUsuario)
                 };
                 var tokens = GenerateTokens(user);
 
@@ -416,20 +421,25 @@ namespace back_cabs.CRM.controllers.Auth
                 }
 
                 // Obtener los datos reales del usuario desde la base de datos usando el ID
-                if (!Guid.TryParse(userIdClaim, out var userGuid))
+                if (!int.TryParse(userIdClaim, out var userId))
                 {
                     _logger.LogWarning("ID de usuario inválido en claims: {UserId}", userIdClaim);
                     return Unauthorized(new { message = "ID de usuario inválido en el token" });
                 }
 
-                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userId);
                 if (usuario == null)
                 {
-                    _logger.LogWarning("Usuario no encontrado en BD para ID: {UserId}", userGuid);
+                    _logger.LogWarning("Usuario no encontrado en BD para ID: {UserId}", userId);
                     return Unauthorized(new { message = "Usuario no encontrado" });
                 }
 
                 _logger.LogInformation("Usuario {Email} obtuvo su información exitosamente", usuario.Email);
+
+                // Determinar rol (por defecto Recepcion si no está definido)
+                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
+                    ? (RolUsuario)usuario.Rol.Value
+                    : RolUsuario.Recepcion;
 
                 return Ok(new
                 {
@@ -438,8 +448,8 @@ namespace back_cabs.CRM.controllers.Auth
                         id = usuario.Id,
                         email = usuario.Email,
                         name = usuario.NombreCompleto,
-                        role = usuario.Rol.ToLower(),
-                        permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol)),
+                        role = rolUsuario.ToString().ToLower(),
+                        permissions = GetPermissionsByRole(rolUsuario),
                         fechaRegistro = usuario.CreadoEn,
                         tipoTransmision = usuario.TransmisionHabilitada
                     }
@@ -490,14 +500,14 @@ namespace back_cabs.CRM.controllers.Auth
                     return Unauthorized(new { message = "Token de acceso inválido o no proporcionado" });
                 }
 
-                // Convertir userId string a Guid
-                if (!Guid.TryParse(userId, out var userGuid))
+                // Convertir userId string a int
+                if (!int.TryParse(userId, out var userIdInt))
                 {
                     return Unauthorized(new { message = "ID de usuario inválido en el token" });
                 }
 
                 // Obtener el usuario por ID
-                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userIdInt);
                 if (usuario == null)
                 {
                     return Unauthorized(new { message = "Usuario no encontrado" });
@@ -512,7 +522,7 @@ namespace back_cabs.CRM.controllers.Auth
                 }
 
                 // Actualizar la contraseña usando el servicio
-                var actualizado = await _usuarioAuthService.ActualizarContrasenaAsync(userGuid, request.NewPassword);
+                var actualizado = await _usuarioAuthService.ActualizarContrasenaAsync(userIdInt, request.NewPassword);
                 if (!actualizado)
                 {
                     return StatusCode(500, new { message = "Error al actualizar la contraseña" });
@@ -714,24 +724,29 @@ namespace back_cabs.CRM.controllers.Auth
         {
             try
             {
-                if (!Guid.TryParse(id, out var userGuid))
+                if (!int.TryParse(id, out var userId))
                 {
                     return null;
                 }
 
-                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userGuid);
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userId);
                 if (usuario == null)
                 {
                     return null;
                 }
+
+                // Determinar rol (por defecto Recepcion si no está definido)
+                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
+                    ? (RolUsuario)usuario.Rol.Value
+                    : RolUsuario.Recepcion;
 
                 return new User
                 {
                     Id = usuario.Id.ToString(),
                     Email = usuario.Email,
                     Name = usuario.NombreCompleto,
-                    Role = usuario.Rol.ToLower(),
-                    Permissions = GetPermissionsByRole(Enum.Parse<RolUsuario>(usuario.Rol))
+                    Role = rolUsuario.ToString().ToLower(),
+                    Permissions = GetPermissionsByRole(rolUsuario)
                 };
             }
             catch (Exception ex)

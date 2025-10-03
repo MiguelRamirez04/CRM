@@ -47,14 +47,29 @@ namespace back_cabs.CRM.validators.Auth
         /// </summary>
         private void ConfigurarReglasValidacion()
         {
-            // Validación de nombre completo
-            RuleFor(x => x.NombreCompleto)
+            // Validación de nombre
+            RuleFor(x => x.Nombre)
                 .NotEmpty()
-                .WithMessage("El nombre completo es obligatorio")
-                .Length(3, 200)
-                .WithMessage("El nombre debe tener entre 3 y 200 caracteres")
+                .WithMessage("El nombre es obligatorio")
+                .Length(2, 100)
+                .WithMessage("El nombre debe tener entre 2 y 100 caracteres")
                 .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$")
                 .WithMessage("El nombre solo puede contener letras y espacios");
+
+            // Validación de apellido
+            RuleFor(x => x.Apellido)
+                .NotEmpty()
+                .WithMessage("El apellido es obligatorio")
+                .Length(2, 100)
+                .WithMessage("El apellido debe tener entre 2 y 100 caracteres")
+                .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$")
+                .WithMessage("El apellido solo puede contener letras y espacios");
+
+            // Validación de teléfono (opcional)
+            RuleFor(x => x.Telefono)
+                .Must(telefono => !telefono.HasValue || telefono.Value.ToString().Length == 10)
+                .WithMessage("El teléfono debe ser un número de 10 dígitos")
+                .When(x => x.Telefono.HasValue);
 
             // Validación de email
             RuleFor(x => x.Email)
@@ -62,19 +77,20 @@ namespace back_cabs.CRM.validators.Auth
                 .WithMessage("El email es obligatorio")
                 .EmailAddress()
                 .WithMessage("Debe ser un email válido")
-                .MaximumLength(255)
-                .WithMessage("El email no puede exceder 255 caracteres")
+                .MaximumLength(150)
+                .WithMessage("El email no puede exceder 150 caracteres")
                 .MustAsync(async (email, cancellation) => await SerEmailUnico(email))
                 .WithMessage("Ya existe un usuario registrado con este email");
 
-            // Validación de contraseña
+            // Validación de contraseña (simplificada para desarrollo)
             RuleFor(x => x.Contrasena)
                 .NotEmpty()
                 .WithMessage("La contraseña es obligatoria")
                 .MinimumLength(8)
-                .WithMessage("La contraseña debe tener al menos 8 caracteres")
-                .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
-                .WithMessage("La contraseña debe contener al menos: 1 minúscula, 1 mayúscula, 1 número y 1 carácter especial");
+                .WithMessage("La contraseña debe tener al menos 8 caracteres");
+            // TODO: Agregar validación de complejidad en producción:
+            // .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]")
+            // .WithMessage("La contraseña debe contener al menos: 1 minúscula, 1 mayúscula, 1 número y 1 carácter especial");
 
             // Validación de confirmación de contraseña
             RuleFor(x => x.ConfirmarContrasena)
@@ -83,23 +99,20 @@ namespace back_cabs.CRM.validators.Auth
                 .Equal(x => x.Contrasena)
                 .WithMessage("Las contraseñas no coinciden");
 
-            // Validación de rol
-            RuleFor(x => x.Rol)
-                .NotEmpty()
-                .WithMessage("El rol es obligatorio")
-                .Must(SerRolValido)
-                .WithMessage($"El rol debe ser uno de: {string.Join(", ", Enum.GetNames<RolUsuario>())}");
+            // Validación de rol (opcional por ahora)
+            // TODO: Implementar mapeo y validación de rol cuando se defina la lógica de negocio
 
-            // Validación de transmisión habilitada
+            // Validación de transmisión habilitada (opcional)
             RuleFor(x => x.TransmisionHabilitada)
-                .Must(SerTransmisionValida)
-                .WithMessage($"La transmisión debe ser una de: {string.Join(", ", Enum.GetNames<TipoTransmision>())}");
+                .MaximumLength(50)
+                .WithMessage("La transmisión habilitada no puede exceder 50 caracteres")
+                .When(x => !string.IsNullOrWhiteSpace(x.TransmisionHabilitada));
 
-            // Validación de consistencia: si no tiene licencia, no puede tener transmisión habilitada
-            RuleFor(x => x)
-                .Must(TenerConsistenciaLicenciaTransmision)
-                .WithMessage("Si no tiene licencia de conducir, la transmisión debe ser 'Ninguna'")
-                .OverridePropertyName(nameof(UsuarioRegistroRequestDto.TransmisionHabilitada));
+            // Validación de licencia de conducir (opcional)
+            RuleFor(x => x.LicenciaConducir)
+                .MaximumLength(50)
+                .WithMessage("La licencia de conducir no puede exceder 50 caracteres")
+                .When(x => !string.IsNullOrWhiteSpace(x.LicenciaConducir));
         }
 
         /// <summary>
@@ -120,35 +133,7 @@ namespace back_cabs.CRM.validators.Auth
             }
         }
 
-        /// <summary>
-        /// Verifica si el rol es válido
-        /// </summary>
-        private static bool SerRolValido(string rol)
-        {
-            return Enum.TryParse<RolUsuario>(rol, true, out _);
-        }
-
-        /// <summary>
-        /// Verifica si el tipo de transmisión es válido
-        /// </summary>
-        private static bool SerTransmisionValida(string transmision)
-        {
-            return Enum.TryParse<TipoTransmision>(transmision, true, out _);
-        }
-
-        /// <summary>
-        /// Verifica consistencia entre licencia y transmisión
-        /// </summary>
-        private static bool TenerConsistenciaLicenciaTransmision(UsuarioRegistroRequestDto dto)
-        {
-            // Si no tiene licencia, la transmisión debe ser "Ninguna"
-            if (!dto.LicenciaConducir)
-            {
-                return dto.TransmisionHabilitada.Equals("Ninguna", StringComparison.OrdinalIgnoreCase);
-            }
-
-            // Si tiene licencia, puede tener cualquier transmisión excepto "Ninguna"
-            return !dto.TransmisionHabilitada.Equals("Ninguna", StringComparison.OrdinalIgnoreCase);
-        }
+        // Métodos de validación obsoletos eliminados
+        // TODO: Restaurar validaciones de enum cuando se implemente la lógica de negocio completa
     }
 }

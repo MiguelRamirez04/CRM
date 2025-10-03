@@ -1,27 +1,357 @@
 @back_cabs_HostAddress = http://localhost:5176
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjlkNTQ2YWQ4LTNmOTUtNGY2NC1iMmE1LWU3NDFmZWFmYTgxMSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Im1pbHkucGVyZXpAZW1wcmVzYS5jb20iLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiTWlseSBQw6lyZXogR2FyY8OtYSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6ImFkbWluaXN0cmFkb3IiLCJleHAiOjE3Mjc5MzIxNzEsImlzcyI6IkNSTS1BUEkiLCJhdWQiOiJDUk0tQ2xpZW50In0.T6wGlc8VnxqYzPvK7jXYvN5xH9RqWtPkL0mJnBdGfHs
+
 # =====================================================================================
 # PRUEBAS DE RECEPCIÓN - CRM API
 # =====================================================================================
+# 
+# MÓDULO: Recepción - Gestión de Órdenes de Trabajo
+# BASE URL: http://localhost:5176/api/Recepcion
+#
+# ENDPOINTS DISPONIBLES:
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ GET    /api/Recepcion           → Obtener todas las órdenes            │
+# │ GET    /api/Recepcion/{id}      → Obtener orden por ID                 │
+# │ POST   /api/Recepcion           → Crear nueva orden de trabajo         │
+# │ PUT    /api/Recepcion/{id}      → Actualizar orden existente           │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# NOTAS:
+# - Reemplaza {{token}} con un JWT válido obtenido de /api/Auth/login
+# - Las fechas deben estar en formato ISO 8601: "2025-10-05T09:00:00"
+# - Los campos con "?" son opcionales (nullable)
+#
+# =====================================================================================
 
-### 1. METODO GET - DASHBOARD
-GET {{back_cabs_HostAddress}}/api/Auth/registro
-Content-Type: aplicattion/json 
+### ============================================================================
+### 1. GET - OBTENER TODAS LAS ÓRDENES DE TRABAJO
+### ============================================================================
+# Descripción: Recupera la lista completa de órdenes de trabajo
+# Respuesta esperada: 200 OK con array de OrdenTrabajoResponseDto
+# ============================================================================
+
+GET {{back_cabs_HostAddress}}/api/Recepcion
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### ============================================================================
+### 2. GET - OBTENER ORDEN POR ID (Caso exitoso)
+### ============================================================================
+# Descripción: Recupera una orden específica por su ID
+# Respuesta esperada: 200 OK con OrdenTrabajoResponseDto
+# ============================================================================
+
+GET {{back_cabs_HostAddress}}/api/Recepcion/1
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### ============================================================================
+### 3. GET - OBTENER ORDEN POR ID (Caso 404 - No encontrada)
+### ============================================================================
+# Descripción: Intenta recuperar una orden que no existe
+# Respuesta esperada: 404 Not Found
+# ============================================================================
+
+GET {{back_cabs_HostAddress}}/api/Recepcion/9999
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+### ============================================================================
+### 4. POST - CREAR ORDEN DE COTIZACIÓN (Presencial)
+### ============================================================================
+# Descripción: Crea una nueva orden de trabajo para cotización presencial
+# Respuesta esperada: 201 Created con Location header
+# ============================================================================
+
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
 {
-    "cliente_id":"1",
-    "noCotizacion":"COT-001",
-    "fechaCotizacion":"2025-09-13",
-    "":"",
-    "":"",
+  "notas": "Cliente requiere cotización para transmisión automática. Vehículo: Honda Accord 2020. Kilometraje: 85,000 km.",
+  "citaProgramadaInicio": "2025-10-05T09:00:00",
+  "citaProgramadaFin": "2025-10-05T11:00:00",
+  "modalidad": "Presencial",
+  "tipoOrden": "Cotizacion",
+  "cotizaciones": "COT-2025-001",
+  "legacyClientId": 1001,
+  "prioridad": 3,
+  "estado": true,
+  "ubicacionText": "Taller Principal - Av. Insurgentes 1234, Col. Roma, CDMX",
+  "estadoFacturado": false,
+  "requiereFactura": true,
+  "facturaFolio": null,
+  "costoReal": null,
+  "costoEstimado": 3500,
+  "id_usuario": 1
 }
 
+###
 
-### 2. METODO PUT - DASHBOARD
-GET {{back_cabs_HostAddress}}/api/Auth/registro
-Content-Type: aplicattion/json 
+### ============================================================================
+### 5. POST - CREAR ORDEN DE ASESORÍA (Virtual - Alta Prioridad)
+### ============================================================================
+# Descripción: Crea orden de asesoría virtual con prioridad alta
+# Respuesta esperada: 201 Created
+# ============================================================================
+
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
 {
-    "cliente_id":"1",
-    "noCotizacion":"COT-001",
-    "fechaCotizacion":"2025-09-13",
-    "":"",
-    "":"",
+  "notas": "Asesoría urgente: Cliente reporta problemas con transmisión CVT. Requiere diagnóstico remoto previo a cita presencial.",
+  "citaProgramadaInicio": "2025-10-02T14:00:00",
+  "citaProgramadaFin": "2025-10-02T15:00:00",
+  "modalidad": "Virtual",
+  "tipoOrden": "Asesoria",
+  "cotizaciones": null,
+  "legacyClientId": 2005,
+  "prioridad": 5,
+  "estado": true,
+  "ubicacionText": "Videollamada - Google Meet",
+  "estadoFacturado": false,
+  "requiereFactura": false,
+  "facturaFolio": null,
+  "costoReal": null,
+  "costoEstimado": 0,
+  "id_usuario": 2
 }
+
+###
+
+### ============================================================================
+### 6. POST - CREAR ORDEN MÍNIMA (Solo campos requeridos)
+### ============================================================================
+# Descripción: Crea orden con mínima información requerida
+# Respuesta esperada: 201 Created
+# ============================================================================
+
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "citaProgramadaInicio": "2025-10-10T10:00:00",
+  "modalidad": "Presencial",
+  "tipoOrden": "Cotizacion",
+  "legacyClientId": 3001,
+  "prioridad": 3,
+  "estado": false,
+  "requiereFactura": false,
+  "id_usuario": 1
+}
+
+###
+
+### ============================================================================
+### 7. POST - CASO DE ERROR (Validación fallida - campos requeridos faltantes)
+### ============================================================================
+# Descripción: Intenta crear orden sin campos obligatorios
+# Respuesta esperada: 400 Bad Request con errores de validación
+# ============================================================================
+
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "notas": "Esta orden no tiene campos requeridos",
+  "prioridad": 3
+}
+
+###
+
+### ============================================================================
+### 8. POST - CASO DE ERROR (Prioridad fuera de rango)
+### ============================================================================
+# Descripción: Intenta crear orden con prioridad inválida
+# Respuesta esperada: 400 Bad Request
+# ============================================================================
+
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "citaProgramadaInicio": "2025-10-10T10:00:00",
+  "modalidad": "Presencial",
+  "tipoOrden": "Cotizacion",
+  "legacyClientId": 1,
+  "prioridad": 10,
+  "estado": true,
+  "requiereFactura": false,
+  "id_usuario": 1
+}
+
+###
+
+### ============================================================================
+### 9. PUT - ACTUALIZAR ORDEN (Cambiar estado y costos)
+### ============================================================================
+# Descripción: Actualiza una orden existente con nuevos valores
+# Respuesta esperada: 204 No Content
+# ============================================================================
+
+PUT {{back_cabs_HostAddress}}/api/Recepcion/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "notas": "Orden completada. Cliente aprobó cotización y autorizó reparación.",
+  "estado": true,
+  "costoReal": 3800,
+  "costoEstimado": 3500,
+  "estadoFacturado": true,
+  "facturaFolio": 12345
+}
+
+###
+
+### ============================================================================
+### 10. PUT - ACTUALIZACIÓN PARCIAL (Solo prioridad y notas)
+### ============================================================================
+# Descripción: Actualiza solo algunos campos de la orden
+# Respuesta esperada: 204 No Content
+# ============================================================================
+
+PUT {{back_cabs_HostAddress}}/api/Recepcion/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "prioridad": 5,
+  "notas": "Cliente solicitó cambio de prioridad a URGENTE. Requiere atención inmediata."
+}
+
+###
+
+### ============================================================================
+### 11. PUT - REPROGRAMAR CITA
+### ============================================================================
+# Descripción: Actualiza fechas de cita programada
+# Respuesta esperada: 204 No Content
+# ============================================================================
+
+PUT {{back_cabs_HostAddress}}/api/Recepcion/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "citaProgramadaInicio": "2025-10-08T15:00:00",
+  "citaProgramadaFin": "2025-10-08T17:00:00",
+  "notas": "Cita reprogramada a solicitud del cliente por conflicto de agenda."
+}
+
+###
+
+### ============================================================================
+### 12. PUT - CASO DE ERROR (Orden no existe)
+### ============================================================================
+# Descripción: Intenta actualizar una orden inexistente
+# Respuesta esperada: 404 Not Found
+# ============================================================================
+
+PUT {{back_cabs_HostAddress}}/api/Recepcion/9999
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "estado": true,
+  "notas": "Esta orden no existe"
+}
+
+###
+
+### ============================================================================
+### 13. FLUJO COMPLETO - Crear, Consultar y Actualizar
+### ============================================================================
+# Descripción: Simula un flujo de trabajo completo
+# Pasos: 
+#   1. Crear orden nueva
+#   2. Consultar la orden creada
+#   3. Actualizar estado
+# ============================================================================
+
+# Paso 1: Crear
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "notas": "Orden de prueba para flujo completo",
+  "citaProgramadaInicio": "2025-10-15T09:00:00",
+  "citaProgramadaFin": "2025-10-15T10:30:00",
+  "modalidad": "Presencial",
+  "tipoOrden": "Asesoria",
+  "legacyClientId": 5001,
+  "prioridad": 2,
+  "estado": false,
+  "ubicacionText": "Sucursal Norte",
+  "requiereFactura": true,
+  "costoEstimado": 1500,
+  "id_usuario": 3
+}
+
+###
+
+# Paso 2: Consultar (cambiar ID por el retornado en paso 1)
+GET {{back_cabs_HostAddress}}/api/Recepcion/2
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+
+# Paso 3: Actualizar estado a completada
+PUT {{back_cabs_HostAddress}}/api/Recepcion/2
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "estado": true,
+  "costoReal": 1650,
+  "estadoFacturado": true,
+  "facturaFolio": 54321,
+  "notas": "Servicio completado satisfactoriamente. Cliente aprobó trabajo realizado."
+}
+
+###
+
+# =====================================================================================
+# NOTAS ADICIONALES Y TIPS
+# =====================================================================================
+#
+# 1. AUTENTICACIÓN:
+#    - Primero ejecuta: POST /api/Auth/login
+#    - Copia el token del response
+#    - Reemplaza {{token}} en la variable al inicio del archivo
+#
+# 2. VALORES DE ENUMS:
+#    - Modalidad: "Presencial" o "Virtual"
+#    - TipoOrden: "Cotizacion" o "Asesoria"
+#    - Prioridad: 1 (muy baja) a 5 (muy alta)
+#
+# 3. CAMPOS OPCIONALES (pueden ser null):
+#    - notas, citaProgramadaFin, cotizaciones, legacyClientId
+#    - ubicacionText, estadoFacturado, facturaFolio, costoReal
+#
+# 4. CÓDIGOS HTTP ESPERADOS:
+#    - 200 OK: GET exitoso
+#    - 201 Created: POST exitoso (incluye Location header)
+#    - 204 No Content: PUT exitoso
+#    - 400 Bad Request: Validación fallida
+#    - 404 Not Found: Recurso no encontrado
+#    - 500 Internal Server Error: Error del servidor
+#
+# 5. TESTING TIPS:
+#    - Ejecuta las pruebas en orden para simular flujos reales
+#    - Verifica el Location header en respuestas 201
+#    - Guarda los IDs retornados para pruebas subsecuentes
+#
+# =====================================================================================

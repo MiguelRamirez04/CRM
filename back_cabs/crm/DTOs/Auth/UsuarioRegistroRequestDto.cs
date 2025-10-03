@@ -35,13 +35,29 @@ namespace back_cabs.CRM.DTOs.Auth
     public class UsuarioRegistroRequestDto
     {
         /// <summary>
-        /// Nombre completo del usuario
+        /// Nombre del usuario
         /// </summary>
-        /// <example>Juan Carlos Pérez García</example>
-        [Required(ErrorMessage = "El nombre completo es obligatorio")]
-        [StringLength(200, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 200 caracteres")]
-        [JsonPropertyName("nombreCompleto")]
-        public string NombreCompleto { get; set; } = string.Empty;
+        /// <example>Juan Carlos</example>
+        [Required(ErrorMessage = "El nombre es obligatorio")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
+        [JsonPropertyName("nombre")]
+        public string Nombre { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Apellido del usuario
+        /// </summary>
+        /// <example>Pérez García</example>
+        [Required(ErrorMessage = "El apellido es obligatorio")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 100 caracteres")]
+        [JsonPropertyName("apellido")]
+        public string Apellido { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Teléfono del usuario (opcional)
+        /// </summary>
+        /// <example>5512345678</example>
+        [JsonPropertyName("telefono")]
+        public int? Telefono { get; set; }
 
         /// <summary>
         /// Email único del usuario (será usado para login)
@@ -49,7 +65,7 @@ namespace back_cabs.CRM.DTOs.Auth
         /// <example>juan.perez@empresa.com</example>
         [Required(ErrorMessage = "El email es obligatorio")]
         [EmailAddress(ErrorMessage = "Debe ser un email válido")]
-        [StringLength(255, ErrorMessage = "El email no puede exceder 255 caracteres")]
+        [StringLength(150, ErrorMessage = "El email no puede exceder 150 caracteres")]
         [JsonPropertyName("email")]
         public string Email { get; set; } = string.Empty;
 
@@ -81,18 +97,20 @@ namespace back_cabs.CRM.DTOs.Auth
         public string Rol { get; set; } = string.Empty;
 
         /// <summary>
-        /// Indica si el usuario tiene licencia de conducir válida. Requerido si el rol es Conductor.
+        /// Número o identificador de licencia de conducir (opcional)
         /// </summary>
-        /// <example>true</example>
+        /// <example>ABC123456</example>
+        [StringLength(50, ErrorMessage = "La licencia no puede exceder 50 caracteres")]
         [JsonPropertyName("licenciaConducir")]
-        public bool LicenciaConducir { get; set; } = false;
+        public string? LicenciaConducir { get; set; }
 
         /// <summary>
-        /// Tipo de transmisión que puede manejar. Requerido si el rol es Conductor.
+        /// Tipo de transmisión que puede manejar (opcional)
         /// </summary>
         /// <example>Manual</example>
+        [StringLength(50, ErrorMessage = "La transmisión habilitada no puede exceder 50 caracteres")]
         [EnumStringValue(typeof(TipoTransmision))]
         [JsonPropertyName("transmisionHabilitada")]
-        public string TransmisionHabilitada { get; set; } = "Ninguna";
+        public string? TransmisionHabilitada { get; set; }
     }
 }

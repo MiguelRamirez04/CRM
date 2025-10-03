@@ -1,3 +1,17 @@
+// =====================================================================================
+// ENUM MODALIDAD - Modalidad.cs
+// =====================================================================================
+//
+// ¿QUÉ HACE ESTE ARCHIVO?
+// Define las modalidades disponibles para las órdenes de trabajo.
+//
+// CUÁNDO USARLO:
+// - Validación de datos de entrada
+// - Filtros en consultas
+// - Documentación Swagger
+//
+// =====================================================================================
+
 using System.ComponentModel;
 
 namespace back_cabs.CRM.enums
@@ -7,10 +21,10 @@ namespace back_cabs.CRM.enums
     /// </summary>
     public enum Modalidad
     {
-        [Description("Asesoria presencial")]
+        [Description("Asesoría presencial")]
         Presencial = 1,
 
-        [Description("Asesoria virtual")]
+        [Description("Asesoría virtual")]
         Virtual = 2
     }
 }

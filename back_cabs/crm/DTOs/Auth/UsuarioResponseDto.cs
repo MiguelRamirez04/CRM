@@ -34,16 +34,37 @@ namespace back_cabs.CRM.DTOs.Auth
         /// <summary>
         /// Identificador único del usuario
         /// </summary>
-        /// <example>f47ac10b-58cc-4372-a567-0e02b2c3d479</example>
+        /// <example>1</example>
         [JsonPropertyName("id")]
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
-        /// Nombre completo del usuario
+        /// Nombre del usuario
+        /// </summary>
+        /// <example>Juan Carlos</example>
+        [JsonPropertyName("nombre")]
+        public string Nombre { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Apellido del usuario
+        /// </summary>
+        /// <example>Pérez García</example>
+        [JsonPropertyName("apellido")]
+        public string Apellido { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Nombre completo del usuario (calculado)
         /// </summary>
         /// <example>Juan Carlos Pérez García</example>
         [JsonPropertyName("nombreCompleto")]
         public string NombreCompleto { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Teléfono del usuario
+        /// </summary>
+        /// <example>5512345678</example>
+        [JsonPropertyName("telefono")]
+        public int? Telefono { get; set; }
 
         /// <summary>
         /// Email del usuario
@@ -53,11 +74,11 @@ namespace back_cabs.CRM.DTOs.Auth
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
-        /// Rol del usuario en el sistema
+        /// Rol del usuario en el sistema (valor numérico)
         /// </summary>
-        /// <example>Soporte</example>
+        /// <example>2</example>
         [JsonPropertyName("rol")]
-        public string Rol { get; set; } = string.Empty;
+        public int? Rol { get; set; }
 
         /// <summary>
         /// Indica si el usuario está activo
@@ -74,18 +95,18 @@ namespace back_cabs.CRM.DTOs.Auth
         public DateTime CreadoEn { get; set; }
 
         /// <summary>
-        /// Indica si tiene licencia de conducir
+        /// Número de licencia de conducir
         /// </summary>
-        /// <example>true</example>
+        /// <example>ABC123456</example>
         [JsonPropertyName("licenciaConducir")]
-        public bool LicenciaConducir { get; set; }
+        public string? LicenciaConducir { get; set; }
 
         /// <summary>
         /// Tipo de transmisión habilitada
         /// </summary>
         /// <example>Ambas</example>
         [JsonPropertyName("transmisionHabilitada")]
-        public string TransmisionHabilitada { get; set; } = string.Empty;
+        public string? TransmisionHabilitada { get; set; }
 
         /// <summary>
         /// Indica si puede usar vehículos de empresa

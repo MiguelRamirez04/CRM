@@ -95,11 +95,14 @@ namespace back_cabs.CRM.services.Auth
                 // PASO 4: CREAR ENTIDAD DE USUARIO
                 var nuevoUsuario = new UsuarioAuth
                 {
-                    Id = Guid.NewGuid(),
-                    NombreCompleto = request.NombreCompleto.Trim(),
+                    // Id se genera automáticamente por IDENTITY en la base de datos
+                    Nombre = request.Nombre.Trim(),
+                    Apellido = request.Apellido.Trim(),
+                    Telefono = request.Telefono,
                     Email = request.Email.ToLower().Trim(),
-                    ContrasenaHash = contrasenaHash,
-                    Rol = request.Rol,
+                    Password = request.Contrasena, // Guardar en texto plano temporalmente
+                    ContrasenaHash = contrasenaHash, // Guardar también el hash para migración futura
+                    Rol = null, // TODO: Mapear rol de string a int según lógica de negocio
                     LicenciaConducir = request.LicenciaConducir,
                     TransmisionHabilitada = request.TransmisionHabilitada,
                     Activo = true,
@@ -119,7 +122,7 @@ namespace back_cabs.CRM.services.Auth
                 {
                     new("sub", nuevoUsuario.Id.ToString()),
                     new("email", nuevoUsuario.Email),
-                    new("rol", nuevoUsuario.Rol),
+                    new("rol", nuevoUsuario.Rol?.ToString() ?? "0"),
                     new("nombre", nuevoUsuario.NombreCompleto)
                 };
 
@@ -166,7 +169,10 @@ namespace back_cabs.CRM.services.Auth
             return new UsuarioResponseDto
             {
                 Id = usuario.Id,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
                 NombreCompleto = usuario.NombreCompleto,
+                Telefono = usuario.Telefono,
                 Email = usuario.Email,
                 Rol = usuario.Rol,
                 Activo = usuario.Activo,
@@ -237,9 +243,22 @@ namespace back_cabs.CRM.services.Auth
                     return null;
                 }
 
-                // Validar contraseña con hash
-                var contrasenaHash = ApiUtilities.GenerateSha256Hash(contrasena);
-                if (usuario.ContrasenaHash != contrasenaHash)
+                // Validar contraseña (soportar tanto Password en texto plano como Hash)
+                bool contrasenaValida = false;
+                
+                // Primero intentar con password en texto plano
+                if (!string.IsNullOrEmpty(usuario.Password) && usuario.Password == contrasena)
+                {
+                    contrasenaValida = true;
+                }
+                // Si no, intentar con hash
+                else if (!string.IsNullOrEmpty(usuario.ContrasenaHash))
+                {
+                    var contrasenaHash = ApiUtilities.GenerateSha256Hash(contrasena);
+                    contrasenaValida = usuario.ContrasenaHash == contrasenaHash;
+                }
+
+                if (!contrasenaValida)
                 {
                     _logger.LogWarning($"Contraseña inválida para usuario: {email}");
                     return null;
@@ -258,9 +277,9 @@ namespace back_cabs.CRM.services.Auth
         /// <summary>
         /// Obtiene un usuario por su ID único
         /// </summary>
-        /// <param name="id">ID único del usuario (Guid)</param>
+        /// <param name="id">ID único del usuario (int)</param>
         /// <returns>Usuario si existe, null si no se encuentra</returns>
-        public async Task<UsuarioAuth?> ObtenerUsuarioPorIdAsync(Guid id)
+        public async Task<UsuarioAuth?> ObtenerUsuarioPorIdAsync(int id)
         {
             try
             {
@@ -291,7 +310,7 @@ namespace back_cabs.CRM.services.Auth
         /// <param name="userId">ID del usuario</param>
         /// <param name="nuevaContrasena">Nueva contraseña en texto plano</param>
         /// <returns>True si se actualizó correctamente, False si no</returns>
-        public async Task<bool> ActualizarContrasenaAsync(Guid userId, string nuevaContrasena)
+        public async Task<bool> ActualizarContrasenaAsync(int userId, string nuevaContrasena)
         {
             try
             {
@@ -318,13 +337,14 @@ namespace back_cabs.CRM.services.Auth
                 var nuevoHash = ApiUtilities.GenerateSha256Hash(nuevaContrasena);
                 
                 // Verificar que la nueva contraseña sea diferente a la actual
-                if (usuario.ContrasenaHash == nuevoHash)
+                if ((usuario.Password == nuevaContrasena) || (usuario.ContrasenaHash == nuevoHash))
                 {
                     _logger.LogWarning("La nueva contraseña es igual a la actual para usuario: {UserId}", userId);
                     return false;
                 }
 
-                // Actualizar la contraseña y fecha de modificación
+                // Actualizar ambos campos de contraseña y fecha de modificación
+                usuario.Password = nuevaContrasena;
                 usuario.ContrasenaHash = nuevoHash;
                 usuario.ActualizarFechaModificacion();
 
