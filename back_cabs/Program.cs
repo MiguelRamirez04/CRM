@@ -27,6 +27,12 @@ builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<back_cabs.CRM.services.Auth.UsuarioAuthService>();
 builder.Services.AddScoped<back_cabs.CRM.validators.Auth.UsuarioRegistroValidator>();
 
+// Registrar servicios CRM de Recepción
+builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+
+// Registrar servicios CRM de Flota
+builder.Services.AddScoped<back_cabs.CRM.services.Fleet.VehiculosService>();
+
 // CORS con configuración de seguridad avanzada
 builder.Services.AddCors(options =>
 {

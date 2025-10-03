@@ -71,6 +71,12 @@ namespace back_cabs.CRM.models.Recepcion
         [Column("RFC")]
         public string? RFC { get; set; }
 
+        /// <summary>
+        /// ID del cliente en el sistema legacy (para compatibilidad)
+        /// </summary>
+        [Column("legacy_client_id")]
+        public int? LegacyClientId { get; set; }
+
         // Propiedades de navegación para Entity Framework
         
         /// <summary>
