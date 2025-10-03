@@ -39,16 +39,18 @@ export class RegisterComponent {
   constructor() {
     this.registerForm = this.fb.group(
       {
-        nombreCompleto: ['', [Validators.required, Validators.minLength(3)]],
-        email: ['', [Validators.required, Validators.email]],
+        nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+        apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+        telefono: ['', [Validators.pattern(/^\d{10}$/)]], // Opcional, 10 dígitos
+        email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
         contrasena: ['', [Validators.required, Validators.minLength(8)]],
         confirmarContrasena: ['', Validators.required],
         rol: [RolUsuario.Recepcion, Validators.required], // Rol por defecto
-        licenciaConducir: [false], // Opcional
+        licenciaConducir: [''], // Opcional, ahora es string
         transmisionHabilitada: [TipoTransmision.Ninguna], // Opcional
       },
       {
-        validators: [passwordMatchValidator], // Se elimina soporteTransmisionValidator()
+        validators: [passwordMatchValidator],
       }
     );
   }
@@ -65,12 +67,14 @@ export class RegisterComponent {
     // Construir payload incluyendo confirmarContrasena y normalizando strings
     const form = this.registerForm.value;
     const payload: RegisterRequest = {
-      nombreCompleto: (form.nombreCompleto || '').trim(),
+      nombre: (form.nombre || '').trim(),
+      apellido: (form.apellido || '').trim(),
+      telefono: form.telefono ? parseInt(form.telefono, 10) : null,
       email: (form.email || '').trim(),
       contrasena: form.contrasena,
       confirmarContrasena: form.confirmarContrasena,
       rol: form.rol,
-      licenciaConducir: !!form.licenciaConducir,
+      licenciaConducir: form.licenciaConducir ? (form.licenciaConducir || '').trim() : null,
       transmisionHabilitada: form.transmisionHabilitada ?? TipoTransmision.Ninguna,
     };
 

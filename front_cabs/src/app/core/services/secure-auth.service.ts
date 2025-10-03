@@ -8,11 +8,16 @@ import { RolUsuario } from '../enums/rol-usuario.enum';
 import { TipoTransmision } from '../enums/tipo-transmision.enum';
 
 export interface User {
-  id: string;
+  id: number;
+  nombre: string;
+  apellido: string;
+  nombreCompleto?: string;
+  telefono?: number | null;
   email: string;
-  name: string;
-  role: string;
-  permissions: string[];
+  rol?: number | null;
+  name?: string; // Mantener para compatibilidad
+  role?: string; // Mantener para compatibilidad
+  permissions?: string[];
 }
 
 export interface LoginRequest {
@@ -21,13 +26,15 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  nombreCompleto: string;
+  nombre: string;
+  apellido: string;
+  telefono?: number | null;
   email: string;
   contrasena: string;
   confirmarContrasena: string; // Enviar confirmación (requerida por el backend)
   rol: RolUsuario;
-  licenciaConducir: boolean;
-  transmisionHabilitada: TipoTransmision;
+  licenciaConducir?: string | null; // Ahora es string (número de licencia)
+  transmisionHabilitada?: TipoTransmision | string | null;
 }
 
 // Respuesta de login del backend (AuthController.Login)
@@ -42,10 +49,13 @@ export interface AuthResponse {
 // Respuesta de registro del backend (RegistroExitosoResponseDto)
 export interface RegistroResponse {
   usuario: {
-    id: string;
-    email: string;
+    id: number;
+    nombre: string;
+    apellido: string;
     nombreCompleto?: string;
-    rol?: string;
+    telefono?: number | null;
+    email: string;
+    rol?: number | null;
     permisos?: string[];
   };
   token?: string;
@@ -148,7 +158,7 @@ export class SecureAuthService {
 
   hasPermission(permission: string): boolean {
     const user = this.getCurrentUser();
-    return user ? user.permissions.includes(permission) : false;
+    return user ? (user.permissions?.includes(permission) ?? false) : false;
   }
 
   hasRole(role: string): boolean {

@@ -18,16 +18,44 @@
     </div>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
-      <!-- Nombre Completo -->
+      <!-- Nombre y Apellido -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+          <input type="text" id="nombre" formControlName="nombre"
+                 placeholder="Juan"
+                 class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+                 [ngClass]="{'border-[#dc3545]': registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched}">
+          <div *ngIf="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched" class="mt-2 text-sm text-[#dc3545]">
+            <span *ngIf="registerForm.get('nombre')?.errors?.['required']">El nombre es obligatorio.</span>
+            <span *ngIf="registerForm.get('nombre')?.errors?.['minlength']">Debe tener al menos 2 caracteres.</span>
+            <span *ngIf="registerForm.get('nombre')?.errors?.['maxlength']">No puede exceder 100 caracteres.</span>
+          </div>
+        </div>
+        <div>
+          <label for="apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+          <input type="text" id="apellido" formControlName="apellido"
+                 placeholder="Pérez García"
+                 class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
+                 [ngClass]="{'border-[#dc3545]': registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched}">
+          <div *ngIf="registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched" class="mt-2 text-sm text-[#dc3545]">
+            <span *ngIf="registerForm.get('apellido')?.errors?.['required']">El apellido es obligatorio.</span>
+            <span *ngIf="registerForm.get('apellido')?.errors?.['minlength']">Debe tener al menos 2 caracteres.</span>
+            <span *ngIf="registerForm.get('apellido')?.errors?.['maxlength']">No puede exceder 100 caracteres.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teléfono (Opcional) -->
       <div>
-        <label for="nombreCompleto" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-        <input type="text" id="nombreCompleto" formControlName="nombreCompleto"
-               placeholder="Juan Pérez"
+        <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono (Opcional)</label>
+        <input type="text" id="telefono" formControlName="telefono"
+               placeholder="5512345678"
+               maxlength="10"
                class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300"
-               [ngClass]="{'border-[#dc3545]': registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched}">
-  <div *ngIf="registerForm.get('nombreCompleto')?.invalid && registerForm.get('nombreCompleto')?.touched" class="mt-2 text-sm text-[#dc3545]">
-          <span *ngIf="registerForm.get('nombreCompleto')?.errors?.['required']">El nombre es obligatorio.</span>
-          <span *ngIf="registerForm.get('nombreCompleto')?.errors?.['minlength']">Debe tener al menos 3 caracteres.</span>
+               [ngClass]="{'border-[#dc3545]': registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched}">
+        <div *ngIf="registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched" class="mt-2 text-sm text-[#dc3545]">
+          <span *ngIf="registerForm.get('telefono')?.errors?.['pattern']">Debe ser un número de 10 dígitos.</span>
         </div>
       </div>
 
@@ -85,9 +113,13 @@
         <div class="border-t border-gray-200 pt-6">
           <h3 class="text-sm font-semibold text-gray-600 mb-4">Información de Conducción (Opcional)</h3>
 
-          <div class="flex items-center mb-4">
-            <input type="checkbox" id="licenciaConducir" formControlName="licenciaConducir" class="h-4 w-4 text-[#667eea] border-gray-300 rounded focus:ring-[#667eea]">
-            <label for="licenciaConducir" class="ml-2 block text-sm text-gray-900">Tengo una licencia de conducir válida</label>
+          <div class="mb-4">
+            <label for="licenciaConducir" class="block text-sm font-medium text-gray-700">Número de Licencia de Conducir (Opcional)</label>
+            <input type="text" id="licenciaConducir" formControlName="licenciaConducir"
+                   placeholder="ABC123456"
+                   maxlength="50"
+                   class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] border-gray-300">
+            <p class="mt-1 text-xs text-gray-500">Ingresa tu número de licencia si la tienes</p>
           </div>
 
           <div>
