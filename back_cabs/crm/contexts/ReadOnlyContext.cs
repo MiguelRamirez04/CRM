@@ -24,11 +24,6 @@ public class ReadOnlyContext : DbContext
     public DbSet<UsuarioAuth> UsuariosAuth { get; set; } = null!;
 
     /// <summary>
-    /// Clientes del sistema CRM
-    /// </summary>
-    public DbSet<Cliente> Clientes { get; set; } = null!;
-
-    /// <summary>
     /// Órdenes de trabajo del módulo de Recepción
     /// </summary>
     public DbSet<OrdenTrabajo> OrdenesTrabajo { get; set; } = null!;
@@ -59,27 +54,35 @@ public class ReadOnlyContext : DbContext
         {
             entity.HasNoKey(); // Es una vista sin clave primaria
             entity.ToView("VwClientesCompletos"); // Mapea a la vista en la BD
+            
+            // Mapeo explícito de columnas - basado en los errores mostrados
+            entity.Property(e => e.ClienteId).HasColumnName("id");
+            entity.Property(e => e.NombreComercial).HasColumnName("nombre");
+            entity.Property(e => e.RFC).HasColumnName("rfc");
+            entity.Property(e => e.Activo).HasColumnName("activo");
+            entity.Property(e => e.LegacyClientId).HasColumnName("id_cliente_legacy");
+            entity.Property(e => e.Calle).HasColumnName("calle");
+            entity.Property(e => e.NumeroExterior).HasColumnName("numero");
+            entity.Property(e => e.Colonia).HasColumnName("colonia");
+            entity.Property(e => e.CodigoPostal).HasColumnName("cp");
+            entity.Property(e => e.Ciudad).HasColumnName("ciudad");
+            entity.Property(e => e.Estado).HasColumnName("estado");
+            entity.Property(e => e.Pais).HasColumnName("pais");
+            entity.Property(e => e.TelefonoPrincipal).HasColumnName("telefono");
+            entity.Property(e => e.EmailPrincipal).HasColumnName("email");
         });
 
-        // Configuración de la entidad Cliente
-        modelBuilder.Entity<Cliente>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.RFC).HasMaxLength(13);
-            entity.HasIndex(e => e.RFC);
-        });
-
-        // Configuración de la entidad OrdenTrabajo (ops.ordenes_trabajo)
+        // Configuración de la entidad OrdenTrabajo (ops_ordenes_trabajo)
         modelBuilder.Entity<OrdenTrabajo>(entity =>
         {
-            entity.ToTable("ordenes_trabajo", "ops");
+            entity.ToTable("ops_ordenes_trabajo");
             entity.HasKey(e => e.Id);
 
             // Configurar columnas con mapeo exacto a SQL Server
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.ClienteId).HasColumnName("cliente_id").IsRequired();
+            entity.Property(e => e.NuevoCliente).HasColumnName("nuevo_cliente");
+            entity.Property(e => e.NombreCliente).HasColumnName("nombre_cliente").HasMaxLength(120);
             entity.Property(e => e.CreadoPorUserId).HasColumnName("creado_por_user_id").IsRequired();
             entity.Property(e => e.AsignadaAUserId).HasColumnName("asignada_a_user_id");
             entity.Property(e => e.Notas).HasColumnName("notas").HasColumnType("NVARCHAR(MAX)");
@@ -98,13 +101,7 @@ public class ReadOnlyContext : DbContext
             entity.Property(e => e.CostoReal).HasColumnName("costo_real").HasColumnType("DECIMAL(12,2)");
             entity.Property(e => e.CostoEstimado).HasColumnName("costo_estimado").HasColumnType("DECIMAL(12,2)");
 
-            // Relaciones con Foreign Keys
-            entity.HasOne(e => e.Cliente)
-                  .WithMany()
-                  .HasForeignKey(e => e.ClienteId)
-                  .HasConstraintName("FK_ordenes_trabajo_cliente")
-                  .OnDelete(DeleteBehavior.Restrict);
-
+            // Relaciones con Foreign Keys (solo usuarios, no hay modelo Cliente)
             entity.HasOne(e => e.CreadoPor)
                   .WithMany()
                   .HasForeignKey(e => e.CreadoPorUserId)
@@ -138,29 +135,6 @@ public class ReadOnlyContext : DbContext
             entity.Property(e => e.Observaciones).HasColumnName("observaciones").HasColumnType("NVARCHAR(MAX)");
 
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
-        });
-        
-
-        // Configuración de la vista VwClientesCompletos
-        modelBuilder.Entity<VwClientesCompletos>(entity =>
-        {
-            entity.ToTable("VwClientesCompletos");
-            entity.HasKey(e => e.ClienteId);
-
-            entity.Property(e => e.ClienteId).HasColumnName("cliente_id");
-            entity.Property(e => e.NombreComercial).HasColumnName("nombre_comercial").HasMaxLength(100);
-            entity.Property(e => e.RFC).HasColumnName("rfc").HasMaxLength(13);
-            entity.Property(e => e.Activo).HasColumnName("activo");
-            entity.Property(e => e.LegacyClientId).HasColumnName("legacy_client_id");
-            entity.Property(e => e.Calle).HasColumnName("calle").HasMaxLength(100);
-            entity.Property(e => e.NumeroExterior).HasColumnName("numero_exterior").HasMaxLength(10);
-            entity.Property(e => e.Colonia).HasColumnName("colonia").HasMaxLength(100);
-            entity.Property(e => e.CodigoPostal).HasColumnName("codigo_postal").HasMaxLength(5);
-            entity.Property(e => e.Ciudad).HasColumnName("ciudad").HasMaxLength(50);
-            entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(50);
-            entity.Property(e => e.Pais).HasColumnName("pais").HasMaxLength(50);
-            entity.Property(e => e.TelefonoPrincipal).HasColumnName("telefono_principal").HasMaxLength(20);
-            entity.Property(e => e.EmailPrincipal).HasColumnName("email_principal").HasMaxLength(100);
         });
 
     }

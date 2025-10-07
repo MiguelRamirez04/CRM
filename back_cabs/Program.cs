@@ -43,6 +43,13 @@ builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
+builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+
+// Registrar la conexión a la base de datos para inyectar IDbConnection
+builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
+    new Microsoft.Data.SqlClient.SqlConnection(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
 // Validación de tokens JWT en rutas específicas
 builder.Services.AddAuthorization(options =>
@@ -54,7 +61,9 @@ builder.Services.AddAuthorization(options =>
 // Configuración de Health Checks
 builder.Services.AddHealthChecks()
     .AddCheck("API Status", () => HealthCheckResult.Healthy("API is up and running"))
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "Database")
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+        throw new InvalidOperationException("Connection string 'DefaultConnection' not found."), 
+        name: "Database")
     .AddCheck("Custom Health Check", () =>
     {
         // Lógica de verificación personalizada

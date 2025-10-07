@@ -11,6 +11,7 @@
 
 using back_cabs.CRM.services;
 using Microsoft.AspNetCore.Mvc;
+using back_cabs.CRM.DTOs;
 
 namespace back_cabs.CRM.controllers
 {
@@ -28,27 +29,39 @@ namespace back_cabs.CRM.controllers
         }
 
         /// <summary>
-        /// Obtiene una lista de todos los clientes completos.
+        /// Obtiene una lista paginada de clientes completos.
         /// </summary>
+        /// <param name="busqueda">Término de búsqueda opcional para filtrar por nombre</param>
+        /// <param name="pagina">Número de página (comienza en 1)</param>
+        /// <param name="porPagina">Cantidad de resultados por página</param>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetClientesPaginados(
+            [FromQuery] string? busqueda = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int porPagina = 20)
         {
-            var clientes = await _service.GetAllAsync();
-            return Ok(clientes);
-        }
+            try
+            {
+                _logger.LogInformation("Obteniendo clientes completos con paginación. Página {Pagina}, Resultados por página {PorPagina}, Búsqueda: {Busqueda}",
+                    pagina, porPagina, busqueda ?? "ninguna");
 
-        /// <summary>
-        /// Busca clientes por un término de búsqueda.
-        /// </summary>
-        /// <param name="q">Término de búsqueda para nombre, RFC, email o teléfono.</param>
-        [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Search([FromQuery] string q)
-        {
-            _logger.LogInformation("Iniciando búsqueda de clientes con query: {Query}", q);
-            var clientes = await _service.SearchAsync(q);
-            return Ok(clientes);
+                var request = new ClientesCompletosPaginadoRequestDto
+                {
+                    NombreBusqueda = busqueda,
+                    Pagina = pagina,
+                    ResultadosPorPagina = porPagina
+                };
+
+                var resultado = await _service.GetClientesPaginadosAsync(request);
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener clientes: {Message}", ex.Message);
+                return StatusCode(500, new { mensaje = "Error interno al procesar la solicitud" });
+            }
         }
     }
 }

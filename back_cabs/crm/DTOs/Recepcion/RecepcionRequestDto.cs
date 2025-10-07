@@ -126,38 +126,30 @@ namespace back_cabs.CRM.DTOs.Recepcion
         [JsonPropertyName("FacturaFolio")]
         public int? FacturaFolio { get; set; }
 
-        /// <summary>
-        ///     Campo para registrar fecha de creacion de la orden.
-        /// </summary>
-        [JsonPropertyName("CreadoEn")]
-        public DateTime CreadoEn { get; set; }
+        // Nota: CreadoEn y ActualizadoEn se generan automáticamente por el sistema
+        // No se incluyen en el DTO de creación
 
         /// <summary>
-        ///     Campo para registrar fecha de actualizacion de la orden.
+        ///  Campo para establecer el costo real de la asesoria (opcional en creación)
         /// </summary>
-        [JsonPropertyName("ActualizadoEn")]
-        public DateTime ActualizadoEn { get; set; }
-
-        /// <summary>
-        ///  Campo para establecer el costo real de la asesoria
-        /// </summary>
-        [Required(ErrorMessage = "Se requiere establecer el costo real de la orden.")]
-        [JsonPropertyName("CostoReal")]
-        public int? CostoReal { get; set; }
+        [Range(0, double.MaxValue, ErrorMessage = "El costo real debe ser mayor o igual a 0.")]
+        [JsonPropertyName("costoReal")]
+        public decimal? CostoReal { get; set; }
 
         /// <summary>
         ///     Campo para establecer el costo aproximado de la asesoria
         /// </summary>
-        [Required(ErrorMessage = "Es necesario colocar el costo estimado de la orden.")]
-        [JsonPropertyName("CostoEstimado")]
-        public int? CostoEstimado { get; set; }
+        [Range(0, double.MaxValue, ErrorMessage = "El costo estimado debe ser mayor o igual a 0.")]
+        [JsonPropertyName("costoEstimado")]
+        public decimal? CostoEstimado { get; set; }
         
         /// <summary>
         ///     Campo para registrar el id del usuario(asesor) que va a atender la asesoria.
         /// </summary>
         [Required(ErrorMessage = "El ID del usuario que va a atender la orden es necesario.")]
-        [JsonPropertyName("id_trabajador")]
-        public int id_usuario { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "El ID del usuario debe ser mayor a 0.")]
+        [JsonPropertyName("id_usuario")]
+        public int IdUsuario { get; set; }
 
 
     }
@@ -203,14 +195,17 @@ namespace back_cabs.CRM.DTOs.Recepcion
         [JsonPropertyName("FacturaFolio")]
         public int? FacturaFolio { get; set; }
 
+        [Range(0, double.MaxValue, ErrorMessage = "El costo real debe ser mayor o igual a 0.")]
         [JsonPropertyName("costoReal")]
-        public int? CostoReal { get; set; }
+        public decimal? CostoReal { get; set; }
 
+        [Range(0, double.MaxValue, ErrorMessage = "El costo estimado debe ser mayor o igual a 0.")]
         [JsonPropertyName("costoEstimado")]
-        public int? CostoEstimado { get; set; }
+        public decimal? CostoEstimado { get; set; }
 
+        [Range(1, int.MaxValue, ErrorMessage = "El ID del usuario debe ser mayor a 0.")]
         [JsonPropertyName("id_usuario")]
-        public int id_usuario { get; set; }
+        public int? IdUsuario { get; set; }
 
     }
 
@@ -302,13 +297,13 @@ namespace back_cabs.CRM.DTOs.Recepcion
         /// Campo de costo final de la asesoria.
         /// </summary>
         [JsonPropertyName("costoReal")]
-        public int? CostoReal { get; init; }
+        public decimal? CostoReal { get; init; }
 
         /// <summary>
         /// Campo de costo aproximado de la asesoria.
         /// </summary>
         [JsonPropertyName("costoEstimado")]
-        public int? CostoEstimado { get; init; }
+        public decimal? CostoEstimado { get; init; }
 
         /// <summary>
         /// Marca de tiempo de cuándo fue creada la orden (generada por el sistema).
@@ -325,8 +320,8 @@ namespace back_cabs.CRM.DTOs.Recepcion
         /// <summary>
         /// Campo de agente quien atendió de la asesoria.
         /// </summary>
-        [JsonPropertyName("Agente")]
-        public int id_usuario { get; init; }
+        [JsonPropertyName("idUsuario")]
+        public int IdUsuario { get; init; }
     }
 }
 

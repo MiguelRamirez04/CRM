@@ -99,18 +99,25 @@ namespace back_cabs.CRM.services.Recepcion
                 _logger.LogInformation("Creando nueva orden de trabajo");
 
                 // Validar que el usuario existe
-                var usuarioExiste = await _readContext.UsuariosAuth.AnyAsync(u => u.Id == request.id_usuario);
+                var usuarioExiste = await _readContext.UsuariosAuth.AnyAsync(u => u.Id == request.IdUsuario);
                 if (!usuarioExiste)
-                    throw new ArgumentException($"Usuario con ID {request.id_usuario} no existe");
+                    throw new ArgumentException($"Usuario con ID {request.IdUsuario} no existe");
 
-                // Obtener cliente por LegacyClientId o crear uno por defecto
-                var clienteId = await ObtenerClienteIdPorLegacyIdAsync(request.LegacyClientId);
+                // Validar cliente legacy si se proporciona
+                if (request.LegacyClientId.HasValue)
+                {
+                    var clienteLegacyExiste = await ValidarClienteLegacyAsync(request.LegacyClientId);
+                    if (!clienteLegacyExiste)
+                        throw new ArgumentException($"Cliente legacy con ID {request.LegacyClientId} no encontrado en el sistema legacy");
+                }
 
                 var nuevaOrden = new OrdenTrabajo
                 {
-                    ClienteId = clienteId,
-                    CreadoPorUserId = request.id_usuario,
-                    AsignadaAUserId = request.id_usuario, // Por ahora mismo usuario
+                    ClienteId = request.LegacyClientId, // Para clientes legacy, usar el LegacyClientId
+                    NuevoCliente = !request.LegacyClientId.HasValue, // TRUE si es cliente nuevo (sin LegacyClientId)
+                    NombreCliente = !request.LegacyClientId.HasValue ? "Cliente Nuevo - Pendiente de Captura" : null, // Solo para clientes nuevos
+                    CreadoPorUserId = request.IdUsuario,
+                    AsignadaAUserId = request.IdUsuario, // Por ahora mismo usuario
                     Notas = request.Notas,
                     CitaProgramadaInicio = request.CitaProgramadaInicio,
                     CitaProgramadaFin = request.CitaProgramadaFin,
@@ -124,8 +131,8 @@ namespace back_cabs.CRM.services.Recepcion
                         ? (request.EstadoFacturado.Value ? "FACTURADO" : "PENDIENTE") 
                         : null,
                     FacturaFolio = request.FacturaFolio?.ToString(), // int? a string?
-                    CostoEstimado = request.CostoEstimado.HasValue ? (decimal)request.CostoEstimado.Value : null,
-                    CostoReal = request.CostoReal.HasValue ? (decimal)request.CostoReal.Value : null,
+                    CostoEstimado = request.CostoEstimado,
+                    CostoReal = request.CostoReal,
                     CreadoEn = DateTime.UtcNow,
                     ActualizadoEn = DateTime.UtcNow
                 };
@@ -164,10 +171,11 @@ namespace back_cabs.CRM.services.Recepcion
                     orden.EstadoFacturado = request.EstadoFacturado.Value ? "FACTURADO" : "PENDIENTE";
                 if (request.RequiereFactura.HasValue) orden.RequiereFactura = request.RequiereFactura.Value;
                 if (request.FacturaFolio.HasValue) orden.FacturaFolio = request.FacturaFolio.ToString();
-                if (request.CostoReal.HasValue) orden.CostoReal = (decimal)request.CostoReal.Value;
-                if (request.CostoEstimado.HasValue) orden.CostoEstimado = (decimal)request.CostoEstimado.Value;
+                if (request.CostoReal.HasValue) orden.CostoReal = request.CostoReal.Value;
+                if (request.CostoEstimado.HasValue) orden.CostoEstimado = request.CostoEstimado.Value;
 
-                orden.AsignadaAUserId = request.id_usuario;
+                if (request.IdUsuario.HasValue)
+                    orden.AsignadaAUserId = request.IdUsuario.Value;
                 orden.ActualizadoEn = DateTime.UtcNow;
 
                 await _writeContext.SaveChangesAsync();
@@ -208,38 +216,18 @@ namespace back_cabs.CRM.services.Recepcion
         // =====================================================================================
 
         /// <summary>
-        /// Obtiene ClienteId por LegacyClientId, o crea uno por defecto
+        /// Valida si existe un cliente legacy por LegacyClientId en la vista ViewClientesCompletos
         /// </summary>
-        private async Task<int> ObtenerClienteIdPorLegacyIdAsync(int? legacyClientId)
+        private async Task<bool> ValidarClienteLegacyAsync(int? legacyClientId)
         {
-            if (legacyClientId.HasValue)
-            {
-                // Buscar cliente por legacy_client_id
-                var cliente = await _readContext.Clientes
-                    .FirstOrDefaultAsync(c => c.LegacyClientId == legacyClientId.Value);
-                    
-                if (cliente != null)
-                    return cliente.Id;
-            }
+            if (!legacyClientId.HasValue)
+                return false;
 
-            // Si no encuentra, crear un cliente por defecto o usar el primero disponible
-            var primerCliente = await _readContext.Clientes.FirstOrDefaultAsync();
-            if (primerCliente != null)
-                return primerCliente.Id;
-
-            // Si no hay clientes, crear uno por defecto
-            var clienteDefault = new Cliente
-            {
-                Nombre = "Cliente Por Defecto",
-                Apellido = "Sistema",
-                LegacyClientId = legacyClientId,
-                Activo = true,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _writeContext.Clientes.Add(clienteDefault);
-            await _writeContext.SaveChangesAsync();
-            return clienteDefault.Id;
+            // Buscar en la vista de clientes completos (solo lectura)
+            var clienteLegacy = await _readContext.ClientesCompletos
+                .FirstOrDefaultAsync(c => c.LegacyClientId == legacyClientId.Value);
+                
+            return clienteLegacy != null;
         }
 
         /// <summary>
@@ -255,17 +243,17 @@ namespace back_cabs.CRM.services.Recepcion
                 CitaProgramadaFin = orden.CitaProgramadaFin,
                 Modalidad = orden.Modalidad,
                 TipoOrden = orden.TipoOrden,
-                LegacyClientId = orden.ClienteId, // Mapear ClienteId nuevo a LegacyClientId viejo
+                LegacyClientId = orden.ClienteId ?? 0, // Mapear ClienteId (nullable) a LegacyClientId, usar 0 si es null
                 Prioridad = orden.Prioridad,
                 Estado = orden.Estado == "ASIGNADA" || orden.Estado == "EN_CURSO", // string a bool
                 UbicacionText = orden.UbicacionText,
                 EstadoFacturado = orden.EstadoFacturado == "FACTURADO", // string a bool
                 RequiereFactura = orden.RequiereFactura,
-                CostoReal = orden.CostoReal.HasValue ? (int)orden.CostoReal.Value : null, // decimal a int
-                CostoEstimado = orden.CostoEstimado.HasValue ? (int)orden.CostoEstimado.Value : null,
+                CostoReal = orden.CostoReal, // mantener como decimal
+                CostoEstimado = orden.CostoEstimado,
                 CreadoEn = orden.CreadoEn,
                 ActualizadoEn = orden.ActualizadoEn,
-                id_usuario = orden.AsignadaAUserId ?? orden.CreadoPorUserId // Mapear a campo viejo
+                IdUsuario = orden.AsignadaAUserId ?? orden.CreadoPorUserId // Mapear a campo corregido
             };
         }
     }

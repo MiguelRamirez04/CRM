@@ -1,3 +1,5 @@
+//file: back_cabs/CRM/models/ViewClientesCompletos.cs
+
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,3 +1,4 @@
+// file: back_cabs/CRM/models/Recepcion/OrdenTrabajo.cs
 // =====================================================================================
 // ENTIDAD ORDEN TRABAJO - OrdenTrabajo.cs
 // =====================================================================================
@@ -22,9 +23,9 @@ namespace back_cabs.CRM.models.Recepcion
 {
     /// <summary>
     /// Entidad que representa una orden de trabajo
-    /// Mapea a: ops.ordenes_trabajo en SQL Server
+    /// Mapea a: ops_ordenes_trabajo en SQL Server
     /// </summary>
-    [Table("ordenes_trabajo", Schema = "ops")]
+    [Table("ops_ordenes_trabajo")]
     public class OrdenTrabajo
     {
         /// <summary>
@@ -35,12 +36,26 @@ namespace back_cabs.CRM.models.Recepcion
         public int Id { get; set; }
 
         /// <summary>
-        /// ID del cliente asociado a la orden
-        /// Mapea a: cliente_id (INT NOT NULL)
+        /// Indica si el cliente es nuevo (local) o viene de la base legacy
+        /// Mapea a: nuevo_cliente (BIT NULL)
         /// </summary>
-        [Required]
+        [Column("nuevo_cliente")]
+        public bool? NuevoCliente { get; set; }
+
+        /// <summary>
+        /// Nombre del cliente (solo si NuevoCliente = true)
+        /// Mapea a: nombre_cliente (VARCHAR(120) NULL)
+        /// </summary>
+        [StringLength(120)]
+        [Column("nombre_cliente")]
+        public string? NombreCliente { get; set; }
+
+        /// <summary>
+        /// ID del cliente legacy (solo si NuevoCliente = false o null)
+        /// Mapea a: cliente_id (INT NULL) - referencia a catalog_clientes
+        /// </summary>
         [Column("cliente_id")]
-        public int ClienteId { get; set; }
+        public int? ClienteId { get; set; }
 
         /// <summary>
         /// ID del usuario que creó la orden
@@ -174,12 +189,6 @@ namespace back_cabs.CRM.models.Recepcion
         // Propiedades de navegación para Entity Framework
         
         /// <summary>
-        /// Cliente asociado a esta orden
-        /// </summary>
-        [ForeignKey("ClienteId")]
-        public virtual Cliente? Cliente { get; set; }
-
-        /// <summary>
         /// Usuario que creó la orden
         /// </summary>
         [ForeignKey("CreadoPorUserId")]
@@ -190,6 +199,15 @@ namespace back_cabs.CRM.models.Recepcion
         /// </summary>
         [ForeignKey("AsignadaAUserId")]
         public virtual UsuarioAuth? AsignadaA { get; set; }
+
+        /// <summary>
+        /// Obtiene el nombre del cliente (ya sea nuevo o legacy) - Propiedad calculada
+        /// </summary>
+        [NotMapped]
+        public string NombreClienteCompleto => 
+            NuevoCliente == true ? 
+                (NombreCliente ?? "Cliente sin nombre") : 
+                $"Cliente Legacy ID: {ClienteId}";
 
         /// <summary>
         /// Actualiza la fecha de modificación al momento actual

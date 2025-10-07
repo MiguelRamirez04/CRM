@@ -23,11 +23,6 @@ public class WriteContext : DbContext
     public DbSet<UsuarioAuth> UsuariosAuth { get; set; } = null!;
 
     /// <summary>
-    /// Clientes del sistema CRM
-    /// </summary>
-    public DbSet<Cliente> Clientes { get; set; } = null!;
-
-    /// <summary>
     /// Órdenes de trabajo del módulo de Recepción
     /// </summary>
     public DbSet<OrdenTrabajo> OrdenesTrabajo { get; set; } = null!;
@@ -48,25 +43,17 @@ public class WriteContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
         });
 
-        // Configuración de la entidad Cliente
-        modelBuilder.Entity<Cliente>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.RFC).HasMaxLength(13);
-            entity.HasIndex(e => e.RFC);
-        });
-
-        // Configuración de la entidad OrdenTrabajo (ops.ordenes_trabajo)
+        // Configuración de la entidad OrdenTrabajo (ops_ordenes_trabajo)
         modelBuilder.Entity<OrdenTrabajo>(entity =>
         {
-            entity.ToTable("ordenes_trabajo", "ops");
+            entity.ToTable("ops_ordenes_trabajo");
             entity.HasKey(e => e.Id);
             
             // Configurar columnas con mapeo exacto a SQL Server
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.ClienteId).HasColumnName("cliente_id").IsRequired();
+            entity.Property(e => e.NuevoCliente).HasColumnName("nuevo_cliente");
+            entity.Property(e => e.NombreCliente).HasColumnName("nombre_cliente").HasMaxLength(120);
+            entity.Property(e => e.ClienteId).HasColumnName("cliente_id");
             entity.Property(e => e.CreadoPorUserId).HasColumnName("creado_por_user_id").IsRequired();
             entity.Property(e => e.AsignadaAUserId).HasColumnName("asignada_a_user_id");
             entity.Property(e => e.Notas).HasColumnName("notas").HasColumnType("NVARCHAR(MAX)");
@@ -85,13 +72,7 @@ public class WriteContext : DbContext
             entity.Property(e => e.CostoReal).HasColumnName("costo_real").HasColumnType("DECIMAL(12,2)");
             entity.Property(e => e.CostoEstimado).HasColumnName("costo_estimado").HasColumnType("DECIMAL(12,2)");
 
-            // Relaciones con Foreign Keys
-            entity.HasOne(e => e.Cliente)
-                  .WithMany()
-                  .HasForeignKey(e => e.ClienteId)
-                  .HasConstraintName("FK_ordenes_trabajo_cliente")
-                  .OnDelete(DeleteBehavior.Restrict);
-
+            // Relaciones con Foreign Keys (solo usuarios, no hay modelo Cliente)
             entity.HasOne(e => e.CreadoPor)
                   .WithMany()
                   .HasForeignKey(e => e.CreadoPorUserId)
