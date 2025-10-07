@@ -53,11 +53,13 @@ namespace back_cabs.CRM.DTOs.Auth
         public string Apellido { get; set; } = string.Empty;
 
         /// <summary>
-        /// Teléfono del usuario (opcional)
+        /// Teléfono del usuario
         /// </summary>
         /// <example>5512345678</example>
+        [Required(ErrorMessage = "El teléfono es obligatorio")]
+        [Range(1000000000, 9999999999, ErrorMessage = "El teléfono debe ser un número válido de 10 dígitos")]
         [JsonPropertyName("telefono")]
-        public string? Telefono { get; set; }
+        public int Telefono { get; set; }
 
         /// <summary>
         /// Email único del usuario (será usado para login)

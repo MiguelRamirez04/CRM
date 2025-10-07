@@ -25,6 +25,7 @@ using back_cabs.CRM.DTOs.Auth;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.contexts;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace back_cabs.CRM.validators.Auth
 {
@@ -65,11 +66,15 @@ namespace back_cabs.CRM.validators.Auth
                 .Matches(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$")
                 .WithMessage("El apellido solo puede contener letras y espacios");
 
-            // Validación de teléfono (opcional)
+            // Validación de teléfono (requerido, debe ser un número válido de 10 dígitos)
             RuleFor(x => x.Telefono)
-                .Must(telefono => string.IsNullOrEmpty(telefono) || (telefono.Length == 10 && telefono.All(char.IsDigit)))
-                .WithMessage("El teléfono debe ser un número de 10 dígitos")
-                .When(x => !string.IsNullOrEmpty(x.Telefono));
+                .NotEmpty()
+                .WithMessage("El teléfono es obligatorio")
+                .Must(telefono => {
+                    var telefonoStr = telefono.ToString();
+                    return telefonoStr.Length == 10 && telefonoStr.All(char.IsDigit);
+                })
+                .WithMessage("El teléfono debe ser un número válido de 10 dígitos (ejemplo: 5512345678)");
 
             // Validación de email
             RuleFor(x => x.Email)

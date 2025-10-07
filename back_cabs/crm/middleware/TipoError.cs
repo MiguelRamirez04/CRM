@@ -101,7 +101,7 @@
 // - Thread-safe y puede usarse en contextos concurrentes
 // - No contiene lógica de negocio, solo definiciones de tipos de error
 
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 /// <summary>
 /// Enumeración de tipos de error con sus códigos HTTP asociados.

@@ -93,7 +93,7 @@ using System.Text.Json;
 // - Thread-safe para uso concurrente
 // - No afectan el rendimiento en operaciones normales
 
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 /// <summary>
 /// Filtro de excepciones para APIs que maneja errores no capturados en controladores.

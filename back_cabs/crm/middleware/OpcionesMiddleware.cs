@@ -22,7 +22,7 @@
 // - Facilita cambios de comportamiento sin modificar el código de los middlewares
 // - Permite escenarios avanzados de logging y seguridad
 // =====================================================================================
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 
 /// <summary>

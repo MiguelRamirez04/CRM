@@ -23,7 +23,7 @@
 
 using back_cabs.CRM.DTOs.Recepcion;
 using back_cabs.CRM.services.Recepcion;
-using back_cabs.middleware;
+using back_cabs.CRM.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;

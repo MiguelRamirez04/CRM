@@ -26,7 +26,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 
 /// <summary>

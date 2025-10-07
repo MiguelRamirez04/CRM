@@ -24,7 +24,7 @@
 // =====================================================================================
 using FluentValidation;
 
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 
 /// <summary>

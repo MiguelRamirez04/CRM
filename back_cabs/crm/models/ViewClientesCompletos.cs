@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
+namespace back_cabs.CRM.models;
+
 /// <summary>
 /// Modelo para la vista de solo lectura VwClientesCompletos
 /// </summary>
 [Keyless]
-[Table("VwClientesCompletos")]
 public class VwClientesCompletos
 {
     public int ClienteId { get; set; }

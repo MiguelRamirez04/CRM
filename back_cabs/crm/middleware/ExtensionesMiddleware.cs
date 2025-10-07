@@ -86,9 +86,9 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace back_cabs.middleware
-{
-    public static class MiddlewareExtensions
+namespace back_cabs.CRM.Middleware;
+
+public static class MiddlewareExtensions
 {
     /// <summary>
     /// Agrega el middleware de manejo de errores global al pipeline
@@ -225,5 +225,4 @@ namespace back_cabs.middleware
                 context.Request.Path);
         });
     }
-}
 }

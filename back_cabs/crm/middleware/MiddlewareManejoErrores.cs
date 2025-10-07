@@ -96,7 +96,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
-namespace back_cabs.middleware;
+namespace back_cabs.CRM.Middleware;
 
 /// <summary>
 /// Middleware para el manejo global de errores en la aplicación.

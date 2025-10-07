@@ -1,7 +1,18 @@
+using System.Text;
 using CRM.Config;
 using Serilog;
+using back_cabs.CRM.contexts;
+using back_cabs.CRM.services;
+using back_cabs.CRM.services.Auth;
+using back_cabs.CRM.services.Fleet;
 using back_cabs.services;
-using back_cabs.middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
+using back_cabs.CRM.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,20 +31,38 @@ builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 // Servicios básicos de ASP.NET Core
 builder.Services.AddControllers();
 
-// Registrar servicios personalizados
+// Inyección de contextos de base de datos
+builder.Services.AddDbContext<ReadOnlyContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContext<WriteContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Inyección de servicios de la aplicación
 builder.Services.AddScoped<ServicioJwt>();
+builder.Services.AddScoped<UsuarioAuthService>();
+builder.Services.AddScoped<VehiculosService>();
+builder.Services.AddScoped<ClientesCompletosService>();
 
-// Registrar servicios CRM de autenticación
-builder.Services.AddScoped<back_cabs.CRM.services.Auth.UsuarioAuthService>();
-builder.Services.AddScoped<back_cabs.CRM.validators.Auth.UsuarioRegistroValidator>();
+// Validación de tokens JWT en rutas específicas
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdministratorRole", policy => policy.RequireRole("admin"));
+    options.AddPolicy("RequireUserRole", policy => policy.RequireRole("user", "admin"));
+});
 
-// Registrar servicios CRM de Recepción
-builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+// Configuración de Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck("API Status", () => HealthCheckResult.Healthy("API is up and running"))
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), name: "Database")
+    .AddCheck("Custom Health Check", () =>
+    {
+        // Lógica de verificación personalizada
+        bool healthCheckPassed = true; // Reemplazar con lógica real
+        return healthCheckPassed ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy();
+    });
 
-// Registrar servicios CRM de Flota
-builder.Services.AddScoped<back_cabs.CRM.services.Fleet.VehiculosService>();
-
-// CORS con configuración de seguridad avanzada
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SecureFrontend", policy =>
@@ -74,55 +103,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API V1");
-        c.RoutePrefix = "swagger";
-        c.EnableTryItOutByDefault();
-        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List);
-        c.DefaultModelsExpandDepth(-1); // Ocultar modelos por defecto
-    });
-}
-
 // Middleware pipeline con seguridad mejorada
-app.UseHttpsRedirection();
-
-// Middleware de manejo de errores
-app.UseMiddleware<MiddlewareManejoErrores>();
-
-// Headers de seguridad
-app.Use(async (context, next) =>
-{
-    // Prevenir clickjacking
-    context.Response.Headers["X-Frame-Options"] = "DENY";
-    
-    // Prevenir MIME sniffing
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    
-    // XSS Protection
-    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-    
-    // Content Security Policy
-    context.Response.Headers["Content-Security-Policy"] = 
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
-
-    // HSTS (solo en producción)
-    if (app.Environment.IsProduction())
-    {
-        context.Response.Headers["Strict-Transport-Security"] =
-            "max-age=31536000; includeSubDomains";
-        
-    }
-    
-    // Referrer Policy
-    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    
-    await next();
-});
+app.UseGlobalErrorHandling();
+app.UseSecurityHeaders();
+app.UseRequestResponseLogging();
 
 // CORS (usar política apropiada según el entorno)
 var corsPolicy = app.Environment.IsProduction() ? "Production" : "SecureFrontend";
@@ -131,6 +115,17 @@ app.UseCors(corsPolicy);
 // Autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Swagger UI (solo en desarrollo y staging)
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API v1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
 // Health checks
 app.UseHealthChecksConfiguration();

@@ -22,7 +22,7 @@ using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Auth;
 using back_cabs.CRM.models.Auth;
 using back_cabs.CRM.validators.Auth;
-using back_cabs.middleware;
+using back_cabs.CRM.Middleware;
 using back_cabs.services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -89,7 +89,7 @@ namespace back_cabs.CRM.services.Auth
                 }
 
                 // PASO 3: CREAR HASH SEGURO DE LA CONTRASEÑA
-                var contrasenaHash = ApiUtilities.GenerateSha256Hash(request.Contrasena);
+                var contrasenaHash = back_cabs.CRM.Middleware.ApiUtilities.GenerateSha256Hash(request.Contrasena);
                 _logger.LogDebug("Hash de contraseña generado para usuario: {Email}", request.Email);
 
                 // PASO 4: CREAR ENTIDAD DE USUARIO
@@ -253,7 +253,7 @@ namespace back_cabs.CRM.services.Auth
                 // Si no, intentar con hash
                 else if (!string.IsNullOrEmpty(usuario.Password))
                 {
-                    var contrasenaHash = ApiUtilities.GenerateSha256Hash(contrasena);
+                    var contrasenaHash = back_cabs.CRM.Middleware.ApiUtilities.GenerateSha256Hash(contrasena);
                     contrasenaValida = usuario.Password == contrasenaHash;
                 }
 
@@ -333,7 +333,7 @@ namespace back_cabs.CRM.services.Auth
                 }
 
                 // Generar hash de la nueva contraseña
-                var nuevoHash = ApiUtilities.GenerateSha256Hash(nuevaContrasena);
+                var nuevoHash = back_cabs.CRM.Middleware.ApiUtilities.GenerateSha256Hash(nuevaContrasena);
                 
                 // Verificar que la nueva contraseña sea diferente a la actual
                 if (usuario.Password == nuevoHash)
@@ -365,6 +365,86 @@ namespace back_cabs.CRM.services.Auth
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al actualizar contraseña para usuario: {UserId}", userId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Autentica un usuario con sus credenciales
+        /// </summary>
+        /// <param name="request">Datos de login del usuario</param>
+        /// <returns>Response con token JWT y datos del usuario si el login es exitoso</returns>
+        public async Task<LoginExitosoResponseDto?> LoginAsync(UsuarioLoginRequestDto request)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando proceso de login para email: {Email}", request.Email);
+
+                // Validar credenciales
+                var usuario = await ValidarCredencialesAsync(request.Email, request.Contrasena);
+                
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Login fallido: credenciales inválidas para email: {Email}", request.Email);
+                    return null;
+                }
+
+                // Verificar si el usuario está activo
+                if (!usuario.Activo)
+                {
+                    _logger.LogWarning("Login fallido: usuario inactivo para email: {Email}", request.Email);
+                    return null;
+                }
+
+                // Configurar duración del token
+                var duracionToken = request.RecordarMe ? TimeSpan.FromDays(30) : TimeSpan.FromHours(12);
+                var expiraEn = DateTime.UtcNow.Add(duracionToken);
+
+                // Crear claims del usuario
+                var claims = new List<System.Security.Claims.Claim>
+                {
+                    new System.Security.Claims.Claim("id", usuario.Id.ToString()),
+                    new System.Security.Claims.Claim("email", usuario.Email),
+                    new System.Security.Claims.Claim("nombre", usuario.Nombre),
+                    new System.Security.Claims.Claim("apellido", usuario.Apellido),
+                    new System.Security.Claims.Claim("rol", usuario.Rol),
+                    new System.Security.Claims.Claim("telefono", usuario.Telefono.ToString())
+                };
+
+                // Generar token JWT
+                var token = _servicioJwt.GenerarTokenAcceso(claims, duracionToken);
+
+                // Mapear usuario a DTO de respuesta
+                var usuarioDto = new UsuarioResponseDto
+                {
+                    Id = usuario.Id,
+                    Nombre = usuario.Nombre,
+                    Apellido = usuario.Apellido,
+                    NombreCompleto = usuario.NombreCompleto,
+                    Telefono = usuario.Telefono,
+                    Email = usuario.Email,
+                    Rol = usuario.Rol,
+                    Activo = usuario.Activo,
+                    CreadoEn = usuario.CreadoEn,
+                    LicenciaConducir = usuario.LicenciaConducir,
+                    TransmisionHabilitada = usuario.TransmisionHabilitada,
+                    PuedeUsarVehiculo = usuario.PuedeUsarVehiculo
+                };
+
+                // Crear respuesta de login exitoso
+                var response = new LoginExitosoResponseDto
+                {
+                    Token = token,
+                    ExpiraEn = expiraEn,
+                    Usuario = usuarioDto
+                };
+
+                _logger.LogInformation("Login exitoso para usuario: {UserId} - {Email}", usuario.Id, usuario.Email);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error durante el login para email: {Email}", request.Email);
                 throw;
             }
         }

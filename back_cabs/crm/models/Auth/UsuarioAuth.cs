@@ -31,7 +31,7 @@ namespace back_cabs.CRM.models.Auth
     /// <summary>
     /// Entidad que representa un usuario del sistema CRM
     /// </summary>
-    [Table("usuarios", Schema = "auth")]
+    [Table("auth_usuarios")]
     public class UsuarioAuth
     {
         /// <summary>
@@ -90,9 +90,9 @@ namespace back_cabs.CRM.models.Auth
         /// <summary>
         /// Teléfono del usuario
         /// </summary>
-        [StringLength(20)]
+        [Required]
         [Column("telefono")]
-        public string? Telefono { get; set; }
+        public int Telefono { get; set; }
 
 
 

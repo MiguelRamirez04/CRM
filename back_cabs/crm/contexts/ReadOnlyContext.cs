@@ -1,6 +1,7 @@
 using back_cabs.CRM.models.Auth;
 using back_cabs.CRM.models.Fleet;
 using back_cabs.CRM.models.Recepcion;
+using back_cabs.CRM.models;
 using Microsoft.EntityFrameworkCore;
 
 namespace back_cabs.CRM.contexts;
@@ -37,6 +38,11 @@ public class ReadOnlyContext : DbContext
     /// </summary>
     public DbSet<Vehiculo> Vehiculos { get; set; } = null!;
 
+    /// <summary>
+    /// Vista completa de clientes con datos de sistema legacy (solo lectura)
+    /// </summary>
+    public DbSet<VwClientesCompletos> ClientesCompletos { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -46,6 +52,13 @@ public class ReadOnlyContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        // Configuración para la VISTA de solo lectura VwClientesCompletos
+        modelBuilder.Entity<VwClientesCompletos>(entity =>
+        {
+            entity.HasNoKey(); // Es una vista sin clave primaria
+            entity.ToView("VwClientesCompletos"); // Mapea a la vista en la BD
         });
 
         // Configuración de la entidad Cliente

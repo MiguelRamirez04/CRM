@@ -64,7 +64,7 @@ namespace back_cabs.CRM.DTOs.Auth
         /// </summary>
         /// <example>5512345678</example>
         [JsonPropertyName("telefono")]
-        public string? Telefono { get; set; }
+        public int Telefono { get; set; }
 
         /// <summary>
         /// Email del usuario

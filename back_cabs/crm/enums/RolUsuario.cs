@@ -29,26 +29,23 @@ namespace back_cabs.CRM.enums
     /// </summary>
     public enum RolUsuario
     {
-        /// <summary>
-        /// Administrador del sistema - Acceso completo
-        /// Puede gestionar usuarios, configuraciones y todos los módulos
-        /// </summary>
-        [Description("Administrador del sistema con acceso completo")]
-        Administrador = 1,
+    /// <summary>
+    /// Personal de recepción - Gestión de clientes y tickets iniciales
+    /// Puede crear tickets, gestionar clientes y coordinar servicios
+    /// </summary>
+    RECEPCION = 1,
 
-        /// <summary>
-        /// Personal de recepción - Gestión de clientes y tickets iniciales
-        /// Puede crear tickets, gestionar clientes y coordinar servicios
-        /// </summary>
-        [Description("Personal de recepción - Gestión de clientes y tickets")]
-        Recepcion = 2,
+    /// <summary>
+    /// Personal de soporte técnico - Resolución de tickets
+    /// Puede trabajar en tickets, actualizar estados y realizar soportes
+    /// </summary>
+    SOPORTE = 2,
 
-        /// <summary>
-        /// Personal de soporte técnico - Resolución de tickets
-        /// Puede trabajar en tickets, actualizar estados y realizar soportes
-        /// </summary>
-        [Description("Personal de soporte técnico - Resolución de tickets")]
-        Soporte = 3
+    /// <summary>
+    /// Administrador del sistema - Acceso completo
+    /// Puede gestionar usuarios, configuraciones y todos los módulos
+    /// </summary>
+    ADMINISTRACION = 3
     }
 
     /// <summary>
@@ -71,7 +68,7 @@ namespace back_cabs.CRM.enums
         /// </summary>
         public static bool EsAdministrativo(this RolUsuario rol)
         {
-            return rol == RolUsuario.Administrador;
+            return rol == RolUsuario.ADMINISTRACION;
         }
 
         /// <summary>
@@ -79,7 +76,7 @@ namespace back_cabs.CRM.enums
         /// </summary>
         public static bool PuedeGestionarClientes(this RolUsuario rol)
         {
-            return rol == RolUsuario.Administrador || rol == RolUsuario.Recepcion;
+            return rol == RolUsuario.ADMINISTRACION || rol == RolUsuario.RECEPCION;
         }
 
         /// <summary>
@@ -87,7 +84,7 @@ namespace back_cabs.CRM.enums
         /// </summary>
         public static bool PuedeRealizarSoporte(this RolUsuario rol)
         {
-            return rol == RolUsuario.Administrador || rol == RolUsuario.Soporte;
+            return rol == RolUsuario.ADMINISTRACION || rol == RolUsuario.SOPORTE;
         }
 
         /// <summary>

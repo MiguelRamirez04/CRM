@@ -24,7 +24,7 @@ using back_cabs.CRM.DTOs.Auth;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.models.Auth;
-using back_cabs.middleware;
+using back_cabs.CRM.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -279,7 +279,7 @@ namespace back_cabs.CRM.controllers.Auth
                 // Determinar rol (por defecto Recepcion si no está definido)
                 var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
                     ? rol
-                    : RolUsuario.Recepcion;
+                    : RolUsuario.RECEPCION;
 
                 var user = new User
                 {
@@ -439,7 +439,7 @@ namespace back_cabs.CRM.controllers.Auth
                 // Determinar rol (por defecto Recepcion si no está definido)
                 var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
                     ? rol
-                    : RolUsuario.Recepcion;
+                    : RolUsuario.RECEPCION;
 
                 return Ok(new
                 {
@@ -713,9 +713,9 @@ namespace back_cabs.CRM.controllers.Auth
         {
             return rol switch
             {
-                RolUsuario.Administrador => new[] { "administracion.read", "administracion.write", "recepcion.read", "recepcion.write", "soporte.read", "soporte.write" },
-                RolUsuario.Recepcion => new[] { "recepcion.read", "recepcion.write", "soporte.read" },
-                RolUsuario.Soporte => new[] { "soporte.read", "soporte.write" },
+                RolUsuario.ADMINISTRACION => new[] { "administracion.read", "administracion.write", "recepcion.read", "recepcion.write", "soporte.read", "soporte.write" },
+                RolUsuario.RECEPCION => new[] { "recepcion.read", "recepcion.write", "soporte.read" },
+                RolUsuario.SOPORTE => new[] { "soporte.read", "soporte.write" },
                 _ => Array.Empty<string>()
             };
         }
@@ -738,7 +738,7 @@ namespace back_cabs.CRM.controllers.Auth
                 // Determinar rol (por defecto Recepcion si no está definido)
                 var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
                     ? rol
-                    : RolUsuario.Recepcion;
+                    : RolUsuario.RECEPCION;
 
                 return new User
                 {

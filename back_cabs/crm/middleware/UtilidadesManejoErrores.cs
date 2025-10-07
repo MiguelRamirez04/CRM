@@ -8,6 +8,13 @@
 // consistentes, serializar errores a JSON, identificar excepciones críticas y generar
 // IDs únicos para trazabilidad.
 //
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+namespace back_cabs.CRM.Middleware;
+
+public static class UtilidadesManejoErrores
+{
 // FUNCIONALIDADES PRINCIPALES:
 // - Creación de respuestas de error estructuradas con formato consistente
 // - Serialización de errores a JSON con configuración camelCase
@@ -103,12 +110,6 @@
 // - Manejo seguro de nulls y excepciones
 // - Optimizado para rendimiento (sin reflection innecesaria)
 
-using System.Text.Json;
-
-namespace back_cabs.middleware;
-
-public static class UtilidadesManejoErrores
-{
     /// <summary>
     /// Crea una respuesta de error estructurada con formato consistente.
     /// Método principal para generar respuestas de error en toda la aplicación.
@@ -166,7 +167,7 @@ public static class UtilidadesManejoErrores
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         });
     }
 
