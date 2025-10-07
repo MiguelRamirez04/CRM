@@ -100,9 +100,8 @@ namespace back_cabs.CRM.services.Auth
                     Apellido = request.Apellido.Trim(),
                     Telefono = request.Telefono,
                     Email = request.Email.ToLower().Trim(),
-                    Password = request.Contrasena, // Guardar en texto plano temporalmente
-                    ContrasenaHash = contrasenaHash, // Guardar también el hash para migración futura
-                    Rol = null, // TODO: Mapear rol de string a int según lógica de negocio
+                    Password = contrasenaHash, // Guardar el hash en password_hash
+                    Rol = request.Rol, // Ahora es string
                     LicenciaConducir = request.LicenciaConducir,
                     TransmisionHabilitada = request.TransmisionHabilitada,
                     Activo = true,
@@ -252,10 +251,10 @@ namespace back_cabs.CRM.services.Auth
                     contrasenaValida = true;
                 }
                 // Si no, intentar con hash
-                else if (!string.IsNullOrEmpty(usuario.ContrasenaHash))
+                else if (!string.IsNullOrEmpty(usuario.Password))
                 {
                     var contrasenaHash = ApiUtilities.GenerateSha256Hash(contrasena);
-                    contrasenaValida = usuario.ContrasenaHash == contrasenaHash;
+                    contrasenaValida = usuario.Password == contrasenaHash;
                 }
 
                 if (!contrasenaValida)
@@ -337,7 +336,7 @@ namespace back_cabs.CRM.services.Auth
                 var nuevoHash = ApiUtilities.GenerateSha256Hash(nuevaContrasena);
                 
                 // Verificar que la nueva contraseña sea diferente a la actual
-                if ((usuario.Password == nuevaContrasena) || (usuario.ContrasenaHash == nuevoHash))
+                if (usuario.Password == nuevoHash)
                 {
                     _logger.LogWarning("La nueva contraseña es igual a la actual para usuario: {UserId}", userId);
                     return false;
@@ -345,7 +344,7 @@ namespace back_cabs.CRM.services.Auth
 
                 // Actualizar ambos campos de contraseña y fecha de modificación
                 usuario.Password = nuevaContrasena;
-                usuario.ContrasenaHash = nuevoHash;
+                usuario.Password = nuevoHash;
                 usuario.ActualizarFechaModificacion();
 
                 // Guardar cambios en la base de datos

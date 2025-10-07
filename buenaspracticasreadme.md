@@ -25,7 +25,7 @@ const authHeader = { 'Authorization': `Bearer ${token}` };
 // ✅ Backend - Cookies HttpOnly
 var cookieOptions = new CookieOptions
 {
-    HttpOnly = true,        // CRÍTICO: JavaScript no puede acceder
+    HttpOnly = true,        // CRÍTICO: JavaScri  xpt no puede acceder
     Secure = true,          // Solo HTTPS en producción
     SameSite = SameSiteMode.Strict,  // Protección CSRF
     Expires = DateTime.UtcNow.AddMinutes(30)

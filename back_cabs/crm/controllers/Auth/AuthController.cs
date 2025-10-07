@@ -277,8 +277,8 @@ namespace back_cabs.CRM.controllers.Auth
                 }
 
                 // Determinar rol (por defecto Recepcion si no está definido)
-                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
-                    ? (RolUsuario)usuario.Rol.Value
+                var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
+                    ? rol
                     : RolUsuario.Recepcion;
 
                 var user = new User
@@ -437,8 +437,8 @@ namespace back_cabs.CRM.controllers.Auth
                 _logger.LogInformation("Usuario {Email} obtuvo su información exitosamente", usuario.Email);
 
                 // Determinar rol (por defecto Recepcion si no está definido)
-                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
-                    ? (RolUsuario)usuario.Rol.Value
+                var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
+                    ? rol
                     : RolUsuario.Recepcion;
 
                 return Ok(new
@@ -736,8 +736,8 @@ namespace back_cabs.CRM.controllers.Auth
                 }
 
                 // Determinar rol (por defecto Recepcion si no está definido)
-                var rolUsuario = usuario.Rol.HasValue && Enum.IsDefined(typeof(RolUsuario), usuario.Rol.Value)
-                    ? (RolUsuario)usuario.Rol.Value
+                var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
+                    ? rol
                     : RolUsuario.Recepcion;
 
                 return new User

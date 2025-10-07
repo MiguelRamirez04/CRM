@@ -67,9 +67,9 @@ namespace back_cabs.CRM.validators.Auth
 
             // Validación de teléfono (opcional)
             RuleFor(x => x.Telefono)
-                .Must(telefono => !telefono.HasValue || telefono.Value.ToString().Length == 10)
+                .Must(telefono => string.IsNullOrEmpty(telefono) || (telefono.Length == 10 && telefono.All(char.IsDigit)))
                 .WithMessage("El teléfono debe ser un número de 10 dígitos")
-                .When(x => x.Telefono.HasValue);
+                .When(x => !string.IsNullOrEmpty(x.Telefono));
 
             // Validación de email
             RuleFor(x => x.Email)

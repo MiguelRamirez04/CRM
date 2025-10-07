@@ -31,13 +31,14 @@ namespace back_cabs.CRM.models.Auth
     /// <summary>
     /// Entidad que representa un usuario del sistema CRM
     /// </summary>
-    [Table("Auth_usuarios")]
+    [Table("usuarios", Schema = "auth")]
     public class UsuarioAuth
     {
         /// <summary>
         /// Identificador único del usuario (autoincremental)
         /// </summary>
         [Key]
+        [Column("id")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
@@ -59,16 +60,15 @@ namespace back_cabs.CRM.models.Auth
         /// </summary>
         [Required]
         [StringLength(150)]
-        [Column("email")]
+        [Column("correo")]
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
-        /// Contraseña del usuario (almacenada temporalmente en texto plano para desarrollo)
-        /// TODO: Implementar hash en producción
+        /// Hash de la contraseña del usuario
         /// </summary>
         [Required]
         [StringLength(255)]
-        [Column("password")]
+        [Column("password_hash")]
         public string Password { get; set; } = string.Empty;
 
         /// <summary>
@@ -90,21 +90,19 @@ namespace back_cabs.CRM.models.Auth
         /// <summary>
         /// Teléfono del usuario
         /// </summary>
+        [StringLength(20)]
         [Column("telefono")]
-        public int? Telefono { get; set; }
+        public string? Telefono { get; set; }
+
+
 
         /// <summary>
-        /// Hash de la contraseña del usuario (para migración futura)
+        /// Rol del usuario en el sistema (valor string)
         /// </summary>
-        [StringLength(255)]
-        [Column("contraseña_hash")]
-        public string? ContrasenaHash { get; set; }
-
-        /// <summary>
-        /// Rol del usuario en el sistema (valor numérico)
-        /// </summary>
+        [Required]
+        [StringLength(30)]
         [Column("rol")]
-        public int? Rol { get; set; }
+        public string Rol { get; set; } = string.Empty;
 
         /// <summary>
         /// Indica si el usuario está activo en el sistema
@@ -124,7 +122,7 @@ namespace back_cabs.CRM.models.Auth
         /// Tipo de transmisión que el usuario puede manejar
         /// </summary>
         [StringLength(50)]
-        [Column("transmicion_habilitada")]
+        [Column("transmision_habilitada")]
         public string? TransmisionHabilitada { get; set; }
 
         /// <summary>

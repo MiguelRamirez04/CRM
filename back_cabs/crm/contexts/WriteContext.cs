@@ -41,25 +41,11 @@ public class WriteContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuración de la entidad UsuarioAuth
+        // Configuración simplificada de UsuarioAuth - usa los atributos del modelo
         modelBuilder.Entity<UsuarioAuth>(entity =>
         {
-            entity.ToTable("Auth_usuarios");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd(); // IDENTITY autoincremental
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
             entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Telefono).IsRequired(false);
-            entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.ContrasenaHash).HasMaxLength(255);
-            entity.Property(e => e.Rol).IsRequired(false);
-            entity.Property(e => e.Activo).IsRequired().HasDefaultValue(true);
-            entity.Property(e => e.LicenciaConducir).HasMaxLength(50);
-            entity.Property(e => e.TransmisionHabilitada).HasMaxLength(50);
-            entity.Property(e => e.CreadoEn).IsRequired().HasDefaultValueSql("GETDATE()");
-            entity.Property(e => e.ActualizadoEn).IsRequired(false);
         });
 
         // Configuración de la entidad Cliente

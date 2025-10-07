@@ -64,7 +64,7 @@ namespace back_cabs.CRM.DTOs.Auth
         /// </summary>
         /// <example>5512345678</example>
         [JsonPropertyName("telefono")]
-        public int? Telefono { get; set; }
+        public string? Telefono { get; set; }
 
         /// <summary>
         /// Email del usuario
@@ -78,7 +78,7 @@ namespace back_cabs.CRM.DTOs.Auth
         /// </summary>
         /// <example>2</example>
         [JsonPropertyName("rol")]
-        public int? Rol { get; set; }
+        public string? Rol { get; set; }
 
         /// <summary>
         /// Indica si el usuario está activo

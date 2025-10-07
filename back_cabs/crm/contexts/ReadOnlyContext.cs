@@ -41,25 +41,11 @@ public class ReadOnlyContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuración de la entidad UsuarioAuth
+        // Configuración simplificada de UsuarioAuth - usa los atributos del modelo
         modelBuilder.Entity<UsuarioAuth>(entity =>
         {
-            entity.ToTable("Auth_usuarios");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd(); // IDENTITY autoincremental
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(150);
             entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Apellido).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Telefono).IsRequired(false);
-            entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.ContrasenaHash).HasMaxLength(255);
-            entity.Property(e => e.Rol).IsRequired(false);
-            entity.Property(e => e.Activo).IsRequired().HasDefaultValue(true);
-            entity.Property(e => e.LicenciaConducir).HasMaxLength(50);
-            entity.Property(e => e.TransmisionHabilitada).HasMaxLength(50);
-            entity.Property(e => e.CreadoEn).IsRequired().HasDefaultValueSql("GETDATE()");
-            entity.Property(e => e.ActualizadoEn).IsRequired(false);
         });
 
         // Configuración de la entidad Cliente
@@ -77,7 +63,7 @@ public class ReadOnlyContext : DbContext
         {
             entity.ToTable("ordenes_trabajo", "ops");
             entity.HasKey(e => e.Id);
-            
+
             // Configurar columnas con mapeo exacto a SQL Server
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.ClienteId).HasColumnName("cliente_id").IsRequired();
@@ -140,5 +126,29 @@ public class ReadOnlyContext : DbContext
 
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
         });
+        
+
+        // Configuración de la vista VwClientesCompletos
+        modelBuilder.Entity<VwClientesCompletos>(entity =>
+        {
+            entity.ToTable("VwClientesCompletos");
+            entity.HasKey(e => e.ClienteId);
+
+            entity.Property(e => e.ClienteId).HasColumnName("cliente_id");
+            entity.Property(e => e.NombreComercial).HasColumnName("nombre_comercial").HasMaxLength(100);
+            entity.Property(e => e.RFC).HasColumnName("rfc").HasMaxLength(13);
+            entity.Property(e => e.Activo).HasColumnName("activo");
+            entity.Property(e => e.LegacyClientId).HasColumnName("legacy_client_id");
+            entity.Property(e => e.Calle).HasColumnName("calle").HasMaxLength(100);
+            entity.Property(e => e.NumeroExterior).HasColumnName("numero_exterior").HasMaxLength(10);
+            entity.Property(e => e.Colonia).HasColumnName("colonia").HasMaxLength(100);
+            entity.Property(e => e.CodigoPostal).HasColumnName("codigo_postal").HasMaxLength(5);
+            entity.Property(e => e.Ciudad).HasColumnName("ciudad").HasMaxLength(50);
+            entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(50);
+            entity.Property(e => e.Pais).HasColumnName("pais").HasMaxLength(50);
+            entity.Property(e => e.TelefonoPrincipal).HasColumnName("telefono_principal").HasMaxLength(20);
+            entity.Property(e => e.EmailPrincipal).HasColumnName("email_principal").HasMaxLength(100);
+        });
+
     }
 }
