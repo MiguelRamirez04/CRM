@@ -42,6 +42,9 @@ public class ClientesCompletosPaginadoRequestDto
     [MaxLength(200)]
     public string? NombreBusqueda { get; set; }
     
+    [MaxLength(13)]
+    public string? RFCBusqueda { get; set; }
+    
     [Range(1, int.MaxValue)]
     public int Pagina { get; set; } = 1;
     

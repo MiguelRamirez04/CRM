@@ -36,15 +36,37 @@ namespace back_cabs.CRM.services
         /// <returns>Respuesta paginada con los clientes que coinciden con los criterios</returns>
         public async Task<PaginatedResponseDto<ClientesCompletosPaginadoDto>> GetClientesPaginadosAsync(ClientesCompletosPaginadoRequestDto request)
         {
-            _logger.LogInformation("Obteniendo clientes completos paginados. Página: {Pagina}, ResultadosPorPagina: {ResultadosPorPagina}, Búsqueda: {Busqueda}", 
-                request.Pagina, request.ResultadosPorPagina, request.NombreBusqueda ?? "Todos");
+            _logger.LogInformation("Obteniendo clientes completos paginados. Página: {Pagina}, ResultadosPorPagina: {ResultadosPorPagina}, Búsqueda Nombre: {BusquedaNombre}, Búsqueda RFC: {BusquedaRFC}", 
+                request.Pagina, request.ResultadosPorPagina, 
+                request.NombreBusqueda ?? "No especificado", 
+                request.RFCBusqueda ?? "No especificado");
 
             try
             {
+                // Verificar que la conexión existe
+                if (_dbConnection == null)
+                {
+                    throw new InvalidOperationException("La conexión a la base de datos no está disponible.");
+                }
+                
                 // Asegurarse de que la conexión esté abierta
                 if (_dbConnection.State != ConnectionState.Open)
                 {
-                    await (_dbConnection as SqlConnection)!.OpenAsync();
+                    try
+                    {
+                        var sqlConnection = _dbConnection as SqlConnection;
+                        if (sqlConnection == null)
+                        {
+                            throw new InvalidOperationException("La conexión no es del tipo SqlConnection esperado.");
+                        }
+                        
+                        await sqlConnection.OpenAsync();
+                    }
+                    catch (SqlException sqlEx)
+                    {
+                        _logger.LogError(sqlEx, "Error al abrir la conexión SQL: {Message}", sqlEx.Message);
+                        throw new Exception("No se pudo establecer conexión con la base de datos.", sqlEx);
+                    }
                 }
 
                 // Preparar el comando para el procedimiento almacenado
@@ -52,34 +74,94 @@ namespace back_cabs.CRM.services
                 cmd.CommandText = "dbo.usp_GetClientesCompletos_Paginado";
                 cmd.CommandType = CommandType.StoredProcedure;
 
-                // Agregar parámetros
-                cmd.Parameters.AddWithValue("@NombreBusqueda", (object?)request.NombreBusqueda ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Pagina", request.Pagina);
-                cmd.Parameters.AddWithValue("@ResultadosPorPagina", request.ResultadosPorPagina);
+                try
+                {
+                    // Agregar parámetros - usar Try/Catch por si algún parámetro no existe en el SP
+                    cmd.Parameters.AddWithValue("@NombreBusqueda", (object?)request.NombreBusqueda ?? DBNull.Value);
+                    
+                    // Verificar si el parámetro RFCBusqueda existe en el SP
+                    if (request.RFCBusqueda != null)
+                    {
+                        try 
+                        {
+                            cmd.Parameters.AddWithValue("@RFCBusqueda", request.RFCBusqueda);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "El parámetro @RFCBusqueda no existe en el procedimiento almacenado. Se ignorará este filtro.");
+                            // Si el parámetro no existe, usamos NombreBusqueda como búsqueda general
+                            if (string.IsNullOrEmpty(request.NombreBusqueda) && !string.IsNullOrEmpty(request.RFCBusqueda))
+                            {
+                                cmd.Parameters["@NombreBusqueda"].Value = request.RFCBusqueda;
+                            }
+                        }
+                    }
+                    
+                    cmd.Parameters.AddWithValue("@Pagina", request.Pagina);
+                    cmd.Parameters.AddWithValue("@ResultadosPorPagina", request.ResultadosPorPagina);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al configurar parámetros del procedimiento almacenado");
+                    throw;
+                }
 
                 // Ejecutar el procedimiento y leer los resultados
                 var clientes = new List<ClientesCompletosPaginadoDto>();
                 
-                using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+                try
                 {
-                    clientes.Add(new ClientesCompletosPaginadoDto
+                    using var reader = await cmd.ExecuteReaderAsync();
+                    
+                    // Verificar si hay resultados
+                    if (!reader.HasRows)
                     {
-                        ClienteId = reader.GetInt32(reader.GetOrdinal("ClienteId")),
-                        NombreComercial = reader.IsDBNull(reader.GetOrdinal("NombreComercial")) ? null : reader.GetString(reader.GetOrdinal("NombreComercial")),
-                        RFC = reader.IsDBNull(reader.GetOrdinal("RFC")) ? null : reader.GetString(reader.GetOrdinal("RFC")),
-                        Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
-                        LegacyClientId = reader.IsDBNull(reader.GetOrdinal("LegacyClientId")) ? null : (int?)reader.GetInt32(reader.GetOrdinal("LegacyClientId")),
-                        Calle = reader.IsDBNull(reader.GetOrdinal("Calle")) ? null : reader.GetString(reader.GetOrdinal("Calle")),
-                        NumeroExterior = reader.IsDBNull(reader.GetOrdinal("NumeroExterior")) ? null : reader.GetString(reader.GetOrdinal("NumeroExterior")),
-                        Colonia = reader.IsDBNull(reader.GetOrdinal("Colonia")) ? null : reader.GetString(reader.GetOrdinal("Colonia")),
-                        CodigoPostal = reader.IsDBNull(reader.GetOrdinal("CodigoPostal")) ? null : reader.GetString(reader.GetOrdinal("CodigoPostal")),
-                        Ciudad = reader.IsDBNull(reader.GetOrdinal("Ciudad")) ? null : reader.GetString(reader.GetOrdinal("Ciudad")),
-                        Estado = reader.IsDBNull(reader.GetOrdinal("Estado")) ? null : reader.GetString(reader.GetOrdinal("Estado")),
-                        Pais = reader.IsDBNull(reader.GetOrdinal("Pais")) ? null : reader.GetString(reader.GetOrdinal("Pais")),
-                        TelefonoPrincipal = reader.IsDBNull(reader.GetOrdinal("TelefonoPrincipal")) ? null : reader.GetString(reader.GetOrdinal("TelefonoPrincipal")),
-                        EmailPrincipal = reader.IsDBNull(reader.GetOrdinal("EmailPrincipal")) ? null : reader.GetString(reader.GetOrdinal("EmailPrincipal"))
-                    });
+                        _logger.LogInformation("No se encontraron clientes con los criterios de búsqueda especificados.");
+                        return new PaginatedResponseDto<ClientesCompletosPaginadoDto>
+                        {
+                            Items = new List<ClientesCompletosPaginadoDto>(),
+                            Pagina = request.Pagina,
+                            ResultadosPorPagina = request.ResultadosPorPagina
+                        };
+                    }
+                    
+                    while (await reader.ReadAsync())
+                    {
+                        try
+                        {
+                            var cliente = new ClientesCompletosPaginadoDto
+                            {
+                                ClienteId = reader.GetInt32(reader.GetOrdinal("ClienteId")),
+                                NombreComercial = reader.IsDBNull(reader.GetOrdinal("NombreComercial")) ? null : reader.GetString(reader.GetOrdinal("NombreComercial")),
+                                RFC = reader.IsDBNull(reader.GetOrdinal("RFC")) ? null : reader.GetString(reader.GetOrdinal("RFC")),
+                                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                            };
+                            
+                            // Manejar las propiedades adicionales que podrían faltar en algunos resultados
+                            try { cliente.LegacyClientId = reader.IsDBNull(reader.GetOrdinal("LegacyClientId")) ? null : (int?)reader.GetInt32(reader.GetOrdinal("LegacyClientId")); } catch { }
+                            try { cliente.Calle = reader.IsDBNull(reader.GetOrdinal("Calle")) ? null : reader.GetString(reader.GetOrdinal("Calle")); } catch { }
+                            try { cliente.NumeroExterior = reader.IsDBNull(reader.GetOrdinal("NumeroExterior")) ? null : reader.GetString(reader.GetOrdinal("NumeroExterior")); } catch { }
+                            try { cliente.Colonia = reader.IsDBNull(reader.GetOrdinal("Colonia")) ? null : reader.GetString(reader.GetOrdinal("Colonia")); } catch { }
+                            try { cliente.CodigoPostal = reader.IsDBNull(reader.GetOrdinal("CodigoPostal")) ? null : reader.GetString(reader.GetOrdinal("CodigoPostal")); } catch { }
+                            try { cliente.Ciudad = reader.IsDBNull(reader.GetOrdinal("Ciudad")) ? null : reader.GetString(reader.GetOrdinal("Ciudad")); } catch { }
+                            try { cliente.Estado = reader.IsDBNull(reader.GetOrdinal("Estado")) ? null : reader.GetString(reader.GetOrdinal("Estado")); } catch { }
+                            try { cliente.Pais = reader.IsDBNull(reader.GetOrdinal("Pais")) ? null : reader.GetString(reader.GetOrdinal("Pais")); } catch { }
+                            try { cliente.TelefonoPrincipal = reader.IsDBNull(reader.GetOrdinal("TelefonoPrincipal")) ? null : reader.GetString(reader.GetOrdinal("TelefonoPrincipal")); } catch { }
+                            try { cliente.EmailPrincipal = reader.IsDBNull(reader.GetOrdinal("EmailPrincipal")) ? null : reader.GetString(reader.GetOrdinal("EmailPrincipal")); } catch { }
+                            
+                            clientes.Add(cliente);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error al leer un registro de cliente del DataReader: {Message}", ex.Message);
+                            // Continuamos con el siguiente registro
+                        }
+                    }
+                }
+                catch (SqlException sqlEx)
+                {
+                    _logger.LogError(sqlEx, "Error SQL al ejecutar el procedimiento almacenado: {Message}", sqlEx.Message);
+                    throw new Exception("Error al consultar clientes en la base de datos.", sqlEx);
                 }
 
                 // Para este ejercicio, no estamos obteniendo el total de registros del SP
