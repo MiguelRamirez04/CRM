@@ -55,7 +55,7 @@ public class ReadOnlyContext : DbContext
             entity.HasNoKey(); // Es una vista sin clave primaria
             entity.ToView("VwClientesCompletos"); // Mapea a la vista en la BD
             
-            // Mapeo explícito de columnas - basado en los errores mostrados
+            // Mapeo explícito de columnas - actualizado según los errores de log
             entity.Property(e => e.ClienteId).HasColumnName("id");
             entity.Property(e => e.NombreComercial).HasColumnName("nombre");
             entity.Property(e => e.RFC).HasColumnName("rfc");

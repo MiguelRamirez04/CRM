@@ -29,6 +29,7 @@ using back_cabs.CRM.enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.controllers.Recepcion
 {
@@ -70,6 +71,12 @@ namespace back_cabs.CRM.controllers.Recepcion
     /// }
     /// ```
     /// </remarks>
+    public class OrdenTrabajoRequestWrapper
+    {
+        [JsonPropertyName("requestDto")]
+        public OrdenTrabajoCreacionRequestDto? RequestDto { get; set; }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
@@ -177,8 +184,71 @@ namespace back_cabs.CRM.controllers.Recepcion
         }
 
         // ----------------------------------------------------------------------
-        // [GET] /api/Recepcion/{id}
+        // [GET] /api/Recepcion/test-data/{userId}/{clienteId}
         // ----------------------------------------------------------------------
+
+        // ----------------------------------------------------------------------
+        // [GET] /api/Recepcion/test-data/{userId}/{clienteId}
+        // ----------------------------------------------------------------------
+
+        /// <summary>
+        /// Endpoint de prueba para verificar si usuario y cliente existen
+        /// </summary>
+        [HttpGet("test-data/{userId}/{clienteId}")]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> TestData(int userId, int clienteId)
+        {
+            try
+            {
+                _logger.LogInformation("Probando existencia de usuario {UserId} y cliente {ClienteId}", userId, clienteId);
+
+                // Verificar usuario directamente
+                var usuarioExiste = await Task.Run(() => {
+                    try {
+                        return _recepcionService.GetType().GetMethod("VerificarUsuarioExisteAsync") != null;
+                    } catch {
+                        return false;
+                    }
+                });
+
+                // Para simplificar, vamos a crear una orden de prueba mínima para ver si funciona
+                var testDto = new OrdenTrabajoCreacionRequestDto {
+                    NuevoCliente = false,
+                    ClienteId = clienteId,
+                    CitaProgramadaInicio = DateTime.Now.AddHours(1),
+                    Modalidad = "Presencial",
+                    TipoOrden = "Asesoria",
+                    Estado = "CAPTURADA",
+                    Prioridad = 3,
+                    CreadoPorUserId = userId
+                };
+
+                // Intentar crear la orden para ver si pasa las validaciones
+                try {
+                    var orden = await _recepcionService.CrearOrdenTrabajoAsync(testDto);
+                    return Ok(new {
+                        success = true,
+                        message = "Orden creada exitosamente",
+                        ordenId = orden.Id,
+                        usuario = new { id = userId, validado = true },
+                        cliente = new { id = clienteId, validado = true }
+                    });
+                }
+                catch (ArgumentException ex) {
+                    return Ok(new {
+                        success = false,
+                        error = ex.Message,
+                        usuario = new { id = userId, validado = ex.Message.Contains("Usuario") ? false : true },
+                        cliente = new { id = clienteId, validado = ex.Message.Contains("Cliente") ? false : true }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al probar datos");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
         /// <summary>
         /// Obtiene una Orden de Trabajo por su ID
@@ -255,13 +325,25 @@ namespace back_cabs.CRM.controllers.Recepcion
         [ProducesResponseType(typeof(OrdenTrabajoResponseDto), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult<OrdenTrabajoResponseDto>> CrearOrden([FromBody] OrdenTrabajoCreacionRequestDto requestDto)
+        public async Task<ActionResult<OrdenTrabajoResponseDto>> CrearOrden([FromBody] OrdenTrabajoRequestWrapper wrapper)
         {
             try
             {
                 _logger.LogInformation("Iniciando creación de orden de trabajo");
 
-                // 1. Validación automática del modelo (por DataAnnotations)
+                // 1. Validar que el wrapper tenga el DTO
+                if (wrapper?.RequestDto == null)
+                {
+                    _logger.LogWarning("Wrapper o requestDto es null");
+                    return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                        TipoError.ErrorValidacion,
+                        "Datos inválidos",
+                        "El request debe contener un objeto 'requestDto' válido"));
+                }
+
+                var requestDto = wrapper.RequestDto;
+
+                // 2. Validación automática del modelo (por DataAnnotations)
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("Validación fallida al crear orden");

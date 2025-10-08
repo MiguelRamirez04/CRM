@@ -19,8 +19,7 @@ Este es un CRM especializado para empresas de servicios técnicos que coordina 3
 ## Reglas de Código ESTRICTAS
 
 ### Modelos (Entidades)
-- SIEMPRE usar `[Table("tabla", Schema = "esquema")]`
-- SIEMPRE usar `[Column("nombre_columna")]` para mapear SQL
+SQL
 - Usar `[Required]`, `[MaxLength]` según definición SQL
 - Incluir `Id`, `CreadoEn`, `ActualizadoEn` estándar
 
@@ -110,6 +109,3 @@ Este es un CRM especializado para empresas de servicios técnicos que coordina 3
 - ✅ Dependency injection
 - ✅ Validaciones en múltiples capas
 
-
-
-);

@@ -44,6 +44,8 @@ builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+// Servicio de depuración para problemas de clientes legacy
+builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
