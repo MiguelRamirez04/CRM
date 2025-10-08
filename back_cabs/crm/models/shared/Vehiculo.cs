@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace back_cabs.CRM.models.Fleet;
 
-[Table("vehiculos", Schema = "fleet")]
+[Table("fleet_vehiculos", Schema = "dbo")]
 public class Vehiculo
 {
     [Key]

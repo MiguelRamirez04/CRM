@@ -120,20 +120,9 @@ public class ReadOnlyContext : DbContext
             entity.HasIndex(e => e.CitaProgramadaInicio);
         });
 
-        // Configuración de la entidad Vehiculo (fleet.vehiculos)
+        // Configuración de la entidad Vehiculo (fleet_vehiculos)
         modelBuilder.Entity<Vehiculo>(entity =>
         {
-            entity.ToTable("vehiculos", "fleet");
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.TipoVehiculo).HasColumnName("tipo_vehiculo").HasMaxLength(50);
-            entity.Property(e => e.Transmision).HasColumnName("transmision").HasMaxLength(20);
-            entity.Property(e => e.EsDeEmpresa).HasColumnName("es_de_empresa").IsRequired().HasDefaultValue(true);
-            entity.Property(e => e.Placas).HasColumnName("placas").HasMaxLength(20);
-            entity.Property(e => e.Activo).HasColumnName("activo").IsRequired().HasDefaultValue(true);
-            entity.Property(e => e.Observaciones).HasColumnName("observaciones").HasColumnType("NVARCHAR(MAX)");
-
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
         });
 
