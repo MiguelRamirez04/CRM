@@ -32,6 +32,7 @@ namespace back_cabs.CRM.models.Shared
         [Column("fase")]
         [StringLength(10)]
         public string Fase { get; set; } = string.Empty;
+        //antes o despues
 
         /// <summary>
         /// Descripción del detalle de evaluación

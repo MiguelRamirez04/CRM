@@ -14,6 +14,23 @@
 // =====================================================================================
 ///Creacion de los sig: 
 /// enum ejecucion orden
-/// enum fotos reparacion
-/// enum de resultado reparacion
-/// 
+
+using System.ComponentModel;
+
+namespace back_cabs.CRM.enums
+{
+
+    ///<summary>
+    /// Prioridad de las evaluaciones 
+    ///<summary>
+
+    public enum Evaluacion_enum
+    {
+        [Description("Antes")]
+        ANTES = 1,
+        [Description("Despues")]
+        DESPUES = 2,
+        
+    }
+    
+}
