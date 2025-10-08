@@ -1,6 +1,6 @@
 // =====================================================================================
 // DTO REQUEST REGISTRO RECEPTION - RecepcionRequestDto.cs
-// =====================================================================================    
+// =====================================================================================
 //
 // ¿QUÉ HACE ESTE ARCHIVO?
 // Define el contrato de entrada para el endpoint de registro de Recepcion
@@ -17,15 +17,19 @@
 // [HttpPost("registro")]
 // public async Task<IActionResult> Registrar([FromBody] UsuarioRegistroRequestDto request)
 // {
+
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using back_cabs.CRM.Validation;
+using back_cabs.CRM.enums;
 //     // Procesar registro
 // }
 //
 // =====================================================================================
 
 
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
 
 
 namespace back_cabs.CRM.DTOs.Recepcion
@@ -81,11 +85,25 @@ namespace back_cabs.CRM.DTOs.Recepcion
         public string? Cotizaciones { get; set; }
 
         /// <summary>
-        ///     ID del cliente registrado de la base existente
+        /// Indica si el cliente es nuevo (true) o es un cliente existente (false)
         /// </summary>
-        [Required(ErrorMessage = "El LegacyClientId es obligatorio.")]
-        [JsonPropertyName("legacyClientId")]
-        public int? LegacyClientId { get; set; }
+        [JsonPropertyName("nuevoCliente")]
+        public bool NuevoCliente { get; set; }
+
+        /// <summary>
+        /// Nombre del cliente (obligatorio si nuevoCliente = true)
+        /// </summary>
+        [StringLength(120)]
+        [JsonPropertyName("nombreCliente")]
+        [RequiredIf("NuevoCliente", true, ErrorMessage = "El nombre del cliente es obligatorio para clientes nuevos")]
+        public string? NombreCliente { get; set; }
+        
+        /// <summary>
+        /// ID del cliente registrado de la base existente (obligatorio si nuevoCliente = false)
+        /// </summary>
+        [JsonPropertyName("clienteId")]
+        [RequiredIf("NuevoCliente", false, ErrorMessage = "El ID del cliente es obligatorio para clientes existentes")]
+        public int? ClienteId { get; set; }
 
         /// <summary>
         ///     Niveles de prioridad sobre la asesoria
@@ -95,11 +113,11 @@ namespace back_cabs.CRM.DTOs.Recepcion
         public int Prioridad { get; set; } = 3;
 
         /// <summary>
-        /// Nuevo estado de la orden (ej. Abierta, Cerrada).
+        /// Estado de la orden (ej. CAPTURADA, ASIGNADA, EN_CURSO, etc.)
         /// </summary>
         [Required(ErrorMessage = "Se requiere establecer el estado de la orden")]
-        [JsonPropertyName("Estado")]
-        public bool Estado { get; set; } = false;
+        [JsonPropertyName("estado")]
+        public string Estado { get; set; } = "CAPTURADA";
 
         /// <summary>
         ///     Campo para registrar la ubicacion del servicio
@@ -112,7 +130,7 @@ namespace back_cabs.CRM.DTOs.Recepcion
         ///     Estado de factura sobre el servicio.
         /// </summary>
         [JsonPropertyName("estadoFacturado")]
-        public bool? EstadoFacturado { get; set; }
+        public string? EstadoFacturado { get; set; } = "NO";
 
         /// <summary>
         ///     Campo para confirmar facturacion del servicio.
@@ -148,8 +166,8 @@ namespace back_cabs.CRM.DTOs.Recepcion
         /// </summary>
         [Required(ErrorMessage = "El ID del usuario que va a atender la orden es necesario.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID del usuario debe ser mayor a 0.")]
-        [JsonPropertyName("id_usuario")]
-        public int IdUsuario { get; set; }
+        [JsonPropertyName("creadoPorUserId")]
+        public int CreadoPorUserId { get; set; }
 
 
     }
@@ -182,12 +200,11 @@ namespace back_cabs.CRM.DTOs.Recepcion
         [JsonPropertyName("prioridad")]
         public int? Prioridad { get; set; }
 
-    
         [JsonPropertyName("estado")]
-        public bool? Estado { get; set; }
+        public string? Estado { get; set; }
 
-        [JsonPropertyName("EstadoFacturado")]
-        public bool? EstadoFacturado { get; set; }
+        [JsonPropertyName("estadoFacturado")]
+        public string? EstadoFacturado { get; set; }
 
         [JsonPropertyName("RequiereFactura")]
         public bool? RequiereFactura { get; set; }
@@ -204,8 +221,12 @@ namespace back_cabs.CRM.DTOs.Recepcion
         public decimal? CostoEstimado { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "El ID del usuario debe ser mayor a 0.")]
-        [JsonPropertyName("id_usuario")]
-        public int? IdUsuario { get; set; }
+        [JsonPropertyName("creadoPorUserId")]
+        public int? CreadoPorUserId { get; set; }
+        
+        [Range(1, int.MaxValue, ErrorMessage = "El ID del usuario asignado debe ser mayor a 0.")]
+        [JsonPropertyName("asignadaAUserId")]
+        public int? AsignadaAUserId { get; set; }
 
     }
 
@@ -258,10 +279,22 @@ namespace back_cabs.CRM.DTOs.Recepcion
         public string? TipoOrden { get; init; }
 
         /// <summary>
-        /// Identificador del cliente quien solicitico la asesoria.
+        /// Indica si es un cliente nuevo (true) o un cliente existente (false)
         /// </summary>
-        [JsonPropertyName("Cliente ID")]
-        public int LegacyClientId { get; init; }
+        [JsonPropertyName("nuevoCliente")]
+        public bool NuevoCliente { get; init; }
+        
+        /// <summary>
+        /// Nombre del cliente (solo si nuevoCliente = true)
+        /// </summary>
+        [JsonPropertyName("nombreCliente")]
+        public string? NombreCliente { get; init; }
+        
+        /// <summary>
+        /// Identificador del cliente en la base de datos (solo si nuevoCliente = false)
+        /// </summary>
+        [JsonPropertyName("clienteId")]
+        public int? ClienteId { get; init; }
 
         /// <summary>
         /// Campo de prioridad para la realizacion de la asesoria.
@@ -273,7 +306,13 @@ namespace back_cabs.CRM.DTOs.Recepcion
         /// Campo de estado de la asesoria.
         /// </summary>
         [JsonPropertyName("estado")]
-        public bool? Estado { get; init; }
+        public string? Estado { get; init; }
+        
+        /// <summary>
+        /// Descripción legible del estado de la orden.
+        /// </summary>
+        [JsonPropertyName("estadoDescripcion")]
+        public string? EstadoDescripcion { get; init; }
 
         /// <summary>
         /// Campo de ubicacion para realizar la asesoria.
@@ -285,7 +324,7 @@ namespace back_cabs.CRM.DTOs.Recepcion
         /// Campo de estado sobre la facturacion de la asesoria.
         /// </summary>
         [JsonPropertyName("estadoFacturado")]
-        public bool? EstadoFacturado { get; init; }
+        public string? EstadoFacturado { get; init; }
 
         /// <summary>
         /// Campo de estado sobre si requiere facturacion de la asesoria.
@@ -318,10 +357,16 @@ namespace back_cabs.CRM.DTOs.Recepcion
         public DateTime? ActualizadoEn { get; init; }
 
         /// <summary>
-        /// Campo de agente quien atendió de la asesoria.
+        /// ID del usuario que creó la orden
         /// </summary>
-        [JsonPropertyName("idUsuario")]
-        public int IdUsuario { get; init; }
+        [JsonPropertyName("creadoPorUserId")]
+        public int CreadoPorUserId { get; init; }
+        
+        /// <summary>
+        /// ID del usuario asignado a la orden
+        /// </summary>
+        [JsonPropertyName("asignadaAUserId")]
+        public int? AsignadaAUserId { get; init; }
     }
 }
 

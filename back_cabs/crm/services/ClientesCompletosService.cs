@@ -6,11 +6,14 @@
 // Contiene la lógica de negocio para consultar la vista VwClientesCompletos.
 // Se encarga de acceder a la base de datos a través del procedimiento almacenado
 // usp_GetClientesCompletos_Paginado, aplicar filtros y mapear los resultados a DTOs.
+// También provee métodos para búsqueda rápida de clientes para el autocompletado.
 //
 // =====================================================================================
 
 using back_cabs.CRM.DTOs;
+using back_cabs.CRM.DTOs.Recepcion;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using System.Data;
 
 namespace back_cabs.CRM.services
@@ -182,6 +185,82 @@ namespace back_cabs.CRM.services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener clientes paginados: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Busca clientes por nombre o RFC (versión simple para autocompletado)
+        /// </summary>
+        /// <param name="termino">Término de búsqueda para nombre o RFC</param>
+        /// <param name="limite">Número máximo de resultados</param>
+        /// <returns>Lista simplificada de clientes para mostrar en un autocompletado</returns>
+        public async Task<List<ClienteResumenDto>> BuscarClientesPorNombreORfcAsync(string? termino, int limite = 10)
+        {
+            var resultado = new List<ClienteResumenDto>();
+            
+            if (string.IsNullOrWhiteSpace(termino))
+                return resultado;
+
+            _logger.LogInformation("Buscando clientes por término: {Termino}, límite: {Limite}", termino, limite);
+                
+            try
+            {
+                // Verificar que la conexión existe y abrirla si es necesario
+                if (_dbConnection.State != ConnectionState.Open)
+                    _dbConnection.Open();
+                
+                // Usar una consulta directa optimizada para búsqueda rápida
+                using var cmd = _dbConnection.CreateCommand();
+                cmd.CommandType = CommandType.Text;
+                cmd.CommandText = @"
+                    SELECT TOP (@Limite) 
+                        ClienteId, 
+                        NombreComercial, 
+                        RFC 
+                    FROM dbo.VwClientesCompletos 
+                    WHERE 
+                        (NombreComercial LIKE @Termino + '%' OR RFC LIKE @Termino + '%') 
+                        AND Activo = 1
+                    ORDER BY 
+                        CASE WHEN NombreComercial LIKE @Termino + '%' THEN 0 ELSE 1 END,
+                        CASE WHEN RFC LIKE @Termino + '%' THEN 0 ELSE 1 END,
+                        NombreComercial";
+                
+                var paramTermino = cmd.CreateParameter();
+                paramTermino.ParameterName = "@Termino";
+                paramTermino.Value = termino;
+                cmd.Parameters.Add(paramTermino);
+                
+                var paramLimite = cmd.CreateParameter();
+                paramLimite.ParameterName = "@Limite";
+                paramLimite.Value = limite;
+                cmd.Parameters.Add(paramLimite);
+
+                using var sqlCommand = cmd as SqlCommand;
+                if (sqlCommand == null)
+                {
+                    throw new InvalidOperationException("No se pudo convertir el comando a SqlCommand");
+                }
+                
+                using var reader = await sqlCommand.ExecuteReaderAsync();
+                
+                while (await reader.ReadAsync())
+                {
+                    resultado.Add(new ClienteResumenDto
+                    {
+                        ClienteId = reader.GetInt32(reader.GetOrdinal("ClienteId")),
+                        NombreComercial = reader.IsDBNull(reader.GetOrdinal("NombreComercial")) ? null : reader.GetString(reader.GetOrdinal("NombreComercial")),
+                        RFC = reader.IsDBNull(reader.GetOrdinal("RFC")) ? null : reader.GetString(reader.GetOrdinal("RFC"))
+                    });
+                }
+
+                _logger.LogInformation("Se encontraron {Count} clientes para la búsqueda rápida", resultado.Count);
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar clientes por término: {Message}", ex.Message);
                 throw;
             }
         }

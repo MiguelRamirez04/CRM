@@ -1,0 +1,8 @@
+﻿{
+    "nuevoCliente":  false,
+    "estado":  "CAPTURADA",
+    "creadoPorUserId":  1,
+    "prioridad":  1,
+    "clienteId":  1,
+    "notas":  "Prueba de cliente existente"
+}

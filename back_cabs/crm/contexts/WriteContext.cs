@@ -53,7 +53,7 @@ public class WriteContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.NuevoCliente).HasColumnName("nuevo_cliente");
             entity.Property(e => e.NombreCliente).HasColumnName("nombre_cliente").HasMaxLength(120);
-            entity.Property(e => e.ClienteId).HasColumnName("cliente_id");
+            entity.Property(e => e.ClienteId).HasColumnName("cliente_id").IsRequired(false); // Permite NULL para clientes nuevos
             entity.Property(e => e.CreadoPorUserId).HasColumnName("creado_por_user_id").IsRequired();
             entity.Property(e => e.AsignadaAUserId).HasColumnName("asignada_a_user_id");
             entity.Property(e => e.Notas).HasColumnName("notas").HasColumnType("NVARCHAR(MAX)");

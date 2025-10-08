@@ -1,0 +1,19 @@
+{
+  "notas": "Cliente legacy - Prueba de funcionamiento",
+  "citaProgramadaInicio": "2025-10-08T15:00:00.000Z",
+  "citaProgramadaFin": "2025-10-08T17:00:00.000Z",
+  "modalidad": "Remoto",
+  "tipoOrden": "Instalación",
+  "cotizaciones": "COT-2025-002-TEST",
+  "nuevoCliente": false,
+  "clienteId": 1,
+  "prioridad": 2,
+  "estado": "ASIGNADA",
+  "ubicacionText": "Oficina principal - Prueba",
+  "estadoFacturado": "NO",
+  "requiereFactura": true,
+  "facturaFolio": 2025001,
+  "costoReal": null,
+  "costoEstimado": 2500.00,
+  "creadoPorUserId": 3
+}

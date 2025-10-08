@@ -22,8 +22,10 @@
 // =====================================================================================
 
 using back_cabs.CRM.DTOs.Recepcion;
+using back_cabs.CRM.services;
 using back_cabs.CRM.services.Recepcion;
 using back_cabs.CRM.Middleware;
+using back_cabs.CRM.enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
@@ -33,6 +35,41 @@ namespace back_cabs.CRM.controllers.Recepcion
     /// <summary>
     /// Controlador para operaciones de Órdenes de Trabajo en el módulo de Recepción
     /// </summary>
+    /// <remarks>
+    /// Este controlador proporciona endpoints para la gestión completa de órdenes de trabajo:
+    /// - GET /api/Recepcion - Lista de órdenes de trabajo con filtros opcionales
+    /// - GET /api/Recepcion/{id} - Detalles de una orden específica
+    /// - POST /api/Recepcion - Crear nueva orden (soporta clientes nuevos y legacy)
+    /// - PUT /api/Recepcion/{id} - Actualizar orden existente
+    /// - GET /api/Recepcion/estados - Lista de estados posibles
+    /// - GET /api/Recepcion/clientes/buscar - Búsqueda de clientes para selección
+    /// 
+    /// Para crear una nueva orden con un cliente legacy:
+    /// ```json
+    /// {
+    ///   "nuevoCliente": false,
+    ///   "clienteId": 123,
+    ///   "creadoPorUserId": 1,
+    ///   "citaProgramadaInicio": "2023-11-30T10:00:00Z",
+    ///   "modalidad": "Presencial",
+    ///   "tipoOrden": "Asesoria",
+    ///   "estado": "CAPTURADA"
+    /// }
+    /// ```
+    /// 
+    /// Para crear una nueva orden con un cliente nuevo:
+    /// ```json
+    /// {
+    ///   "nuevoCliente": true,
+    ///   "nombreCliente": "Cliente Nuevo XYZ",
+    ///   "creadoPorUserId": 1,
+    ///   "citaProgramadaInicio": "2023-11-30T10:00:00Z",
+    ///   "modalidad": "Remoto",
+    ///   "tipoOrden": "Cotizacion",
+    ///   "estado": "CAPTURADA"
+    /// }
+    /// ```
+    /// </remarks>
     [ApiController]
     [Route("api/[controller]")]
     [Produces("application/json")]
@@ -40,13 +77,16 @@ namespace back_cabs.CRM.controllers.Recepcion
     public class RecepcionController : ControllerBase
     {
         private readonly DashRecepcionService _recepcionService;
+        private readonly ClientesCompletosService _clientesCompletosService;
         private readonly ILogger<RecepcionController> _logger;
 
         public RecepcionController(
             DashRecepcionService recepcionService,
+            ClientesCompletosService clientesCompletosService,
             ILogger<RecepcionController> logger)
         {
             _recepcionService = recepcionService ?? throw new ArgumentNullException(nameof(recepcionService));
+            _clientesCompletosService = clientesCompletosService ?? throw new ArgumentNullException(nameof(clientesCompletosService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -59,19 +99,70 @@ namespace back_cabs.CRM.controllers.Recepcion
         /// </summary>
         /// <param name="skip">Número de registros a saltar (paginación)</param>
         /// <param name="take">Número de registros a obtener (paginación)</param>
+        /// <param name="estado">Filtrar por estado de orden (opcional)</param>
         /// <returns>Lista de OrdenTrabajoResponseDto</returns>
         /// <response code="200">Lista obtenida exitosamente</response>
+        /// <response code="400">Estado inválido proporcionado</response>
         /// <response code="500">Error interno del servidor</response>
+        /// <remarks>
+        /// Ejemplo de respuesta:
+        /// ```json
+        /// [
+        ///   {
+        ///     "id": 1,
+        ///     "nuevoCliente": false,
+        ///     "clienteId": 123,
+        ///     "nombreCliente": null,
+        ///     "estado": "ASIGNADA",
+        ///     "estadoDescripcion": "Orden asignada a un técnico",
+        ///     "creadoPorUserId": 1,
+        ///     "asignadaAUserId": 2,
+        ///     "creadoEn": "2023-11-15T14:30:00Z"
+        ///   },
+        ///   {
+        ///     "id": 2,
+        ///     "nuevoCliente": true,
+        ///     "clienteId": null,
+        ///     "nombreCliente": "Cliente Nuevo XYZ",
+        ///     "estado": "CAPTURADA",
+        ///     "estadoDescripcion": "Orden capturada, pendiente de asignación",
+        ///     "creadoPorUserId": 1,
+        ///     "asignadaAUserId": null,
+        ///     "creadoEn": "2023-11-15T15:45:00Z"
+        ///   }
+        /// ]
+        /// ```
+        /// </remarks>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<OrdenTrabajoResponseDto>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult<IEnumerable<OrdenTrabajoResponseDto>>> GetAll([FromQuery] int? skip = null, [FromQuery] int? take = null)
+        public async Task<ActionResult<IEnumerable<OrdenTrabajoResponseDto>>> GetAll(
+            [FromQuery] int? skip = null, 
+            [FromQuery] int? take = null,
+            [FromQuery] string? estado = null)
         {
             try
             {
-                _logger.LogInformation("Obteniendo todas las órdenes de trabajo");
+                _logger.LogInformation("Obteniendo órdenes de trabajo. Estado={Estado}, Skip={Skip}, Take={Take}", 
+                    estado ?? "TODOS", skip, take);
 
-                var ordenes = await _recepcionService.ObtenerTodasLasOrdenesAsync(skip, take);
+                // Validar el estado si se proporciona
+                if (!string.IsNullOrEmpty(estado))
+                {
+                    try
+                    {
+                        _ = EstadoOrdenExtensions.FromDbValue(estado);
+                    }
+                    catch
+                    {
+                        return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                            TipoError.ErrorValidacion,
+                            "Estado inválido",
+                            $"El estado '{estado}' no es válido para filtrar órdenes."));
+                    }
+                }
+
+                var ordenes = await _recepcionService.ObtenerTodasLasOrdenesAsync(skip, take, estado);
 
                 return Ok(ordenes);
             }
@@ -143,6 +234,23 @@ namespace back_cabs.CRM.controllers.Recepcion
         /// <response code="201">Orden creada exitosamente</response>
         /// <response code="400">Datos de entrada inválidos</response>
         /// <response code="500">Error interno del servidor</response>
+        /// <remarks>
+        /// ## Modelo Híbrido de Clientes
+        /// Este endpoint soporta un modelo híbrido para clientes:
+        /// 
+        /// **Opción 1: Cliente Legacy (existente)**
+        /// - `nuevoCliente`: false
+        /// - `clienteId`: ID del cliente existente (requerido)
+        /// - `nombreCliente`: No es necesario (se ignora)
+        /// 
+        /// **Opción 2: Cliente Nuevo**
+        /// - `nuevoCliente`: true
+        /// - `clienteId`: No es necesario (se ignora)
+        /// - `nombreCliente`: Nombre del nuevo cliente (requerido)
+        /// 
+        /// ## Estados Permitidos
+        /// Utilice el endpoint GET /api/Recepcion/estados para obtener la lista de estados permitidos.
+        /// </remarks>
         [HttpPost]
         [ProducesResponseType(typeof(OrdenTrabajoResponseDto), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
@@ -159,13 +267,32 @@ namespace back_cabs.CRM.controllers.Recepcion
                     _logger.LogWarning("Validación fallida al crear orden");
                     return BadRequest(ModelState);
                 }
+                
+                // 2. Validación adicional para el cliente
+                if (!requestDto.NuevoCliente && !requestDto.ClienteId.HasValue)
+                {
+                    _logger.LogWarning("Cliente legacy seleccionado sin proporcionar ID");
+                    return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                        TipoError.ErrorValidacion,
+                        "Cliente inválido",
+                        "Para clientes existentes, debe proporcionar un ID de cliente válido"));
+                }
+                
+                if (requestDto.NuevoCliente && string.IsNullOrWhiteSpace(requestDto.NombreCliente))
+                {
+                    _logger.LogWarning("Cliente nuevo seleccionado sin proporcionar nombre");
+                    return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                        TipoError.ErrorValidacion,
+                        "Cliente inválido",
+                        "Para clientes nuevos, debe proporcionar un nombre de cliente"));
+                }
 
-                // 2. Crear orden usando el servicio
+                // 3. Crear orden usando el servicio
                 var ordenCreada = await _recepcionService.CrearOrdenTrabajoAsync(requestDto);
 
                 _logger.LogInformation("Orden creada exitosamente con ID: {Id}", ordenCreada.Id);
 
-                // 3. Retorna 201 Created con la ubicación del nuevo recurso
+                // 4. Retorna 201 Created con la ubicación del nuevo recurso
                 return CreatedAtAction(nameof(GetOrdenPorId), new { id = ordenCreada.Id }, ordenCreada);
             }
             catch (ArgumentException ex)
@@ -205,10 +332,12 @@ namespace back_cabs.CRM.controllers.Recepcion
         /// <param name="requestDto">DTO con los campos a modificar (anulables)</param>
         /// <returns>No Content si la actualización es exitosa</returns>
         /// <response code="204">Orden actualizada exitosamente</response>
+        /// <response code="400">Datos de entrada inválidos</response>
         /// <response code="404">Orden no encontrada</response>
         /// <response code="500">Error interno del servidor</response>
         [HttpPut("{id}")]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> ActualizarOrden(int id, [FromBody] OrdenTrabajoActualizacionRequestDto requestDto)
@@ -222,6 +351,22 @@ namespace back_cabs.CRM.controllers.Recepcion
                 {
                     _logger.LogWarning("Validación fallida al actualizar orden");
                     return BadRequest(ModelState);
+                }
+
+                // Validar el estado si se proporciona
+                if (!string.IsNullOrEmpty(requestDto.Estado))
+                {
+                    try
+                    {
+                        _ = EstadoOrdenExtensions.FromDbValue(requestDto.Estado);
+                    }
+                    catch
+                    {
+                        return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                            TipoError.ErrorValidacion,
+                            "Estado inválido",
+                            $"El estado '{requestDto.Estado}' no es válido. Use uno de los estados permitidos."));
+                    }
                 }
 
                 // Actualizar usando el servicio
@@ -288,6 +433,115 @@ namespace back_cabs.CRM.controllers.Recepcion
                     TipoError.ErrorServidorInterno,
                     "Error al obtener estadísticas",
                     "No se pudieron cargar las estadísticas del dashboard"));
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // [POST] /api/Recepcion/clientes/buscar
+        // ----------------------------------------------------------------------
+
+        /// <summary>
+        /// Busca clientes por nombre o RFC para autocomplete
+        /// </summary>
+        /// <param name="busqueda">Texto de búsqueda</param>
+        /// <param name="limite">Límite de resultados (opcional)</param>
+        /// <returns>Lista de clientes resumidos</returns>
+        /// <response code="200">Clientes encontrados</response>
+        /// <response code="500">Error interno del servidor</response>
+        /// <summary>
+        /// Busca clientes por nombre o RFC para autocomplete
+        /// </summary>
+        /// <param name="busqueda">Texto de búsqueda</param>
+        /// <param name="limite">Límite de resultados (opcional)</param>
+        /// <returns>Lista de clientes resumidos</returns>
+        /// <response code="200">Clientes encontrados</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("clientes/buscar")]
+        [Authorize] // Todos los roles pueden acceder a la búsqueda de clientes
+        [ProducesResponseType(typeof(List<Dictionary<string, object>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<List<Dictionary<string, object>>>> BuscarClientes([FromQuery] string busqueda, [FromQuery] int limite = 10)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando clientes con término: {Termino}", busqueda);
+
+                if (string.IsNullOrWhiteSpace(busqueda))
+                {
+                    _logger.LogWarning("Búsqueda de clientes con texto vacío");
+                    return Ok(new List<Dictionary<string, object>>()); // Devolver lista vacía
+                }
+
+                var clientes = await _recepcionService.BuscarClientesPorNombreORfcAsync(
+                    busqueda, 
+                    limite);
+
+                return Ok(clientes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar clientes");
+                return StatusCode(500, UtilidadesManejoErrores.CreateErrorResponse(
+                    TipoError.ErrorServidorInterno,
+                    "Error en búsqueda de clientes",
+                    "No se pudieron recuperar los clientes solicitados"));
+            }
+        }
+        
+        /// <summary>
+        /// Obtiene la lista de estados posibles para una orden de trabajo
+        /// </summary>
+        /// <returns>Lista de estados con sus valores y descripciones</returns>
+        /// <response code="200">Estados obtenidos exitosamente</response>
+        /// <remarks>
+        /// Ejemplo de respuesta:
+        /// ```json
+        /// [
+        ///   {
+        ///     "id": 1,
+        ///     "valor": "CAPTURADA",
+        ///     "nombre": "CAPTURADA",
+        ///     "descripcion": "Orden capturada, pendiente de asignación"
+        ///   },
+        ///   {
+        ///     "id": 2,
+        ///     "valor": "ASIGNADA",
+        ///     "nombre": "ASIGNADA",
+        ///     "descripcion": "Orden asignada a un técnico"
+        ///   }
+        /// ]
+        /// ```
+        /// </remarks>
+        [HttpGet("estados")]
+        [Authorize]
+        [ProducesResponseType(typeof(List<object>), (int)HttpStatusCode.OK)]
+        public ActionResult<List<object>> ObtenerEstados()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo lista de estados para órdenes de trabajo");
+                
+                // Obtener todos los valores del enum
+                var estados = Enum.GetValues(typeof(EstadoOrden))
+                    .Cast<EstadoOrden>()
+                    .Select(e => new
+                    {
+                        Id = (int)e,
+                        Valor = e.ToDbValue(),
+                        Nombre = e.ToString(),
+                        Descripcion = e.GetDescription()
+                    })
+                    .ToList();
+                
+                return Ok(estados);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener estados de órdenes");
+                return StatusCode(500, UtilidadesManejoErrores.CreateErrorResponse(
+                    TipoError.ErrorServidorInterno,
+                    "Error al obtener estados",
+                    "No se pudieron obtener los estados de las órdenes"));
             }
         }
     }

@@ -1,0 +1,8 @@
+﻿{
+    "nuevoCliente":  true,
+    "nombreCliente":  "Cliente de Prueba",
+    "creadoPorUserId":  1,
+    "estado":  "CAPTURADA",
+    "prioridad":  1,
+    "notas":  "Prueba de cliente nuevo"
+}

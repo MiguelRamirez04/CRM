@@ -1,0 +1,19 @@
+{
+  "notas": "Cliente nuevo - Prueba de funcionamiento",
+  "citaProgramadaInicio": "2025-10-08T15:00:00.000Z",
+  "citaProgramadaFin": "2025-10-08T16:00:00.000Z",
+  "modalidad": "Presencial",
+  "tipoOrden": "Mantenimiento",
+  "cotizaciones": "COT-2025-001-TEST",
+  "nuevoCliente": true,
+  "nombreCliente": "Juan Pérez - Cliente Nuevo",
+  "prioridad": 3,
+  "estado": "CAPTURADA",
+  "ubicacionText": "Sucursal Centro - Prueba",
+  "estadoFacturado": "NO",
+  "requiereFactura": false,
+  "facturaFolio": null,
+  "costoReal": null,
+  "costoEstimado": 1200.00,
+  "creadoPorUserId": 3
+}
