@@ -43,6 +43,7 @@ namespace back_cabs.CRM.models.Soporte
         /// </summary>
         [Key]
         [Column("id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         /// <summary>
@@ -104,7 +105,7 @@ namespace back_cabs.CRM.models.Soporte
         /// Descripción detallada de la falla reportada por el cliente.
         /// </summary>
         [Required(ErrorMessage = "La descripción de la falla es obligatoria.")]
-        [Column("descripcion_falla", TypeName = "NVARCHAR(MAX")]
+        [Column("descripcion_falla", TypeName = "NVARCHAR(MAX)")]
         public string DescripcionFalla { get; set; } = string.Empty;
 
         /// <summary>
@@ -142,7 +143,7 @@ namespace back_cabs.CRM.models.Soporte
 
         /// <summary>
         /// Costo de la mano de obra de la reparación.
-        /// </summary
+        /// </summary>
         [Column("costo_mano_obra", TypeName = "decimal(12,2)")]
         public decimal? CostoManoObra { get; set; }
 
@@ -169,16 +170,14 @@ namespace back_cabs.CRM.models.Soporte
         /// Costo total de la reparación a precio público (mano de obra + refacciones público).
         /// Esta es una propiedad calculada en la base de datos, no mapeada directamente.
         /// </summary>
-        
-      [Column("costo_total_publico", TypeName = "decimal(12,2)")]
+        [Column("costo_total_publico", TypeName = "decimal(12,2)")]
         public decimal CostoTotalPublico { get; set; }
 
         /// <summary>
         /// Margen estimado de ganancia por las refacciones.
         /// Esta es una propiedad calculada en la base de datos, no mapeada directamente.
         /// </summary>
-        
-      [Column("margen_estimado", TypeName = "decimal(12,2)")]
+        [Column("margen_estimado", TypeName = "decimal(12,2)")]
         public decimal MargenEstimado { get; set; }
 
         /// <summary>

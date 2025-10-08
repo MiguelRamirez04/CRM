@@ -4,30 +4,53 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace back_cabs.CRM.models.Shared
 {
+    /// <summary>
+    /// Entidad que representa una foto asociada a un detalle de evaluación
+    /// </summary>
     [Table("evaluaciones_fotos")]
     public class EvaluacionFoto
     {
+        /// <summary>
+        /// Identificador único de la foto (autoincremental)
+        /// </summary>
         [Key]
+        [Column("id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        /// <summary>
+        /// ID del detalle de evaluación al que pertenece la foto
+        /// </summary>
         [Required]
         [Column("detalle_id")]
         public int DetalleId { get; set; }
 
+        /// <summary>
+        /// ID del documento/foto
+        /// </summary>
         [Required]
         [Column("documento_id")]
         public int DocumentoId { get; set; }
 
+        /// <summary>
+        /// Tipo de foto (antes, durante, después, etc.)
+        /// </summary>
         [Column("tipo")]
         [StringLength(20)]
         public string? Tipo { get; set; }
 
+        /// <summary>
+        /// Descripción de la foto
+        /// </summary>
         [Column("descripcion")]
         [StringLength(500)]
         public string? Descripcion { get; set; }
 
+        /// <summary>
+        /// Fecha y hora de creación
+        /// </summary>
         [Required]
-        [Column("creado_en")]
+        [Column("creado_en", TypeName = "DATETIME2(0)")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
     }
 }

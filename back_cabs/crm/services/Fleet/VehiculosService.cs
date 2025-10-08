@@ -1,6 +1,6 @@
 using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Fleet;
-using back_cabs.CRM.models.Fleet;
+using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace back_cabs.CRM.services.Fleet;

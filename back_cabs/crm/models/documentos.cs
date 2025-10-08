@@ -16,6 +16,7 @@ namespace back_cabs.CRM.models.Files
         /// </summary>
         [Key]
         [Column("id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         /// <summary>

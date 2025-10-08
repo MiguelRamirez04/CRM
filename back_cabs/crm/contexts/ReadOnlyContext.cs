@@ -1,6 +1,9 @@
 using back_cabs.CRM.models.Auth;
-using back_cabs.CRM.models.Fleet;
+using back_cabs.CRM.models.Shared;
 using back_cabs.CRM.models.Recepcion;
+using back_cabs.CRM.models.Administracion;
+using back_cabs.CRM.models.Soporte;
+using back_cabs.CRM.models.Files;
 using back_cabs.CRM.models;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +35,61 @@ public class ReadOnlyContext : DbContext
     /// Vehículos de la flota
     /// </summary>
     public DbSet<Vehiculo> Vehiculos { get; set; } = null!;
+
+    /// <summary>
+    /// Catálogo de clientes
+    /// </summary>
+    public DbSet<Catalog_Clientes> CatalogClientes { get; set; } = null!;
+
+    /// <summary>
+    /// Catálogo de productos y servicios
+    /// </summary>
+    public DbSet<Catalog_Productos_Servicio_Ref> CatalogProductosServicios { get; set; } = null!;
+
+    /// <summary>
+    /// Gastos de viáticos
+    /// </summary>
+    public DbSet<Finance_Gastos_Viaticos> GastosViaticos { get; set; } = null!;
+
+    /// <summary>
+    /// Evaluaciones de servicio
+    /// </summary>
+    public DbSet<Evaluacion> Evaluaciones { get; set; } = null!;
+
+    /// <summary>
+    /// Detalles de evaluaciones
+    /// </summary>
+    public DbSet<EvaluacionDetalle> EvaluacionesDetalles { get; set; } = null!;
+
+    /// <summary>
+    /// Fotos de evaluaciones
+    /// </summary>
+    public DbSet<EvaluacionFoto> EvaluacionesFotos { get; set; } = null!;
+
+    /// <summary>
+    /// Reparaciones de dispositivos
+    /// </summary>
+    public DbSet<Reparacion> Reparaciones { get; set; } = null!;
+
+    /// <summary>
+    /// Componentes utilizados en reparaciones
+    /// </summary>
+    public DbSet<ReparacionComponente> ReparacionesComponentes { get; set; } = null!;
+
+    /// <summary>
+    /// Fotos de reparaciones
+    /// </summary>
+    public DbSet<ReparacionFoto> ReparacionesFotos { get; set; } = null!;
+
+    /// <summary>
+    /// Ejecuciones de órdenes de trabajo
+    /// </summary>
+    public DbSet<EjecucionOrden> EjecucionesOrden { get; set; } = null!;
+
+    /// <summary>
+    /// Documentos y archivos del sistema
+    /// </summary>
+    public DbSet<FilesDocumento> Documentos { get; set; } = null!;
 
     /// <summary>
     /// Vista completa de clientes con datos de sistema legacy (solo lectura)
@@ -124,6 +182,92 @@ public class ReadOnlyContext : DbContext
         modelBuilder.Entity<Vehiculo>(entity =>
         {
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
+        });
+
+        // Configuración de la entidad Catalog_Clientes (catalog_clientes)
+        modelBuilder.Entity<Catalog_Clientes>(entity =>
+        {
+            entity.HasIndex(e => e.LegacyClientId).IsUnique().HasFilter("[legacy_client_id] IS NOT NULL");
+            entity.HasIndex(e => e.Email).HasFilter("[email] IS NOT NULL");
+            entity.HasIndex(e => e.RFC).IsUnique().HasFilter("[rfc] IS NOT NULL");
+        });
+
+        // Configuración de la entidad Catalog_Productos_Servicio_Ref (catalog_productos_servicio_ref)
+        modelBuilder.Entity<Catalog_Productos_Servicio_Ref>(entity =>
+        {
+            entity.HasIndex(e => e.Nombre);
+            entity.HasIndex(e => e.LegacyProductId).IsUnique().HasFilter("[legacy_product_id] IS NOT NULL");
+        });
+
+        // Configuración de la entidad Finance_Gastos_Viaticos (finance_gastos_viaticos)
+        modelBuilder.Entity<Finance_Gastos_Viaticos>(entity =>
+        {
+            entity.HasIndex(e => new { e.CordenId, e.Fecha });
+            entity.HasIndex(e => e.Fecha);
+        });
+
+        // Configuración de la entidad Evaluacion (evaluaciones)
+        modelBuilder.Entity<Evaluacion>(entity =>
+        {
+            entity.HasIndex(e => new { e.OrdenId, e.CreadoEn });
+            entity.HasIndex(e => e.EvaluadorId);
+            entity.HasIndex(e => e.ClienteId).HasFilter("[cliente_id] IS NOT NULL");
+        });
+
+        // Configuración de la entidad EvaluacionDetalle (evaluaciones_detalles)
+        modelBuilder.Entity<EvaluacionDetalle>(entity =>
+        {
+            entity.HasIndex(e => e.EvaluacionId);
+            entity.HasIndex(e => new { e.EvaluacionId, e.Fase });
+        });
+
+        // Configuración de la entidad EvaluacionFoto (evaluaciones_fotos)
+        modelBuilder.Entity<EvaluacionFoto>(entity =>
+        {
+            entity.HasIndex(e => e.DetalleId);
+            entity.HasIndex(e => e.DocumentoId);
+        });
+
+        // Configuración de la entidad Reparacion (reparaciones)
+        modelBuilder.Entity<Reparacion>(entity =>
+        {
+            entity.HasIndex(e => e.OrdenId);
+            entity.HasIndex(e => e.TecnicoId);
+            entity.HasIndex(e => new { e.Resultado, e.FechaLlegada });
+            entity.HasIndex(e => e.FechaLlegada);
+        });
+
+        // Configuración de la entidad ReparacionComponente (reparacion_componentes)
+        modelBuilder.Entity<ReparacionComponente>(entity =>
+        {
+            entity.HasIndex(e => e.ReparacionId);
+            entity.HasIndex(e => e.Componente);
+        });
+
+        // Configuración de la entidad ReparacionFoto (reparacion_fotos)
+        modelBuilder.Entity<ReparacionFoto>(entity =>
+        {
+            entity.HasIndex(e => e.ReparacionId);
+            entity.HasIndex(e => e.DocumentoId);
+            entity.HasIndex(e => new { e.ReparacionId, e.Etapa });
+        });
+
+        // Configuración de la entidad EjecucionOrden (ejecuciones_orden)
+        modelBuilder.Entity<EjecucionOrden>(entity =>
+        {
+            entity.HasIndex(e => e.OrdenId);
+            entity.HasIndex(e => e.TecnicoId);
+            entity.HasIndex(e => new { e.TipoEjecucion, e.HrInicio });
+            entity.HasIndex(e => e.HrInicio);
+        });
+
+        // Configuración de la entidad FilesDocumento (files_documentos)
+        modelBuilder.Entity<FilesDocumento>(entity =>
+        {
+            entity.HasIndex(e => e.CreadoPorUsuarioId);
+            entity.HasIndex(e => new { e.EntidadTipo, e.EntidadId });
+            entity.HasIndex(e => e.RutaAlmacenamiento).IsUnique();
+            entity.HasIndex(e => e.NombreArchivo);
         });
 
     }
