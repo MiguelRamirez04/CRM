@@ -1,0 +1,56 @@
+<div class="position-relative">
+  <div class="input-group">
+    <input type="text"
+           class="form-control"
+           [placeholder]="placeholder"
+           [disabled]="disabled"
+           [(ngModel)]="terminoBusqueda"
+           (input)="onInputChange()"
+           (focus)="onFocus()"
+           (blur)="onBlur()"
+           autocomplete="off">
+
+    <button class="btn btn-outline-secondary"
+            type="button"
+            (click)="limpiarBusqueda()"
+            [disabled]="disabled"
+            *ngIf="terminoBusqueda">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+
+  <!-- Resultados de búsqueda -->
+  <div class="dropdown-menu w-100 show"
+       *ngIf="mostrarResultados && resultados.length > 0"
+       style="position: absolute; z-index: 1000;">
+    <div *ngFor="let cliente of resultados"
+         class="dropdown-item"
+         (click)="onClienteSeleccionado(cliente)">
+      <div class="d-flex justify-content-between">
+        <span class="fw-bold">{{ cliente.nombre }}</span>
+        <small class="text-muted" *ngIf="cliente.rfc">RFC: {{ cliente.rfc }}</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sin resultados -->
+  <div class="dropdown-menu w-100 show"
+       *ngIf="mostrarResultados && terminoBusqueda.length >= 2 && resultados.length === 0 && !loading"
+       style="position: absolute; z-index: 1000;">
+    <div class="dropdown-item text-muted">
+      No se encontraron clientes
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="dropdown-menu w-100 show"
+       *ngIf="loading"
+       style="position: absolute; z-index: 1000;">
+    <div class="dropdown-item text-center">
+      <div class="spinner-border spinner-border-sm me-2" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      Buscando...
+    </div>
+  </div>
+</div>

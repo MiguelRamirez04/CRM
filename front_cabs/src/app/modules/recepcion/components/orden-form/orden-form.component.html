@@ -1,0 +1,204 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="row g-3">
+  <!-- Tipo de Cliente -->
+  <div class="col-12">
+    <label class="form-label fw-bold">Tipo de Cliente</label>
+    <div class="btn-group w-100" role="group">
+      <input type="radio"
+             class="btn-check"
+             id="clienteNuevo"
+             [value]="'nuevo'"
+             formControlName="tipoCliente"
+             (change)="onTipoClienteChange('nuevo')">
+      <label class="btn btn-outline-primary" for="clienteNuevo">Cliente Nuevo</label>
+
+      <input type="radio"
+             class="btn-check"
+             id="clienteExistente"
+             [value]="'existente'"
+             formControlName="tipoCliente"
+             (change)="onTipoClienteChange('existente')">
+      <label class="btn btn-outline-primary" for="clienteExistente">Cliente Existente</label>
+    </div>
+  </div>
+
+  <!-- Cliente Nuevo -->
+  <div class="col-12" *ngIf="tipoCliente === 'nuevo'">
+    <label for="nombreCliente" class="form-label">Nombre del Cliente *</label>
+    <input type="text"
+           class="form-control"
+           id="nombreCliente"
+           formControlName="nombreCliente"
+           [class.is-invalid]="isFieldInvalid('nombreCliente')"
+           placeholder="Ingrese el nombre del cliente">
+    <div class="invalid-feedback" *ngIf="isFieldInvalid('nombreCliente')">
+      {{ getFieldError('nombreCliente') }}
+    </div>
+  </div>
+
+  <!-- Cliente Existente -->
+  <div class="col-12" *ngIf="tipoCliente === 'existente'">
+    <label class="form-label">Buscar Cliente Existente</label>
+    <app-cliente-search
+      placeholder="Buscar por nombre o RFC..."
+      (busquedaCambiada)="onBusquedaCliente($event)"
+      (clienteSeleccionado)="onClienteSeleccionado($event)">
+    </app-cliente-search>
+    <input type="hidden" formControlName="clienteId">
+  </div>
+
+  <!-- Tipo de Orden y Modalidad -->
+  <div class="col-md-6">
+    <label for="tipoOrden" class="form-label">Tipo de Orden *</label>
+    <select class="form-select"
+            id="tipoOrden"
+            formControlName="tipoOrden"
+            [class.is-invalid]="isFieldInvalid('tipoOrden')">
+      <option *ngFor="let tipo of [TipoOrden.ASESORIA, TipoOrden.COTIZACION, TipoOrden.SERVICIO]"
+              [value]="tipo">
+        {{ tipo }}
+      </option>
+    </select>
+  </div>
+
+  <div class="col-md-6">
+    <label for="modalidad" class="form-label">Modalidad *</label>
+    <select class="form-select"
+            id="modalidad"
+            formControlName="modalidad"
+            [class.is-invalid]="isFieldInvalid('modalidad')">
+      <option *ngFor="let mod of [Modalidad.PRESENCIAL, Modalidad.REMOTO, Modalidad.HIBRIDO]"
+              [value]="mod">
+        {{ mod }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Prioridad y Estado -->
+  <div class="col-md-6">
+    <label for="prioridad" class="form-label">Prioridad *</label>
+    <select class="form-select"
+            id="prioridad"
+            formControlName="prioridad"
+            [class.is-invalid]="isFieldInvalid('prioridad')">
+      <option *ngFor="let p of [1,2,3,4,5]" [value]="p">{{ p }}</option>
+    </select>
+  </div>
+
+  <div class="col-md-6">
+    <label for="estado" class="form-label">Estado *</label>
+    <select class="form-select"
+            id="estado"
+            formControlName="estado"
+            [class.is-invalid]="isFieldInvalid('estado')">
+      <option *ngFor="let est of [EstadoOrden.CAPTURADA, EstadoOrden.ASIGNADA, EstadoOrden.EN_PROCESO, EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA]"
+              [value]="est">
+        {{ est }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Fechas -->
+  <div class="col-md-6">
+    <label for="citaProgramadaInicio" class="form-label">Fecha y Hora de Cita *</label>
+    <input type="datetime-local"
+           class="form-control"
+           id="citaProgramadaInicio"
+           formControlName="citaProgramadaInicio"
+           [class.is-invalid]="isFieldInvalid('citaProgramadaInicio')">
+  </div>
+
+  <div class="col-md-6">
+    <label for="citaProgramadaFin" class="form-label">Fecha y Hora Fin (Opcional)</label>
+    <input type="datetime-local"
+           class="form-control"
+           id="citaProgramadaFin"
+           formControlName="citaProgramadaFin">
+  </div>
+
+  <!-- Ubicación -->
+  <div class="col-12">
+    <label for="ubicacionText" class="form-label">Ubicación</label>
+    <input type="text"
+           class="form-control"
+           id="ubicacionText"
+           formControlName="ubicacionText"
+           placeholder="Dirección o lugar de la cita">
+  </div>
+
+  <!-- Notas -->
+  <div class="col-12">
+    <label for="notas" class="form-label">Notas</label>
+    <textarea class="form-control"
+              id="notas"
+              formControlName="notas"
+              rows="3"
+              placeholder="Notas adicionales sobre la orden"></textarea>
+  </div>
+
+  <!-- Facturación -->
+  <div class="col-12">
+    <div class="form-check">
+      <input class="form-check-input"
+             type="checkbox"
+             id="requiereFactura"
+             formControlName="requiereFactura">
+      <label class="form-check-label" for="requiereFactura">
+        Requiere Factura
+      </label>
+    </div>
+  </div>
+
+  <div class="col-md-6" *ngIf="form.get('requiereFactura')?.value">
+    <label for="facturaFolio" class="form-label">Folio de Factura</label>
+    <input type="text"
+           class="form-control"
+           id="facturaFolio"
+           formControlName="facturaFolio"
+           placeholder="Número de folio">
+  </div>
+
+  <!-- Costos -->
+  <div class="col-md-6">
+    <label for="costoEstimado" class="form-label">Costo Estimado</label>
+    <div class="input-group">
+      <span class="input-group-text">$</span>
+      <input type="number"
+             class="form-control"
+             id="costoEstimado"
+             formControlName="costoEstimado"
+             min="0"
+             step="0.01">
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <label for="costoReal" class="form-label">Costo Real</label>
+    <div class="input-group">
+      <span class="input-group-text">$</span>
+      <input type="number"
+             class="form-control"
+             id="costoReal"
+             formControlName="costoReal"
+             min="0"
+             step="0.01">
+    </div>
+  </div>
+
+  <!-- Botones -->
+  <div class="col-12">
+    <div class="d-flex gap-2 justify-content-end">
+      <button type="button"
+              class="btn btn-secondary"
+              (click)="onCancelar()"
+              [disabled]="loading">
+        Cancelar
+      </button>
+      <button type="submit"
+              class="btn btn-primary"
+              [disabled]="loading || form.invalid">
+        <span class="spinner-border spinner-border-sm me-2" *ngIf="loading" role="status"></span>
+        {{ ordenEditar ? 'Actualizar' : 'Crear' }} Orden
+      </button>
+    </div>
+  </div>
+</form>
