@@ -11,7 +11,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace back_cabs.CRM.DTOs;
+namespace CRM.DTOs.Response;
 
 /// <summary>
 /// DTO para representar los resultados paginados del procedimiento almacenado de clientes

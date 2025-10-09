@@ -24,7 +24,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace back_cabs.CRM.DTOs.Auth
+namespace CRM.DTOs.Request
 {
     /// <summary>
     /// DTO para solicitud de login de usuario

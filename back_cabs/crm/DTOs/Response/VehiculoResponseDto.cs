@@ -1,4 +1,4 @@
-namespace back_cabs.CRM.DTOs.Fleet;
+namespace CRM.DTOs.Response;
 
 public class VehiculoResponseDto
 {

@@ -11,7 +11,7 @@
 
 using back_cabs.CRM.services;
 using Microsoft.AspNetCore.Mvc;
-using back_cabs.CRM.DTOs;
+using CRM.DTOs.Response;
 
 namespace back_cabs.CRM.controllers
 {

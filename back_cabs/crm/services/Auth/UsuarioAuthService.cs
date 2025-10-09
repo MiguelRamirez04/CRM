@@ -19,7 +19,8 @@
 // =====================================================================================
 
 using back_cabs.CRM.contexts;
-using back_cabs.CRM.DTOs.Auth;
+using CRM.DTOs.Request;
+using CRM.DTOs.Response;
 using back_cabs.CRM.models.Auth;
 using back_cabs.CRM.validators.Auth;
 using back_cabs.CRM.Middleware;

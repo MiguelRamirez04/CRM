@@ -20,7 +20,8 @@
 //
 // =====================================================================================
 
-using back_cabs.CRM.DTOs.Auth;
+using CRM.DTOs.Request;
+using CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.models.Auth;

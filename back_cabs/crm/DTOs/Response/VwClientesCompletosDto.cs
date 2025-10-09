@@ -13,7 +13,7 @@
 //
 // =====================================================================================
 
-namespace back_cabs.CRM.DTOs
+namespace CRM.DTOs.Response
 {
     /// <summary>
     /// DTO para la vista de solo lectura VwClientesCompletos.

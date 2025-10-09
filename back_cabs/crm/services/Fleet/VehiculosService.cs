@@ -1,5 +1,6 @@
 using back_cabs.CRM.contexts;
-using back_cabs.CRM.DTOs.Fleet;
+using CRM.DTOs.Request;
+using CRM.DTOs.Response;
 using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
 

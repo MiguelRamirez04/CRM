@@ -22,7 +22,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace back_cabs.CRM.DTOs.Auth
+namespace CRM.DTOs.Response
 {
     /// <summary>
     /// DTO de respuesta para login exitoso

@@ -21,7 +21,7 @@
 // =====================================================================================
 
 using FluentValidation;
-using back_cabs.CRM.DTOs.Auth;
+using CRM.DTOs.Request;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.contexts;
 using Microsoft.EntityFrameworkCore;

@@ -1,11 +1,11 @@
 // =====================================================================================
-// CONTROLADOR RECEPCION - RecepcionController.cs
+// CONTROLADOR ORDEN TRABAJO - OrdenTrabajoController.cs
 // =====================================================================================
 //
 // ¿QUÉ HACE ESTE ARCHIVO?
 // Define los endpoints HTTP para operaciones de Órdenes de Trabajo en el módulo de Recepción.
 // Incluye CRUD completo: crear, leer, actualizar órdenes de trabajo.
-// Conectado con DashRecepcionService y base de datos ops.ordenes_trabajo.
+// Conectado con OrdenTrabajoService y base de datos ops.ordenes_trabajo.
 //
 // CUÁNDO USARLO:
 // - Gestión de órdenes de trabajo (GET, POST, PUT)
@@ -21,7 +21,8 @@
 //
 // =====================================================================================
 
-using back_cabs.CRM.DTOs.Recepcion;
+using CRM.DTOs.Request;
+using CRM.DTOs.Response;
 using back_cabs.CRM.services;
 using back_cabs.CRM.services.Recepcion;
 using back_cabs.CRM.Middleware;
@@ -74,25 +75,25 @@ namespace back_cabs.CRM.controllers.Recepcion
     public class OrdenTrabajoRequestWrapper
     {
         [JsonPropertyName("requestDto")]
-        public OrdenTrabajoCreacionRequestDto? RequestDto { get; set; }
+        public OrdenTrabajoRequestDto? RequestDto { get; set; }
     }
 
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Recepcion")]
     [Produces("application/json")]
     [Authorize] // Todos los roles pueden acceder (ADMINISTRADOR, SOPORTE, RECEPCION)
-    public class RecepcionController : ControllerBase
+    public class OrdenTrabajoController : ControllerBase
     {
-        private readonly DashRecepcionService _recepcionService;
+        private readonly OrdenTrabajoService _ordenTrabajoService;
         private readonly ClientesCompletosService _clientesCompletosService;
-        private readonly ILogger<RecepcionController> _logger;
+        private readonly ILogger<OrdenTrabajoController> _logger;
 
-        public RecepcionController(
-            DashRecepcionService recepcionService,
+        public OrdenTrabajoController(
+            OrdenTrabajoService ordenTrabajoService,
             ClientesCompletosService clientesCompletosService,
-            ILogger<RecepcionController> logger)
+            ILogger<OrdenTrabajoController> logger)
         {
-            _recepcionService = recepcionService ?? throw new ArgumentNullException(nameof(recepcionService));
+            _ordenTrabajoService = ordenTrabajoService ?? throw new ArgumentNullException(nameof(ordenTrabajoService));
             _clientesCompletosService = clientesCompletosService ?? throw new ArgumentNullException(nameof(clientesCompletosService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -169,7 +170,7 @@ namespace back_cabs.CRM.controllers.Recepcion
                     }
                 }
 
-                var ordenes = await _recepcionService.ObtenerTodasLasOrdenesAsync(skip, take, estado);
+                var ordenes = await _ordenTrabajoService.ObtenerTodasLasOrdenesAsync(skip, take, estado);
 
                 return Ok(ordenes);
             }
@@ -205,14 +206,14 @@ namespace back_cabs.CRM.controllers.Recepcion
                 // Verificar usuario directamente
                 var usuarioExiste = await Task.Run(() => {
                     try {
-                        return _recepcionService.GetType().GetMethod("VerificarUsuarioExisteAsync") != null;
+                        return _ordenTrabajoService.GetType().GetMethod("VerificarUsuarioExisteAsync") != null;
                     } catch {
                         return false;
                     }
                 });
 
                 // Para simplificar, vamos a crear una orden de prueba mínima para ver si funciona
-                var testDto = new OrdenTrabajoCreacionRequestDto {
+                var testDto = new OrdenTrabajoRequestDto {
                     NuevoCliente = false,
                     ClienteId = clienteId,
                     CitaProgramadaInicio = DateTime.Now.AddHours(1),
@@ -225,7 +226,7 @@ namespace back_cabs.CRM.controllers.Recepcion
 
                 // Intentar crear la orden para ver si pasa las validaciones
                 try {
-                    var orden = await _recepcionService.CrearOrdenTrabajoAsync(testDto);
+                    var orden = await _ordenTrabajoService.CrearOrdenTrabajoAsync(testDto);
                     return Ok(new {
                         success = true,
                         message = "Orden creada exitosamente",
@@ -268,7 +269,7 @@ namespace back_cabs.CRM.controllers.Recepcion
             {
                 _logger.LogInformation("Buscando orden de trabajo con ID: {Id}", id);
 
-                var orden = await _recepcionService.ObtenerOrdenPorIdAsync(id);
+                var orden = await _ordenTrabajoService.ObtenerOrdenPorIdAsync(id);
 
                 if (orden == null)
                 {
@@ -370,7 +371,7 @@ namespace back_cabs.CRM.controllers.Recepcion
                 }
 
                 // 3. Crear orden usando el servicio
-                var ordenCreada = await _recepcionService.CrearOrdenTrabajoAsync(requestDto);
+                var ordenCreada = await _ordenTrabajoService.CrearOrdenTrabajoAsync(requestDto);
 
                 _logger.LogInformation("Orden creada exitosamente con ID: {Id}", ordenCreada.Id);
 
@@ -422,7 +423,7 @@ namespace back_cabs.CRM.controllers.Recepcion
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public async Task<IActionResult> ActualizarOrden(int id, [FromBody] OrdenTrabajoActualizacionRequestDto requestDto)
+        public async Task<IActionResult> ActualizarOrden(int id, [FromBody] OrdenTrabajoUpdateRequestDto requestDto)
         {
             try
             {
@@ -452,7 +453,7 @@ namespace back_cabs.CRM.controllers.Recepcion
                 }
 
                 // Actualizar usando el servicio
-                var actualizada = await _recepcionService.ActualizarOrdenTrabajoAsync(id, requestDto);
+                var actualizada = await _ordenTrabajoService.ActualizarOrdenTrabajoAsync(id, requestDto);
 
                 if (!actualizada)
                 {
@@ -504,7 +505,7 @@ namespace back_cabs.CRM.controllers.Recepcion
             {
                 _logger.LogInformation("Obteniendo estadísticas del dashboard");
 
-                var estadisticas = await _recepcionService.ObtenerEstadisticasAsync();
+                var estadisticas = await _ordenTrabajoService.ObtenerEstadisticasAsync();
 
                 return Ok(estadisticas);
             }
@@ -554,7 +555,7 @@ namespace back_cabs.CRM.controllers.Recepcion
                     return Ok(new List<Dictionary<string, object>>()); // Devolver lista vacía
                 }
 
-                var clientes = await _recepcionService.BuscarClientesPorNombreORfcAsync(
+                var clientes = await _ordenTrabajoService.BuscarClientesPorNombreORfcAsync(
                     busqueda, 
                     limite);
 

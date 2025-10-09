@@ -1,5 +1,5 @@
 // =====================================================================================
-// SERVICIO RECEPCIÓN - DashRecepcionService.cs (SIMPLIFICADO)
+// SERVICIO ORDEN TRABAJO - OrdenTrabajoService.cs
 // =====================================================================================
         /// <summary>
         /// Obtiene estadísticas básicas del módulo de recepción
@@ -23,18 +23,18 @@ namespace back_cabs.CRM.services.Recepcion
     /// <summary>
     /// Servicio para gestión de órdenes de trabajo del módulo de Recepción
     /// </summary>
-    public class DashRecepcionService
+    public class OrdenTrabajoService
     {
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
-        private readonly ILogger<DashRecepcionService> _logger;
+        private readonly ILogger<OrdenTrabajoService> _logger;
         private readonly ClientesLegacyValidationService _clientesLegacyValidationService;
 
-        public DashRecepcionService(
+        public OrdenTrabajoService(
             WriteContext writeContext,
             ReadOnlyContext readContext,
             ClientesLegacyValidationService clientesLegacyValidationService,
-            ILogger<DashRecepcionService> logger)
+            ILogger<OrdenTrabajoService> logger)
         {
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));

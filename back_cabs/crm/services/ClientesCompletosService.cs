@@ -10,8 +10,7 @@
 //
 // =====================================================================================
 
-using back_cabs.CRM.DTOs;
-using back_cabs.CRM.DTOs.Recepcion;
+using CRM.DTOs.Response;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Data;

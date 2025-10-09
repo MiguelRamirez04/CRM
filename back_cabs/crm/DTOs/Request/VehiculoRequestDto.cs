@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace back_cabs.CRM.DTOs.Fleet;
+namespace CRM.DTOs.Request;
 
 public class VehiculoRequestDto
 {

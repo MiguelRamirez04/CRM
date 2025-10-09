@@ -27,7 +27,7 @@ using System.Text.Json.Serialization;
 using back_cabs.CRM.Core.Validation;
 using back_cabs.CRM.enums;
 
-namespace back_cabs.CRM.DTOs.Auth
+namespace CRM.DTOs.Request
 {
     /// <summary>
     /// DTO para solicitud de registro de nuevo usuario

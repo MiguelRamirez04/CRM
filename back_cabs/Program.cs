@@ -43,7 +43,7 @@ builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
-builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 
