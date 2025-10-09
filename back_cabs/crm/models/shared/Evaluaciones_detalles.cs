@@ -7,7 +7,7 @@ namespace back_cabs.CRM.models.Shared
     /// <summary>
     /// Entidad que representa el detalle de una evaluación por fase
     /// </summary>
-    [Table("evaluaciones_detalles")]
+    [Table("evaluacion_detalles")]
     public class EvaluacionDetalle
     {
         /// <summary>
@@ -24,6 +24,12 @@ namespace back_cabs.CRM.models.Shared
         [Required]
         [Column("evaluacion_id")]
         public int EvaluacionId { get; set; }
+
+        ///<summary>
+        /// Propiedad de navegación para la evaluación padre
+        /// </summary>
+        [ForeignKey("EvaluacionId")]
+        public virtual Evaluacion Evaluacion { get; set; } = null!; // Se asume que siempre habrá una evaluación
 
         /// <summary>
         /// Fase del proceso evaluada
