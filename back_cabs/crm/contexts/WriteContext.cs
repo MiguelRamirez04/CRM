@@ -5,6 +5,7 @@ using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace back_cabs.CRM.contexts;
 
@@ -180,14 +181,21 @@ public class WriteContext : DbContext
         // Configuración de la entidad Evaluacion (evaluaciones)
         modelBuilder.Entity<Evaluacion>(entity =>
         {
+            entity.HasKey(e => e.Id);
+
             entity.HasIndex(e => new { e.OrdenId, e.CreadoEn });
             entity.HasIndex(e => e.EvaluadorId);
             entity.HasIndex(e => e.ClienteId).HasFilter("[cliente_id] IS NOT NULL");
 
             //DJ aqui vas weon no se te olvide
-            ///  AWAWAAAAAAEWAWAWAWWAWAW
             entity.Property(e => e.EvaluadorId).HasColumnName("evaluador_id").IsRequired(true);
-            entity.Property(e => e.OrdenId).HasColumnName("orden_id").IsRequired(true);
+            entity.Property(e => e.Objetivo).HasMaxLength(200);
+            entity.Property(e => e.ComentariosGenerales).HasColumnName("comentarios_generales");
+            entity.Property(e => e.ScoreCalidadTotal).HasColumnName("score_calidad_total");
+            entity.Property(e => e.RequiereSeguimiento).HasColumnName("requiere_seguimiento").IsRequired(true);
+            entity.Property(e => e.SeguimientoNotas).HasColumnName("seguimiento_notas");
+            entity.Property(e => e.CreadoEn).HasColumnName("creado_en").HasColumnType("DATETIME2(0)").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            
         });
 
         // Configuración de la entidad EvaluacionDetalle (evaluaciones_detalles)
