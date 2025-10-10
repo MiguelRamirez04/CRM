@@ -90,7 +90,18 @@ public class EvaluacionService : Evaluacion
     /// </summary>
     /// <param name="id">El ID de la evaluación a eliminar.</param>
     /// <returns>True si se eliminó, False si no se encontró.</returns>
-    
+    public async Task<bool> DeleteEvaluacionAsync(int id)
+    {
+        var evaliacionAEliminar = await _writeContext.Evaluaciones.FindAsync(id);
+        if (evaliacionAEliminar == null)
+        {
+            return false;
+        }
+        _writeContext.Evaluaciones.Remove(evaliacionAEliminar);
+        await _writeContext.SaveChangesAsync();
+        return true;
+
+    }
     
     #endregion
 
