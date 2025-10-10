@@ -14,7 +14,7 @@
 //
 // =====================================================================================
 
-import { EstadoOrden, TipoOrden, Modalidad, EstadoFacturado } from '../../enums/estado-orden.enum';
+import { EstadoOrden, TipoOrden, Modalidad, EstadoFacturado } from '../enums/estado-orden.enum';
 
 export interface OrdenTrabajo {
   id: number;

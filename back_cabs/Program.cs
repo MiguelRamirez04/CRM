@@ -148,3 +148,6 @@ app.MapControllers();
 app.Logger.LogInformation("🚀 CRM API iniciada correctamente");
 
 app.Run();
+
+
+Console.WriteLine("Hello, World!");

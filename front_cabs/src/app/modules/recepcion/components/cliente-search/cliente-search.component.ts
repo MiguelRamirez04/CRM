@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClienteLegacy } from '../../../../core/models/orden-trabajo/orden-trabajo.interface';
+import { ClienteLegacy } from '../../../../core/models/orden-trabajo.interface';
 
 @Component({
   selector: 'app-cliente-search',
@@ -14,6 +14,7 @@ export class ClienteSearchComponent implements OnInit {
   @Input() disabled = false;
   @Input() resultados: ClienteLegacy[] = [];
   @Input() loading = false;
+  @Input() invalid = false;
 
   @Output() clienteSeleccionado = new EventEmitter<ClienteLegacy>();
   @Output() busquedaCambiada = new EventEmitter<string>();

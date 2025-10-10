@@ -1,179 +1,147 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgbModule],
+  imports: [CommonModule, RouterLink],
   template: `
-    <div class="container-fluid">
+    <div class="min-h-screen bg-gray-50">
       <!-- Header del Dashboard -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="d-flex justify-content-between align-items-center">
+      <div class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div class="flex justify-between items-center">
             <div>
-              <h1 class="h3 mb-0">Dashboard</h1>
-              <p class="text-muted">Bienvenido al sistema CRM</p>
+              <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p class="text-gray-600 mt-1">Bienvenido al sistema CRM</p>
             </div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-primary" (click)="refreshData()">
-                <i class="fas fa-sync-alt"></i> Actualizar
+            <div class="flex items-center space-x-4">
+              <button class="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200" (click)="refreshData()">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Actualizar
+              </button>
+              <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200" (click)="logout()">
+                <i class="fas fa-sign-out-alt mr-2"></i>
+                Cerrar Sesión
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Cards de Estadísticas -->
-      <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                    Total Usuarios
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.totalUsers }}</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-users fa-2x text-primary"></i>
-                </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Cards de Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-2">Total Usuarios</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.totalUsers }}</p>
               </div>
+              <div class="bg-blue-100 rounded-full p-3">
+                <i class="fas fa-users text-2xl text-blue-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md border-l-4 border-green-500 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-green-500 uppercase tracking-wide mb-2">Tickets Activos</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.activeTickets }}</p>
+              </div>
+              <div class="bg-green-100 rounded-full p-3">
+                <i class="fas fa-ticket-alt text-2xl text-green-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md border-l-4 border-cyan-500 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-cyan-500 uppercase tracking-wide mb-2">Pedidos Pendientes</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.pendingOrders }}</p>
+              </div>
+              <div class="bg-cyan-100 rounded-full p-3">
+                <i class="fas fa-shopping-cart text-2xl text-cyan-500"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-md border-l-4 border-yellow-500 p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-yellow-500 uppercase tracking-wide mb-2">Alertas del Sistema</p>
+                <p class="text-2xl font-bold text-gray-800">{{ stats.systemAlerts }}</p>
+              </div>
+              <div class="bg-yellow-100 rounded-full p-3">
+                <i class="fas fa-exclamation-triangle text-2xl text-yellow-500"></i>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- Panel de Acceso Rápido -->
+        <div class="bg-white rounded-lg shadow-md mb-8">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Acceso Rápido</h3>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <a routerLink="/administracion" class="flex flex-col items-center justify-center p-6 border-2 border-blue-200 rounded-lg text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 transform hover:scale-105">
+                <i class="fas fa-users text-3xl mb-3"></i>
+                <span class="font-medium">Administración</span>
+              </a>
+              <a routerLink="/recepcion" class="flex flex-col items-center justify-center p-6 border-2 border-green-200 rounded-lg text-green-600 hover:bg-green-50 hover:border-green-300 transition-all duration-200 transform hover:scale-105">
+                <i class="fas fa-inbox text-3xl mb-3"></i>
+                <span class="font-medium">Recepción</span>
+              </a>
+              <a routerLink="/soporte" class="flex flex-col items-center justify-center p-6 border-2 border-cyan-200 rounded-lg text-cyan-600 hover:bg-cyan-50 hover:border-cyan-300 transition-all duration-200 transform hover:scale-105">
+                <i class="fas fa-headset text-3xl mb-3"></i>
+                <span class="font-medium">Soporte</span>
+              </a>
+              <a routerLink="/dashboard/profile" class="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 transform hover:scale-105">
+                <i class="fas fa-user text-3xl mb-3"></i>
+                <span class="font-medium">Mi Perfil</span>
+              </a>
             </div>
           </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                    Tickets Activos
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.activeTickets }}</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-ticket-alt fa-2x text-success"></i>
-                </div>
-              </div>
-            </div>
+        <!-- Información del Usuario Actual -->
+        <div class="bg-white rounded-lg shadow-md">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Información de Sesión</h3>
           </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                    Pedidos Pendientes
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pendingOrders }}</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-shopping-cart fa-2x text-info"></i>
-                </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-3">
+                <p class="text-sm text-gray-600"><span class="font-medium text-gray-900">Usuario:</span> {{ currentUser?.name }}</p>
+                <p class="text-sm text-gray-600"><span class="font-medium text-gray-900">Email:</span> {{ currentUser?.email }}</p>
+                <p class="text-sm text-gray-600"><span class="font-medium text-gray-900">Rol:</span> {{ currentUser?.role }}</p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                    Alertas del Sistema
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.systemAlerts }}</div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel de Acceso Rápido -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="card shadow">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Acceso Rápido</h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-3 mb-3">
-                  <a routerLink="/administracion" class="btn btn-outline-primary btn-block p-3">
-                    <i class="fas fa-users fa-2x mb-2"></i><br>
-                    Administración
-                  </a>
-                </div>
-                <div class="col-md-3 mb-3">
-                  <a routerLink="/recepcion" class="btn btn-outline-success btn-block p-3">
-                    <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                    Recepción
-                  </a>
-                </div>
-                <div class="col-md-3 mb-3">
-                  <a routerLink="/soporte" class="btn btn-outline-info btn-block p-3">
-                    <i class="fas fa-headset fa-2x mb-2"></i><br>
-                    Soporte
-                  </a>
-                </div>
-                <div class="col-md-3 mb-3">
-                  <a routerLink="/dashboard/profile" class="btn btn-outline-secondary btn-block p-3">
-                    <i class="fas fa-user fa-2x mb-2"></i><br>
-                    Mi Perfil
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Información del Usuario Actual -->
-      <div class="row">
-        <div class="col-12">
-          <div class="card shadow">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Información de Sesión</h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <p><strong>Usuario:</strong> {{ currentUser?.name }}</p>
-                  <p><strong>Email:</strong> {{ currentUser?.email }}</p>
-                  <p><strong>Rol:</strong> {{ currentUser?.role }}</p>
-                </div>
-                <div class="col-md-6">
-                  <p><strong>Permisos:</strong></p>
-                  <div class="mb-2">
-                    <span *ngFor="let permission of currentUser?.permissions" class="badge badge-primary me-1">
+              <div class="space-y-3">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 mb-2">Permisos:</p>
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <span *ngFor="let permission of currentUser?.permissions" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {{ permission }}
                     </span>
                   </div>
-                  <button class="btn btn-sm btn-outline-danger" (click)="logout()">
-                    <i class="fas fa-sign-out-alt me-1"></i>
-                    Cerrar Sesión
-                  </button>
                 </div>
+                <button class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200" (click)="logout()">
+                  <i class="fas fa-sign-out-alt mr-2"></i>
+                  Cerrar Sesión
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   `,
   styles: [`
     .border-left-primary {

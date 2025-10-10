@@ -24,7 +24,7 @@ import {
   ClienteLegacy,
   EstadisticaRecepcion,
   ClienteResumenDto
-} from '../../../core/models/orden-trabajo/orden-trabajo.interface';
+} from '../../../core/models/orden-trabajo.interface';
 
 @Injectable({
   providedIn: 'root'

@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OrdenTrabajo } from '../../../../core/models/orden-trabajo/orden-trabajo.interface';
+import { OrdenTrabajo } from '../../../../core/models/orden-trabajo.interface';
 
 @Component({
   selector: 'app-orden-list',

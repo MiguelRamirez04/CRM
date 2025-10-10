@@ -1,6 +1,10 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OrdenTrabajo, EstadisticaRecepcion } from '../../../../core/models/orden-trabajo/orden-trabajo.interface';
+import {
+  OrdenTrabajo,
+  EstadisticaRecepcion,
+  OrdenTrabajoRequest,
+} from '../../../../core/models/orden-trabajo.interface';
 import { RecepcionService } from '../../services/recepcion.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
 import { OrdenFormComponent } from '../../components/orden-form/orden-form.component';
@@ -8,9 +12,13 @@ import { OrdenFormComponent } from '../../components/orden-form/orden-form.compo
 @Component({
   selector: 'app-recepcion-dashboard',
   standalone: true,
-  imports: [CommonModule, OrdenListComponent, OrdenFormComponent],
+  imports: [
+    CommonModule,
+    OrdenListComponent,
+    OrdenFormComponent
+],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  styleUrl: './dashboard.component.css',
 })
 export class RecepcionDashboardComponent implements OnInit {
   private recepcionService = inject(RecepcionService);
@@ -20,15 +28,13 @@ export class RecepcionDashboardComponent implements OnInit {
   estadisticas = signal<EstadisticaRecepcion | null>(null);
   loading = signal(false);
   mostrarFormulario = signal(false);
-  ordenEditar = signal<OrdenTrabajo | null>(null);
   error = signal<string | null>(null);
 
   ngOnInit() {
-    this.cargarOrdenes();
-    this.cargarEstadisticas();
+    this.cargarDatosIniciales();
   }
 
-  cargarOrdenes() {
+  cargarDatosIniciales() {
     this.loading.set(true);
     this.error.set(null);
     this.recepcionService.getOrdenes().subscribe({
@@ -36,104 +42,83 @@ export class RecepcionDashboardComponent implements OnInit {
         this.ordenes.set(ordenes);
         this.loading.set(false);
       },
-      error: (error) => {
-        console.error('Error cargando órdenes:', error);
-        this.error.set('Error al cargar las órdenes. Intente nuevamente.');
-        this.loading.set(false);
-      }
+      error: (err) => this.handleError('Error al cargar las órdenes.', err),
     });
-  }
-
-  cargarEstadisticas() {
     this.recepcionService.getEstadisticas().subscribe({
-      next: (stats) => {
-        this.estadisticas.set(stats);
-      },
-      error: (error) => {
-        console.error('Error cargando estadísticas:', error);
-        // No mostrar error para estadísticas, solo log
-      }
+      next: (stats) => this.estadisticas.set(stats),
+      error: (err) =>
+        this.handleError('No se pudieron cargar las estadísticas.', err, false),
     });
   }
 
-  tipoClienteSeleccionado = signal<'nuevo' | 'existente'>('nuevo');
-
-  onNuevaOrden(tipo: 'nuevo' | 'existente') {
-    console.log(`Abriendo modal de nueva orden para cliente ${tipo}`);
-    this.ordenEditar.set(null);
-    this.tipoClienteSeleccionado.set(tipo);
+  onNuevaOrden() {
+    console.log('Botón Nueva Orden presionado');
     this.mostrarFormulario.set(true);
+    console.log('Estado mostrarFormulario:', this.mostrarFormulario());
   }
 
   onEditarOrden(id: number) {
-    const orden = this.ordenes().find(o => o.id === id);
-    if (orden) {
-      this.ordenEditar.set(orden);
-      this.mostrarFormulario.set(true);
-    }
+    // TODO: Implementar edición de orden
+    console.log('Editar orden:', id);
   }
 
   onVerDetalles(id: number) {
-    // TODO: Navegar a página de detalles
+    // Implementar navegación a la página de detalles de la orden
     console.log('Ver detalles de orden:', id);
   }
 
   onEliminarOrden(id: number) {
-    if (confirm('¿Está seguro de eliminar esta orden?')) {
-      // TODO: Implementar eliminación
-      console.log('Eliminar orden:', id);
+    if (confirm('¿Está seguro de eliminar esta orden de trabajo?')) {
+      this.loading.set(true);
+      this.recepcionService.eliminarOrden(id).subscribe({
+        next: () => {
+          this.ordenes.update((ordenes) =>
+            ordenes.filter((o) => o.id !== id)
+          );
+          this.loading.set(false);
+        },
+        error: (err) => this.handleError('Error al eliminar la orden.', err),
+      });
     }
   }
 
-  onGuardarOrden(ordenRequest: any) {
+  onGuardarOrden(ordenRequest: OrdenTrabajoRequest) {
     this.loading.set(true);
     this.error.set(null);
-    if (this.ordenEditar()) {
-      // Actualizar
-      this.recepcionService.actualizarOrden(this.ordenEditar()!.id, ordenRequest).subscribe({
-        next: () => {
-          this.cargarOrdenes();
-          this.mostrarFormulario.set(false);
-          this.loading.set(false);
-        },
-        error: (error) => {
-          console.error('Error actualizando orden:', error);
-          this.error.set('Error al actualizar la orden. Verifique los datos e intente nuevamente.');
-          this.loading.set(false);
-        }
-      });
-    } else {
-      // Crear
-      this.recepcionService.crearOrden(ordenRequest).subscribe({
-        next: (nuevaOrden) => {
-          this.ordenes.update(ordenes => [nuevaOrden, ...ordenes]);
-          this.mostrarFormulario.set(false);
-          this.loading.set(false);
-        },
-        error: (error) => {
-          console.error('Error creando orden:', error);
-          this.error.set('Error al crear la orden. Verifique los datos e intente nuevamente.');
-          this.loading.set(false);
-        }
-      });
-    }
+    
+    this.recepcionService.crearOrden(ordenRequest).subscribe({
+      next: (ordenCreada) => {
+        console.log('Orden creada exitosamente:', ordenCreada);
+        this.mostrarFormulario.set(false);
+        this.loading.set(false);
+        this.cargarDatosIniciales(); // Recargar lista de órdenes
+      },
+      error: (err: any) => {
+        console.error('Error al crear la orden:', err);
+        this.handleError('Error al guardar la orden. Por favor intente nuevamente.', err);
+      },
+    });
   }
 
   onCancelarFormulario() {
     this.mostrarFormulario.set(false);
-    this.ordenEditar.set(null);
+    this.error.set(null);
   }
 
-  onBuscarCliente(termino: string) {
-    // Implementar búsqueda de clientes legacy
-    this.recepcionService.buscarClientePorNombre(termino).subscribe({
-      next: (clientes) => {
-        // Los resultados se manejan en el componente cliente-search
-        console.log('Clientes encontrados:', clientes);
-      },
-      error: (error) => {
-        console.error('Error buscando clientes:', error);
-      }
-    });
+  onBuscarCliente(term: string) {
+    // Lógica para buscar cliente si es necesario en el dashboard
+    console.log('Buscando cliente con término:', term);
+  }
+
+  private handleError(
+    message: string,
+    error: any,
+    showToUser: boolean = true
+  ) {
+    console.error(message, error);
+    if (showToUser) {
+      this.error.set(message);
+    }
+    this.loading.set(false);
   }
 }
