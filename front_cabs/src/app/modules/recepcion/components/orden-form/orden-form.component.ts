@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { OrdenTrabajoRequest, EstadoOrden, TipoOrden, Modalidad, ClienteLegacy } from '../../../../core/models/orden-trabajo.interface';
 import { Cliente } from '../../../../core/models/cliente.interface';
 import { ClienteSearchComponent } from '../cliente-search/cliente-search.component';
+import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-orden-form',
@@ -19,6 +20,7 @@ export class OrdenFormComponent implements OnInit {
 
   form: FormGroup;
   private fb = inject(FormBuilder);
+  private authService = inject(SecureAuthService);
 
   // Enums para el template
   EstadoOrden = Object.values(EstadoOrden);
@@ -31,6 +33,19 @@ export class OrdenFormComponent implements OnInit {
 
   ngOnInit() {
     this.setupFormBasedOnTipoCliente();
+    this.setCurrentUser();
+  }
+
+  private setCurrentUser(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      console.log('Usuario actual:', currentUser);
+      this.form.patchValue({
+        creadoPorUserId: currentUser.id
+      });
+    } else {
+      console.warn('No se encontró usuario logueado');
+    }
   }
 
   private createForm(): FormGroup {
@@ -52,7 +67,7 @@ export class OrdenFormComponent implements OnInit {
       FacturaFolio: [0],
       costoEstimado: [0, [Validators.min(0)]],
       costoReal: [0, [Validators.min(0)]],
-      creadoPorUserId: [1]
+      creadoPorUserId: [null]
     });
   }
 
@@ -91,6 +106,13 @@ export class OrdenFormComponent implements OnInit {
       return;
     }
 
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      console.error('No hay usuario logueado. No se puede crear la orden.');
+      alert('Error: No hay usuario logueado. Por favor, inicie sesión nuevamente.');
+      return;
+    }
+
     const formValue = this.form.value;
     const ordenRequest: OrdenTrabajoRequest = {
       requestDto: {
@@ -111,7 +133,7 @@ export class OrdenFormComponent implements OnInit {
         facturaFolio: formValue.FacturaFolio || 0,
         costoReal: formValue.costoReal || 0,
         costoEstimado: formValue.costoEstimado || 0,
-        creadoPorUserId: formValue.creadoPorUserId || 1
+        creadoPorUserId: formValue.creadoPorUserId || currentUser.id
       }
     };
     this.guardar.emit(ordenRequest);

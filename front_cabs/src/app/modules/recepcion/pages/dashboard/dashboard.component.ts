@@ -52,9 +52,7 @@ export class RecepcionDashboardComponent implements OnInit {
   }
 
   onNuevaOrden() {
-    console.log('Botón Nueva Orden presionado');
     this.mostrarFormulario.set(true);
-    console.log('Estado mostrarFormulario:', this.mostrarFormulario());
   }
 
   onEditarOrden(id: number) {
