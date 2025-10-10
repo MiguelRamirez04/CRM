@@ -100,7 +100,6 @@ public class EvaluacionService : Evaluacion
         _writeContext.Evaluaciones.Remove(evaliacionAEliminar);
         await _writeContext.SaveChangesAsync();
         return true;
-
     }
     
     #endregion
