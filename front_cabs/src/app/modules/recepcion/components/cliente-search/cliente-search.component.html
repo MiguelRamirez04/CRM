@@ -1,7 +1,7 @@
-<div class="position-relative">
-  <div class="input-group">
+<div class="relative">
+  <div class="relative">
     <input type="text"
-           class="form-control"
+           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
            [placeholder]="placeholder"
            [disabled]="disabled"
            [(ngModel)]="terminoBusqueda"
@@ -10,46 +10,46 @@
            (blur)="onBlur()"
            autocomplete="off">
 
-    <button class="btn btn-outline-secondary"
+    <button class="absolute inset-y-0 right-0 pr-3 flex items-center"
             type="button"
             (click)="limpiarBusqueda()"
             [disabled]="disabled"
             *ngIf="terminoBusqueda">
-      <i class="bi bi-x"></i>
+      <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
     </button>
   </div>
 
   <!-- Resultados de búsqueda -->
-  <div class="dropdown-menu w-100 show"
-       *ngIf="mostrarResultados && resultados.length > 0"
-       style="position: absolute; z-index: 1000;">
+  <div class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-auto"
+       *ngIf="mostrarResultados && resultados.length > 0">
     <div *ngFor="let cliente of resultados"
-         class="dropdown-item"
+         class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
          (click)="onClienteSeleccionado(cliente)">
-      <div class="d-flex justify-content-between">
-        <span class="fw-bold">{{ cliente.nombre }}</span>
-        <small class="text-muted" *ngIf="cliente.rfc">RFC: {{ cliente.rfc }}</small>
+      <div class="flex justify-between items-center">
+        <span class="font-medium text-gray-900">{{ cliente.nombre }}</span>
+        <span class="text-sm text-gray-500" *ngIf="cliente.rfc">RFC: {{ cliente.rfc }}</span>
       </div>
     </div>
   </div>
 
   <!-- Sin resultados -->
-  <div class="dropdown-menu w-100 show"
-       *ngIf="mostrarResultados && terminoBusqueda.length >= 2 && resultados.length === 0 && !loading"
-       style="position: absolute; z-index: 1000;">
-    <div class="dropdown-item text-muted">
+  <div class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1"
+       *ngIf="mostrarResultados && terminoBusqueda.length >= 2 && resultados.length === 0 && !loading">
+    <div class="px-4 py-3 text-gray-500 text-center">
       No se encontraron clientes
     </div>
   </div>
 
   <!-- Loading -->
-  <div class="dropdown-menu w-100 show"
-       *ngIf="loading"
-       style="position: absolute; z-index: 1000;">
-    <div class="dropdown-item text-center">
-      <div class="spinner-border spinner-border-sm me-2" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
+  <div class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1"
+       *ngIf="loading">
+    <div class="px-4 py-3 text-center">
+      <svg class="animate-spin h-4 w-4 text-blue-600 inline mr-2" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
       Buscando...
     </div>
   </div>

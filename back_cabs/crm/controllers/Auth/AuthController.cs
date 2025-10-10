@@ -292,11 +292,15 @@ namespace back_cabs.CRM.controllers.Auth
                 };
                 var tokens = GenerateTokens(user);
 
-                // Configurar cookie HttpOnly con el refresh token
-                SetRefreshTokenCookie(tokens.RefreshToken);
-
-                // Configurar cookie HttpOnly con el access token (opcional, para máxima seguridad)
-                SetAccessTokenCookie(tokens.AccessToken);
+                // Configurar cookie HttpOnly con el access token
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.UtcNow.AddMinutes(30),
+                    Secure = Request.IsHttps, // true en producción
+                    SameSite = SameSiteMode.Lax // O Strict si el frontend está en el mismo dominio
+                };
+                Response.Cookies.Append("AuthToken", tokens.AccessToken, cookieOptions);
 
                 _logger.LogInformation($"Usuario {user.Email} inició sesión exitosamente");
 
@@ -310,8 +314,8 @@ namespace back_cabs.CRM.controllers.Auth
                         role = user.Role,
                         permissions = user.Permissions
                     },
-                    token = tokens.AccessToken, // JWT para usar en Swagger
-                    refreshToken = tokens.RefreshToken,
+                    // El token se envía en la cookie, pero lo devolvemos para facilitar pruebas en Swagger
+                    token = tokens.AccessToken, 
                     expiresIn = 1800 // 30 minutos en segundos
                 });
             }

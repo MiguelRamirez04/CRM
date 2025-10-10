@@ -72,7 +72,7 @@ namespace back_cabs.CRM.services.Recepcion
                 if (take.HasValue) query = query.Take(take.Value);
 
                 var ordenes = await query
-                    .OrderByDescending(o => o.CreadoEn)
+                    .OrderByDescending(o => o.CreadoEn ?? DateTime.MinValue)
                     .ToListAsync();
 
                 return ordenes.Select(MapearAResponseDto).ToList();
@@ -395,22 +395,22 @@ namespace back_cabs.CRM.services.Recepcion
                 CitaProgramadaFin = orden.CitaProgramadaFin,
                 Modalidad = orden.Modalidad,
                 TipoOrden = orden.TipoOrden,
-                NuevoCliente = orden.NuevoCliente ?? false,
+                NuevoCliente = orden.NuevoCliente,
                 NombreCliente = orden.NombreCliente,
-                // Para clientes nuevos, ClienteId es null
-                ClienteId = orden.NuevoCliente == true ? null : orden.ClienteId,
+                // ClienteId puede ser null independientemente del valor de NuevoCliente
+                ClienteId = orden.ClienteId,
                 Prioridad = orden.Prioridad,
-                Estado = orden.Estado, // Mantener como string (valor almacenado)
+                Estado = orden.Estado, 
                 EstadoDescripcion = estadoEnum.GetDescription(), // Obtener la descripción
                 UbicacionText = orden.UbicacionText,
-                EstadoFacturado = orden.EstadoFacturado, // Mantener como string
+                EstadoFacturado = orden.EstadoFacturado, 
                 RequiereFactura = orden.RequiereFactura,
-                CostoReal = orden.CostoReal, // mantener como decimal
+                CostoReal = orden.CostoReal,
                 CostoEstimado = orden.CostoEstimado,
                 CreadoEn = orden.CreadoEn,
                 ActualizadoEn = orden.ActualizadoEn,
-                CreadoPorUserId = orden.CreadoPorUserId, // Mapear a campo corregido
-                AsignadaAUserId = orden.AsignadaAUserId // Mapear a campo corregido
+                CreadoPorUserId = orden.CreadoPorUserId,
+                AsignadaAUserId = orden.AsignadaAUserId
             };
         }
     }

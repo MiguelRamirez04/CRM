@@ -59,11 +59,10 @@ namespace back_cabs.CRM.models.Recepcion
 
         /// <summary>
         /// ID del usuario que creó la orden
-        /// Mapea a: creado_por_user_id (INT NOT NULL)
+        /// Mapea a: creado_por_user_id (INT NULL)
         /// </summary>
-        [Required]
         [Column("creado_por_user_id")]
-        public int CreadoPorUserId { get; set; }
+        public int? CreadoPorUserId { get; set; }
 
         /// <summary>
         /// ID del usuario asignado a la orden
@@ -119,12 +118,11 @@ namespace back_cabs.CRM.models.Recepcion
         /// <summary>
         /// Estado de la orden
         /// Valores: CAPTURADA, ASIGNADA, EN_CURSO, COMPLETADA, POR_FACTURAR, FACTURADA, CERRADA
-        /// Mapea a: estado (VARCHAR(20) NOT NULL)
+        /// Mapea a: estado (VARCHAR(20) NULL)
         /// </summary>
-        [Required]
         [StringLength(20)]
         [Column("estado")]
-        public string Estado { get; set; } = "CAPTURADA";
+        public string? Estado { get; set; } = "CAPTURADA";
 
         /// <summary>
         /// Ubicación en texto donde se realizará el servicio
@@ -135,11 +133,10 @@ namespace back_cabs.CRM.models.Recepcion
 
         /// <summary>
         /// Indica si la orden requiere factura
-        /// Mapea a: requiere_factura (BIT NOT NULL DEFAULT 0)
+        /// Mapeo a: requiere_factura (BIT NULL DEFAULT 0)
         /// </summary>
-        [Required]
         [Column("requiere_factura")]
-        public bool RequiereFactura { get; set; } = false;
+        public bool? RequiereFactura { get; set; } = false;
 
         /// <summary>
         /// Estado de facturación de la orden
@@ -159,11 +156,10 @@ namespace back_cabs.CRM.models.Recepcion
 
         /// <summary>
         /// Fecha de creación de la orden
-        /// Mapea a: creado_en (DATETIME2(0) NOT NULL DEFAULT GETDATE())
+        /// Mapea a: creado_en (DATETIME2(0) NULL DEFAULT GETDATE())
         /// </summary>
-        [Required]
         [Column("creado_en", TypeName = "DATETIME2(0)")]
-        public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+        public DateTime? CreadoEn { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Fecha de última actualización

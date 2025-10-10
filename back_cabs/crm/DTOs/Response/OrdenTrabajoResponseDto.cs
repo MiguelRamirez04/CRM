@@ -26,7 +26,7 @@ namespace CRM.DTOs.Response
         [JsonPropertyName("tipoOrden")]
         public string? TipoOrden { get; init; }
         [JsonPropertyName("nuevoCliente")]
-        public bool NuevoCliente { get; init; }
+        public bool? NuevoCliente { get; init; }
         [JsonPropertyName("nombreCliente")]
         public string? NombreCliente { get; init; }
         [JsonPropertyName("clienteId")]
@@ -48,11 +48,11 @@ namespace CRM.DTOs.Response
         [JsonPropertyName("costoEstimado")]
         public decimal? CostoEstimado { get; init; }
         [JsonPropertyName("creadoEn")]
-        public DateTime CreadoEn { get; init; }
+        public DateTime? CreadoEn { get; init; }
         [JsonPropertyName("actualizadoEn")]
         public DateTime? ActualizadoEn { get; init; }
         [JsonPropertyName("creadoPorUserId")]
-        public int CreadoPorUserId { get; init; }
+        public int? CreadoPorUserId { get; init; }
         [JsonPropertyName("asignadaAUserId")]
         public int? AsignadaAUserId { get; init; }
     }

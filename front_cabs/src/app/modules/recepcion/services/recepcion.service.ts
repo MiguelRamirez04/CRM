@@ -75,6 +75,11 @@ export class RecepcionService {
     return this.http.put<void>(`${this.apiUrl}/${id}`, orden);
   }
 
+  // DELETE /api/Recepcion/{id} - Eliminar orden
+  eliminarOrden(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   // GET /api/Recepcion/estadisticas - Estadísticas del módulo
   getEstadisticas(): Observable<EstadisticaRecepcion> {
     return this.http.get<EstadisticaRecepcion>(`${this.apiUrl}/estadisticas`);

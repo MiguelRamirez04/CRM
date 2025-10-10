@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
+import { RolUsuario } from '../../../../core/enums/rol-usuario.enum';
 
 @Component({
   selector: 'app-login',
@@ -203,9 +204,14 @@ export class LoginComponent {
           this.isLoading = false;
           this.successMessage = 'Inicio de sesión exitoso';
           
-          // Redireccionar después de un breve delay
+          // Redireccionar basado en el rol del usuario
           setTimeout(() => {
-            this.router.navigate(['/dashboard']);
+            const userRole = response.user.role || response.user.rol;
+            if (userRole === 'Recepcion' || userRole === RolUsuario.Recepcion) {
+              this.router.navigate(['/recepcion/dashboard']);
+            } else {
+              this.router.navigate(['/dashboard']);
+            }
           }, 1000);
         },
         error: (error) => {

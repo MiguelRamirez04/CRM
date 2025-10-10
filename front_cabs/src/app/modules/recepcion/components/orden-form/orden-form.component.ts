@@ -11,17 +11,18 @@ import { ClienteSearchComponent } from '../cliente-search/cliente-search.compone
   styleUrl: './orden-form.component.css'
 })
 export class OrdenFormComponent implements OnInit {
-onCancelar() {
-throw new Error('Method not implemented.');
-}
+  onCancelar() {
+    this.cancelar.emit();
+  }
   @Input() ordenEditar: OrdenTrabajo | null = null;
+  @Input() tipoCliente: 'nuevo' | 'existente' = 'nuevo';
   @Input() loading = false;
 
-  @Output() guardar = new EventEmitter<OrdenTrabajoRequest>();
+  @Output() guardar = new EventEmitter<OrdenTrabajoRequest | null>();
+  @Output() cancelar = new EventEmitter<void>();
   @Output() buscarCliente = new EventEmitter<string>();
 
   form: FormGroup;
-  tipoCliente: 'nuevo' | 'existente' = 'nuevo';
 
   // Enums para el template
   EstadoOrden = EstadoOrden;
@@ -33,6 +34,9 @@ throw new Error('Method not implemented.');
   }
 
   ngOnInit() {
+    this.form.get('tipoCliente')?.setValue(this.tipoCliente);
+    this.onTipoClienteChange(this.tipoCliente);
+
     if (this.ordenEditar) {
       this.loadOrdenData();
     }

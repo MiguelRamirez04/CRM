@@ -78,7 +78,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SecureFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200") // Angular
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:5176", "https://localhost:5176") // Angular
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials() // CRÍTICO: Para cookies HttpOnly

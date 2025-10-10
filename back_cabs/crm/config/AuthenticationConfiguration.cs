@@ -54,15 +54,30 @@ public static class AuthenticationConfiguration
                 OnMessageReceived = context =>
                 {
                     var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    
+                    // Primero intentar leer del header Authorization (para compatibilidad)
                     var token = context.Token;
-                    if (!string.IsNullOrEmpty(token))
+                    
+                    // Si no hay token en header, buscar en cookie HttpOnly
+                    if (string.IsNullOrEmpty(token))
                     {
-                        logger.LogInformation("JWT Token received, length: {Length}", token.Length);
+                        token = context.Request.Cookies["AuthToken"];
+                        if (!string.IsNullOrEmpty(token))
+                        {
+                            context.Token = token;
+                            logger.LogInformation("JWT Token read from HttpOnly cookie, length: {Length}", token.Length);
+                        }
                     }
                     else
                     {
-                        logger.LogWarning("No JWT token received in Authorization header");
+                        logger.LogInformation("JWT Token received from Authorization header, length: {Length}", token.Length);
                     }
+                    
+                    if (string.IsNullOrEmpty(context.Token))
+                    {
+                        logger.LogWarning("No JWT token received in Authorization header or AuthToken cookie");
+                    }
+                    
                     return Task.CompletedTask;
                 }
             };

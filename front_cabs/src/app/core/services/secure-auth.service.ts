@@ -102,7 +102,7 @@ export class SecureAuthService {
   }
 
   login(loginData: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, loginData)
+    return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, loginData)
       .pipe(
         tap(response => {
           // Guardar usuario en cookie (no sensible)
@@ -119,7 +119,7 @@ export class SecureAuthService {
   }
 
   register(registerData: RegisterRequest): Observable<RegistroResponse> {
-    return this.http.post<RegistroResponse>(`${this.baseUrl}/auth/registro`, registerData)
+    return this.http.post<RegistroResponse>(`${this.baseUrl}/api/auth/registro`, registerData)
       .pipe(
         tap(response => {
           // Opcional: Iniciar sesión automáticamente o manejar la respuesta
@@ -130,7 +130,7 @@ export class SecureAuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/auth/logout`, {})
+    return this.http.post<void>(`${this.baseUrl}/api/auth/logout`, {})
       .pipe(
         tap(() => {
           this.clearAuthData();
@@ -175,7 +175,7 @@ export class SecureAuthService {
     }
 
     // Si no hay usuario local, intentar verificar con el servidor
-    return this.http.get<User>(`${this.baseUrl}/auth/me`)
+    return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
       .pipe(
         map(user => {
           this.currentUserSubject.next(user);
@@ -201,7 +201,7 @@ export class SecureAuthService {
       return this.refreshTokenRequest;
     }
 
-    this.refreshTokenRequest = this.http.post<RefreshResponse>(`${this.baseUrl}/auth/refresh`, {})
+    this.refreshTokenRequest = this.http.post<RefreshResponse>(`${this.baseUrl}/api/auth/refresh`, {})
       .pipe(
         tap(response => {
           // Actualizar tiempo de expiración si viene
@@ -226,14 +226,14 @@ export class SecureAuthService {
    * Solicitar reset de contraseña
    */
   requestPasswordReset(email: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/auth/forgot-password`, { email });
+    return this.http.post<void>(`${this.baseUrl}/api/auth/forgot-password`, { email });
   }
 
   /**
    * Reset de contraseña con token
    */
   resetPassword(token: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/auth/reset-password`, {
+    return this.http.post<void>(`${this.baseUrl}/api/auth/reset-password`, {
       token,
       newPassword
     });

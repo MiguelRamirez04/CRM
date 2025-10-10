@@ -12,13 +12,13 @@ import { ClienteLegacy } from '../../../../core/models/orden-trabajo/orden-traba
 export class ClienteSearchComponent implements OnInit {
   @Input() placeholder = 'Buscar cliente por nombre o RFC...';
   @Input() disabled = false;
+  @Input() resultados: ClienteLegacy[] = [];
+  @Input() loading = false;
 
   @Output() clienteSeleccionado = new EventEmitter<ClienteLegacy>();
   @Output() busquedaCambiada = new EventEmitter<string>();
 
   terminoBusqueda = '';
-  resultados: ClienteLegacy[] = [];
-  loading = false;
   mostrarResultados = false;
 
   ngOnInit() {

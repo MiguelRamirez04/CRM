@@ -1,43 +1,61 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="row g-3">
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
   <!-- Tipo de Cliente -->
-  <div class="col-12">
-    <label class="form-label fw-bold">Tipo de Cliente</label>
-    <div class="btn-group w-100" role="group">
-      <input type="radio"
-             class="btn-check"
-             id="clienteNuevo"
-             [value]="'nuevo'"
-             formControlName="tipoCliente"
-             (change)="onTipoClienteChange('nuevo')">
-      <label class="btn btn-outline-primary" for="clienteNuevo">Cliente Nuevo</label>
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Cliente</label>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="relative">
+        <input type="radio"
+               class="sr-only peer"
+               id="clienteNuevo"
+               [value]="'nuevo'"
+               formControlName="tipoCliente"
+               (change)="onTipoClienteChange('nuevo')">
+        <label class="flex items-center justify-center w-full p-4 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-50 transition-colors duration-200"
+               for="clienteNuevo">
+          <div class="block">
+            <div class="w-full text-lg font-semibold">Cliente Nuevo</div>
+            <div class="w-full text-sm">Ingresar nombre manualmente</div>
+          </div>
+        </label>
+      </div>
 
-      <input type="radio"
-             class="btn-check"
-             id="clienteExistente"
-             [value]="'existente'"
-             formControlName="tipoCliente"
-             (change)="onTipoClienteChange('existente')">
-      <label class="btn btn-outline-primary" for="clienteExistente">Cliente Existente</label>
+      <div class="relative">
+        <input type="radio"
+               class="sr-only peer"
+               id="clienteExistente"
+               [value]="'existente'"
+               formControlName="tipoCliente"
+               (change)="onTipoClienteChange('existente')">
+        <label class="flex items-center justify-center w-full p-4 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-50 transition-colors duration-200"
+               for="clienteExistente">
+          <div class="block">
+            <div class="w-full text-lg font-semibold">Cliente Existente</div>
+            <div class="w-full text-sm">Buscar en base de datos</div>
+          </div>
+        </label>
+      </div>
     </div>
   </div>
 
   <!-- Cliente Nuevo -->
-  <div class="col-12" *ngIf="tipoCliente === 'nuevo'">
-    <label for="nombreCliente" class="form-label">Nombre del Cliente *</label>
+  <div *ngIf="tipoCliente === 'nuevo'">
+    <label for="nombreCliente" class="block text-sm font-medium text-gray-700">Nombre del Cliente *</label>
     <input type="text"
-           class="form-control"
+           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
            id="nombreCliente"
            formControlName="nombreCliente"
-           [class.is-invalid]="isFieldInvalid('nombreCliente')"
+           [class.border-red-300]="isFieldInvalid('nombreCliente')"
+           [class.focus:ring-red-500]="isFieldInvalid('nombreCliente')"
+           [class.focus:border-red-500]="isFieldInvalid('nombreCliente')"
            placeholder="Ingrese el nombre del cliente">
-    <div class="invalid-feedback" *ngIf="isFieldInvalid('nombreCliente')">
+    <p class="mt-1 text-sm text-red-600" *ngIf="isFieldInvalid('nombreCliente')">
       {{ getFieldError('nombreCliente') }}
-    </div>
+    </p>
   </div>
 
   <!-- Cliente Existente -->
-  <div class="col-12" *ngIf="tipoCliente === 'existente'">
-    <label class="form-label">Buscar Cliente Existente</label>
+  <div *ngIf="tipoCliente === 'existente'">
+    <label class="block text-sm font-medium text-gray-700">Buscar Cliente Existente</label>
     <app-cliente-search
       placeholder="Buscar por nombre o RFC..."
       (busquedaCambiada)="onBusquedaCliente($event)"
@@ -47,88 +65,104 @@
   </div>
 
   <!-- Tipo de Orden y Modalidad -->
-  <div class="col-md-6">
-    <label for="tipoOrden" class="form-label">Tipo de Orden *</label>
-    <select class="form-select"
-            id="tipoOrden"
-            formControlName="tipoOrden"
-            [class.is-invalid]="isFieldInvalid('tipoOrden')">
-      <option *ngFor="let tipo of [TipoOrden.ASESORIA, TipoOrden.COTIZACION, TipoOrden.SERVICIO]"
-              [value]="tipo">
-        {{ tipo }}
-      </option>
-    </select>
-  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="tipoOrden" class="block text-sm font-medium text-gray-700">Tipo de Orden *</label>
+      <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              id="tipoOrden"
+              formControlName="tipoOrden"
+              [class.border-red-300]="isFieldInvalid('tipoOrden')"
+              [class.focus:ring-red-500]="isFieldInvalid('tipoOrden')"
+              [class.focus:border-red-500]="isFieldInvalid('tipoOrden')">
+        <option *ngFor="let tipo of [TipoOrden.ASESORIA, TipoOrden.COTIZACION, TipoOrden.SERVICIO]"
+                [value]="tipo">
+          {{ tipo }}
+        </option>
+      </select>
+    </div>
 
-  <div class="col-md-6">
-    <label for="modalidad" class="form-label">Modalidad *</label>
-    <select class="form-select"
-            id="modalidad"
-            formControlName="modalidad"
-            [class.is-invalid]="isFieldInvalid('modalidad')">
-      <option *ngFor="let mod of [Modalidad.PRESENCIAL, Modalidad.REMOTO, Modalidad.HIBRIDO]"
-              [value]="mod">
-        {{ mod }}
-      </option>
-    </select>
+    <div>
+      <label for="modalidad" class="block text-sm font-medium text-gray-700">Modalidad *</label>
+      <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              id="modalidad"
+              formControlName="modalidad"
+              [class.border-red-300]="isFieldInvalid('modalidad')"
+              [class.focus:ring-red-500]="isFieldInvalid('modalidad')"
+              [class.focus:border-red-500]="isFieldInvalid('modalidad')">
+        <option *ngFor="let mod of [Modalidad.PRESENCIAL, Modalidad.REMOTO, Modalidad.HIBRIDO]"
+                [value]="mod">
+          {{ mod }}
+        </option>
+      </select>
+    </div>
   </div>
 
   <!-- Prioridad y Estado -->
-  <div class="col-md-6">
-    <label for="prioridad" class="form-label">Prioridad *</label>
-    <select class="form-select"
-            id="prioridad"
-            formControlName="prioridad"
-            [class.is-invalid]="isFieldInvalid('prioridad')">
-      <option *ngFor="let p of [1,2,3,4,5]" [value]="p">{{ p }}</option>
-    </select>
-  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="prioridad" class="block text-sm font-medium text-gray-700">Prioridad *</label>
+      <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              id="prioridad"
+              formControlName="prioridad"
+              [class.border-red-300]="isFieldInvalid('prioridad')"
+              [class.focus:ring-red-500]="isFieldInvalid('prioridad')"
+              [class.focus:border-red-500]="isFieldInvalid('prioridad')">
+        <option *ngFor="let p of [1,2,3,4,5]" [value]="p">{{ p }}</option>
+      </select>
+    </div>
 
-  <div class="col-md-6">
-    <label for="estado" class="form-label">Estado *</label>
-    <select class="form-select"
-            id="estado"
-            formControlName="estado"
-            [class.is-invalid]="isFieldInvalid('estado')">
-      <option *ngFor="let est of [EstadoOrden.CAPTURADA, EstadoOrden.ASIGNADA, EstadoOrden.EN_PROCESO, EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA]"
-              [value]="est">
-        {{ est }}
-      </option>
-    </select>
+    <div>
+      <label for="estado" class="block text-sm font-medium text-gray-700">Estado *</label>
+      <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+              id="estado"
+              formControlName="estado"
+              [class.border-red-300]="isFieldInvalid('estado')"
+              [class.focus:ring-red-500]="isFieldInvalid('estado')"
+              [class.focus:border-red-500]="isFieldInvalid('estado')">
+        <option *ngFor="let est of [EstadoOrden.CAPTURADA, EstadoOrden.ASIGNADA, EstadoOrden.EN_PROCESO, EstadoOrden.COMPLETADA, EstadoOrden.CANCELADA]"
+                [value]="est">
+          {{ est }}
+        </option>
+      </select>
+    </div>
   </div>
 
   <!-- Fechas -->
-  <div class="col-md-6">
-    <label for="citaProgramadaInicio" class="form-label">Fecha y Hora de Cita *</label>
-    <input type="datetime-local"
-           class="form-control"
-           id="citaProgramadaInicio"
-           formControlName="citaProgramadaInicio"
-           [class.is-invalid]="isFieldInvalid('citaProgramadaInicio')">
-  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="citaProgramadaInicio" class="block text-sm font-medium text-gray-700">Fecha y Hora de Cita *</label>
+      <input type="datetime-local"
+             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+             id="citaProgramadaInicio"
+             formControlName="citaProgramadaInicio"
+             [class.border-red-300]="isFieldInvalid('citaProgramadaInicio')"
+             [class.focus:ring-red-500]="isFieldInvalid('citaProgramadaInicio')"
+             [class.focus:border-red-500]="isFieldInvalid('citaProgramadaInicio')">
+    </div>
 
-  <div class="col-md-6">
-    <label for="citaProgramadaFin" class="form-label">Fecha y Hora Fin (Opcional)</label>
-    <input type="datetime-local"
-           class="form-control"
-           id="citaProgramadaFin"
-           formControlName="citaProgramadaFin">
+    <div>
+      <label for="citaProgramadaFin" class="block text-sm font-medium text-gray-700">Fecha y Hora Fin (Opcional)</label>
+      <input type="datetime-local"
+             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+             id="citaProgramadaFin"
+             formControlName="citaProgramadaFin">
+    </div>
   </div>
 
   <!-- Ubicación -->
-  <div class="col-12">
-    <label for="ubicacionText" class="form-label">Ubicación</label>
+  <div>
+    <label for="ubicacionText" class="block text-sm font-medium text-gray-700">Ubicación</label>
     <input type="text"
-           class="form-control"
+           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
            id="ubicacionText"
            formControlName="ubicacionText"
            placeholder="Dirección o lugar de la cita">
   </div>
 
   <!-- Notas -->
-  <div class="col-12">
-    <label for="notas" class="form-label">Notas</label>
-    <textarea class="form-control"
+  <div>
+    <label for="notas" class="block text-sm font-medium text-gray-700">Notas</label>
+    <textarea class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
               id="notas"
               formControlName="notas"
               rows="3"
@@ -136,69 +170,78 @@
   </div>
 
   <!-- Facturación -->
-  <div class="col-12">
-    <div class="form-check">
-      <input class="form-check-input"
-             type="checkbox"
-             id="requiereFactura"
-             formControlName="requiereFactura">
-      <label class="form-check-label" for="requiereFactura">
-        Requiere Factura
-      </label>
-    </div>
+  <div class="flex items-center">
+    <input id="requiereFactura"
+           type="checkbox"
+           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+           formControlName="requiereFactura">
+    <label for="requiereFactura" class="ml-2 block text-sm text-gray-900">
+      Requiere Factura
+    </label>
   </div>
 
-  <div class="col-md-6" *ngIf="form.get('requiereFactura')?.value">
-    <label for="facturaFolio" class="form-label">Folio de Factura</label>
-    <input type="text"
-           class="form-control"
-           id="facturaFolio"
-           formControlName="facturaFolio"
-           placeholder="Número de folio">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="form.get('requiereFactura')?.value">
+    <div>
+      <label for="facturaFolio" class="block text-sm font-medium text-gray-700">Folio de Factura</label>
+      <input type="text"
+             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+             id="facturaFolio"
+             formControlName="facturaFolio"
+             placeholder="Número de folio">
+    </div>
   </div>
 
   <!-- Costos -->
-  <div class="col-md-6">
-    <label for="costoEstimado" class="form-label">Costo Estimado</label>
-    <div class="input-group">
-      <span class="input-group-text">$</span>
-      <input type="number"
-             class="form-control"
-             id="costoEstimado"
-             formControlName="costoEstimado"
-             min="0"
-             step="0.01">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="costoEstimado" class="block text-sm font-medium text-gray-700">Costo Estimado</label>
+      <div class="mt-1 relative rounded-md shadow-sm">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-gray-500 sm:text-sm">$</span>
+        </div>
+        <input type="number"
+               class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+               id="costoEstimado"
+               formControlName="costoEstimado"
+               min="0"
+               step="0.01">
+      </div>
     </div>
-  </div>
 
-  <div class="col-md-6">
-    <label for="costoReal" class="form-label">Costo Real</label>
-    <div class="input-group">
-      <span class="input-group-text">$</span>
-      <input type="number"
-             class="form-control"
-             id="costoReal"
-             formControlName="costoReal"
-             min="0"
-             step="0.01">
+    <div>
+      <label for="costoReal" class="block text-sm font-medium text-gray-700">Costo Real</label>
+      <div class="mt-1 relative rounded-md shadow-sm">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-gray-500 sm:text-sm">$</span>
+        </div>
+        <input type="number"
+               class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+               id="costoReal"
+               formControlName="costoReal"
+               min="0"
+               step="0.01">
+      </div>
     </div>
   </div>
 
   <!-- Botones -->
-  <div class="col-12">
-    <div class="d-flex gap-2 justify-content-end">
-      <button type="button"
-              class="btn btn-secondary"
-              (click)="onCancelar()"
-              [disabled]="loading">
-        Cancelar
-      </button>
-      <button type="submit"
-              class="btn btn-primary"
-              [disabled]="loading || form.invalid">
-        <span class="spinner-border spinner-border-sm me-2" *ngIf="loading" role="status"></span>
+  <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+    <button type="button"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            (click)="onCancelar()"
+            [disabled]="loading">
+      Cancelar
+    </button>
+    <button type="submit"
+            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            [disabled]="loading || form.invalid">
+      <span class="inline-flex items-center">
+        <svg *ngIf="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
         {{ ordenEditar ? 'Actualizar' : 'Crear' }} Orden
-      </button>
-    </div>
+      </span>
+    </button>
   </div>
 </form>

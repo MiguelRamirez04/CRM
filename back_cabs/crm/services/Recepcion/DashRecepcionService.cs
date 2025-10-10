@@ -67,12 +67,15 @@ namespace back_cabs.CRM.services.Recepcion
                     query = query.Where(o => o.Estado == estado);
                 }
 
+                // Filtrar registros con campos críticos NULL para evitar errores de mapeo
+                query = query.Where(o => o.CreadoPorUserId != null && o.Estado != null && o.RequiereFactura != null);
+
                 // Aplicar paginación
                 if (skip.HasValue) query = query.Skip(skip.Value);
                 if (take.HasValue) query = query.Take(take.Value);
 
                 var ordenes = await query
-                    .OrderByDescending(o => o.CreadoEn)
+                    .OrderByDescending(o => o.CreadoEn ?? DateTime.MinValue)
                     .ToListAsync();
 
                 return ordenes.Select(MapearAResponseDto).ToList();
@@ -400,16 +403,16 @@ namespace back_cabs.CRM.services.Recepcion
                 // Para clientes nuevos, ClienteId es null
                 ClienteId = orden.NuevoCliente == true ? null : orden.ClienteId,
                 Prioridad = orden.Prioridad,
-                Estado = orden.Estado, // Mantener como string (valor almacenado)
+                Estado = orden.Estado ?? "CAPTURADA", // Valor por defecto si es null
                 EstadoDescripcion = estadoEnum.GetDescription(), // Obtener la descripción
                 UbicacionText = orden.UbicacionText,
                 EstadoFacturado = orden.EstadoFacturado, // Mantener como string
-                RequiereFactura = orden.RequiereFactura,
+                RequiereFactura = orden.RequiereFactura ?? false,
                 CostoReal = orden.CostoReal, // mantener como decimal
                 CostoEstimado = orden.CostoEstimado,
-                CreadoEn = orden.CreadoEn,
+                CreadoEn = orden.CreadoEn ?? DateTime.UtcNow,
                 ActualizadoEn = orden.ActualizadoEn,
-                CreadoPorUserId = orden.CreadoPorUserId, // Mapear a campo corregido
+                CreadoPorUserId = orden.CreadoPorUserId ?? 0, // Valor por defecto si es null
                 AsignadaAUserId = orden.AsignadaAUserId // Mapear a campo corregido
             };
         }

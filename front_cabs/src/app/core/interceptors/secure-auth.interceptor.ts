@@ -71,10 +71,10 @@ export class SecureAuthInterceptor implements HttpInterceptor {
 
   private isAuthRoute(url: string): boolean {
     const u = url.toLowerCase();
-    return u.includes('/auth/login') || 
-           u.includes('/auth/refresh') || 
-           u.includes('/auth/register') ||
-           u.includes('/auth/registro') ||
-           u.includes('/auth/logout');
+    return u.includes('/api/auth/login') || 
+           u.includes('/api/auth/refresh') || 
+           u.includes('/api/auth/register') ||
+           u.includes('/api/auth/registro') ||
+           u.includes('/api/auth/logout');
   }
 }

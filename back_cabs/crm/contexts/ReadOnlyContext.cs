@@ -138,10 +138,10 @@ public class ReadOnlyContext : DbContext
 
             // Configurar columnas con mapeo exacto a SQL Server
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-            entity.Property(e => e.ClienteId).HasColumnName("cliente_id").IsRequired();
+            entity.Property(e => e.ClienteId).HasColumnName("cliente_id");
             entity.Property(e => e.NuevoCliente).HasColumnName("nuevo_cliente");
             entity.Property(e => e.NombreCliente).HasColumnName("nombre_cliente").HasMaxLength(120);
-            entity.Property(e => e.CreadoPorUserId).HasColumnName("creado_por_user_id").IsRequired();
+            entity.Property(e => e.CreadoPorUserId).HasColumnName("creado_por_user_id");
             entity.Property(e => e.AsignadaAUserId).HasColumnName("asignada_a_user_id");
             entity.Property(e => e.Notas).HasColumnName("notas").HasColumnType("NVARCHAR(MAX)");
             entity.Property(e => e.CitaProgramadaInicio).HasColumnName("cita_programada_inicio").HasColumnType("DATETIME2(0)");
@@ -164,7 +164,8 @@ public class ReadOnlyContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.CreadoPorUserId)
                   .HasConstraintName("FK_ordenes_trabajo_creado_por")
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.AsignadaA)
                   .WithMany()

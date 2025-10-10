@@ -21,6 +21,7 @@ export class RecepcionDashboardComponent implements OnInit {
   loading = signal(false);
   mostrarFormulario = signal(false);
   ordenEditar = signal<OrdenTrabajo | null>(null);
+  error = signal<string | null>(null);
 
   ngOnInit() {
     this.cargarOrdenes();
@@ -29,6 +30,7 @@ export class RecepcionDashboardComponent implements OnInit {
 
   cargarOrdenes() {
     this.loading.set(true);
+    this.error.set(null);
     this.recepcionService.getOrdenes().subscribe({
       next: (ordenes) => {
         this.ordenes.set(ordenes);
@@ -36,6 +38,7 @@ export class RecepcionDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cargando órdenes:', error);
+        this.error.set('Error al cargar las órdenes. Intente nuevamente.');
         this.loading.set(false);
       }
     });
@@ -48,12 +51,17 @@ export class RecepcionDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error cargando estadísticas:', error);
+        // No mostrar error para estadísticas, solo log
       }
     });
   }
 
-  onNuevaOrden() {
+  tipoClienteSeleccionado = signal<'nuevo' | 'existente'>('nuevo');
+
+  onNuevaOrden(tipo: 'nuevo' | 'existente') {
+    console.log(`Abriendo modal de nueva orden para cliente ${tipo}`);
     this.ordenEditar.set(null);
+    this.tipoClienteSeleccionado.set(tipo);
     this.mostrarFormulario.set(true);
   }
 
@@ -79,6 +87,7 @@ export class RecepcionDashboardComponent implements OnInit {
 
   onGuardarOrden(ordenRequest: any) {
     this.loading.set(true);
+    this.error.set(null);
     if (this.ordenEditar()) {
       // Actualizar
       this.recepcionService.actualizarOrden(this.ordenEditar()!.id, ordenRequest).subscribe({
@@ -89,6 +98,7 @@ export class RecepcionDashboardComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error actualizando orden:', error);
+          this.error.set('Error al actualizar la orden. Verifique los datos e intente nuevamente.');
           this.loading.set(false);
         }
       });
@@ -102,6 +112,7 @@ export class RecepcionDashboardComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error creando orden:', error);
+          this.error.set('Error al crear la orden. Verifique los datos e intente nuevamente.');
           this.loading.set(false);
         }
       });
@@ -114,7 +125,15 @@ export class RecepcionDashboardComponent implements OnInit {
   }
 
   onBuscarCliente(termino: string) {
-    // TODO: Implementar búsqueda de clientes legacy
-    console.log('Buscar cliente:', termino);
+    // Implementar búsqueda de clientes legacy
+    this.recepcionService.buscarClientePorNombre(termino).subscribe({
+      next: (clientes) => {
+        // Los resultados se manejan en el componente cliente-search
+        console.log('Clientes encontrados:', clientes);
+      },
+      error: (error) => {
+        console.error('Error buscando clientes:', error);
+      }
+    });
   }
 }

@@ -27,4 +27,8 @@ export class OrdenListComponent {
   onEliminar(id: number) {
     this.eliminar.emit(id);
   }
+
+  trackByOrdenId(index: number, orden: any): number {
+    return orden.id;
+  }
 }
