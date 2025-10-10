@@ -23,6 +23,7 @@
 
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
+using back_cabs.CRM.DTOs.Response;
 using back_cabs.CRM.services;
 using back_cabs.CRM.services.Recepcion;
 using back_cabs.CRM.Middleware;
@@ -491,15 +492,15 @@ namespace back_cabs.CRM.controllers.Recepcion
         // ----------------------------------------------------------------------
 
         /// <summary>
-        /// Obtiene estadísticas del dashboard de recepción
+        /// Obtiene estadísticas detalladas del dashboard de recepción
         /// </summary>
-        /// <returns>Estadísticas agregadas</returns>
+        /// <returns>Estadísticas agregadas con desglose por estados</returns>
         /// <response code="200">Estadísticas obtenidas exitosamente</response>
         /// <response code="500">Error interno del servidor</response>
         [HttpGet("estadisticas")]
-        [ProducesResponseType(typeof(Dictionary<string, object>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(EstadisticasRecepcionResponseDto), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult<Dictionary<string, object>>> GetEstadisticas()
+        public async Task<ActionResult<EstadisticasRecepcionResponseDto>> GetEstadisticas()
         {
             try
             {

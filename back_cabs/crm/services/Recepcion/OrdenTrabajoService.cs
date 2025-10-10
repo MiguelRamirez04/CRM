@@ -13,6 +13,7 @@
 using back_cabs.CRM.contexts;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
+using back_cabs.CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.models.Recepcion;
 using Microsoft.EntityFrameworkCore;
@@ -275,24 +276,65 @@ namespace back_cabs.CRM.services.Recepcion
         }
 
         /// <summary>
-        /// Obtiene estadísticas básicas
+        /// Obtiene estadísticas detalladas del dashboard de recepción
         /// </summary>
-        public async Task<Dictionary<string, object>> ObtenerEstadisticasAsync()
+        public async Task<EstadisticasRecepcionResponseDto> ObtenerEstadisticasAsync()
         {
             try
             {
-                var totalOrdenes = await _readContext.OrdenesTrabajo.CountAsync();
-                var ordenesActivas = await _readContext.OrdenesTrabajo.CountAsync(o => o.Estado != "CERRADA");
+                _logger.LogInformation("Calculando estadísticas detalladas de recepción");
                 
-                return new Dictionary<string, object>
+                // Obtener todas las órdenes con sus estados
+                var ordenes = await _readContext.OrdenesTrabajo
+                    .Select(o => o.Estado)
+                    .ToListAsync();
+                
+                var totalOrdenes = ordenes.Count;
+                
+                // Contar órdenes por estado usando el enum
+                var estadisticasPorEstado = new EstadisticasPorEstadoDto
                 {
-                    ["totalOrdenes"] = totalOrdenes,
-                    ["ordenesActivas"] = ordenesActivas
+                    Capturadas = ordenes.Count(e => e == EstadoOrden.CAPTURADA.ToString()),
+                    Asignadas = ordenes.Count(e => e == EstadoOrden.ASIGNADA.ToString()),
+                    EnCurso = ordenes.Count(e => e == EstadoOrden.EN_CURSO.ToString()),
+                    Completadas = ordenes.Count(e => e == EstadoOrden.COMPLETADA.ToString()),
+                    PorFacturar = ordenes.Count(e => e == EstadoOrden.POR_FACTURAR.ToString()),
+                    Facturadas = ordenes.Count(e => e == EstadoOrden.FACTURADA.ToString()),
+                    Cerradas = ordenes.Count(e => e == EstadoOrden.CERRADA.ToString())
                 };
+                
+                // Calcular totales y métricas
+                var ordenesCerradas = estadisticasPorEstado.Cerradas;
+                var ordenesActivas = totalOrdenes - ordenesCerradas;
+                
+                var flujo = new EstadisticasFlujoDto
+                {
+                    OrdenesPendientes = estadisticasPorEstado.Capturadas + estadisticasPorEstado.Asignadas,
+                    OrdenesEnProceso = estadisticasPorEstado.EnCurso + estadisticasPorEstado.Completadas,
+                    OrdenesFinalizadas = estadisticasPorEstado.PorFacturar + estadisticasPorEstado.Facturadas + estadisticasPorEstado.Cerradas,
+                    PorcentajeCompletadas = totalOrdenes > 0 ? 
+                        Math.Round((decimal)(estadisticasPorEstado.Completadas + estadisticasPorEstado.PorFacturar + estadisticasPorEstado.Facturadas + estadisticasPorEstado.Cerradas) / totalOrdenes * 100, 2) : 0,
+                    PorcentajeFacturadas = totalOrdenes > 0 ? 
+                        Math.Round((decimal)(estadisticasPorEstado.Facturadas + estadisticasPorEstado.Cerradas) / totalOrdenes * 100, 2) : 0
+                };
+                
+                var estadisticas = new EstadisticasRecepcionResponseDto
+                {
+                    TotalOrdenes = totalOrdenes,
+                    OrdenesActivas = ordenesActivas,
+                    OrdenesCerradas = ordenesCerradas,
+                    PorEstado = estadisticasPorEstado,
+                    Flujo = flujo,
+                    FechaGeneracion = DateTime.UtcNow
+                };
+                
+                _logger.LogInformation($"Estadísticas calculadas: {totalOrdenes} total, {ordenesActivas} activas, {ordenesCerradas} cerradas");
+                
+                return estadisticas;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener estadísticas");
+                _logger.LogError(ex, "Error al obtener estadísticas detalladas");
                 throw;
             }
         }

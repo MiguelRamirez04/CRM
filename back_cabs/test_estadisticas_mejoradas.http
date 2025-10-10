@@ -1,0 +1,8 @@
+### Prueba de la API de Estadísticas Mejorada
+### GET /api/Recepcion/estadisticas
+
+GET http://localhost:5176/api/Recepcion/estadisticas
+Accept: application/json
+Cookie: authToken=your-jwt-token-here
+
+###

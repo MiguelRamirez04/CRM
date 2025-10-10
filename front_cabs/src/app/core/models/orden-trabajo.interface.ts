@@ -76,11 +76,30 @@ export interface ClienteLegacy {
 }
 
 export interface EstadisticaRecepcion {
-  ordenesHoy: number;
-  pendientes: number;
+  totalOrdenes: number;
+  ordenesActivas: number;
+  ordenesCerradas: number;
+  porEstado: EstadisticasPorEstado;
+  flujo: EstadisticasFlujo;
+  fechaGeneracion: string;
+}
+
+export interface EstadisticasPorEstado {
+  capturadas: number;
+  asignadas: number;
+  enCurso: number;
   completadas: number;
-  totalMes: number;
-  // Agregar más métricas según backend
+  porFacturar: number;
+  facturadas: number;
+  cerradas: number;
+}
+
+export interface EstadisticasFlujo {
+  ordenesPendientes: number;
+  ordenesEnProceso: number;
+  ordenesFinalizadas: number;
+  porcentajeCompletadas: number;
+  porcentajeFacturadas: number;
 }
 
 export interface ClienteBusquedaRequest {
