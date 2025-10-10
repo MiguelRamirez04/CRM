@@ -197,7 +197,6 @@ public class WriteContext : DbContext
             entity.HasIndex(e => e.ClienteId).HasFilter("[cliente_id] IS NOT NULL");
 
             //DJ aqui vas weon no se te olvide
-            entity.Property(e => e.EvaluadorId).HasColumnName("evaluador_id").IsRequired(true);
             entity.Property(e => e.Objetivo).HasMaxLength(200);
             entity.Property(e => e.ComentariosGenerales).HasColumnName("comentarios_generales");
             entity.Property(e => e.ScoreCalidadTotal).HasColumnName("score_calidad_total");
