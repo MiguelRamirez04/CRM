@@ -45,6 +45,9 @@ export class SecureAuthGuard implements CanActivate, CanActivateChild {
         } else {
           // Guardar URL intentada para redireccionar después del login
           const returnUrl = route.url.map(segment => segment.path).join('/');
+          // Solo limpiar sesión sin redirigir
+          this.authService.clearSession();
+          // Redirigir manteniendo returnUrl
           this.router.navigate(['/auth/login'], { 
             queryParams: { returnUrl: returnUrl }
           });
@@ -52,8 +55,8 @@ export class SecureAuthGuard implements CanActivate, CanActivateChild {
         }
       }),
       catchError(() => {
-        // Error en verificación - redirigir a login
-        this.router.navigate(['/auth/login']);
+        // Error en verificación - forzar logout y redirigir a login
+        this.authService.forceLogout();
         return of(false);
       })
     );

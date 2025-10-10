@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, timer, throwError, of } from 'rxjs';
 import { map, tap, catchError, switchMap, share } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { RolUsuario } from '../enums/rol-usuario.enum';
 import { TipoTransmision } from '../enums/tipo-transmision.enum';
@@ -80,6 +81,8 @@ export class SecureAuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
   public isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
 
+  private router = inject(Router);
+
   constructor(
     private http: HttpClient,
     private cookieService: CookieService
@@ -134,18 +137,58 @@ export class SecureAuthService {
       .pipe(
         tap(() => {
           this.clearAuthData();
+          this.redirectToLogin();
         }),
         catchError(error => {
-          // Even if logout fails on server, clear local data
+          // Even if logout fails on server, clear local data and redirect
           this.clearAuthData();
+          this.redirectToLogin();
           return throwError(error);
         })
       );
   }
 
+  /**
+   * Cierra sesión inmediatamente sin llamar al servidor
+   * Útil para manejar tokens expirados o errores de autenticación
+   */
+  forceLogout(): void {
+    this.clearAuthData();
+    this.redirectToLogin();
+  }
+
+  /**
+   * Solo limpia los datos de autenticación sin redireccionar
+   * Útil para guards que manejan su propia redirección
+   */
+  clearSession(): void {
+    this.clearAuthData();
+  }
+
+  /**
+   * Redirige al usuario después de un login exitoso
+   * Usa returnUrl si está disponible, sino va al dashboard
+   */
+  handleLoginSuccess(returnUrl?: string): void {
+    const targetUrl = returnUrl && returnUrl !== '/auth/login' ? returnUrl : '/dashboard';
+    setTimeout(() => {
+      this.router.navigate([targetUrl], { replaceUrl: true });
+    }, 100);
+  }
+
   private clearAuthData(): void {
     this.cookieService.delete('user', '/');
     this.currentUserSubject.next(null);
+  }
+
+  private redirectToLogin(): void {
+    // Usar setTimeout para evitar problemas de navegación durante el procesamiento
+    setTimeout(() => {
+      this.router.navigate(['/auth/login'], { 
+        replaceUrl: true,
+        queryParams: { message: 'Sesión cerrada correctamente' }
+      });
+    }, 100);
   }
 
   getCurrentUser(): User | null {

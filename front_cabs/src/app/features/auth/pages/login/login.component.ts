@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 import { RolUsuario } from '../../../../core/enums/rol-usuario.enum';
@@ -170,16 +170,18 @@ import { RolUsuario } from '../../../../core/enums/rol-usuario.enum';
   `,
   styles: []
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(SecureAuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loginForm: FormGroup;
   isLoading = false;
   showPassword = false;
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  returnUrl: string = '/dashboard';
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -187,6 +189,17 @@ export class LoginComponent {
       password: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [false]
     });
+  }
+
+  ngOnInit(): void {
+    // Obtener returnUrl de los query params
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    
+    // Mostrar mensaje si viene de logout
+    const message = this.route.snapshot.queryParams['message'];
+    if (message) {
+      this.successMessage = message;
+    }
   }
 
   onSubmit(): void {
@@ -204,14 +217,18 @@ export class LoginComponent {
           this.isLoading = false;
           this.successMessage = 'Inicio de sesión exitoso';
           
-          // Redireccionar basado en el rol del usuario
-          setTimeout(() => {
+          // Determinar URL de destino basado en el rol si no hay returnUrl específico
+          let targetUrl = this.returnUrl;
+          if (this.returnUrl === '/dashboard') {
             const userRole = response.user.role || response.user.rol;
             if (userRole === 'Recepcion' || userRole === RolUsuario.Recepcion) {
-              this.router.navigate(['/recepcion/dashboard']);
-            } else {
-              this.router.navigate(['/dashboard']);
+              targetUrl = '/recepcion/dashboard';
             }
+          }
+          
+          // Usar el método del servicio para manejar redirección
+          setTimeout(() => {
+            this.authService.handleLoginSuccess(targetUrl);
           }, 1000);
         },
         error: (error) => {

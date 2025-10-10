@@ -54,8 +54,8 @@ export class SecureAuthInterceptor implements HttpInterceptor {
         catchError((err) => {
           this.isRefreshing = false;
           
-          // Si falla el refresh, redirigir a login
-          this.authService.logout().subscribe();
+          // Si falla el refresh, forzar logout inmediato
+          this.authService.forceLogout();
           return throwError(() => err);
         })
       );

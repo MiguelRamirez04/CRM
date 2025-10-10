@@ -192,12 +192,14 @@ export class DashboardComponent {
   }
 
   logout(): void {
+    // El servicio ya maneja la redirección automáticamente
     this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate(['/auth/login']);
+        console.log('Logout exitoso');
       },
-      error: () => {
-        this.router.navigate(['/auth/login']);
+      error: (error) => {
+        console.error('Error durante logout:', error);
+        // El servicio ya redirige automáticamente incluso en caso de error
       }
     });
   }

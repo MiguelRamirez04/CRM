@@ -28,6 +28,8 @@ export class RecepcionDashboardComponent implements OnInit {
   estadisticas = signal<EstadisticaRecepcion | null>(null);
   loading = signal(false);
   mostrarFormulario = signal(false);
+  mostrarDetallesOrden = signal(false);
+  ordenSeleccionada = signal<OrdenTrabajo | null>(null);
   error = signal<string | null>(null);
 
   ngOnInit() {
@@ -53,6 +55,8 @@ export class RecepcionDashboardComponent implements OnInit {
 
   onNuevaOrden() {
     this.mostrarFormulario.set(true);
+    // Prevenir scroll del body cuando el modal está abierto
+    document.body.classList.add('modal-open');
   }
 
   onEditarOrden(id: number) {
@@ -61,8 +65,16 @@ export class RecepcionDashboardComponent implements OnInit {
   }
 
   onVerDetalles(id: number) {
-    // Implementar navegación a la página de detalles de la orden
-    console.log('Ver detalles de orden:', id);
+    // Buscar la orden en la lista actual
+    const orden = this.ordenes().find(o => o.id === id);
+    if (orden) {
+      this.ordenSeleccionada.set(orden);
+      this.mostrarDetallesOrden.set(true);
+      // Prevenir scroll del body cuando el modal está abierto
+      document.body.classList.add('modal-open');
+    } else {
+      this.handleError('No se encontró la orden seleccionada.', null);
+    }
   }
 
   onEliminarOrden(id: number) {
@@ -89,6 +101,8 @@ export class RecepcionDashboardComponent implements OnInit {
         console.log('Orden creada exitosamente:', ordenCreada);
         this.mostrarFormulario.set(false);
         this.loading.set(false);
+        // Restaurar scroll del body
+        document.body.classList.remove('modal-open');
         this.cargarDatosIniciales(); // Recargar lista de órdenes
       },
       error: (err: any) => {
@@ -101,6 +115,15 @@ export class RecepcionDashboardComponent implements OnInit {
   onCancelarFormulario() {
     this.mostrarFormulario.set(false);
     this.error.set(null);
+    // Restaurar scroll del body cuando se cierra el modal
+    document.body.classList.remove('modal-open');
+  }
+
+  onCerrarDetallesOrden() {
+    this.mostrarDetallesOrden.set(false);
+    this.ordenSeleccionada.set(null);
+    // Restaurar scroll del body cuando se cierra el modal
+    document.body.classList.remove('modal-open');
   }
 
   onBuscarCliente(term: string) {
