@@ -1,218 +1,42 @@
-/* Global Styles - CRM Sistema */
-@import "tailwindcss";
+/* TailwindCSS Imports */
+@import 'tailwindcss';
 
-/* Tailwind colors are applied via classes. Custom theme tokens removed for compatibility. */
-
-/* FontAwesome Import */
+/* FontAwesome */
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
-/* CSS Variables Personalizadas */
-:root {
-  --primary-color: #667eea;
-  --primary-dark: #764ba2;
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
-  --danger-color: #dc3545;
-  --warning-color: #ffc107;
-  --info-color: #17a2b8;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
-  
-  /* Gradientes */
-  --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  --gradient-light: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  
-  /* Sombras */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
-  
-  /* Transiciones */
-  --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
-}
-
-/* Body y HTML */
+/* Minimal Global Styles */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 14px;
-  color: var(--dark-color);
-  background-color: var(--light-color);
 }
 
-/* Scrollbar personalizado */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  @apply bg-gray-100;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  @apply bg-gray-400 rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  @apply bg-gray-500;
 }
 
-/* Clases utilitarias personalizadas */
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.transition-all {
-  transition: all var(--transition-normal);
-}
-
-.shadow-hover:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-
-.text-gradient {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.bg-gradient-primary {
-  background: var(--gradient-primary);
-}
-
-.bg-gradient-light {
-  background: var(--gradient-light);
-}
-
-/* Truncar texto con ellipsis */
-.text-truncate-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.text-truncate-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Override de Bootstrap con tema personalizado */
-.btn-primary {
-  background: var(--gradient-primary);
-  border: none;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
-}
-
-.btn-primary:hover {
-  background: var(--gradient-primary);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-  filter: brightness(1.1);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.card {
-  border: none;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-normal);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.form-control:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-}
-
-.navbar-brand {
-  font-weight: bold;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s ease-out;
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.5s ease-out;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite;
-}
-
-/* Estados de carga */
+/* Loading States */
 .loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  @apply fixed inset-0 bg-white/90 flex items-center justify-center z-50;
 }
 
 .spinner-custom {
   width: 50px;
   height: 50px;
-  border: 4px solid var(--light-color);
-  border-top: 4px solid var(--primary-color);
-  border-radius: 50%;
+  @apply border-4 border-gray-200 border-t-blue-600 rounded-full;
   animation: spin 1s linear infinite;
 }
 
@@ -221,101 +45,9 @@ html, body {
   100% { transform: rotate(360deg); }
 }
 
-/* Componentes custom */
-.alert {
-  border: none;
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-}
-
-.alert-success {
-  background: linear-gradient(135deg, #d4edda, #c3e6cb);
-  color: #155724;
-}
-
-.alert-danger {
-  background: linear-gradient(135deg, #f8d7da, #f1b9bc);
-  color: #721c24;
-}
-
-.alert-warning {
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  color: #856404;
-}
-
-.alert-info {
-  background: linear-gradient(135deg, #d1ecf1, #bee5eb);
-  color: #0c5460;
-}
-
-/* Responsividad mejorada */
-@media (max-width: 576px) {
-  .container-fluid {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-  
-  .btn-lg {
-    padding: 8px 16px;
-    font-size: 1rem;
-  }
-  
-  .display-4 {
-    font-size: 2rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1.5rem;
-  }
-  
-  h1, .h1 {
-    font-size: 1.8rem;
-  }
-}
-
-/* Estados hover para elementos interactivos */
-.clickable {
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.clickable:hover {
-  transform: scale(1.02);
-  opacity: 0.9;
-}
-
-/* Modo oscuro (preparado para futuro) */
-[data-theme="dark"] {
-  --light-color: #212529;
-  --dark-color: #f8f9fa;
-  
-  body {
-    background-color: var(--light-color);
-    color: var(--dark-color);
-  }
-  
-  .card {
-    background-color: #343a40;
-    color: var(--dark-color);
-  }
-}
-
-/* Print styles */
+/* Print Styles */
 @media print {
   .no-print {
     display: none !important;
-  }
-  
-  body {
-    font-size: 12px;
-    color: black;
-    background: white;
-  }
-  
-  .card {
-    box-shadow: none;
-    border: 1px solid #ddd;
   }
 }

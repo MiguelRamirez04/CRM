@@ -77,6 +77,7 @@ export class SecureAuthService {
   private readonly baseUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private refreshTokenRequest: Observable<RefreshResponse> | null = null;
+  private logoutPerformed = false; // Flag para controlar logout realizado
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
@@ -108,6 +109,9 @@ export class SecureAuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, loginData)
       .pipe(
         tap(response => {
+          // Reset flag de logout al hacer login exitoso
+          this.logoutPerformed = false;
+
           // Guardar usuario en cookie (no sensible)
           this.cookieService.set('user', JSON.stringify(response.user), {
             path: '/',
@@ -133,19 +137,11 @@ export class SecureAuthService {
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/api/auth/logout`, {})
-      .pipe(
-        tap(() => {
-          this.clearAuthData();
-          this.redirectToLogin();
-        }),
-        catchError(error => {
-          // Even if logout fails on server, clear local data and redirect
-          this.clearAuthData();
-          this.redirectToLogin();
-          return throwError(error);
-        })
-      );
+    // Logout inmediato del lado cliente - el servidor validará tokens automáticamente
+    // cuando se intenten hacer requests con tokens expirados/inválidos
+    this.logoutPerformed = true;
+    this.forceLogout();
+    return of(void 0);
   }
 
   /**
@@ -153,6 +149,7 @@ export class SecureAuthService {
    * Útil para manejar tokens expirados o errores de autenticación
    */
   forceLogout(): void {
+    this.logoutPerformed = true;
     this.clearAuthData();
     this.redirectToLogin();
   }
@@ -213,6 +210,11 @@ export class SecureAuthService {
    * Verificar estado de autenticación (para guards)
    */
   checkAuthStatus(): Observable<boolean> {
+    // Si se realizó logout, no considerar autenticado hasta nuevo login
+    if (this.logoutPerformed) {
+      return of(false);
+    }
+
     if (this.isAuthenticated()) {
       return this.isLoggedIn$;
     }

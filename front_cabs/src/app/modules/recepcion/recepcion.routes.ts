@@ -10,6 +10,10 @@ export const recepcionRoutes: Routes = [
     loadComponent: () => import('./pages/clientes/clientes.component').then(m => m.ClientesComponent)
   },
   {
+    path: 'clientes-completos',
+    loadComponent: () => import('./pages/clientes-completos/clientes-completos.component').then(m => m.ClientesCompletosComponent)
+  },
+  {
     path: 'pedidos',
     loadComponent: () => import('./pages/pedidos/pedidos.component').then(m => m.PedidosComponent)
   }

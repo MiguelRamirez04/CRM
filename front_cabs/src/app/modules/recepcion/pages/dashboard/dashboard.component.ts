@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   OrdenTrabajo,
   EstadisticaRecepcion,
@@ -8,20 +9,23 @@ import {
 import { RecepcionService } from '../../services/recepcion.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
 import { OrdenFormComponent } from '../../components/orden-form/orden-form.component';
+import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-recepcion-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     OrdenListComponent,
     OrdenFormComponent
 ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css',
+  styleUrls: ['./dashboard.component.css'],
 })
 export class RecepcionDashboardComponent implements OnInit {
   private recepcionService = inject(RecepcionService);
+  private authService = inject(SecureAuthService);
 
   // Signals para estado reactivo
   ordenes = signal<OrdenTrabajo[]>([]);
@@ -129,6 +133,22 @@ export class RecepcionDashboardComponent implements OnInit {
   onBuscarCliente(term: string) {
     // Lógica para buscar cliente si es necesario en el dashboard
     console.log('Buscando cliente con término:', term);
+  }
+
+  onLogout() {
+    if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+      this.authService.logout().subscribe({
+        next: () => {
+          // El servicio maneja la redirección automáticamente
+          console.log('Sesión cerrada exitosamente');
+        },
+        error: (error) => {
+          console.error('Error al cerrar sesión:', error);
+          // Forzar logout si falla la llamada al servidor
+          this.authService.forceLogout();
+        }
+      });
+    }
   }
 
   private handleError(
