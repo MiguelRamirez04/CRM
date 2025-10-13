@@ -2,9 +2,7 @@ using back_cabs.CRM.contexts;
 using back_cabs.CRM.models.Shared;
 using back_cabs.CRM.DTOs.shared;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+
 
 namespace back_cabs.CRM.services.shared
 {
