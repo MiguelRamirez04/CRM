@@ -22,5 +22,8 @@ namespace back_cabs.CRM.DTOs.shared{
         [Required]
         public bool RequiereSeguimiento { get; set; }
         public string? SeguimientoNotas { get; set; }
+        public string? EvaluacionActualizada { get; set; }
+        public string? NuevaEvaluacion { get; set; }
+
     }
 }
