@@ -46,7 +46,10 @@ namespace back_cabs.CRM.enums
         COTIZADO = 3,
 
         [Description("Devuelto sin Reparar")]
-        DEVUELTO_SIN_REPARAR = 4
+        DEVUELTO_SIN_REPARAR = 4,
+
+        [Description("Sin Reparar")]
+        SIN_REPARAR = 5
     }
 
     public enum TipoEntrega
