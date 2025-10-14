@@ -276,6 +276,7 @@ public class WriteContext : DbContext
             entity.Property(e => e.Notas).HasColumnName("notas");
 
             //Llaves foraneas de la tabla
+            /*
             entity.HasOne(e => e.Orden)
                 .WithMany()
                 .HasForeignKey(e => e.OrdenId)
@@ -287,7 +288,7 @@ public class WriteContext : DbContext
                 .HasForeignKey(e => e.Tecnico)
                 .HasConstraintName("FK_rep_tecnico")
                 .OnDelete(DeleteBehavior.Cascade);
-
+            */
             // Índices para optimización
             entity.HasIndex(e => e.OrdenId);
             entity.HasIndex(e => e.TecnicoId);
