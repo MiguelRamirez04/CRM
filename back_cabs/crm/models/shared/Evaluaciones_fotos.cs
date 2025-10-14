@@ -7,7 +7,7 @@ namespace back_cabs.CRM.models.Shared
     /// <summary>
     /// Entidad que representa una foto asociada a un detalle de evaluación
     /// </summary>
-    [Table("evaluaciones_fotos")]
+    [Table("evaluacion_fotos")]
     public class EvaluacionFoto
     {
         /// <summary>

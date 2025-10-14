@@ -8,6 +8,7 @@ namespace back_cabs.CRM.models.Shared
     /// Entidad que representa una evaluación de servicio
     /// </summary>
     [Table("evaluaciones")]
+    /*[Table("ejecuciones_orden", Schema = "ops")] */
     public class Evaluacion
     {
         /// <summary>
