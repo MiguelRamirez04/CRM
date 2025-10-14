@@ -48,6 +48,7 @@ builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
 
 // Registrar la conexión a la base de datos para inyectar IDbConnection
