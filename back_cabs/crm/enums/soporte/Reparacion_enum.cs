@@ -43,21 +43,21 @@ namespace back_cabs.CRM.enums
         REPARADO = 2,
 
         [Description("Cotizado")]
-        COTIZADO = 3,
+        COTIZAR = 3,
 
         [Description("Devuelto sin Reparar")]
         DEVUELTO_SIN_REPARAR = 4,
 
-        [Description("Sin Reparar")]
+        [Description("Sin_Reparar")]
         SIN_REPARAR = 5
     }
 
     public enum TipoEntrega
     {
-        [Description("Recogida en Taller")]
+        [Description("Recoge_Cliente")]
         RECOGE_CLIENTE = 1,
 
-        [Description("Envío a Domicilio")]
+        [Description("Domicilio")]
         DOMICILIO = 2
     }
 }

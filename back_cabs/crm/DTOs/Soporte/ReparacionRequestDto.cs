@@ -59,11 +59,11 @@ namespace back_cabs.CRM.DTOs.Soporte
 
         public decimal CostoRefaccionesPublico { get; init; } = 0;
 
-        public decimal CostoTotalCompra { get; init; }
+        // public decimal CostoTotalCompra { get; init; }
 
-        public decimal CostoTotalPublico { get; init; }
+        // public decimal CostoTotalPublico { get; init; }
 
-        public decimal MargenEstimado { get; init; }
+        // public decimal MargenEstimado { get; init; }
 
         public int? GarantiaDias { get; init; }
 

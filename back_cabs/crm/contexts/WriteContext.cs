@@ -244,7 +244,7 @@ public class WriteContext : DbContext
         // Configuración de la entidad Reparacion (reparaciones)
         modelBuilder.Entity<Reparacion>(entity =>
         {
-            entity.ToTable("reparaciones");
+            entity.ToTable("reparaciones", "dbo");
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
@@ -264,9 +264,9 @@ public class WriteContext : DbContext
             entity.Property(e => e.CostoManoObra).HasColumnName("costo_mano_obra").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.CostoRefaccionesCompra).HasColumnName("costo_refacciones_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.CostoRefaccionesPublico).HasColumnName("costo_refacciones_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
-            entity.Property(e => e.CostoTotalCompra).HasColumnName("costo_total_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
-            entity.Property(e => e.CostoTotalPublico).HasColumnName("costo_total_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
-            entity.Property(e => e.MargenEstimado).HasColumnName("margen_estimado").HasColumnType("DECIMAL(5,2)");
+            entity.Property(e => e.CostoTotalCompra).HasColumnName("costo_total_compra").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_mano_obra] + [costo_refacciones_compra]").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.CostoTotalPublico).HasColumnName("costo_total_publico").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_mano_obra] + [costo_refacciones_publico]").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.MargenEstimado).HasColumnName("margen_estimado").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_refacciones_publico] - [costo_refacciones_compra]").HasColumnType("DECIMAL(5,2)");
             entity.Property(e => e.GarantiaDias).HasColumnName("garantia_dias");
             entity.Property(e => e.FechaLlegada).HasColumnName("fecha_llegada").HasColumnType("DATETIME2(0)").IsRequired();
             entity.Property(e => e.EmpezadoEn).HasColumnName("empezado_en").HasColumnType("DATETIME2(0)");
