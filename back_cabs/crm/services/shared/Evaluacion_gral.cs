@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace back_cabs.CRM.services.shared
 {
-    public class EvaluacionService : Evaluacion
+    public class EvaluacionService 
     {
         private readonly ReadOnlyContext _readOnlyContext;
         private readonly WriteContext _writeContext;
