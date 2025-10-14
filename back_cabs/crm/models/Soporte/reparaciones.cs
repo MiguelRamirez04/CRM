@@ -56,10 +56,11 @@ namespace back_cabs.CRM.models.Soporte
         /// <summary>
         /// Propiedad de navegación para la orden de trabajo asociada.
         /// </summary>
+        /*
         [ForeignKey("OrdenId")]
         public virtual OrdenTrabajo Orden { get; set; } = null!; // Se asume que siempre habrá una orden
-
-        /// <summary>
+        */
+        /// <summary>  
         /// ID del técnico asignado a esta reparación.
         /// </summary>
         [Required(ErrorMessage = "El ID del técnico es obligatorio.")]
@@ -69,9 +70,10 @@ namespace back_cabs.CRM.models.Soporte
         /// <summary>
         /// Propiedad de navegación para el usuario (técnico) asignado.
         /// </summary>
+        /*
         [ForeignKey("TecnicoId")]
         public virtual UsuarioAuth Tecnico { get; set; } = null!; // Se asume que siempre habrá un técnico
-
+        */
         /// <summary>
         /// Tipo de dispositivo a reparar (ej. "Laptop", "Celular", "Tablet").
         /// </summary>

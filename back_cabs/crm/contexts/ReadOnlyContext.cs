@@ -166,11 +166,18 @@ public class ReadOnlyContext : DbContext
 
             // Relaciones con Foreign Keys (solo usuarios, no hay modelo Cliente)
             entity.HasOne(e => e.CreadoPor)
+<<<<<<< HEAD
                   .WithMany()
                   .HasForeignKey(e => e.CreadoPorUserId)
                   .HasConstraintName("FK_ordenes_trabajo_creado_por")
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
+=======
+                .WithMany()
+                .HasForeignKey(e => e.CreadoPorUserId)
+                .HasConstraintName("FK_ordenes_trabajo_creado_por")
+                .OnDelete(DeleteBehavior.Restrict);
+>>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
 
             entity.HasOne(e => e.AsignadaA)
                 .WithMany()

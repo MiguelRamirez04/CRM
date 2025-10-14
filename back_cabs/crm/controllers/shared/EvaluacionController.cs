@@ -6,6 +6,12 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
+<<<<<<< HEAD
+=======
+/// <summary>
+/// agregar la cosa de los roles segun que tienes que debes de ver
+/// </summary>
+>>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
 [ApiController] //esta es por asi decirlo la clase como control que voy a usar
 [Route("api/[controller]")]
 public class EvaluacionController : ControllerBase 
@@ -23,6 +29,22 @@ public class EvaluacionController : ControllerBase
     public async Task<ActionResult<List<EvaluacionResponseDto>>> GetAll()
     {
         var evaluaciones = await _evaluacionService.GetAllEvaluacionesAsync();
+<<<<<<< HEAD
+=======
+        var evaluacionesDto = evaluaciones.Select(e => new EvaluacionResponseDto
+        {
+            Id = e.Id,
+            ordenId = e.OrdenId,
+            EjecucoinId = e.EjecucionId,
+            CLienteId = e.ClienteId,
+            EvaluadirId = e.EvaluadorId,
+            Objetivo = e.Objetivo,
+            ComentariosGenerales = e.ComentariosGenerales,
+            ScoreCalidadTotal = e.ScoreCalidadTotal,
+            RequiereSeguimiento = e.RequiereSeguimiento,
+            SeguimientoNotas = e.SeguimientoNotas,
+        }).ToList();
+>>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
         return Ok(evaluaciones);
     }
     /// <summary>

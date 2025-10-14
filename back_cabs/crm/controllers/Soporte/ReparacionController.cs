@@ -54,9 +54,15 @@ namespace back_cabs.CRM.DTOs.Soporte
                 var reparaciones = await _reparacionService.ObtenerReparacionesAsync();
                 return Ok(reparaciones);
             }
+<<<<<<< HEAD
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener la lista de reparaciones}", ex);
+=======
+            catch (Exception)
+            {
+                _logger.LogError("Error al obtener la lista de reparaciones}");
+>>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
                 return StatusCode(500, UtilidadesManejoErrores.CreateErrorResponse(
                     TipoError.ErrorServidorInterno,
                     "Error de lectura",

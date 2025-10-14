@@ -28,6 +28,7 @@ builder.Services.AddMediatRConfiguration();
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 
+
 // Servicios básicos de ASP.NET Core
 builder.Services.AddControllers();
 
@@ -43,10 +44,19 @@ builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
+=======
+builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
+
+>>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
+
 
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
