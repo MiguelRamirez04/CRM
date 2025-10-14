@@ -5,6 +5,7 @@ using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace back_cabs.CRM.contexts;
 
@@ -142,16 +143,16 @@ public class WriteContext : DbContext
 
             // Relaciones con Foreign Keys (solo usuarios, no hay modelo Cliente)
             entity.HasOne(e => e.CreadoPor)
-                  .WithMany()
-                  .HasForeignKey(e => e.CreadoPorUserId)
-                  .HasConstraintName("FK_ordenes_trabajo_creado_por")
-                  .OnDelete(DeleteBehavior.Restrict);
+                .WithMany()
+                .HasForeignKey(e => e.CreadoPorUserId)
+                .HasConstraintName("FK_ordenes_trabajo_creado_por")
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.AsignadaA)
-                  .WithMany()
-                  .HasForeignKey(e => e.AsignadaAUserId)
-                  .HasConstraintName("FK_ordenes_trabajo_asignada_a")
-                  .OnDelete(DeleteBehavior.SetNull);
+                .WithMany()
+                .HasForeignKey(e => e.AsignadaAUserId)
+                .HasConstraintName("FK_ordenes_trabajo_asignada_a")
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Índices para optimización
             entity.HasIndex(e => new { e.ClienteId, e.CreadoEn }).HasDatabaseName("IX_ordenes_cliente");
@@ -171,6 +172,15 @@ public class WriteContext : DbContext
             entity.Property(e => e.Observaciones).HasColumnName("observaciones").HasColumnType("NVARCHAR(MAX)");
 
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.TipoVehiculo).HasColumnName("tipo_vehiculo").HasMaxLength(50);
+            entity.Property(e => e.EsDeEmpresa).HasColumnName("es_de_empresa").IsRequired(true);
+            entity.Property(e => e.Transmision).HasColumnName("transmicion").HasMaxLength(20);
+            entity.Property(e => e.Placas).HasColumnName("placas").HasMaxLength(20);
+            entity.Property(e => e.Activo).HasColumnName("activo").IsRequired(true);
+            entity.Property(e => e.Observaciones).HasColumnName("observaciones");
         });
 
         // Configuración de la entidad Catalog_Clientes (catalog_clientes)
@@ -198,14 +208,46 @@ public class WriteContext : DbContext
         // Configuración de la entidad Evaluacion (evaluaciones)
         modelBuilder.Entity<Evaluacion>(entity =>
         {
+            entity.HasKey(e => e.Id);
+
             entity.HasIndex(e => new { e.OrdenId, e.CreadoEn });
             entity.HasIndex(e => e.EvaluadorId);
             entity.HasIndex(e => e.ClienteId).HasFilter("[cliente_id] IS NOT NULL");
+
+            //DJ aqui vas weon no se te olvide
+            entity.Property(e => e.Objetivo).HasMaxLength(200);
+            entity.Property(e => e.ComentariosGenerales).HasColumnName("comentarios_generales");
+            entity.Property(e => e.ScoreCalidadTotal).HasColumnName("score_calidad_total");
+            entity.Property(e => e.RequiereSeguimiento).HasColumnName("requiere_seguimiento").IsRequired(true);
+            entity.Property(e => e.SeguimientoNotas).HasColumnName("seguimiento_notas");
+            entity.Property(e => e.CreadoEn).HasColumnName("creado_en").HasColumnType("DATETIME2(0)").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            
         });
 
         // Configuración de la entidad EvaluacionDetalle (evaluaciones_detalles)
         modelBuilder.Entity<EvaluacionDetalle>(entity =>
         {
+            entity.ToTable("evaluacion_detalles");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.EvaluacionId).HasColumnName("evaluacion_id").IsRequired();
+            entity.Property(e => e.Fase).HasColumnName("fase").HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.Sugerencias).HasColumnName("sugerencias");
+            entity.Property(e => e.ScoreFase).HasColumnName("score_fase");
+            entity.Property(e => e.EvidenciaNota).HasColumnName("evidencia_nota");
+            entity.Property(e => e.CreadoEn).HasColumnName("creado_en").HasColumnType("DATETIME2(0)").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            entity.Property(e => e.Lugar).HasColumnName("lugar").IsRequired();
+
+            //Llaves foraneas de la tabla
+            entity.HasOne(e => e.Evaluacion)
+                .WithMany()
+                .HasForeignKey(e => e.EvaluacionId)
+                .HasConstraintName("FK_eval_detalle_eval")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Índices para optimización
             entity.HasIndex(e => e.EvaluacionId);
             entity.HasIndex(e => new { e.EvaluacionId, e.Fase });
         });
@@ -220,6 +262,51 @@ public class WriteContext : DbContext
         // Configuración de la entidad Reparacion (reparaciones)
         modelBuilder.Entity<Reparacion>(entity =>
         {
+            entity.ToTable("reparaciones");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.OrdenId).HasColumnName("orden_id").IsRequired();
+            entity.Property(e => e.TecnicoId).HasColumnName("tecnico_id").IsRequired();
+            entity.Property(e => e.DispositivoTipo).HasColumnName("dispositivo_tipo").IsRequired();
+            entity.Property(e => e.Marca).HasColumnName("marca");
+            entity.Property(e => e.Modelo).HasColumnName("modelo");
+            entity.Property(e => e.AccesoriosRecibidos).HasColumnName("accesorios_recibidos");
+            entity.Property(e => e.AccesoriosRecibidos).HasColumnName("accesorios_recibidos");
+            entity.Property(e => e.DescripcionFalla).HasColumnName("descripcion_falla").IsRequired();
+            entity.Property(e => e.Diagnostico).HasColumnName("diagnostico");
+            entity.Property(e => e.SolucionAplicada).HasColumnName("solucion_aplicada");
+            entity.Property(e => e.Resultado).HasColumnName("resultado").IsRequired();
+            entity.Property(e => e.CausaIrreparable).HasColumnName("causa_irreparable");
+            entity.Property(e => e.RespaldoDatosAutorizado).HasColumnName("respaldo_datos_autorizado").IsRequired();
+            entity.Property(e => e.CostoManoObra).HasColumnName("costo_mano_obra").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.CostoRefaccionesCompra).HasColumnName("costo_refacciones_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.CostoRefaccionesPublico).HasColumnName("costo_refacciones_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.CostoTotalCompra).HasColumnName("costo_total_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.CostoTotalPublico).HasColumnName("costo_total_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
+            entity.Property(e => e.MargenEstimado).HasColumnName("margen_estimado").HasColumnType("DECIMAL(5,2)");
+            entity.Property(e => e.GarantiaDias).HasColumnName("garantia_dias");
+            entity.Property(e => e.FechaLlegada).HasColumnName("fecha_llegada").HasColumnType("DATETIME2(0)").IsRequired();
+            entity.Property(e => e.EmpezadoEn).HasColumnName("empezado_en").HasColumnType("DATETIME2(0)");
+            entity.Property(e => e.EntregadoEn).HasColumnName("entregado_en").HasColumnType("DATETIME2(0)");
+            entity.Property(e => e.TipoEntrega).HasColumnName("tipo_entrega").IsRequired();
+            entity.Property(e => e.UbicacionAlmacenamiento).HasColumnName("ubicacion_almacenamiento");
+            entity.Property(e => e.Notas).HasColumnName("notas");
+
+            //Llaves foraneas de la tabla
+            entity.HasOne(e => e.Orden)
+                .WithMany()
+                .HasForeignKey(e => e.OrdenId)
+                .HasConstraintName("FK_rep_orden")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Tecnico)
+                .WithMany()
+                .HasForeignKey(e => e.Tecnico)
+                .HasConstraintName("FK_rep_tecnico")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Índices para optimización
             entity.HasIndex(e => e.OrdenId);
             entity.HasIndex(e => e.TecnicoId);
             entity.HasIndex(e => new { e.Resultado, e.FechaLlegada });

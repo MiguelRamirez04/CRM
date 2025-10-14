@@ -173,10 +173,10 @@ public class ReadOnlyContext : DbContext
                   .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.AsignadaA)
-                  .WithMany()
-                  .HasForeignKey(e => e.AsignadaAUserId)
-                  .HasConstraintName("FK_ordenes_trabajo_asignada_a")
-                  .OnDelete(DeleteBehavior.SetNull);
+                .WithMany()
+                .HasForeignKey(e => e.AsignadaAUserId)
+                .HasConstraintName("FK_ordenes_trabajo_asignada_a")
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Índices para optimización
             entity.HasIndex(e => new { e.ClienteId, e.CreadoEn }).HasDatabaseName("IX_ordenes_cliente");
