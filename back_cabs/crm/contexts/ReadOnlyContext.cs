@@ -47,9 +47,9 @@ public class ReadOnlyContext : DbContext
     public DbSet<Catalog_Productos_Servicio_Ref> CatalogProductosServicios { get; set; } = null!;
 
     /// <summary>
-    /// Gastos de viáticos
+    /// Gastos de viáticos (comentado para evitar conflicto)
     /// </summary>
-    public DbSet<Finance_Gastos_Viaticos> GastosViaticos { get; set; } = null!;
+    // public DbSet<Finance_Gastos_Viaticos> GastosViaticos { get; set; } = null!;
 
     /// <summary>
     /// Evaluaciones de servicio
@@ -95,6 +95,11 @@ public class ReadOnlyContext : DbContext
     /// Vista completa de clientes con datos de sistema legacy (solo lectura)
     /// </summary>
     public DbSet<VwClientesCompletos> ClientesCompletos { get; set; } = null!;
+
+    // public DbSet<Finance_Gastos_Viaticos> GastosViaticosNuevos { get; set; } = null!; // Comentado para evitar conflicto
+    public DbSet<GastoViatico> GastosViaticosNuevos { get; set; } = null!;
+    public DbSet<GastoViaticoDetalle> GastosViaticosDetalles { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -200,12 +205,12 @@ public class ReadOnlyContext : DbContext
             entity.HasIndex(e => e.LegacyProductId).IsUnique().HasFilter("[legacy_product_id] IS NOT NULL");
         });
 
-        // Configuración de la entidad Finance_Gastos_Viaticos (finance_gastos_viaticos)
-        modelBuilder.Entity<Finance_Gastos_Viaticos>(entity =>
-        {
-            entity.HasIndex(e => new { e.CordenId, e.Fecha });
-            entity.HasIndex(e => e.Fecha);
-        });
+        // Configuración de la entidad Finance_Gastos_Viaticos (comentada para evitar conflicto)
+        // modelBuilder.Entity<Finance_Gastos_Viaticos>(entity =>
+        // {
+        //     entity.HasIndex(e => new { e.CordenId, e.Fecha });
+        //     entity.HasIndex(e => e.Fecha);
+        // });
 
         // Configuración de la entidad Evaluacion (evaluaciones)
         modelBuilder.Entity<Evaluacion>(entity =>
@@ -270,6 +275,55 @@ public class ReadOnlyContext : DbContext
             entity.HasIndex(e => e.RutaAlmacenamiento).IsUnique();
             entity.HasIndex(e => e.NombreArchivo);
         });
+
+
+
+        // Agregar al final de OnModelCreating
+// Configuración para GastoViatico (finance_gastos_viaticos)
+modelBuilder.Entity<GastoViatico>(entity =>
+{
+    entity.ToTable("finance_gastos_viaticos");
+    entity.HasKey(e => e.Id);
+    entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+    entity.Property(e => e.TipoViatico).HasColumnName("tipo_viatico").HasConversion<string>();
+    entity.Property(e => e.OrdenId).HasColumnName("orden_id");
+    entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+    entity.Property(e => e.TieneFactura).HasColumnName("tiene_factura");
+    entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+    entity.Property(e => e.ProveedorNombre).HasColumnName("proveedor_nombre");
+    entity.Property(e => e.Fecha).HasColumnName("fecha");
+    entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro");
+    entity.Property(e => e.KmRecorridos).HasColumnName("km_recorridos");
+    entity.Property(e => e.LugarDestino).HasColumnName("lugar_destino");
+    entity.Property(e => e.EstadoGasto).HasColumnName("estado_gasto").HasConversion<string>();
+    entity.Property(e => e.DocumentoId).HasColumnName("documento_id");
+    entity.Property(e => e.Observaciones).HasColumnName("observaciones");
+
+    // Índices
+    entity.HasIndex(e => new { e.TipoViatico, e.Fecha });
+    entity.HasIndex(e => e.UsuarioId);
+});
+
+// Configuración para GastoViaticoDetalle (viatico_gasto_detalle)
+modelBuilder.Entity<GastoViaticoDetalle>(entity =>
+{
+    entity.ToTable("viatico_gasto_detalle");
+    entity.HasKey(e => e.Id);
+    entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+    entity.Property(e => e.ViaticoId).HasColumnName("viatico_id");
+    entity.Property(e => e.TipoGasto).HasColumnName("tipo_gasto");
+    entity.Property(e => e.Monto).HasColumnName("monto");
+    entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+
+    // Relación
+    entity.HasOne<GastoViatico>()
+          .WithMany(v => v.Detalles)
+          .HasForeignKey(d => d.ViaticoId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+    // Índice
+    entity.HasIndex(e => e.ViaticoId);
+});
 
     }
 }

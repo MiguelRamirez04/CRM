@@ -14,7 +14,6 @@ export class OrdenListComponent {
 
   @Output() verDetalles = new EventEmitter<number>();
   @Output() editar = new EventEmitter<number>();
-  @Output() eliminar = new EventEmitter<number>();
 
   onVerDetalles(id: number) {
     this.verDetalles.emit(id);
@@ -22,10 +21,6 @@ export class OrdenListComponent {
 
   onEditar(id: number) {
     this.editar.emit(id);
-  }
-
-  onEliminar(id: number) {
-    this.eliminar.emit(id);
   }
 
   trackByOrdenId(index: number, orden: any): number {
