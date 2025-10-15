@@ -1,5 +1,7 @@
 @back_cabs_HostAddress = http://localhost:5176
 
+
+
 # =====================================================================================
 # PRUEBAS DE AUTENTICACIÓN - CRM API
 # =====================================================================================
@@ -8,12 +10,25 @@
 POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
+
 {
   "nombreCompleto": "Alejandro Alejo Admin",
   "email": "alex.alejo@empresa.com",
   "contrasena": "AdminPass123!",
   "confirmarContrasena": "AdminPass123!",
   "rol": "Administrador",
+  "licenciaConducir": true,
+  "transmisionHabilitada": "Ambas"
+}
+
+{
+  "nombre": "Manuel",
+  "apellido": "Díaz",
+  "telefono": 1234567890,
+  "email": "manuel@gmail.com",
+  "contrasena": "AdminPass123!",
+  "confirmarContrasena": "AdminPass123!",
+  "rol": "ADMINISTRACION",
   "licenciaConducir": true,
   "transmisionHabilitada": "Ambas"
 }
