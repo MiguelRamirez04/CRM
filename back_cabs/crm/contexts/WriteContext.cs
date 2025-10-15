@@ -317,6 +317,23 @@ public class WriteContext : DbContext
         // Configuración de la entidad ReparacionComponente (reparacion_componentes)
         modelBuilder.Entity<ReparacionComponente>(entity =>
         {
+            entity.ToTable("reparacion_componentes");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd().IsRequired();
+            entity.Property(e => e.ReparacionId).HasColumnName("reparacion_id").IsRequired();
+            entity.Property(e => e.Componente).HasColumnName("componente").IsRequired();
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad").IsRequired();
+            entity.Property(e => e.Proveedor).HasColumnName("proveedor").HasMaxLength(160);
+            entity.Property(e => e.GarantiaMeses).HasColumnName("garantia_meses").IsRequired();
+            entity.Property(e => e.CostoUnitarioCompra).HasColumnName("costo_unitario_compra").HasColumnType("DECIMAL(12,2)");
+            entity.Property(e => e.CostoUnitarioPublico).HasColumnName("costo_unitario_publico").HasColumnType("DECIMAL(12,2)");
+            entity.Property(e => e.SubtotalCompra).HasColumnName("subtotal_compra").HasColumnType("DECIMAL(13,2)").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[cantidad] * [costo_unitario_compra]").IsRequired();
+            entity.Property(e => e.SubtotalPublico).HasColumnName("subtotal_publico").HasColumnType("DECIMAL(13,2)").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[cantidad] * [costo_unitario_publico]").IsRequired();
+            entity.Property(e => e.Notas).HasColumnName("notas").HasMaxLength(500);
+
+
+
             entity.HasIndex(e => e.ReparacionId);
             entity.HasIndex(e => e.Componente);
         });
@@ -324,6 +341,18 @@ public class WriteContext : DbContext
         // Configuración de la entidad ReparacionFoto (reparacion_fotos)
         modelBuilder.Entity<ReparacionFoto>(entity =>
         {
+            entity.ToTable("reparacion_fotos");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd().IsRequired();
+            entity.Property(e => e.ReparacionId).HasColumnName("reparacion_id").IsRequired();
+            entity.Property(e => e.DocumentoId).HasColumnName("documento_id").IsRequired();
+            entity.Property(e => e.Etapa).HasColumnName("etapa");
+            entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.CreadoEn).HasColumnName("creado_en").HasColumnType("DATETIME2(0)").IsRequired().HasDefaultValueSql("GETUTCDATE()");
+
+
+
             entity.HasIndex(e => e.ReparacionId);
             entity.HasIndex(e => e.DocumentoId);
             entity.HasIndex(e => new { e.ReparacionId, e.Etapa });
