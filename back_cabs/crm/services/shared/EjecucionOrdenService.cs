@@ -75,7 +75,7 @@ namespace back_cabs.CRM.services.shared
                 _logger.LogInformation("Ejecución creada exitosamente con ID {EjecucionId}", ejecucion.Id);
 
                 // Mapear a response
-                return await MapToResponseDtoAsync(ejecucion);
+                return MapToResponseDto(ejecucion);
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace back_cabs.CRM.services.shared
                 return null;
             }
 
-            return await MapToResponseDtoAsync(ejecucion);
+            return MapToResponseDto(ejecucion);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace back_cabs.CRM.services.shared
             var result = new List<EjecucionOrdenResponseDto>();
             foreach (var ejecucion in ejecuciones)
             {
-                result.Add(await MapToResponseDtoAsync(ejecucion));
+                result.Add(MapToResponseDto(ejecucion));
             }
 
             _logger.LogInformation("Se encontraron {Count} ejecuciones", result.Count);
@@ -241,7 +241,7 @@ namespace back_cabs.CRM.services.shared
         /// <summary>
         /// Mapea una entidad EjecucionOrden a DTO de respuesta.
         /// </summary>
-        private async Task<EjecucionOrdenResponseDto> MapToResponseDtoAsync(EjecucionOrden ejecucion)
+        private EjecucionOrdenResponseDto MapToResponseDto(EjecucionOrden ejecucion)
         {
             return new EjecucionOrdenResponseDto
             {

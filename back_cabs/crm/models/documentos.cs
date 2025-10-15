@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using back_cabs.CRM.models.Auth;
@@ -38,7 +39,7 @@ namespace back_cabs.CRM.models.Files
         /// </summary>
         [Required]
         [StringLength(50)]
-        [Column("entidad_tipo")]
+        [Column("entidad_tipo", TypeName = "varchar(50)")] // Corregido: agregar TypeName
         public string EntidadTipo { get; set; } = string.Empty;
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace back_cabs.CRM.models.Files
         /// Tipo MIME del archivo (ej: "image/jpeg", "application/pdf").
         /// </summary>
         [StringLength(100)]
-        [Column("mimetype")]
+        [Column("mimetype", TypeName = "varchar(100)")] // Corregido: agregar TypeName
         public string? MimeType { get; set; }
 
         /// <summary>
