@@ -6,12 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
-<<<<<<< HEAD
-=======
 /// <summary>
 /// agregar la cosa de los roles segun que tienes que debes de ver
 /// </summary>
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
 
 [ApiController]
 [Route("api/[Controller]")]

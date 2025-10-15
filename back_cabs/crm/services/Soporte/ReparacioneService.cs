@@ -4,10 +4,7 @@ using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-<<<<<<< HEAD
-=======
 using Microsoft.IdentityModel.Tokens;
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
 
 namespace back_cabs.CRM.services.Soporte
 {
@@ -35,7 +32,7 @@ namespace back_cabs.CRM.services.Soporte
                 _logger.LogInformation("Iniciando creación de reparación para la orden ID: {OrdenId}", request.OrdenId);
 
                 //Validacion de Referencias
-                var ordenExistente = await _readOnlyContext.OrdenesTrabajo.AnyAsync(o => o.Id == request.OrdenId);
+                var ordenExistente = await _readOnlyContext.OrdenesTrabajo.AnyAsync(o => o.Id == request.OrdenId); 
                 if (!ordenExistente)
                 {
                     _logger.LogWarning("No se encontró la orden de trabajo con ID: {OrdenId}", request.OrdenId);
@@ -60,11 +57,7 @@ namespace back_cabs.CRM.services.Soporte
                     AccesoriosRecibidos = request.AccesoriosRecibidos,
                     DescripcionFalla = request.DescripcionFalla,
                     Diagnostico = request.Diagnostico,
-<<<<<<< HEAD
-                    Resultado = ResultadoReparacion.SIN_REPARAR.ToString(), // Valor por defecto al crear
-=======
                     Resultado = ResultadoReparacion.COTIZAR.ToString().ToUpper(), // Valor por defecto al crear
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
                     CausaIrreparable = request.CausaIrreparable,
                     RespaldoDatosAutorizado = request.RespaldoDatosAutorizado,
                     CostoManoObra = request.CostoManoObra,
@@ -74,11 +67,7 @@ namespace back_cabs.CRM.services.Soporte
                     FechaLlegada = DateTime.UtcNow,
                     EmpezadoEn = request.EmpezadoEn,
                     EntregadoEn = request.EntregadoEn,
-<<<<<<< HEAD
-                    TipoEntrega = TipoEntrega.RECOGE_CLIENTE.ToString(), // Valor por defecto al crear
-=======
                     TipoEntrega = TipoEntrega.RECOGE_CLIENTE.ToString().ToUpper(), // Valor por defecto al crear
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
                     UbicacionAlmacenamiento = request.UbicacionAlmacenamiento,
                     Notas = request.Notas
                 };
@@ -131,76 +120,6 @@ namespace back_cabs.CRM.services.Soporte
                     reparacionExistente.Resultado = nuevoResultadoEnum.ToString().ToUpper();
                 }
 
-<<<<<<< HEAD
-                // ----------------------------------------------------------------------
-                // 2. ACTUALIZACIÓN DE CAMPOS Y VALIDACIONES DE NEGOCIO
-                // ----------------------------------------------------------------------
-
-                // Actualizar solo los campos que vengan en el Request.
-                // Usamos la comprobación de nulidad para no sobrescribir con null o valores vacíos.
-
-                // Campos de solo lectura (FKs), se mantienen
-                // reparacionExistente.OrdenId = reparacionExistente.OrdenId; 
-                // reparacionExistente.TecnicoId = reparacionExistente.TecnicoId;
-
-                if (request.SolucionAplicada != null)
-                    reparacionExistente.SolucionAplicada = request.SolucionAplicada;
-
-                if (request.CausaIrreparable != null)
-                    reparacionExistente.CausaIrreparable = request.CausaIrreparable;
-
-                // Se actualizan solo si tienen valor. Los tipos 'decimal?' se comprueban con HasValue.
-                if (request.CostoManoObra.HasValue)
-                    reparacionExistente.CostoManoObra = request.CostoManoObra.Value;
-                if (request.CostoRefaccionesCompra.HasValue)
-                    reparacionExistente.CostoRefaccionesCompra = request.CostoRefaccionesCompra.Value;
-                if (request.CostoRefaccionesPublico.HasValue)
-                    reparacionExistente.CostoRefaccionesPublico = request.CostoRefaccionesPublico.Value;
-                if (request.GarantiaDias.HasValue)
-                    reparacionExistente.GarantiaDias = request.GarantiaDias.Value;
-                if (request.EmpezadoEn.HasValue)
-                    reparacionExistente.EmpezadoEn = request.EmpezadoEn.Value;
-                if (request.EntregadoEn.HasValue)
-                    reparacionExistente.EntregadoEn = request.EntregadoEn.Value;
-
-                if (request.TipoEntrega != null)
-                    reparacionExistente.TipoEntrega = request.TipoEntrega;
-                if (request.Notas != null)
-                    reparacionExistente.Notas = request.Notas;
-
-                // 2.1 Aplicar Regla de Negocio de Irreparable
-                if (request.Resultado != null && nuevoResultadoEnum == ResultadoReparacion.IRREPARABLE)
-                {
-                    if (string.IsNullOrWhiteSpace(request.CausaIrreparable))
-                    {
-                        throw new ArgumentException("Si el resultado es 'IRREPARABLE', la causa es obligatoria.");
-                    }
-                }
-
-                // 2.2 Sellar fecha de entrega al finalizar la reparación
-                if (request.Resultado != null && nuevoResultadoEnum is ResultadoReparacion.REPARADO or ResultadoReparacion.DEVUELTO_SIN_REPARAR)
-                {
-                    // Solo actualizamos si no se proporcionó una fecha de entrega en el request
-                    if (!reparacionExistente.EntregadoEn.HasValue)
-                    {
-                        reparacionExistente.EntregadoEn = DateTime.UtcNow;
-                    }
-                }
-
-                // ----------------------------------------------------------------------
-                // 3. PERSISTENCIA
-                // ----------------------------------------------------------------------
-
-                int filasAfectadas = await _writeContext.SaveChangesAsync();
-
-                _logger.LogInformation("Reparación ID {Id} actualizada. Filas afectadas: {Filas}", id, filasAfectadas);
-
-                var DTOMapeado = MapearAResponseDto(reparacionExistente);
-
-
-                return (filasAfectadas, DTOMapeado);
-            }
-=======
 
                 if (request.TipoEntrega != null)
                 {
@@ -284,7 +203,6 @@ namespace back_cabs.CRM.services.Soporte
 
                     return (filasAfectadas, DTOMapeado);
                 }
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
             catch (KeyNotFoundException)
             {
                 throw; // Re-lanzar la excepción específica para que el controlador pueda devolver 404

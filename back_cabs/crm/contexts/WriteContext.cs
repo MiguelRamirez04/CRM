@@ -262,11 +262,7 @@ public class WriteContext : DbContext
         // Configuración de la entidad Reparacion (reparaciones)
         modelBuilder.Entity<Reparacion>(entity =>
         {
-<<<<<<< HEAD
-            entity.ToTable("reparaciones");
-=======
             entity.ToTable("reparaciones", "dbo");
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
@@ -286,15 +282,9 @@ public class WriteContext : DbContext
             entity.Property(e => e.CostoManoObra).HasColumnName("costo_mano_obra").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.CostoRefaccionesCompra).HasColumnName("costo_refacciones_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.CostoRefaccionesPublico).HasColumnName("costo_refacciones_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
-<<<<<<< HEAD
-            entity.Property(e => e.CostoTotalCompra).HasColumnName("costo_total_compra").HasColumnType("DECIMAL(12,2)").IsRequired();
-            entity.Property(e => e.CostoTotalPublico).HasColumnName("costo_total_publico").HasColumnType("DECIMAL(12,2)").IsRequired();
-            entity.Property(e => e.MargenEstimado).HasColumnName("margen_estimado").HasColumnType("DECIMAL(5,2)");
-=======
             entity.Property(e => e.CostoTotalCompra).HasColumnName("costo_total_compra").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_mano_obra] + [costo_refacciones_compra]").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.CostoTotalPublico).HasColumnName("costo_total_publico").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_mano_obra] + [costo_refacciones_publico]").HasColumnType("DECIMAL(12,2)").IsRequired();
             entity.Property(e => e.MargenEstimado).HasColumnName("margen_estimado").ValueGeneratedOnAddOrUpdate().HasComputedColumnSql("[costo_refacciones_publico] - [costo_refacciones_compra]").HasColumnType("DECIMAL(5,2)");
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
             entity.Property(e => e.GarantiaDias).HasColumnName("garantia_dias");
             entity.Property(e => e.FechaLlegada).HasColumnName("fecha_llegada").HasColumnType("DATETIME2(0)").IsRequired();
             entity.Property(e => e.EmpezadoEn).HasColumnName("empezado_en").HasColumnType("DATETIME2(0)");
@@ -304,10 +294,7 @@ public class WriteContext : DbContext
             entity.Property(e => e.Notas).HasColumnName("notas");
 
             //Llaves foraneas de la tabla
-<<<<<<< HEAD
-=======
             /*
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
             entity.HasOne(e => e.Orden)
                 .WithMany()
                 .HasForeignKey(e => e.OrdenId)
@@ -319,11 +306,7 @@ public class WriteContext : DbContext
                 .HasForeignKey(e => e.Tecnico)
                 .HasConstraintName("FK_rep_tecnico")
                 .OnDelete(DeleteBehavior.Cascade);
-<<<<<<< HEAD
-
-=======
             */
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
             // Índices para optimización
             entity.HasIndex(e => e.OrdenId);
             entity.HasIndex(e => e.TecnicoId);
@@ -365,7 +348,7 @@ public class WriteContext : DbContext
         });
 
 
-     
+
 modelBuilder.Entity<GastoViatico>(entity =>
 {
     entity.ToTable("finance_gastos_viaticos");

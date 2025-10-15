@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-///Esto es para los controles de evaluacion
-=======
 ///Esto es para los controles de evaluacion
 /// using back_cabs.CRM.DTOs.shared;
 using back_cabs.CRM.services.shared;
@@ -131,4 +128,3 @@ namespace back_cabs.CRM.Controllers
         }
     }
 }
->>>>>>> 26ed7eef6405f23b5f35e858f5e4a208e4eb26c6
