@@ -302,7 +302,7 @@ public class WriteContext : DbContext
 
             entity.HasOne(e => e.Tecnico)
                 .WithMany()
-                .HasForeignKey(e => e.Tecnico)
+                .HasForeignKey(e => e.TecnicoId)
                 .HasConstraintName("FK_rep_tecnico")
                 .OnDelete(DeleteBehavior.Cascade);
 
