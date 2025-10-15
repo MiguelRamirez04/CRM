@@ -1,25 +1,28 @@
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using back_cabs.CRM.DTOs.shared;
 using back_cabs.CRM.services.shared;
-using FluentValidation;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
-/// <summary>
-/// agregar la cosa de los roles segun que tienes que debes de ver
-/// </summary>
+using Microsoft.Extensions.Logging;
 
 [ApiController]
 [Route("api/[Controller]")]
+[Authorize(Roles = "SOPORTE,ADMINISTRACION")]
 public class FotosEvaluacionController : ControllerBase
 {
     private readonly FotosEvaluacionService _fotosService;
+    private readonly ILogger<FotosEvaluacionController> _logger;
 
-    // 1. Inyección de Dependencias
-    public FotosEvaluacionController(FotosEvaluacionService fotosService)
+    public FotosEvaluacionController(
+        FotosEvaluacionService fotosService, 
+        ILogger<FotosEvaluacionController> logger)
     {
-        _fotosService = fotosService;
+        _fotosService = fotosService ?? throw new ArgumentNullException(nameof(fotosService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     // --- Endpoints ---
@@ -51,34 +54,75 @@ public class FotosEvaluacionController : ControllerBase
     }
     /// <summary>
     /// POST: api/FotosEvaluacion
-    /// Crea una nueva foto de evaluación.
+    /// Sube una nueva foto de evaluación (convierte automáticamente a WebP).
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<EvaluacionFotoResponseDto>> Create([FromBody] EvaluacionFotoRequestDto requestDto)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<EvaluacionFotoResponseDto>> Create([FromForm] EvaluacionFotoRequestDto requestDto)
     {
-        var nuevaFotoModel = await _fotosService.CreateFotoAsync(requestDto);
-        var responseDto = new EvaluacionFotoResponseDto
+        if (!ModelState.IsValid)
         {
-            Id = nuevaFotoModel.Id,
-            DetalleId = nuevaFotoModel.DetalleId,
-            DocumentoId = nuevaFotoModel.DocumentoId,
-            Tipo = nuevaFotoModel.Tipo,
-            Descripcion = nuevaFotoModel.Descripcion,
-            CreadoEn = nuevaFotoModel.CreadoEn,
-        };
-        return CreatedAtAction(nameof(GetById), new { id = nuevaFotoModel.Id }, responseDto);
+            return BadRequest(ModelState);
+        }
 
+        try
+        {
+            var usuarioId = GetCurrentUserId();
+            var responseDto = await _fotosService.CreateFotoAsync(requestDto, usuarioId);
+            return CreatedAtAction(nameof(GetById), new { id = responseDto.Id }, responseDto);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Error = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al subir foto");
+            return StatusCode(500, new { Error = "Error interno al subir foto." });
+        }
     }
 
+    /// <summary>
+    /// GET: api/FotosEvaluacion/5/download
+    /// Descarga una foto específica.
+    /// </summary>
+    [HttpGet("{id}/download")]
+    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadFoto(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Descargando foto {FotoId}", id);
+            
+            var result = await _fotosService.DownloadFotoAsync(id);
+            if (result == null)
+            {
+                _logger.LogWarning("Foto {FotoId} no encontrada", id);
+                return NotFound(new { Error = "Foto no encontrada." });
+            }
+
+            return File(result.Value.fileStream, result.Value.contentType, result.Value.fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al descargar foto {FotoId}", id);
+            return StatusCode(500, new { Error = "Error al descargar foto." });
+        }
+    }
 
     /// <summary>
     /// PUT: api/FotosEvaluacion/5
-    /// Actualiza una foto de evaluación existente.
+    /// Actualiza metadatos de una foto (tipo y descripción).
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] EvaluacionFotoRequestDto requestDto)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateFotoMetadataDto requestDto)
     {
-        var fotoActualizada = await _fotosService.UpdateFotoAsync(id, requestDto);
+        var fotoActualizada = await _fotosService.UpdateFotoAsync(id, requestDto.Tipo, requestDto.Descripcion);
         if (fotoActualizada == null)
         {
             return NotFound();
@@ -88,7 +132,7 @@ public class FotosEvaluacionController : ControllerBase
 
     /// <summary>
     /// DELETE: api/FotosEvaluacion/5
-    /// Elimina una foto de evaluación por su ID.
+    /// Elimina una foto de evaluación por su ID (archivo físico + BD).
     /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
@@ -99,5 +143,28 @@ public class FotosEvaluacionController : ControllerBase
             return NotFound();
         }
         return NoContent();
+    }
+
+    /// <summary>
+    /// Obtiene el ID del usuario actual desde el token JWT.
+    /// </summary>
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            _logger.LogError("No se pudo obtener el ID del usuario del token JWT");
+            throw new UnauthorizedAccessException("Usuario no autenticado.");
+        }
+        return userId;
+    }
+
+    /// <summary>
+    /// DTO simple para actualizar metadatos.
+    /// </summary>
+    public class UpdateFotoMetadataDto
+    {
+        public string? Tipo { get; set; }
+        public string? Descripcion { get; set; }
     }
 }

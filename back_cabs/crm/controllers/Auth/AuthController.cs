@@ -287,7 +287,7 @@ namespace back_cabs.CRM.controllers.Auth
                     Id = usuario.Id.ToString(),
                     Email = usuario.Email,
                     Name = usuario.NombreCompleto,
-                    Role = rolUsuario.ToString().ToLower(),
+                    Role = rolUsuario.ToString(), // Mantener en MAYÚSCULAS (RECEPCION, SOPORTE, ADMINISTRACION)
                     Permissions = GetPermissionsByRole(rolUsuario)
                 };
                 var tokens = GenerateTokens(user);
@@ -453,7 +453,7 @@ namespace back_cabs.CRM.controllers.Auth
                         id = usuario.Id,
                         email = usuario.Email,
                         name = usuario.NombreCompleto,
-                        role = rolUsuario.ToString().ToLower(),
+                        role = rolUsuario.ToString(), // Mantener en MAYÚSCULAS
                         permissions = GetPermissionsByRole(rolUsuario),
                         fechaRegistro = usuario.CreadoEn,
                         tipoTransmision = usuario.TransmisionHabilitada
@@ -750,7 +750,7 @@ namespace back_cabs.CRM.controllers.Auth
                     Id = usuario.Id.ToString(),
                     Email = usuario.Email,
                     Name = usuario.NombreCompleto,
-                    Role = rolUsuario.ToString().ToLower(),
+                    Role = rolUsuario.ToString(), // Mantener en MAYÚSCULAS
                     Permissions = GetPermissionsByRole(rolUsuario)
                 };
             }
