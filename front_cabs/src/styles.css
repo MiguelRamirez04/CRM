@@ -1,8 +1,7 @@
 /* TailwindCSS Imports */
 @import 'tailwindcss';
 
-/* FontAwesome */
-@import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 /* Minimal Global Styles */
 html, body {
