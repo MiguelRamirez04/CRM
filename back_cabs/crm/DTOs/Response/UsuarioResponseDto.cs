@@ -64,7 +64,7 @@ namespace CRM.DTOs.Response
         /// </summary>
         /// <example>5512345678</example>
         [JsonPropertyName("telefono")]
-        public int Telefono { get; set; }
+        public long Telefono { get; set; }
 
         /// <summary>
         /// Email del usuario

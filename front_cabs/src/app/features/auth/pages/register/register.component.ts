@@ -78,7 +78,7 @@ export class RegisterComponent {
         confirmarContrasena: ['', Validators.required],
         rol: [RolUsuario.Recepcion, Validators.required], // Rol por defecto
         transmisionHabilitada: [TipoTransmision.Ninguna], // Opcional
-        activo: [true], // Checkbox por defecto activado
+        activo: [false], // Checkbox por defecto desactivado
       },
       {
         validators: [passwordMatchValidator],

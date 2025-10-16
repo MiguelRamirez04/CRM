@@ -13,7 +13,7 @@ export interface User {
   nombre: string;
   apellido: string;
   nombreCompleto?: string;
-  telefono?: number | null;
+  telefono?: number | null; // Acepta long desde backend (JS number soporta hasta 2^53)
   email: string;
   rol?: number | null;
   name?: string; // Mantener para compatibilidad

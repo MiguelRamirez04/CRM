@@ -52,7 +52,7 @@ CREATE TABLE [dbo].[auth_usuarios](
     [password_hash] [varchar](255) NOT NULL,
     [nombre] [varchar](100) NOT NULL,
     [apellido] [varchar](100) NOT NULL,
-    [telefono] [int] NOT NULL,
+    [telefono] [bigint] NOT NULL,  -- Cambiado de int a bigint para soportar números grandes
     [rol] [varchar](30) NOT NULL,
     [activo] [bit] NOT NULL,
     [transmision_habilitada] [varchar](50) NULL
@@ -91,13 +91,13 @@ La contraseña ahora debe cumplir con los siguientes criterios de seguridad:
 {
   "nombre": "Juan Carlos",
   "apellido": "Pérez García",
-  "telefono": 5512345678,
+  "telefono": 6182171064,
   "email": "juan.perez@empresa.com",
   "contrasena": "MiContraseña123!",
   "confirmarContrasena": "MiContraseña123!",
   "rol": "SOPORTE",
   "transmisionHabilitada": "Ambas",
-  "activo": true
+  "activo": false
 }
 ```
 
@@ -105,13 +105,13 @@ La contraseña ahora debe cumplir con los siguientes criterios de seguridad:
 ### Campos:
 - **nombre** (requerido): Nombre del usuario (2-100 caracteres)
 - **apellido** (requerido): Apellido del usuario (2-100 caracteres)
-- **telefono** (opcional): Número de 10 dígitos
+- **telefono** (requerido): Número de 10 dígitos (soporta cualquier número de 1000000000 a 9999999999)
 - **email** (requerido): Correo electrónico válido (máx. 150 caracteres)
 - **contrasena** (requerido): Contraseña con requisitos de seguridad
 - **confirmarContrasena** (requerido): Debe coincidir con contraseña
 - **rol** (requerido): `ADMINISTRACION`, `RECEPCION`, o `SOPORTE`
 - **transmisionHabilitada** (opcional): `Ninguna`, `Automatico`, `Manual`, o `Ambas`
-- **activo** (opcional, default `true`): Si el usuario está activo y puede usar licencia de conducir (checkbox en el formulario)
+- **activo** (opcional, default `false`): Si el usuario está activo y puede usar licencia de conducir (checkbox en el formulario)
 
 ---
 

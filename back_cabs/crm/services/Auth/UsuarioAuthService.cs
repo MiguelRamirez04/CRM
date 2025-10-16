@@ -104,7 +104,7 @@ namespace back_cabs.CRM.services.Auth
                     Password = contrasenaHash, // Guardar el hash en password_hash
                     Rol = request.Rol, // Ahora es string
                     TransmisionHabilitada = request.TransmisionHabilitada,
-                    Activo = request.Activo ?? true,
+                    Activo = request.Activo ?? false, // Si no se envía, por defecto false
                     CreadoEn = DateTime.UtcNow,
                     ActualizadoEn = DateTime.UtcNow
                 };

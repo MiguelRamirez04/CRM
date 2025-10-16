@@ -92,7 +92,7 @@ namespace back_cabs.CRM.models.Auth
         /// </summary>
         [Required]
         [Column("telefono")]
-        public int Telefono { get; set; }
+        public long Telefono { get; set; }
 
 
 
