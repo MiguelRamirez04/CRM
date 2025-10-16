@@ -98,21 +98,20 @@ namespace CRM.DTOs.Request
         [JsonPropertyName("rol")]
         public string Rol { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Número o identificador de licencia de conducir (opcional)
-        /// </summary>
-        /// <example>ABC123456</example>
-        [StringLength(50, ErrorMessage = "La licencia no puede exceder 50 caracteres")]
-        [JsonPropertyName("licenciaConducir")]
-        public string? LicenciaConducir { get; set; }
+    /// <summary>
+    /// Tipo de transmisión que puede manejar (opcional)
+    /// </summary>
+    /// <example>Manual</example>
+    [StringLength(50, ErrorMessage = "La transmisión habilitada no puede exceder 50 caracteres")]
+    [EnumStringValue(typeof(TipoTransmision))]
+    [JsonPropertyName("transmisionHabilitada")]
+    public string? TransmisionHabilitada { get; set; }
 
-        /// <summary>
-        /// Tipo de transmisión que puede manejar (opcional)
-        /// </summary>
-        /// <example>Manual</example>
-        [StringLength(50, ErrorMessage = "La transmisión habilitada no puede exceder 50 caracteres")]
-        [EnumStringValue(typeof(TipoTransmision))]
-        [JsonPropertyName("transmisionHabilitada")]
-        public string? TransmisionHabilitada { get; set; }
+    /// <summary>
+    /// Indica si el usuario está activo (puede usar licencia de conducir)
+    /// </summary>
+    /// <example>true</example>
+    [JsonPropertyName("activo")]
+    public bool? Activo { get; set; } = true;
     }
 }

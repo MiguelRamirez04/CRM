@@ -112,12 +112,6 @@ namespace back_cabs.CRM.validators.Auth
                 .MaximumLength(50)
                 .WithMessage("La transmisión habilitada no puede exceder 50 caracteres")
                 .When(x => !string.IsNullOrWhiteSpace(x.TransmisionHabilitada));
-
-            // Validación de licencia de conducir (opcional)
-            RuleFor(x => x.LicenciaConducir)
-                .MaximumLength(50)
-                .WithMessage("La licencia de conducir no puede exceder 50 caracteres")
-                .When(x => !string.IsNullOrWhiteSpace(x.LicenciaConducir));
         }
 
         /// <summary>

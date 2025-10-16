@@ -14,6 +14,28 @@ export function passwordMatchValidator(group: AbstractControl): ValidationErrors
     return pass === confirmPass ? null : { mismatch: true };
 }
 
+// Validador personalizado para contraseña robusta
+export function strongPasswordValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  if (!value) {
+    return null;
+  }
+
+  const hasNumber = /[0-9]/.test(value);
+  const hasUpperCase = /[A-Z]/.test(value);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+
+  const passwordValid = hasNumber && hasUpperCase && hasSpecialChar;
+
+  return !passwordValid ? {
+    strongPassword: {
+      hasNumber,
+      hasUpperCase,
+      hasSpecialChar
+    }
+  } : null;
+}
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -36,6 +58,15 @@ export class RegisterComponent {
   roles = Object.values(RolUsuario);
   transmisiones = Object.values(TipoTransmision);
 
+  // Propiedades para retroalimentación de contraseña
+  showPasswordRequirements = false;
+  passwordRequirements = {
+    minLength: false,
+    hasNumber: false,
+    hasUpperCase: false,
+    hasSpecialChar: false
+  };
+
   constructor() {
     this.registerForm = this.fb.group(
       {
@@ -43,16 +74,42 @@ export class RegisterComponent {
         apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
         telefono: ['', [Validators.pattern(/^\d{10}$/)]], // Opcional, 10 dígitos
         email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
-        contrasena: ['', [Validators.required, Validators.minLength(8)]],
+        contrasena: ['', [Validators.required, Validators.minLength(8), strongPasswordValidator]],
         confirmarContrasena: ['', Validators.required],
         rol: [RolUsuario.Recepcion, Validators.required], // Rol por defecto
-        licenciaConducir: [''], // Opcional, ahora es string
         transmisionHabilitada: [TipoTransmision.Ninguna], // Opcional
+        activo: [true], // Checkbox por defecto activado
       },
       {
         validators: [passwordMatchValidator],
       }
     );
+
+    // Suscribirse a cambios en el campo de contraseña para actualizar requisitos
+    this.registerForm.get('contrasena')?.valueChanges.subscribe((value) => {
+      this.updatePasswordRequirements(value);
+    });
+  }
+
+  updatePasswordRequirements(password: string): void {
+    this.passwordRequirements = {
+      minLength: password?.length >= 8,
+      hasNumber: /[0-9]/.test(password),
+      hasUpperCase: /[A-Z]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+  }
+
+  onPasswordFocus(): void {
+    this.showPasswordRequirements = true;
+  }
+
+  onPasswordBlur(): void {
+    // Mantener visible si hay errores
+    const passwordControl = this.registerForm.get('contrasena');
+    if (passwordControl?.valid || !passwordControl?.value) {
+      this.showPasswordRequirements = false;
+    }
   }
 
   onSubmit(): void {
@@ -74,8 +131,8 @@ export class RegisterComponent {
       contrasena: form.contrasena,
       confirmarContrasena: form.confirmarContrasena,
       rol: form.rol,
-      licenciaConducir: form.licenciaConducir ? (form.licenciaConducir || '').trim() : null,
       transmisionHabilitada: form.transmisionHabilitada ?? TipoTransmision.Ninguna,
+      activo: !!form.activo,
     };
 
     this.secureAuthService.register(payload).subscribe({

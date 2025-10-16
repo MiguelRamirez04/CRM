@@ -95,13 +95,6 @@ namespace CRM.DTOs.Response
         public DateTime CreadoEn { get; set; }
 
         /// <summary>
-        /// Número de licencia de conducir
-        /// </summary>
-        /// <example>ABC123456</example>
-        [JsonPropertyName("licenciaConducir")]
-        public string? LicenciaConducir { get; set; }
-
-        /// <summary>
         /// Tipo de transmisión habilitada
         /// </summary>
         /// <example>Ambas</example>

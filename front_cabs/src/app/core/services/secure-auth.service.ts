@@ -34,8 +34,8 @@ export interface RegisterRequest {
   contrasena: string;
   confirmarContrasena: string; // Enviar confirmación (requerida por el backend)
   rol: RolUsuario;
-  licenciaConducir?: string | null; // Ahora es string (número de licencia)
   transmisionHabilitada?: TipoTransmision | string | null;
+  activo?: boolean;
 }
 
 // Respuesta de login del backend (AuthController.Login)
