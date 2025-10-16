@@ -42,22 +42,27 @@ namespace back_cabs.CRM.models.Recepcion
         [Column("nuevo_cliente")]
         public bool? NuevoCliente { get; set; }
 
-        /// <summary>
-        /// Nombre del cliente (solo si NuevoCliente = true)
-        /// Mapea a: nombre_cliente (VARCHAR(120) NULL)
-        /// </summary>
-        [StringLength(120)]
-        [Column("nombre_cliente")]
-        public string? NombreCliente { get; set; }
+    /// <summary>
+    /// Nombre del cliente (solo si NuevoCliente = true)
+    /// Mapea a: nombre_cliente (VARCHAR(120) NULL)
+    /// </summary>
+    [StringLength(120)]
+    [Column("nombre_cliente")]
+    public string? NombreCliente { get; set; }
 
-        /// <summary>
-        /// ID del cliente legacy (solo si NuevoCliente = false o null)
-        /// Mapea a: cliente_id (INT NULL) - referencia a catalog_clientes
-        /// </summary>
-        [Column("cliente_id")]
-        public int? ClienteId { get; set; }
+    /// <summary>
+    /// Teléfono del cliente nuevo (solo si NuevoCliente = true)
+    /// Mapea a: cliente_telefono (BIGINT NULL)
+    /// </summary>
+    [Column("cliente_telefono")]
+    public long? ClienteTelefono { get; set; }
 
-        /// <summary>
+    /// <summary>
+    /// ID del cliente legacy (solo si NuevoCliente = false o null)
+    /// Mapea a: cliente_id (INT NULL) - referencia a catalog_clientes
+    /// </summary>
+    [Column("cliente_id")]
+    public int? ClienteId { get; set; }        /// <summary>
         /// ID del usuario que creó la orden
         /// Mapea a: creado_por_user_id (INT NULL)
         /// </summary>

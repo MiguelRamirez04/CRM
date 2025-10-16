@@ -533,42 +533,119 @@ namespace back_cabs.CRM.controllers.Recepcion
         /// <response code="200">Clientes encontrados</response>
         /// <response code="500">Error interno del servidor</response>
         /// <summary>
-        /// Busca clientes por nombre o RFC para autocomplete
+        /// Busca clientes legacy por nombre o RFC para autocompletado
         /// </summary>
-        /// <param name="busqueda">Texto de búsqueda</param>
-        /// <param name="limite">Límite de resultados (opcional)</param>
+        /// <param name="busqueda">Término de búsqueda (nombre o RFC)</param>
+        /// <param name="limite">Número máximo de resultados (default: 10)</param>
         /// <returns>Lista de clientes resumidos</returns>
-        /// <response code="200">Clientes encontrados</response>
+        /// <response code="200">Clientes encontrados exitosamente</response>
+        /// <response code="400">Parámetros inválidos</response>
         /// <response code="500">Error interno del servidor</response>
+        /// <remarks>
+        /// Ejemplo de respuesta:
+        /// ```json
+        /// [
+        ///   {
+        ///     "clienteId": 42,
+        ///     "nombreComercial": "Abarrotes Don Pepe S.A.",
+        ///     "rfc": "ADP850101ABC",
+        ///     "legacyClientId": 123
+        ///   }
+        /// ]
+        /// ```
+        /// </remarks>
         [HttpGet("clientes/buscar")]
         [Authorize] // Todos los roles pueden acceder a la búsqueda de clientes
-        [ProducesResponseType(typeof(List<Dictionary<string, object>>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(List<ClienteResumenDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult<List<Dictionary<string, object>>>> BuscarClientes([FromQuery] string busqueda, [FromQuery] int limite = 10)
+        public async Task<ActionResult<List<ClienteResumenDto>>> BuscarClientes(
+            [FromQuery] string busqueda, 
+            [FromQuery] int limite = 10)
         {
             try
             {
-                _logger.LogInformation("Buscando clientes con término: {Termino}", busqueda);
+                _logger.LogInformation("Buscando clientes legacy con término: {Termino}", busqueda);
 
                 if (string.IsNullOrWhiteSpace(busqueda))
                 {
                     _logger.LogWarning("Búsqueda de clientes con texto vacío");
-                    return Ok(new List<Dictionary<string, object>>()); // Devolver lista vacía
+                    return Ok(new List<ClienteResumenDto>()); // Devolver lista vacía
+                }
+
+                if (limite <= 0 || limite > 50)
+                {
+                    return BadRequest(UtilidadesManejoErrores.CreateErrorResponse(
+                        TipoError.ErrorValidacion,
+                        "Límite inválido",
+                        "El límite debe estar entre 1 y 50"));
                 }
 
                 var clientes = await _ordenTrabajoService.BuscarClientesPorNombreORfcAsync(
                     busqueda, 
                     limite);
 
+                _logger.LogInformation("Se encontraron {Count} clientes", clientes.Count);
                 return Ok(clientes);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al buscar clientes");
+                _logger.LogError(ex, "Error al buscar clientes legacy");
                 return StatusCode(500, UtilidadesManejoErrores.CreateErrorResponse(
                     TipoError.ErrorServidorInterno,
                     "Error en búsqueda de clientes",
                     "No se pudieron recuperar los clientes solicitados"));
+            }
+        }
+        
+        /// <summary>
+        /// Obtiene la lista de clientes nuevos registrados en órdenes de trabajo
+        /// </summary>
+        /// <returns>Lista de clientes nuevos con nombre, teléfono y número de órdenes</returns>
+        /// <response code="200">Clientes nuevos obtenidos exitosamente</response>
+        /// <response code="500">Error interno del servidor</response>
+        /// <remarks>
+        /// Este endpoint devuelve los clientes que fueron registrados como "nuevos" en las órdenes,
+        /// es decir, clientes que no están en la base de datos legacy.
+        /// 
+        /// Ejemplo de respuesta:
+        /// ```json
+        /// [
+        ///   {
+        ///     "nombreCliente": "Abarrotes Don Pepe S.A.",
+        ///     "telefono": 6182171064,
+        ///     "numeroOrdenes": 3
+        ///   },
+        ///   {
+        ///     "nombreCliente": "Taller Mecánico El Rayo",
+        ///     "telefono": 6181234567,
+        ///     "numeroOrdenes": 1
+        ///   }
+        /// ]
+        /// ```
+        /// </remarks>
+        [HttpGet("clientes/nuevos")]
+        [Authorize]
+        [ProducesResponseType(typeof(List<ClienteNuevoDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<List<ClienteNuevoDto>>> ObtenerClientesNuevos()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo lista de clientes nuevos");
+                
+                var clientesNuevos = await _ordenTrabajoService.ObtenerClientesNuevosAsync();
+                
+                _logger.LogInformation("Se encontraron {Count} clientes nuevos únicos", clientesNuevos.Count);
+                return Ok(clientesNuevos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener clientes nuevos");
+                return StatusCode(500, UtilidadesManejoErrores.CreateErrorResponse(
+                    TipoError.ErrorServidorInterno,
+                    "Error al obtener clientes nuevos",
+                    "No se pudieron recuperar los clientes nuevos"));
             }
         }
         
