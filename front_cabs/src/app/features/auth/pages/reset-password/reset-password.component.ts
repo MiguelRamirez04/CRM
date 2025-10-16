@@ -2,14 +2,13 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div class="row justify-content-center w-100">

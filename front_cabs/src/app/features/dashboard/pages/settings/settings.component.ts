@@ -1,12 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, NgbModule],
+  imports: [CommonModule, ],
   template: `
     <div class="container-fluid">
       <div class="row">
