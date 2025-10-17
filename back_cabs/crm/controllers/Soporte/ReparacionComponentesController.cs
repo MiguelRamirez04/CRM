@@ -18,7 +18,7 @@ namespace back_cabs.CRM.Controllers.Soporte.Componentes
     ///<remarks>
     /// Rutas base: /api/soporte/reparaciones/componentes
     /// </remarks>
-    [Route("api/soporte/reparaciones")] // La ruta base para el controlador de reparaciones
+    [Route("api/soporte/reparaciones/componentes")] // La ruta base para el controlador de reparaciones
     [Produces("application/json")]
     [Authorize]
     public class ReparacionController : ControllerBase
