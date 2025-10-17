@@ -64,7 +64,7 @@ namespace CRM.DTOs.Response
         /// </summary>
         /// <example>5512345678</example>
         [JsonPropertyName("telefono")]
-        public int Telefono { get; set; }
+        public long Telefono { get; set; }
 
         /// <summary>
         /// Email del usuario
@@ -93,13 +93,6 @@ namespace CRM.DTOs.Response
         /// <example>2024-01-15T10:30:00Z</example>
         [JsonPropertyName("creadoEn")]
         public DateTime CreadoEn { get; set; }
-
-        /// <summary>
-        /// Número de licencia de conducir
-        /// </summary>
-        /// <example>ABC123456</example>
-        [JsonPropertyName("licenciaConducir")]
-        public string? LicenciaConducir { get; set; }
 
         /// <summary>
         /// Tipo de transmisión habilitada

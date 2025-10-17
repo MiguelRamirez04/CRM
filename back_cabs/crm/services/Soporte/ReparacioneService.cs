@@ -32,7 +32,7 @@ namespace back_cabs.CRM.services.Soporte
                 _logger.LogInformation("Iniciando creación de reparación para la orden ID: {OrdenId}", request.OrdenId);
 
                 //Validacion de Referencias
-                var ordenExistente = await _readOnlyContext.OrdenesTrabajo.AnyAsync(o => o.Id == request.OrdenId); 
+                var ordenExistente = await _readOnlyContext.OrdenesTrabajo.AnyAsync(o => o.Id == request.OrdenId);
                 if (!ordenExistente)
                 {
                     _logger.LogWarning("No se encontró la orden de trabajo con ID: {OrdenId}", request.OrdenId);
@@ -137,72 +137,72 @@ namespace back_cabs.CRM.services.Soporte
                     string valorParaDB = nuevoTipoEntregaEnum.ToString().ToUpper();
                     reparacionExistente.TipoEntrega = nuevoTipoEntregaEnum.ToString().ToUpper();
                 }
-                    // ----------------------------------------------------------------------
-                    // 2. ACTUALIZACIÓN DE CAMPOS Y VALIDACIONES DE NEGOCIO
-                    // ----------------------------------------------------------------------
+                // ----------------------------------------------------------------------
+                // 2. ACTUALIZACIÓN DE CAMPOS Y VALIDACIONES DE NEGOCIO
+                // ----------------------------------------------------------------------
 
-                    // Actualizar solo los campos que vengan en el Request.
-                    // Usamos la comprobación de nulidad para no sobrescribir con null o valores vacíos.
+                // Actualizar solo los campos que vengan en el Request.
+                // Usamos la comprobación de nulidad para no sobrescribir con null o valores vacíos.
 
-                    // Campos de solo lectura (FKs), se mantienen
-                    // reparacionExistente.OrdenId = reparacionExistente.OrdenId; 
-                    // reparacionExistente.TecnicoId = reparacionExistente.TecnicoId;
+                // Campos de solo lectura (FKs), se mantienen
+                // reparacionExistente.OrdenId = reparacionExistente.OrdenId; 
+                // reparacionExistente.TecnicoId = reparacionExistente.TecnicoId;
 
-                    if (request.SolucionAplicada != null)
-                        reparacionExistente.SolucionAplicada = request.SolucionAplicada;
+                if (request.SolucionAplicada != null)
+                    reparacionExistente.SolucionAplicada = request.SolucionAplicada;
 
-                    if (request.CausaIrreparable != null)
-                        reparacionExistente.CausaIrreparable = request.CausaIrreparable;
+                if (request.CausaIrreparable != null)
+                    reparacionExistente.CausaIrreparable = request.CausaIrreparable;
 
-                    // Se actualizan solo si tienen valor. Los tipos 'decimal?' se comprueban con HasValue.
-                    if (request.CostoManoObra.HasValue)
-                        reparacionExistente.CostoManoObra = request.CostoManoObra.Value;
-                    if (request.CostoRefaccionesCompra.HasValue)
-                        reparacionExistente.CostoRefaccionesCompra = request.CostoRefaccionesCompra.Value;
-                    if (request.CostoRefaccionesPublico.HasValue)
-                        reparacionExistente.CostoRefaccionesPublico = request.CostoRefaccionesPublico.Value;
-                    if (request.GarantiaDias.HasValue)
-                        reparacionExistente.GarantiaDias = request.GarantiaDias.Value;
-                    if (request.EmpezadoEn.HasValue)
-                        reparacionExistente.EmpezadoEn = request.EmpezadoEn.Value;
-                    if (request.EntregadoEn.HasValue)
-                        reparacionExistente.EntregadoEn = request.EntregadoEn.Value;
+                // Se actualizan solo si tienen valor. Los tipos 'decimal?' se comprueban con HasValue.
+                if (request.CostoManoObra.HasValue)
+                    reparacionExistente.CostoManoObra = request.CostoManoObra.Value;
+                if (request.CostoRefaccionesCompra.HasValue)
+                    reparacionExistente.CostoRefaccionesCompra = request.CostoRefaccionesCompra.Value;
+                if (request.CostoRefaccionesPublico.HasValue)
+                    reparacionExistente.CostoRefaccionesPublico = request.CostoRefaccionesPublico.Value;
+                if (request.GarantiaDias.HasValue)
+                    reparacionExistente.GarantiaDias = request.GarantiaDias.Value;
+                if (request.EmpezadoEn.HasValue)
+                    reparacionExistente.EmpezadoEn = request.EmpezadoEn.Value;
+                if (request.EntregadoEn.HasValue)
+                    reparacionExistente.EntregadoEn = request.EntregadoEn.Value;
 
-                    if (request.Notas != null)
-                        reparacionExistente.Notas = request.Notas;
+                if (request.Notas != null)
+                    reparacionExistente.Notas = request.Notas;
 
-                    // 2.1 Aplicar Regla de Negocio de Irreparable
-                    if (request.Resultado != null && nuevoResultadoEnum == ResultadoReparacion.IRREPARABLE)
+                // 2.1 Aplicar Regla de Negocio de Irreparable
+                if (request.Resultado != null && nuevoResultadoEnum == ResultadoReparacion.IRREPARABLE)
+                {
+                    if (string.IsNullOrWhiteSpace(request.CausaIrreparable))
                     {
-                        if (string.IsNullOrWhiteSpace(request.CausaIrreparable))
-                        {
-                            throw new ArgumentException("Si el resultado es 'IRREPARABLE', la causa es obligatoria.");
-                        }
+                        throw new ArgumentException("Si el resultado es 'IRREPARABLE', la causa es obligatoria.");
                     }
-
-                    // 2.2 Sellar fecha de entrega al finalizar la reparación
-                    if (request.Resultado != null && nuevoResultadoEnum is ResultadoReparacion.REPARADO or ResultadoReparacion.DEVUELTO_SIN_REPARAR)
-                    {
-                        // Solo actualizamos si no se proporcionó una fecha de entrega en el request
-                        if (!reparacionExistente.EntregadoEn.HasValue)
-                        {
-                            reparacionExistente.EntregadoEn = DateTime.UtcNow;
-                        }
-                    }
-
-                    // ----------------------------------------------------------------------
-                    // 3. PERSISTENCIA
-                    // ----------------------------------------------------------------------
-
-                    int filasAfectadas = await _writeContext.SaveChangesAsync();
-
-                    _logger.LogInformation("Reparación ID {Id} actualizada. Filas afectadas: {Filas}", id, filasAfectadas);
-
-                    var DTOMapeado = MapearAResponseDto(reparacionExistente);
-
-
-                    return (filasAfectadas, DTOMapeado);
                 }
+
+                // 2.2 Sellar fecha de entrega al finalizar la reparación
+                if (request.Resultado != null && nuevoResultadoEnum is ResultadoReparacion.REPARADO or ResultadoReparacion.DEVUELTO_SIN_REPARAR)
+                {
+                    // Solo actualizamos si no se proporcionó una fecha de entrega en el request
+                    if (!reparacionExistente.EntregadoEn.HasValue)
+                    {
+                        reparacionExistente.EntregadoEn = DateTime.UtcNow;
+                    }
+                }
+
+                // ----------------------------------------------------------------------
+                // 3. PERSISTENCIA
+                // ----------------------------------------------------------------------
+
+                int filasAfectadas = await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("Reparación ID {Id} actualizada. Filas afectadas: {Filas}", id, filasAfectadas);
+
+                var DTOMapeado = MapearAResponseDto(reparacionExistente);
+
+
+                return (filasAfectadas, DTOMapeado);
+            }
             catch (KeyNotFoundException)
             {
                 throw; // Re-lanzar la excepción específica para que el controlador pueda devolver 404
@@ -271,6 +271,161 @@ namespace back_cabs.CRM.services.Soporte
         }
 
 
+        // =====================================================================================
+        // LOGICA DE NEGOCIO DE REPARACION COMPONENTES
+        // =====================================================================================
+        public async Task<List<ReparacionComponenteResponseDto>> ObtenerComponentesReparacionAsync(int? skip = null, int? take = null)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando componentes de reparación");
+                var query = _readOnlyContext.ReparacionesComponentes.AsQueryable();
+
+                if (skip.HasValue)
+                {
+                    query = query.Skip(skip.Value);
+                }
+                if (take.HasValue)
+                {
+                    query = query.Take(take.Value);
+                }
+
+                var componenteReparacion = await query.OrderByDescending(r => r.Id).ToListAsync();
+
+                return componenteReparacion.Select(MapearAResponseComponenteDto).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los componentes de reparacion");
+                throw;
+            }
+        }
+
+        public async Task<ReparacionComponenteResponseDto?> ObtenerComponenteReparacionPorIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando componente de reparación por ID: {Id}", id);
+
+                var componenteReparacion = await _readOnlyContext.ReparacionesComponentes.FirstOrDefaultAsync(r => r.Id == id);
+
+                if (componenteReparacion == null)
+                {
+                    _logger.LogWarning("Componente de reparación no encontrada por ID  {Id}", id);
+                    return null;
+                }
+                return MapearAResponseComponenteDto(componenteReparacion);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener el componente de reparación con ID: {Id}", id);
+                throw;
+            }
+        }
+
+        public async Task<ReparacionComponenteResponseDto> CrearComponenteReparacionAsync(ReparacionComponenteRequestDto request)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando creación de componente de reparación para la reparación ID: {ReparacionId}", request.ReparacionId);
+
+                //Validacion de Referencias
+                var reparacionExistente = await _readOnlyContext.Reparaciones.AnyAsync(r => r.Id == request.ReparacionId);
+                if (!reparacionExistente)
+                {
+                    _logger.LogWarning("No se encontró la reparación con ID: {ReparacionId}", request.ReparacionId);
+                    throw new KeyNotFoundException($"No se encontró la reparación con ID: {request.ReparacionId}");
+                }
+
+                //Mapeo de Valores sobre el modelo
+
+                if (string.IsNullOrEmpty(request.Componente))
+                {
+                    throw new ArgumentException("El componente no puede ser nulo o vacío.");
+                }
+
+                var nuevoComponenteReparacion = new ReparacionComponente
+                {
+                    ReparacionId = request.ReparacionId,
+                    Componente = request.Componente,
+                    Cantidad = request.Cantidad,
+                    Proveedor = request.Proveedor,
+                    GarantiaMeses = request.GarantiaMeses,
+                    CostoUnitarioCompra = request.CostoUnitarioCompra,
+                    CostoUnitarioPublico = request.CostoUnitarioPublico,
+                    Notas = request.Notas
+                };
+
+                //Resistencia del modelo
+                _writeContext.ReparacionesComponentes.Add(nuevoComponenteReparacion);
+
+                await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("Componente de reparación creado con ID: {Id}", nuevoComponenteReparacion.Id);
+
+                return MapearAResponseComponenteDto(nuevoComponenteReparacion);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear el componente de reparación para la reparación ID: {ReparacionId}", request.ReparacionId);
+                throw; // Re-lanzar la excepción para que pueda ser manejada por el controlador
+
+            }
+        }
+
+        public async Task<(int FilasAfectadas, ReparacionComponenteResponseDto? reparacionComponenteActualizada)> ActualizarComponenteReparacionAsync(int id, ReparacionComponenteActualizacionDto request)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando actualización de componente de reparación con ID: {Id}", id);
+
+                var componenteReparacionExistente = await _writeContext.ReparacionesComponentes.FindAsync(id);
+
+                if (componenteReparacionExistente == null)
+                {
+                    _logger.LogWarning("No se encontró el componente de reparación con ID: {Id}", id);
+                    throw new KeyNotFoundException($"No se encontró el componente de reparación con ID: {id}");
+                }
+                //Actualizar los campos del DTO
+                
+                    componenteReparacionExistente.Cantidad = request.cantidad;
+                if (request.GarantiaMeses != null)
+                {
+                    componenteReparacionExistente.GarantiaMeses = request.GarantiaMeses;
+                }
+                if (request.CostoUnitarioCompra != null)
+                {
+                    componenteReparacionExistente.CostoUnitarioCompra = request.CostoUnitarioCompra;
+                }
+                if (request.CostoUnitarioPublico != null)
+                {
+                    componenteReparacionExistente.CostoUnitarioPublico = request.CostoUnitarioPublico;
+                }
+                if (request.Notas != null)
+                {
+                    componenteReparacionExistente.Notas = request.Notas;
+                }
+
+                int filasAfectadas = await _writeContext.SaveChangesAsync();
+                _logger.LogInformation("Componente de reparación ID {Id} actualizado. Filas afectadas: {Filas}", id, filasAfectadas);
+                var dtoMapeado = MapearAResponseComponenteDto(componenteReparacionExistente);
+                return (filasAfectadas, dtoMapeado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar el componente de reparación con ID: {Id}", id);
+                throw;
+            }
+        }
+
+
+
+
+
+
+
+
+
         // Método auxiliar para mantener el código DRY (Don't Repeat Yourself)
         private ReparacionResponseDto MapearAResponseDto(Reparacion reparacion)
         {
@@ -302,6 +457,23 @@ namespace back_cabs.CRM.services.Soporte
                 UbicacionAlmacenamiento = reparacion.UbicacionAlmacenamiento,
                 Notas = reparacion.Notas,
                 CostoTotalPublico = reparacion.CostoTotalPublico
+            };
+        }
+        private ReparacionComponenteResponseDto MapearAResponseComponenteDto(ReparacionComponente componente)
+        {
+            return new ReparacionComponenteResponseDto
+            {
+                Id = componente.Id,
+                ReparacionId = componente.ReparacionId,
+                Componente = componente.Componente,
+                Cantidad = componente.Cantidad,
+                Proveedor = componente.Proveedor,
+                GarantiaMeses = componente.GarantiaMeses,
+                CostoUnitarioCompra = componente.CostoUnitarioCompra,
+                CostoUnitarioPublico = componente.CostoUnitarioPublico,
+                SubtotalCompra = componente.SubtotalCompra,
+                SubtotalPublico = componente.SubtotalPublico,
+                Notas = componente.Notas
             };
         }
     }

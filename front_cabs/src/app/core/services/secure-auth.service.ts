@@ -13,7 +13,7 @@ export interface User {
   nombre: string;
   apellido: string;
   nombreCompleto?: string;
-  telefono?: number | null;
+  telefono?: number | null; // Acepta long desde backend (JS number soporta hasta 2^53)
   email: string;
   rol?: number | null;
   name?: string; // Mantener para compatibilidad
@@ -34,8 +34,8 @@ export interface RegisterRequest {
   contrasena: string;
   confirmarContrasena: string; // Enviar confirmación (requerida por el backend)
   rol: RolUsuario;
-  licenciaConducir?: string | null; // Ahora es string (número de licencia)
   transmisionHabilitada?: TipoTransmision | string | null;
+  activo?: boolean;
 }
 
 // Respuesta de login del backend (AuthController.Login)

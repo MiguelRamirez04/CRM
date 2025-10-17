@@ -55,6 +55,12 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
 
+// Servicios de procesamiento de imágenes y gestión de archivos
+builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
+builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>();
+builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
+
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
     new Microsoft.Data.SqlClient.SqlConnection(
@@ -118,6 +124,12 @@ builder.Services.ConfigureApplicationCookie(options =>
         : SameSiteMode.Lax; // CSRF protection
     options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     options.SlidingExpiration = true;
+});
+
+// Configuración de límite de tamaño de archivos para subida
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
 });
 
 var app = builder.Build();

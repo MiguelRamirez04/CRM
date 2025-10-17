@@ -103,9 +103,8 @@ namespace back_cabs.CRM.services.Auth
                     Email = request.Email.ToLower().Trim(),
                     Password = contrasenaHash, // Guardar el hash en password_hash
                     Rol = request.Rol, // Ahora es string
-                    LicenciaConducir = request.LicenciaConducir,
                     TransmisionHabilitada = request.TransmisionHabilitada,
-                    Activo = true,
+                    Activo = request.Activo ?? false, // Si no se envía, por defecto false
                     CreadoEn = DateTime.UtcNow,
                     ActualizadoEn = DateTime.UtcNow
                 };
@@ -177,7 +176,6 @@ namespace back_cabs.CRM.services.Auth
                 Rol = usuario.Rol,
                 Activo = usuario.Activo,
                 CreadoEn = usuario.CreadoEn,
-                LicenciaConducir = usuario.LicenciaConducir,
                 TransmisionHabilitada = usuario.TransmisionHabilitada,
                 PuedeUsarVehiculo = usuario.PuedeUsarVehiculo
             };
@@ -427,7 +425,6 @@ namespace back_cabs.CRM.services.Auth
                     Rol = usuario.Rol,
                     Activo = usuario.Activo,
                     CreadoEn = usuario.CreadoEn,
-                    LicenciaConducir = usuario.LicenciaConducir,
                     TransmisionHabilitada = usuario.TransmisionHabilitada,
                     PuedeUsarVehiculo = usuario.PuedeUsarVehiculo
                 };

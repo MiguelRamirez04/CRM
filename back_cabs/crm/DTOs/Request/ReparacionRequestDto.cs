@@ -1,3 +1,5 @@
+
+
 using System.ComponentModel.DataAnnotations;
 
 namespace back_cabs.CRM.DTOs.Soporte
@@ -50,39 +52,22 @@ namespace back_cabs.CRM.DTOs.Soporte
         // ESTADO INICIAL Y LOGÍSTICA
         [Required]
         public bool RespaldoDatosAutorizado { get; init; } = false;
-
-
         public decimal CostoManoObra { get; init; } = 0; // Puede ser 0 si no se cobra mano de obra inicialmente
-
-
         public decimal CostoRefaccionesCompra { get; init; } = 0;
-
         public decimal CostoRefaccionesPublico { get; init; } = 0;
-
         public decimal CostoTotalCompra { get; init; }
-
         public decimal CostoTotalPublico { get; init; }
-
         public decimal MargenEstimado { get; init; }
-
         public int? GarantiaDias { get; init; }
-
         public DateTime FechaLlegada { get; init; } = DateTime.UtcNow;
-
         public DateTime? EmpezadoEn { get; init; }
-
         public DateTime? EntregadoEn { get; init; }
-
         [Required(ErrorMessage = "El tipo de entrega es obligatorio.")]
         [StringLength(20, ErrorMessage = "El tipo de entrega no puede exceder 20 caracteres.")]
         public string TipoEntrega { get; init; } = string.Empty; // Considerar un enum para valores fijos
-
-
         [StringLength(200, ErrorMessage = "La ubicación de almacenamiento no puede exceder 200 caracteres.")]
         public string? UbicacionAlmacenamiento { get; init; }
-
         public string? Notas { get; init; }
-
 
     }
 
@@ -116,17 +101,56 @@ namespace back_cabs.CRM.DTOs.Soporte
 
         public int? GarantiaDias { get; init; }
 
-        [Required(ErrorMessage ="La fecha de inicio de reparacion es obligatoria")]
+        [Required(ErrorMessage = "La fecha de inicio de reparacion es obligatoria")]
         public DateTime? EmpezadoEn { get; init; }
 
-        [Required(ErrorMessage ="La fecha de entrega de la reparacion es obligatoria")]
+        [Required(ErrorMessage = "La fecha de entrega de la reparacion es obligatoria")]
         public DateTime? EntregadoEn { get; init; }
 
         [Required(ErrorMessage = "El tipo de entrega es obligatorio.")]
         public string TipoEntrega { get; init; } = string.Empty;
 
-        
+
         public string? Notas { get; init; }
-        
+
+    }
+    // =====================================================================================
+    // DTO REPARACIÓN COMPONENTES- ReparacionComponenteRequestDto
+    // =====================================================================================
+
+    /// <summary>
+    /// DTO para la creacion de un componente de reparacion.
+    /// </summary>
+    public record ReparacionComponenteRequestDto
+    {
+        [Required(ErrorMessage = "El ID de la reparacion es obligatorio")]
+        public int ReparacionId { get; init; }
+        [Required(ErrorMessage = "El nombre del componente es obligatorio")]
+        public string? Componente { get; init; }
+        [Required(ErrorMessage = "La cantidad es obligatoria")]
+        public int Cantidad { get; init; }
+        public string? Proveedor { get; init; }
+        public int? GarantiaMeses { get; init; }
+        public decimal? CostoUnitarioCompra { get; init; }
+
+        public decimal? CostoUnitarioPublico { get; init; }
+
+        public string? Notas { get; init; }
+
+    }
+
+    ///<summary>
+    /// DTO para la actualizacion de un componente de reparacion.
+    /// </summary>
+    public record ReparacionComponenteActualizacionDto
+    {
+        public int Id { get; init; }
+        [Required(ErrorMessage = "La cantidad de componentes es obligatoria")]
+        public int cantidad { get; init; }
+        public int? GarantiaMeses { get; init; }
+        public decimal? CostoUnitarioCompra { get; init; }
+        public decimal? CostoUnitarioPublico { get; init; }
+        public string? Notas { get; init; }
+
     }
 }

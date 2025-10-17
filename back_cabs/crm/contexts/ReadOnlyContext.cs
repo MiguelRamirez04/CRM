@@ -257,13 +257,50 @@ public class ReadOnlyContext : DbContext
             entity.HasIndex(e => new { e.ReparacionId, e.Etapa });
         });
 
-        // Configuración de la entidad EjecucionOrden (ejecuciones_orden)
+        // Configuración de la entidad EjecucionOrden (ops_ejecuciones_orden)
         modelBuilder.Entity<EjecucionOrden>(entity =>
         {
-            entity.HasIndex(e => e.OrdenId);
-            entity.HasIndex(e => e.TecnicoId);
-            entity.HasIndex(e => new { e.TipoEjecucion, e.HrInicio });
-            entity.HasIndex(e => e.HrInicio);
+            entity.ToTable("ops_ejecuciones_orden");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.OrdenId).HasColumnName("orden_id").IsRequired();
+            entity.Property(e => e.TipoEjecucion).HasColumnName("tipo_ejecucion").HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(e => e.TecnicoId).HasColumnName("tecnico_id").IsRequired();
+            entity.Property(e => e.HrInicio).HasColumnName("hr_inicio").HasColumnType("DATETIME2(0)");
+            entity.Property(e => e.HrFin).HasColumnName("hr_fin").HasColumnType("DATETIME2(0)");
+            entity.Property(e => e.Comentarios).HasColumnName("comentarios").HasColumnType("NVARCHAR(MAX)");
+            entity.Property(e => e.VehiculoId).HasColumnName("vehiculo_id");
+            entity.Property(e => e.KmInicial).HasColumnName("km_inicial");
+            entity.Property(e => e.KmFinal).HasColumnName("km_final");
+            entity.Property(e => e.Herramientas).HasColumnName("herramientas").HasMaxLength(100);
+            entity.Property(e => e.CodigoSesion).HasColumnName("codigo_sesion").HasMaxLength(100);
+            entity.Property(e => e.ContrasenaSesion).HasColumnName("contrasena_sesion").HasMaxLength(100);
+
+            // Relaciones con Foreign Keys
+            entity.HasOne(e => e.Orden)
+                .WithMany()
+                .HasForeignKey(e => e.OrdenId)
+                .HasConstraintName("FK_ejecuciones_orden_orden")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Tecnico)
+                .WithMany()
+                .HasForeignKey(e => e.TecnicoId)
+                .HasConstraintName("FK_ejecuciones_orden_tecnico")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Vehiculo>()
+                .WithMany()
+                .HasForeignKey(e => e.VehiculoId)
+                .HasConstraintName("FK_ejecuciones_orden_vehiculo")
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Índices para optimización
+            entity.HasIndex(e => e.OrdenId).HasDatabaseName("IX_ejecuciones_orden_orden");
+            entity.HasIndex(e => e.TecnicoId).HasDatabaseName("IX_ejecuciones_orden_tecnico");
+            entity.HasIndex(e => new { e.OrdenId, e.TipoEjecucion, e.HrInicio }).HasDatabaseName("IX_ejecuciones_orden_tipo");
+            entity.HasIndex(e => e.HrInicio).HasDatabaseName("IX_ejecuciones_orden_hr_inicio");
         });
 
         // Configuración de la entidad FilesDocumento (files_documentos)

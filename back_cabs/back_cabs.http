@@ -1,5 +1,7 @@
 @back_cabs_HostAddress = http://localhost:5176
 
+
+
 # =====================================================================================
 # PRUEBAS DE AUTENTICACIÓN - CRM API
 # =====================================================================================
@@ -9,12 +11,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Alejandro Alejo Admin",
-  "email": "alex.alejo@empresa.com",
+  "nombre": "Manuel",
+  "apellido": "Díaz",
+  "telefono": 1234567890,
+  "email": "manuel.diaz@empresa.com",
   "contrasena": "AdminPass123!",
   "confirmarContrasena": "AdminPass123!",
-  "rol": "Administrador",
-  "licenciaConducir": true,
+  "rol": "ADMINISTRACION",
   "transmisionHabilitada": "Ambas"
 }
 /*
@@ -47,11 +50,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Ana Martínez Recepcionista",
+  "nombre": "Ana",
+  "apellido": "Martínez",
+  "telefono": 5512345678,
   "email": "ana.martinez@empresa.com",
   "contrasena": "RecepcionPass123!",
-  "rol": "Recepcion",
-  "licenciaConducir": false,
+  "confirmarContrasena": "RecepcionPass123!",
+  "rol": "RECEPCION",
   "transmisionHabilitada": "Ninguna"
 }
 /*
@@ -78,11 +83,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Marta López Técnico",
+  "nombre": "Marta",
+  "apellido": "López",
+  "telefono": 5523456789,
   "email": "marta.lopez@empresa.com",
   "contrasena": "TecnicoPass123!",
-  "rol": "Soporte",
-  "licenciaConducir": true,
+  "confirmarContrasena": "TecnicoPass123!",
+  "rol": "SOPORTE",
   "transmisionHabilitada": "Manual"
 }
 /*
@@ -125,11 +132,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Usuario Duplicado",
+  "nombre": "Usuario",
+  "apellido": "Duplicado",
+  "telefono": 5534567890,
   "email": "marta.lopez@empresa.com",
   "contrasena": "Password123!",
-  "rol": "Recepcion",
-  "licenciaConducir": false,
+  "confirmarContrasena": "Password123!",
+  "rol": "RECEPCION",
   "transmisionHabilitada": "Ninguna"
 }
 /*
@@ -156,11 +165,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Usuario Contraseña Débil",
+  "nombre": "Usuario",
+  "apellido": "Debil",
+  "telefono": 5545678901,
   "email": "usuario.debil@empresa.com",
   "contrasena": "123",
-  "rol": "Recepcion",
-  "licenciaConducir": false,
+  "confirmarContrasena": "123",
+  "rol": "RECEPCION",
   "transmisionHabilitada": "Ninguna"
 }
 /*
@@ -189,11 +200,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Usuario Email Inválido",
+  "nombre": "Usuario",
+  "apellido": "EmailInvalido",
+  "telefono": 5556789012,
   "email": "email-invalido",
   "contrasena": "ValidPass123!",
-  "rol": "Recepcion",
-  "licenciaConducir": false,
+  "confirmarContrasena": "ValidPass123!",
+  "rol": "RECEPCION",
   "transmisionHabilitada": "Ninguna"
 }
 /*
@@ -222,11 +235,13 @@ POST {{back_cabs_HostAddress}}/api/Auth/registro
 Content-Type: application/json
 
 {
-  "nombreCompleto": "Usuario Rol Inválido",
+  "nombre": "Usuario",
+  "apellido": "RolInvalido",
+  "telefono": 5567890123,
   "email": "usuario.rol@empresa.com",
   "contrasena": "ValidPass123!",
+  "confirmarContrasena": "ValidPass123!",
   "rol": "RolQueNoExiste",
-  "licenciaConducir": false,
   "transmisionHabilitada": "Ninguna"
 }
 /*

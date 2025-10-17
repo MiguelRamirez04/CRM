@@ -8,7 +8,8 @@ import { SecureAuthService } from '../../../../core/services/secure-auth.service
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+
+  imports: [CommonModule, ReactiveFormsModule,  RouterLink],
   template: `
     <div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div class="row justify-content-center w-100">

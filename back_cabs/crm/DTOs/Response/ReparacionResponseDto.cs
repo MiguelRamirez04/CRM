@@ -39,14 +39,34 @@ namespace back_cabs.CRM.DTOs.Soporte
         public decimal? CostoManoObra { get; init; }
         public decimal? CostoRefaccionesCompra { get; init; }
         public decimal? CostoRefaccionesPublico { get; init; }
-        
+
         // Se exponen los totales calculados por la DB (o por el servicio)
         public decimal CostoTotalCompra { get; init; }
         public decimal CostoTotalPublico { get; init; }
         public decimal MargenEstimado { get; init; }
 
         // OPCIONAL: Nombres para facilitar la lectura al cliente
-        public string NombreTecnico { get; set; } = string.Empty; 
-        public string FolioOrden { get; set; } = string.Empty; 
+        public string NombreTecnico { get; set; } = string.Empty;
+        public string FolioOrden { get; set; } = string.Empty;
+    }
+
+    // =====================================================================================
+    // DTO REPARACIÓN COMPONENTES- ReparacionComponenteResponseDto
+    // =====================================================================================
+
+    public record ReparacionComponenteResponseDto
+    {
+        public int Id { get; init; }
+        public int ReparacionId { get; init; }
+        public string? Componente { get; init; }
+        public int Cantidad { get; init; }
+        public string? Proveedor { get; init; }
+        public int? GarantiaMeses { get; init; }
+        public decimal? CostoUnitarioCompra { get; init; }
+        public decimal? CostoUnitarioPublico { get; init; }
+        public decimal SubtotalCompra { get; init; }
+        public decimal SubtotalPublico { get; init; }
+        public string? Notas { get; init; }
+
     }
 }

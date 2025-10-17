@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
+using CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
@@ -57,9 +58,12 @@ namespace back_cabs.CRM.Services.Shared
             // Validar que el usuario existe (ejemplo básico)
             var usuarioExiste = await _readContext.UsuariosAuth.AnyAsync(u => u.Id == dto.UsuarioId);
             if (!usuarioExiste)
-                throw new ArgumentException("El usuario especificado no existe.", nameof(dto.UsuarioId));
+            {
+                _logger.LogWarning("Usuario con ID {UsuarioId} no existe.", dto.UsuarioId);
+                throw new ArgumentException($"Usuario con ID {dto.UsuarioId} no existe.", nameof(dto.UsuarioId));
+            }
 
-            // Crear entidad principal
+
             var viatico = new GastoViatico
             {
                 TipoViatico = dto.TipoViatico,
@@ -87,7 +91,7 @@ namespace back_cabs.CRM.Services.Shared
                 await _writeContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("Viático creado exitosamente con ID {ViaticoId}", viatico.Id);
+                _logger.LogInformation($"viatico creado exitosamente con ID {viatico.Id}");
                 return new GastoViaticoResponseDto
                 {
                     Id = viatico.Id,
@@ -125,49 +129,56 @@ namespace back_cabs.CRM.Services.Shared
         /// Consulta viáticos con filtros opcionales (GET /api/viaticos).
         /// Incluye detalles y soporta paginación.
         /// </summary>
-        /// <param name="tipo">Filtro por tipo de viático.</param>
-        /// <param name="usuarioId">Filtro por usuario.</param>
-        /// <param name="estado">Filtro por estado.</param>
-        /// <param name="fechaDesde">Filtro por fecha desde.</param>
-        /// <param name="fechaHasta">Filtro por fecha hasta.</param>
-        /// <param name="pageNumber">Número de página (1-based).</param>
-        /// <param name="pageSize">Tamaño de página.</param>
-        /// <returns>Lista paginada de viáticos.</returns>
-        public async Task<List<GastoViaticoResponseDto>> GetViaticosAsync(
-            TipoViatico? tipo = null,
+        /// <param name="usuarioId">ID del usuario para filtrar.</param>
+        /// <param name="tipoViatico">Tipo de viático para filtrar (op
+        /// cional).</param>
+        /// <param name="fechaDesde">Fecha inicial para filtrar (opcional).</param>
+        /// <param name="fechaHasta">Fecha final para filtrar (opcional).</param>
+        /// <returns>Lista de viáticos que cumplen los filtros.</returns>
+        ///
+        ///     
+        ///  <exception cref="ArgumentException">Si el usuario no existe.</exception>
+        ///     <exception cref="DbUpdateException">Si hay error al consultar en BD.</exception>
+        ///     
+
+
+        public async Task<PaginatedResponseDto<GastoViaticoResponseDto>> GetViaticosAsync(
             int? usuarioId = null,
-            EstadoGasto? estado = null,
+            TipoViatico? tipoViatico = null,
+            EstadoGasto? estadoGasto = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null,
+            int? ordenId = null,
             int pageNumber = 1,
             int pageSize = 10)
         {
-            _logger.LogInformation("Consultando viáticos con filtros: Tipo={Tipo}, Usuario={UsuarioId}", tipo, usuarioId);
+            _logger.LogInformation("Consultando viáticos con filtros: UsuarioId={UsuarioId}, Tipo={Tipo}, Estado={Estado}, Desde={Desde}, Hasta={Hasta}, Pagina={Pagina}, Tamano={Tamano}",
+                usuarioId, tipoViatico, estadoGasto, fechaDesde, fechaHasta, pageNumber, pageSize);
 
             var query = _readContext.GastosViaticosNuevos
-                .Include(v => v.Detalles)  // Incluir detalles para evitar N+1 queries
-                .AsNoTracking()  // Optimización para lecturas
+                .Include(v => v.Detalles)
+                .AsNoTracking()
                 .AsQueryable();
 
-            // Aplicar filtros
-            if (tipo.HasValue) query = query.Where(v => v.TipoViatico == tipo.Value);
-            if (usuarioId.HasValue) query = query.Where(v => v.UsuarioId == usuarioId.Value);
-            if (estado.HasValue) query = query.Where(v => v.EstadoGasto == estado.Value);
-            if (fechaDesde.HasValue) query = query.Where(v => v.Fecha >= fechaDesde.Value);
-            if (fechaHasta.HasValue) query = query.Where(v => v.Fecha <= fechaHasta.Value);
+            if (tipoViatico.HasValue)
+                query = query.Where(v => v.TipoViatico == tipoViatico.Value);
+            if (usuarioId.HasValue)
+                query = query.Where(v => v.UsuarioId == usuarioId.Value);
+            if (estadoGasto.HasValue)
+                query = query.Where(v => v.EstadoGasto == estadoGasto.Value);
+            if (fechaDesde.HasValue)
+                query = query.Where(v => v.Fecha >= fechaDesde.Value);
+            if (fechaHasta.HasValue)
+                query = query.Where(v => v.Fecha <= fechaHasta.Value);
 
             // Paginación
-            var totalCount = await query.CountAsync();
             var viaticos = await query
-                .OrderByDescending(v => v.FechaRegistro)  // Ordenar por fecha de registro descendente
+                .OrderByDescending(v => v.FechaRegistro)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            _logger.LogInformation("Consulta completada: {Count} viáticos encontrados", viaticos.Count);
-
-            // Mapear a DTOs
-            return viaticos.Select(v => new GastoViaticoResponseDto
+            var result = viaticos.Select(v => new GastoViaticoResponseDto
             {
                 Id = v.Id,
                 TipoViatico = v.TipoViatico,
@@ -191,6 +202,17 @@ namespace back_cabs.CRM.Services.Shared
                     Descripcion = d.Descripcion
                 }).ToList()
             }).ToList();
+
+            var totalCount = await query.CountAsync();
+
+            _logger.LogInformation("Se encontraron {Count} viáticos", result.Count);
+            return new PaginatedResponseDto<GastoViaticoResponseDto>
+            {
+                Items = result,
+                TotalItems = totalCount,
+                Pagina = pageNumber,
+                ResultadosPorPagina = pageSize
+            };
         }
 
         /// <summary>

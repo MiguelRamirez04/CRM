@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using back_cabs.CRM.models.Soporte;
 
-namespace back_cabs.CRM.DTOs.Soporte
+namespace back_cabs.CRM.Controllers.Soporte
 {
     ///<summary>
     /// Controlador para gestionar las reparaciones.

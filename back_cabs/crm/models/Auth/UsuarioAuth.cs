@@ -92,7 +92,7 @@ namespace back_cabs.CRM.models.Auth
         /// </summary>
         [Required]
         [Column("telefono")]
-        public int Telefono { get; set; }
+        public long Telefono { get; set; }
 
 
 
@@ -112,13 +112,6 @@ namespace back_cabs.CRM.models.Auth
         public bool Activo { get; set; } = true;
 
         /// <summary>
-        /// Licencia de conducir del usuario
-        /// </summary>
-        [StringLength(50)]
-        [Column("licencia_conducir")]
-        public string? LicenciaConducir { get; set; }
-
-        /// <summary>
         /// Tipo de transmisión que el usuario puede manejar
         /// </summary>
         [StringLength(50)]
@@ -135,8 +128,7 @@ namespace back_cabs.CRM.models.Auth
         /// Valida si el usuario puede usar vehículos de empresa
         /// </summary>
         [NotMapped]
-        public bool PuedeUsarVehiculo => !string.IsNullOrWhiteSpace(LicenciaConducir) && 
-                                          !string.IsNullOrWhiteSpace(TransmisionHabilitada) && 
+        public bool PuedeUsarVehiculo => !string.IsNullOrWhiteSpace(TransmisionHabilitada) && 
                                           TransmisionHabilitada != "Ninguna";
 
         /// <summary>

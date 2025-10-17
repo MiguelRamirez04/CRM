@@ -1,12 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using back_cabs.CRM.enums;
+using back_cabs.CRM.models.Recepcion;
+using back_cabs.CRM.models.Auth;
+using back_cabs.CRM.models.Shared;
 
 namespace back_cabs.CRM.models.Soporte
 {
     /// <summary>
     /// Entidad que representa la ejecución de una orden de trabajo
     /// </summary>
-    [Table("ejecuciones_orden")]
+    [Table("ops_ejecuciones_orden")]
     public class EjecucionOrden
     {
         /// <summary>
@@ -28,9 +32,8 @@ namespace back_cabs.CRM.models.Soporte
         /// Tipo de ejecución (CAMPO, REMOTO)
         /// </summary>
         [Required]
-        [StringLength(20)]
-        [Column("tipo_ejecucion")]
-        public string TipoEjecucion { get; set; } = string.Empty;
+        [Column("tipo_ejecucion", TypeName = "varchar(20)")]
+        public TipoEjecucion TipoEjecucion { get; set; }
 
         /// <summary>
         /// ID del técnico asignado
@@ -95,5 +98,15 @@ namespace back_cabs.CRM.models.Soporte
         [StringLength(100)]
         [Column("contrasena_sesion")]
         public string? ContrasenaSesion { get; set; }
+
+        // Propiedades de navegación
+        [ForeignKey("OrdenId")]
+        public virtual OrdenTrabajo? Orden { get; set; }
+
+        [ForeignKey("TecnicoId")]
+        public virtual UsuarioAuth? Tecnico { get; set; }
+
+        [ForeignKey("VehiculoId")]
+        public virtual Vehiculo? Vehiculo { get; set; }
     }
 }

@@ -59,7 +59,7 @@ namespace CRM.DTOs.Request
         [Required(ErrorMessage = "El teléfono es obligatorio")]
         [Range(10000000000, 99999999998, ErrorMessage = "El teléfono debe ser un número válido de 10 dígitos")]
         [JsonPropertyName("telefono")]
-        public int Telefono { get; set; }
+        public long Telefono { get; set; }
 
         /// <summary>
         /// Email único del usuario (será usado para login)
@@ -98,21 +98,20 @@ namespace CRM.DTOs.Request
         [JsonPropertyName("rol")]
         public string Rol { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Número o identificador de licencia de conducir (opcional)
-        /// </summary>
-        /// <example>ABC123456</example>
-        [StringLength(50, ErrorMessage = "La licencia no puede exceder 50 caracteres")]
-        [JsonPropertyName("licenciaConducir")]
-        public string? LicenciaConducir { get; set; }
+    /// <summary>
+    /// Tipo de transmisión que puede manejar (opcional)
+    /// </summary>
+    /// <example>Manual</example>
+    [StringLength(50, ErrorMessage = "La transmisión habilitada no puede exceder 50 caracteres")]
+    [EnumStringValue(typeof(TipoTransmision))]
+    [JsonPropertyName("transmisionHabilitada")]
+    public string? TransmisionHabilitada { get; set; }
 
-        /// <summary>
-        /// Tipo de transmisión que puede manejar (opcional)
-        /// </summary>
-        /// <example>Manual</example>
-        [StringLength(50, ErrorMessage = "La transmisión habilitada no puede exceder 50 caracteres")]
-        [EnumStringValue(typeof(TipoTransmision))]
-        [JsonPropertyName("transmisionHabilitada")]
-        public string? TransmisionHabilitada { get; set; }
+    /// <summary>
+    /// Indica si el usuario está activo (puede usar licencia de conducir)
+    /// </summary>
+    /// <example>true</example>
+    [JsonPropertyName("activo")]
+    public bool? Activo { get; set; } = true;
     }
 }

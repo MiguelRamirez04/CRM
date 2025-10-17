@@ -17,12 +17,8 @@ using System.ComponentModel;
 namespace back_cabs.CRM.enums
 {
     public enum TipoEjecucion
-
     {
-        [Description("Presencial")]
-        campo = 1,
-
-        [Description("Remoto")]
-        Remoto = 2
+        REMOTO,
+        CAMPO
     }
 }

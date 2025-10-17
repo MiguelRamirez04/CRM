@@ -52,5 +52,9 @@ namespace back_cabs.CRM.models.Shared
         [Required]
         [Column("creado_en", TypeName = "DATETIME2(0)")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+
+        // --- Propiedades de Navegación ---
+        [ForeignKey("DocumentoId")]
+        public virtual back_cabs.CRM.models.Files.FilesDocumento? Documento { get; set; }
     }
 }
