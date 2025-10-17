@@ -1,0 +1,23 @@
+@back_cabs_HostAddress = http://localhost:5176
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwiZW1haWwiOiJhZG1pbkBnbWFpw7EuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiBhZG1pbiIsInJvbGUiOiJBRE1JTklTVFJBQ0lPTiIsIm5iZiI6MTc2MDcyMDgyOSwiZXhwIjoxNzYwNzIyNjI5LCJpYXQiOjE3NjA3MjA4MjksImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.5Wfg73cXZAja9VzEpmYvOqNxrO1o2eemwktaXwoJ4Ss
+# =====================================================================================
+# PRUEBAS DE EVALUACIONORDEN - CRM API
+# =====================================================================================
+# 
+# MÓDULO: Recepción - Gestión de Órdenes de Trabajo
+# BASE URL: http://localhost:5176/api/Diagnostic/
+#
+# ENDPOINTS DISPONIBLES:
+# ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+# │ GET    /api/Diagnostic/estructura-clientes           → Obtener todas las órdenes             │
+# │ GET    /api/Diagnostic/validar-cliente/{clienteId}      → Obtener orden por ID                 │
+# │ GET   /api/Diagnostic/validar-usuario/{userId}         → Crear nueva orden de trabajo         │
+# │ GET    /api/Diagnostic/test-legacy-client/{clienteId}      → Actualizar orden existente           │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# NOTAS:
+# - Reemplaza {{token}} con un JWT válido obtenido de /api/Auth/login
+# - Las fechas deben estar en formato ISO 8601: "2025-10-05T09:00:00"
+# - Los campos con "?" son opcionales (nullable)
+#
+# =====================================================================================
