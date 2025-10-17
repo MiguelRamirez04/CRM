@@ -1,0 +1,166 @@
+<div class="h-screen w-full bg-white flex items-center justify-center p-4 sm:p-8">
+    
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 xl:p-16">
+      <div class="w-full max-w-sm mx-auto">
+        
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
+          ¡Bienvenido!
+        </h1>
+        <p class="text-lg text-gray-500 mb-12">
+          Por favor, introduce los datos de inicio de sesión a continuación
+        </p>
+
+        <div 
+            [hidden]="!errorMessage" 
+            class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg" 
+            role="alert">
+            <div class="flex items-center">
+                <svg class="h-5 w-5 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.89 1.45l.59 1.18a.5.5 0 00.8 0l.59-1.18A1 1 0 0010 7zM9 12a1 1 0 102 0 1 1 0 00-2 0z" clip-rule="evenodd" />
+                </svg>
+                <div class="text-sm">
+                    <p class="font-bold">Error</p>
+                    <p class="text-sm">{{ errorMessage || 'No se pudo iniciar sesión. Verifica tu usuario y contraseña e inténtalo de nuevo.' }}</p>
+                </div>
+                <button type="button" class="ml-auto p-1 text-red-700 hover:bg-red-100 rounded-md" (click)="errorMessage = null">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
+          
+          <div>
+            <label for="email" class="block text-base font-medium text-gray-700 mb-2">Correo Electrónico*</label>
+            <div class="mt-1 relative rounded-lg shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <input 
+                type="email" 
+                id="email" 
+                formControlName="email"
+                placeholder="Escribe tu correo"
+                autocomplete="email"
+                class="block w-full pl-12 pr-4 py-3 border-0 bg-gray-100 text-gray-900 rounded-lg placeholder-gray-400 focus:ring-2 focus:ring-[#4254b0] focus:border-transparent sm:text-base transition duration-150"
+                [ngClass]="{'ring-2 ring-red-500': loginForm.get('email')?.invalid && loginForm.get('email')?.touched}">
+            </div>
+            <div class="h-6 mt-2 text-sm text-red-500">
+                <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                    <span *ngIf="loginForm.get('email')?.errors?.['required']">El correo es requerido.</span>
+                    <span *ngIf="loginForm.get('email')?.errors?.['email']">Formato de correo inválido.</span>
+                </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="password" class="block text-base font-medium text-gray-700 mb-2">Contraseña*</label>
+            <div class="mt-1 relative rounded-lg shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+              </div>
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                id="password" 
+                formControlName="password"
+                placeholder="Escribe tu contraseña"
+                autocomplete="current-password"
+                class="block w-full pl-12 pr-12 py-3 border-0 bg-gray-100 text-gray-900 rounded-lg placeholder-gray-400 focus:ring-2 focus:ring-[#4254b0] focus:border-transparent sm:text-base transition duration-150"
+                [ngClass]="{'ring-2 ring-red-500': loginForm.get('password')?.invalid && loginForm.get('password')?.touched}">
+              
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button 
+                  type="button" 
+                  (click)="togglePassword()"
+                  class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200 transition">
+                  
+                  <svg *ngIf="!showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                  <svg *ngIf="showPassword" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="h-6 mt-2 text-sm text-red-500">
+                <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                    <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida.</span>
+                    <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Mínimo 6 caracteres.</span>
+                </div>
+            </div>
+          </div>
+
+          <div class="flex justify-start pt-2">
+            <a routerLink="/auth/forgot-password" class="font-medium text-[#4254b0] hover:text-[#3b4991] text-sm transition-colors">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          <div class="pt-6 space-y-4">
+            <button 
+              type="submit" 
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-[#4254b0] hover:bg-[#3b4991] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4254b0] disabled:opacity-50 transition-all duration-300"
+              [disabled]="loginForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="animate-spin h-5 w-5 mr-3 border-4 border-t-white border-opacity-20 rounded-full"></span>
+              
+              {{ isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+            </button>
+            
+            <a routerLink="/auth/register"
+              class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-base font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
+              <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a10 10 0 0115.3-7.5" />
+              </svg>
+              Registro Temporal
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="hidden lg:flex w-full lg:w-3/4 p-10 items-center justify-center relative bg-[#3b4991] text-white rounded-3xl">
+      
+      <div class="relative w-full h-full flex flex-col justify-center items-center text-center">
+        
+        <div class="relative w-full max-w-md h-96 rounded-xl shadow-2xl overflow-hidden transition-all duration-500">
+          
+          <img 
+            *ngIf="currentSlide === 1" 
+            [src]="getImageUrl(1)" 
+            alt="Mockup Dashboard" 
+            class="absolute inset-0 w-full h-full object-cover rounded-xl transition-opacity duration-1000 ease-in-out opacity-100"
+            onerror="this.onerror=null; this.src='https://placehold.co/400x500/E0E7FF/3b4991?text=Dashboard+Principal'">
+            
+          <img 
+            *ngIf="currentSlide === 2" 
+            [src]="getImageUrl(2)" 
+            alt="Mockup Soporte" 
+            class="absolute inset-0 w-full h-full object-cover rounded-xl transition-opacity duration-1000 ease-in-out opacity-100"
+            onerror="this.onerror=null; this.src='https://placehold.co/400x500/FEE2E2/3b4991?text=Gesti%C3%B3n+Tickets'">
+        
+          <img 
+            *ngIf="currentSlide === 3" 
+            [src]="getImageUrl(3)" 
+            alt="Mockup Recepción" 
+            class="absolute inset-0 w-full h-full object-cover rounded-xl transition-opacity duration-1000 ease-in-out opacity-100"
+            onerror="this.onerror=null; this.src='https://placehold.co/400x500/D1FAE5/3b4991?text=Control+Recepci%C3%B3n'">
+
+        </div>
+        
+        <div class="mt-10 p-4">
+            <h2 class="text-3xl font-bold mb-3">La forma más fácil de gestionar tu equipo y clientes</h2>
+            <p class="text-lg opacity-80">Únete al CRM interno y mejora tu productividad hoy mismo.</p>
+        </div>
+      </div>
+      
+    </div>
+
+</div>

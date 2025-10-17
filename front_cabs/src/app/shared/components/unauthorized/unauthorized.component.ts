@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-unauthorized',
   standalone: true,
-  imports: [CommonModule, RouterLink, NgbModule],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div class="row justify-content-center w-100">
