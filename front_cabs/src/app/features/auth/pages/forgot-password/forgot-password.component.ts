@@ -2,8 +2,10 @@
 
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { interval, Subscription } from 'rxjs'; 
+import { startWith } from 'rxjs/operators';
 
 // Define las fases del flujo
 enum RecoveryStep {
@@ -15,29 +17,23 @@ enum RecoveryStep {
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule], 
-  // Usa las URL que ya tienes para el Reset/Forgot
+  imports: [CommonModule, ReactiveFormsModule, RouterLink], 
   templateUrl: './forgot-password.component.html', 
-  styleUrls: ['./forgot-password.component.css']
+  styleUrls: ['./forgot-password.component.css'] 
 })
 export class ForgotPasswordComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
-  // Exponemos las fases para usarlas en el HTML
   RecoveryStep = RecoveryStep;
-  
-  // CRÍTICO: Controla qué panel se está mostrando
   currentStep: RecoveryStep = RecoveryStep.RequestEmail;
 
-  // Formularios para cada fase
   emailForm: FormGroup;
   verificationForm: FormGroup;
   resetForm: FormGroup;
 
-  // Temporizador de reenvío (solo visual por ahora)
-  resendTimer: number = 20; // 0:20
-  timerSubscription: any; // Usaremos setInterval simple para la demo visual
+  resendTimer: number = 20;
+  timerSubscription: any; 
 
   constructor() {
     this.emailForm = this.fb.group({
@@ -45,67 +41,72 @@ export class ForgotPasswordComponent implements OnInit {
     });
 
     this.verificationForm = this.fb.group({
-      // Campo que combina los 6 inputs visuales en uno solo para validación
       code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]], 
     });
     
     this.resetForm = this.fb.group({
-      contrasena: ['', [Validators.required, Validators.minLength(6)]],
+      contrasena: ['', [Validators.required, Validators.minLength(8)]],
       confirmarContrasena: ['', [Validators.required]],
     });
     
-    // Agregamos un validador para que las contraseñas coincidan
-    // this.resetForm.get('confirmarContrasena')?.addValidators(
-      //Validators.compose([
-        //Validators.required,
-        //(control: any) => {
-          //const pass = this.resetForm.get('contrasena')?.value;
-          //return pass === control.value ? null : { mismatch: true };
-        //},
-      //])
-    //);
+    // Validador para la coincidencia de contraseñas
+    this.resetForm.get('confirmarContrasena')?.addValidators(
+      (control: AbstractControl) => {
+        const pass = this.resetForm.get('contrasena')?.value;
+        return pass === control.value ? null : { mismatch: true };
+      }
+    );
   }
   
   ngOnInit(): void {
-      // Si el paso inicial es la verificación (por si viene de un link de correo), 
-      // podrías iniciar el temporizador aquí.
+      if (this.currentStep === RecoveryStep.VerifyCode) {
+          this.startTimer();
+      }
   }
 
-  // Lógica de navegación entre pasos
+  /**
+   * Maneja la navegación y la validación entre pasos.
+   */
   nextStep(): void {
-    if (this.currentStep === RecoveryStep.RequestEmail && this.emailForm.valid) {
-      // Lógica de backend: Enviar correo de verificación (a futuro)
-      this.currentStep = RecoveryStep.VerifyCode;
-      this.startTimer(); // Inicia el temporizador al ir a verificación
-      return;
+    if (this.currentStep === RecoveryStep.RequestEmail) {
+        if (this.emailForm.invalid) {
+            this.markFormGroupTouched(this.emailForm); // Uso correcto con 'this'
+            return;
+        }
+        // ÉXITO DEL PASO 1 (A futuro, después del llamado al backend)
+        this.currentStep = RecoveryStep.VerifyCode;
+        this.startTimer();
+        return;
     } 
     
-    if (this.currentStep === RecoveryStep.VerifyCode && this.verificationForm.valid) {
-      // Lógica de backend: Verificar código (a futuro)
-      this.currentStep = RecoveryStep.ResetPassword;
-      if (this.timerSubscription) {
-          clearInterval(this.timerSubscription);
-      }
-      return;
+    if (this.currentStep === RecoveryStep.VerifyCode) {
+        if (this.verificationForm.invalid) {
+            this.markFormGroupTouched(this.verificationForm); // Uso correcto con 'this'
+            return;
+        }
+        // ÉXITO DEL PASO 2 (A futuro, después del llamado al backend)
+        this.currentStep = RecoveryStep.ResetPassword;
+        if (this.timerSubscription) {
+            clearInterval(this.timerSubscription);
+        }
+        return;
     }
     
-    if (this.currentStep === RecoveryStep.ResetPassword && this.resetForm.valid) {
-        // Lógica de backend: Enviar nueva contraseña (a futuro)
-        // Por ahora, solo simula un retorno al login:
+    if (this.currentStep === RecoveryStep.ResetPassword) {
+        if (this.resetForm.invalid) {
+            this.markFormGroupTouched(this.resetForm); // Uso correcto con 'this'
+            return;
+        }
+        // ÉXITO DEL PASO 3 (A futuro, después del llamado al backend)
         alert('Contraseña restablecida con éxito (Simulación)');
         this.router.navigate(['/auth/login']);
         return;
     }
-    
-    // Marcar campos como tocados si la validación falla
-    this.markFormGroupTouched(
-      this.currentStep === RecoveryStep.RequestEmail ? this.emailForm : 
-      this.currentStep === RecoveryStep.VerifyCode ? this.verificationForm : 
-      this.resetForm
-    );
   }
 
-  // Vuelve al paso anterior
+  /**
+   * Vuelve al paso anterior.
+   */
   prevStep(): void {
     if (this.currentStep === RecoveryStep.VerifyCode) {
       this.currentStep = RecoveryStep.RequestEmail;
@@ -114,11 +115,13 @@ export class ForgotPasswordComponent implements OnInit {
       }
     } else if (this.currentStep === RecoveryStep.ResetPassword) {
       this.currentStep = RecoveryStep.VerifyCode;
-      this.startTimer(); // Reinicia el temporizador si regresa
+      this.startTimer();
     }
   }
 
-  // Simulación de temporizador de reenvío
+  /**
+   * Simula el inicio del temporizador de reenvío de código.
+   */
   startTimer(): void {
       this.resendTimer = 20;
       if (this.timerSubscription) {
@@ -133,13 +136,25 @@ export class ForgotPasswordComponent implements OnInit {
       }, 1000);
   }
   
-  // Función de utilidad para marcar todos los campos como tocados
+  /**
+   * MÉTODO DE CLASE: Marca recursivamente todos los controles de un FormGroup como tocados.
+   */
   markFormGroupTouched(formGroup: FormGroup) {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
-      if ((control as FormGroup).controls) {
-        this.markFormGroupTouched(control as FormGroup);
+      // Verificación para FormControl o FormGroup/FormArray anidado
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
       }
     });
+  }
+
+  // Métodos visuales (no funcionales para el flujo, pero necesarios para compilar)
+  getImageUrl(slide: number): string {
+    // Implementación de getImageUrl
+    return '';
+  }
+  togglePassword(): void {
+    // Implementación de togglePassword
   }
 }
