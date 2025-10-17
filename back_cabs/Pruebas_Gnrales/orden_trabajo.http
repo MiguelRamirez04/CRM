@@ -1,0 +1,80 @@
+@back_cabs_HostAddress = http://localhost:5176
+
+# =====================================================================================
+# PRUEBAS DE ÓRDENES DE TRABAJO
+# =====================================================================================
+
+### 1. CREAR ORDEN DE TRABAJO (POST)
+POST {{back_cabs_HostAddress}}/api/Recepcion
+Content-Type: application/json
+
+{
+  "requestDto": {
+    "notas": "Revisión de equipo",
+    "citaProgramadaInicio": "2025-10-22T10:00:00Z",
+    "citaProgramadaFin": "2025-10-22T12:00:00Z",
+    "modalidad": "Presencial",
+    "tipoOrden": "Asesoria",
+    "cotizaciones": null,
+    "nuevoCliente": false,
+    "nombreCliente": null,
+    "clienteTelefono": null,
+    "clienteId": 1,
+    "prioridad": 3,
+    "estado": "CAPTURADA",
+    "ubicacionText": "Oficina del cliente",
+    "estadoFacturado": "Pendiente",
+    "RequiereFactura": true,
+    "FacturaFolio": null,
+    "costoReal": 0,
+    "costoEstimado": 100.00,
+    "creadoPorUserId": 2
+  }
+}
+
+### 2. OBTENER TODAS LAS ÓRDENES DE TRABAJO (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion
+Accept: application/json
+
+### 3. OBTENER ORDEN DE TRABAJO POR ID (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/test-data/1/1
+Accept: application/json
+
+### 4. OBTENER ÓRDENES DE TRABAJO POR CLIENTE (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/1
+Accept: application/json
+
+### 5. ACTUALIZAR ORDEN DE TRABAJO (PUT)
+PUT {{back_cabs_HostAddress}}/api/Recepcion/1
+Content-Type: application/json
+
+{
+  "notas": "Revisión y reparación de equipo",
+  "citaProgramadaInicio": "2025-10-23T14:00:00Z",
+  "citaProgramadaFin": "2025-10-23T16:00:00Z",
+  "prioridad": 4,
+  "estado": "ASIGNADA",
+  "estadoFacturado": "Pendiente",
+  "RequiereFactura": true,
+  "FacturaFolio": null,
+  "costoReal": 50.00,
+  "costoEstimado": 150.00,
+  "creadoPorUserId": 2,
+  "asignadaAUserId": 3
+}
+
+### 6. OBTENER ESTADÍSTICAS DE ÓRDENES DE TRABAJO (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/estadisticas
+Accept: application/json
+
+### 7. BUSCAR CLIENTES (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/clientes/buscar
+Accept: application/json
+
+### 8. OBTENER CLIENTES NUEVOS (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/clientes/nuevos
+Accept: application/json
+
+### 9. OBTENER ESTADOS (GET)
+GET {{back_cabs_HostAddress}}/api/Recepcion/estados
+Accept: application/json

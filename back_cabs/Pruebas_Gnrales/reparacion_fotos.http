@@ -1,0 +1,23 @@
+@back_cabs_HostAddress = http://localhost:5176
+
+# =====================================================================================
+# PRUEBAS DE FOTOS DE REPARACIÓN
+# =====================================================================================
+
+### 1. CREAR FOTO DE REPARACIÓN (POST)
+POST {{back_cabs_HostAddress}}/api/reparaciones/1/fotos
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+### aca no se como llenarlo exactamente
+
+
+### 2. OBTENER TODAS LAS FOTOS DE REPARACIÓN (GET)
+GET {{back_cabs_HostAddress}}/api/reparaciones/1/fotos
+Accept: application/json
+
+### 3. DESCARGAR FOTO DE REPARACIÓN POR ID (GET)
+GET {{back_cabs_HostAddress}}/api/reparaciones/1/fotos/1/download
+Accept: application/json
+
+### 4. ELIMINAR FOTO DE REPARACIÓN (DELETE)
+DELETE {{back_cabs_HostAddress}}/api/reparaciones/1/fotos/1
