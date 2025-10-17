@@ -1,14 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, NgbModule],
+  imports: [CommonModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
