@@ -48,6 +48,8 @@ builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
+builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
 
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();

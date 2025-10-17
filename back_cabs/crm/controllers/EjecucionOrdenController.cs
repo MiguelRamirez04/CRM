@@ -11,7 +11,7 @@ namespace back_cabs.CRM.controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Soporte")]
+    [Authorize(Roles = "SOPORTE, ADMINISTRACION")]
     public class EjecucionOrdenController : ControllerBase
     {
         private readonly EjecucionOrdenService _service;

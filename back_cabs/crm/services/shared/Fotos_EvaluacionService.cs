@@ -140,94 +140,101 @@ namespace back_cabs.CRM.services.shared
                     throw new ArgumentException("El archivo no contiene una imagen válida.", nameof(requestDto.Archivo));
             }
 
-            using var transaction = await _writeContext.Database.BeginTransactionAsync();
-            try
-            {
-                // 4. Generar nombre único
-                var originalFileName = Path.GetFileNameWithoutExtension(requestDto.Archivo.FileName);
-                var sanitizedFileName = SanitizeFileName(originalFileName);
-                var webpFileName = $"{Guid.NewGuid()}_{sanitizedFileName}.webp";
-                var webpFilePath = Path.Combine(_uploadPath, webpFileName);
+            var strategy = _writeContext.Database.CreateExecutionStrategy();
 
-                // 5. Convertir a WebP
-                long tamanoBytes;
-                int ancho, alto;
-                using (var inputStream = requestDto.Archivo.OpenReadStream())
+            var ejecucionResult = await strategy.ExecuteAsync(async () =>
+            {
+
+                using var transaction = await _writeContext.Database.BeginTransactionAsync();
+                try
                 {
-                    (tamanoBytes, ancho, alto) = await _imageProcessing.ConvertToWebPAsync(
-                        inputStream, 
-                        webpFilePath, 
-                        _webpQuality,
-                        _maxImageWidth,
-                        _maxImageHeight);
+                    // 4. Generar nombre único
+                    var originalFileName = Path.GetFileNameWithoutExtension(requestDto.Archivo.FileName);
+                    var sanitizedFileName = SanitizeFileName(originalFileName);
+                    var webpFileName = $"{Guid.NewGuid()}_{sanitizedFileName}.webp";
+                    var webpFilePath = Path.Combine(_uploadPath, webpFileName);
+
+                    // 5. Convertir a WebP
+                    long tamanoBytes;
+                    int ancho, alto;
+                    using (var inputStream = requestDto.Archivo.OpenReadStream())
+                    {
+                        (tamanoBytes, ancho, alto) = await _imageProcessing.ConvertToWebPAsync(
+                            inputStream,
+                            webpFilePath,
+                            _webpQuality,
+                            _maxImageWidth,
+                            _maxImageHeight);
+                    }
+
+                    // 6. Crear metadatos
+                    var metadatos = new
+                    {
+                        ArchivoOriginal = requestDto.Archivo.FileName,
+                        TamanoOriginal = requestDto.Archivo.Length,
+                        ContentTypeOriginal = requestDto.Archivo.ContentType,
+                        Ancho = ancho,
+                        Alto = alto,
+                        CalidadWebP = _webpQuality,
+                        FechaConversion = DateTime.UtcNow
+                    };
+                    var metadatosJson = JsonSerializer.Serialize(metadatos);
+
+                    // 7. Crear registro en files_documentos
+                    var documento = new FilesDocumento
+                    {
+                        CreadoPorUsuarioId = usuarioId,
+                        CreadoEn = DateTime.UtcNow,
+                        EntidadTipo = "Evaluacion",
+                        EntidadId = requestDto.DetalleId,
+                        NombreArchivo = webpFileName,
+                        RutaAlmacenamiento = webpFilePath,
+                        MimeType = "image/webp",
+                        TamanoBytes = tamanoBytes,
+                        MetadatosJson = metadatosJson
+                    };
+                    _writeContext.Documentos.Add(documento);
+                    await _writeContext.SaveChangesAsync();
+
+                    // 8. Crear registro en evaluacion_fotos
+                    var nuevaFoto = new EvaluacionFoto
+                    {
+                        DetalleId = requestDto.DetalleId,
+                        DocumentoId = documento.Id,
+                        Tipo = requestDto.Tipo,
+                        Descripcion = requestDto.Descripcion,
+                        CreadoEn = DateTime.UtcNow
+                    };
+                    _writeContext.EvaluacionesFotos.Add(nuevaFoto);
+                    await _writeContext.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Foto subida exitosamente para detalle {DetalleId}, Foto ID: {FotoId}, Tamaño: {TamanoKB}KB",
+                        requestDto.DetalleId, nuevaFoto.Id, tamanoBytes / 1024);
+
+                    return new EvaluacionFotoResponseDto
+                    {
+                        Id = nuevaFoto.Id,
+                        DetalleId = nuevaFoto.DetalleId,
+                        DocumentoId = nuevaFoto.DocumentoId,
+                        Tipo = nuevaFoto.Tipo,
+                        Descripcion = nuevaFoto.Descripcion,
+                        CreadoEn = nuevaFoto.CreadoEn,
+                        NombreArchivo = documento.NombreArchivo,
+                        MimeType = documento.MimeType,
+                        TamanoBytes = documento.TamanoBytes,
+                        UrlDescarga = $"/api/FotosEvaluacion/{nuevaFoto.Id}/download"
+                    };
                 }
-
-                // 6. Crear metadatos
-                var metadatos = new
+                catch (Exception ex)
                 {
-                    ArchivoOriginal = requestDto.Archivo.FileName,
-                    TamanoOriginal = requestDto.Archivo.Length,
-                    ContentTypeOriginal = requestDto.Archivo.ContentType,
-                    Ancho = ancho,
-                    Alto = alto,
-                    CalidadWebP = _webpQuality,
-                    FechaConversion = DateTime.UtcNow
-                };
-                var metadatosJson = JsonSerializer.Serialize(metadatos);
-
-                // 7. Crear registro en files_documentos
-                var documento = new FilesDocumento
-                {
-                    CreadoPorUsuarioId = usuarioId,
-                    CreadoEn = DateTime.UtcNow,
-                    EntidadTipo = "Evaluacion",
-                    EntidadId = requestDto.DetalleId,
-                    NombreArchivo = webpFileName,
-                    RutaAlmacenamiento = webpFilePath,
-                    MimeType = "image/webp",
-                    TamanoBytes = tamanoBytes,
-                    MetadatosJson = metadatosJson
-                };
-                _writeContext.Documentos.Add(documento);
-                await _writeContext.SaveChangesAsync();
-
-                // 8. Crear registro en evaluacion_fotos
-                var nuevaFoto = new EvaluacionFoto
-                {
-                    DetalleId = requestDto.DetalleId,
-                    DocumentoId = documento.Id,
-                    Tipo = requestDto.Tipo,
-                    Descripcion = requestDto.Descripcion,
-                    CreadoEn = DateTime.UtcNow
-                };
-                _writeContext.EvaluacionesFotos.Add(nuevaFoto);
-                await _writeContext.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                _logger.LogInformation("Foto subida exitosamente para detalle {DetalleId}, Foto ID: {FotoId}, Tamaño: {TamanoKB}KB", 
-                    requestDto.DetalleId, nuevaFoto.Id, tamanoBytes / 1024);
-
-                return new EvaluacionFotoResponseDto
-                {
-                    Id = nuevaFoto.Id,
-                    DetalleId = nuevaFoto.DetalleId,
-                    DocumentoId = nuevaFoto.DocumentoId,
-                    Tipo = nuevaFoto.Tipo,
-                    Descripcion = nuevaFoto.Descripcion,
-                    CreadoEn = nuevaFoto.CreadoEn,
-                    NombreArchivo = documento.NombreArchivo,
-                    MimeType = documento.MimeType,
-                    TamanoBytes = documento.TamanoBytes,
-                    UrlDescarga = $"/api/FotosEvaluacion/{nuevaFoto.Id}/download"
-                };
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error al subir foto para detalle {DetalleId}", requestDto.DetalleId);
-                throw new InvalidOperationException("Error al guardar la foto.", ex);
-            }
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error al subir foto para detalle {DetalleId}", requestDto.DetalleId);
+                    throw new InvalidOperationException("Error al guardar la foto.", ex);
+                }
+            });
+            return ejecucionResult;
         }
 
         /// <summary>

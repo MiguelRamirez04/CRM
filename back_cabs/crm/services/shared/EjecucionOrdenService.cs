@@ -8,6 +8,7 @@ using back_cabs.CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.models.Soporte;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace back_cabs.CRM.services.shared
@@ -50,39 +51,47 @@ namespace back_cabs.CRM.services.shared
             if (tecnico == null || tecnico.Rol != RolUsuario.SOPORTE.ToString())
                 throw new ArgumentException("El técnico debe existir y tener rol SOPORTE.", nameof(dto.TecnicoId));
 
-            // Crear la entidad
-            var ejecucion = new EjecucionOrden
-            {
-                OrdenId = dto.OrdenId,
-                TipoEjecucion = dto.TipoEjecucion,
-                TecnicoId = dto.TecnicoId,
-                HrInicio = dto.HrInicio,
-                Comentarios = dto.Comentarios,
-                VehiculoId = dto.VehiculoId,
-                KmInicial = dto.KmInicial,
-                Herramientas = dto.Herramientas,
-                CodigoSesion = dto.CodigoSesion,
-                ContrasenaSesion = dto.ContrasenaSesion
-            };
+            var strategy = _writeContext.Database.CreateExecutionStrategy();
 
-            using var transaction = await _writeContext.Database.BeginTransactionAsync();
-            try
+            var ejecucionResult = await strategy.ExecuteAsync(async () =>
             {
-                _writeContext.EjecucionesOrden.Add(ejecucion);
-                await _writeContext.SaveChangesAsync();
-                await transaction.CommitAsync();
+                // Crear la entidad
+                var ejecucion = new EjecucionOrden
+                {
+                    OrdenId = dto.OrdenId,
+                    TipoEjecucion = dto.TipoEjecucion,
+                    TecnicoId = dto.TecnicoId,
+                    HrInicio = dto.HrInicio,
+                    Comentarios = dto.Comentarios,
+                    VehiculoId = dto.VehiculoId,
+                    KmInicial = dto.KmInicial,
+                    Herramientas = dto.Herramientas,
+                    CodigoSesion = dto.CodigoSesion,
+                    ContrasenaSesion = dto.ContrasenaSesion
+                };
 
-                _logger.LogInformation("Ejecución creada exitosamente con ID {EjecucionId}", ejecucion.Id);
 
-                // Mapear a response
-                return MapToResponseDto(ejecucion);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error al crear ejecución para orden {OrdenId}", dto.OrdenId);
-                throw;
-            }
+                using IDbContextTransaction transaction = await _writeContext.Database.BeginTransactionAsync();
+                try
+                {
+                    _writeContext.EjecucionesOrden.Add(ejecucion);
+                    await _writeContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Ejecución creada exitosamente con ID {EjecucionId}", ejecucion.Id);
+                    // Mapear a response
+                    return MapToResponseDto(ejecucion);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error al crear ejecución para orden {OrdenId}", dto.OrdenId);
+                    throw;
+                }
+            });
+
+            return ejecucionResult;
+
         }
 
         /// <summary>
