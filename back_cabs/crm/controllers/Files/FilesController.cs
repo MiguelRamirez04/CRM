@@ -65,15 +65,9 @@ public class FilesController : ControllerBase
                 return Unauthorized("No se pudo obtener el ID del usuario");
             }
 
-            // Convertir el string del tipo de entidad a enum
-            if (!Enum.TryParse<TipoEntidadDocumento>(request.EntidadTipo, out var entidadTipo))
-            {
-                return BadRequest($"Tipo de entidad '{request.EntidadTipo}' no válido");
-            }
-
             var documento = await _fileStorageService.UploadFileAsync(
                 request.Archivo,
-                entidadTipo,
+                request.EntidadTipo,
                 request.EntidadId,
                 usuarioId,
                 request.Descripcion,

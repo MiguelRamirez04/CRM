@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using back_cabs.CRM.enums.Files;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace back_cabs.CRM.DTOs.Files;
 
@@ -15,11 +17,16 @@ public class FileUploadRequestDto
     public IFormFile Archivo { get; set; } = null!;
 
     /// <summary>
-    /// Tipo de entidad (Evaluacion, Reparacion, GastoViatico, etc.)
+    /// Tipo de entidad a la que pertenece el archivo
+    /// Evaluacion: fotos de evaluación (convierte a WebP)
+    /// Reparacion: fotos de reparación (convierte a WebP)  
+    /// GastoViatico: facturas y recibos (PDF/Excel/Word)
+    /// OrdenTrabajo: cotizaciones y contratos (PDF/Excel/Word)
+    /// Cliente: documentos del cliente (PDF/Excel/Word)
+    /// Vehiculo: documentos del vehículo (PDF/Excel/Word)
     /// </summary>
     [Required(ErrorMessage = "El tipo de entidad es requerido")]
-    [StringLength(50)]
-    public string EntidadTipo { get; set; } = string.Empty;
+    public TipoEntidadDocumento EntidadTipo { get; set; }
 
     /// <summary>
     /// ID de la entidad a la que pertenece el archivo
@@ -66,9 +73,11 @@ public class FileResponseDto
 /// </summary>
 public class FileListByEntidadRequestDto
 {
+    /// <summary>
+    /// Tipo de entidad a filtrar
+    /// </summary>
     [Required]
-    [StringLength(50)]
-    public string EntidadTipo { get; set; } = string.Empty;
+    public TipoEntidadDocumento EntidadTipo { get; set; }
 
     [Required]
     [Range(1, int.MaxValue)]
