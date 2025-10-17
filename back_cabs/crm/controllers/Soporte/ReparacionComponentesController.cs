@@ -18,16 +18,17 @@ namespace back_cabs.CRM.Controllers.Soporte.Componentes
     ///<remarks>
     /// Rutas base: /api/soporte/reparaciones/componentes
     /// </remarks>
+    [ApiController]
     [Route("api/soporte/reparaciones")] // La ruta base para el controlador de reparaciones
     [Produces("application/json")]
     [Authorize]
-    public class ReparacionController : ControllerBase
+    public class ReparacionComponentesController : ControllerBase
     {
         private readonly ReparacionService _reparacionService;
-        private readonly ILogger<ReparacionController> _logger;
+        private readonly ILogger<ReparacionComponentesController> _logger;
 
-        public ReparacionController(ReparacionService reparacionService,
-        ILogger<ReparacionController> logger)
+        public ReparacionComponentesController(ReparacionService reparacionService,
+        ILogger<ReparacionComponentesController> logger)
         {
             _reparacionService = reparacionService ?? throw new ArgumentNullException(nameof(reparacionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

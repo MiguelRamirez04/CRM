@@ -25,37 +25,6 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(2rem) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes modalAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
 /* Animation utility classes with staggered delays */
 /* NOTE: These classes are applied directly in the HTML template. */
 .animate-fade-in-up { animation: fade-in-up 0.6s ease-out both; }
@@ -64,16 +33,6 @@
 .animate-fade-in-up-delayed-3 { animation: fade-in-up 0.6s ease-out 0.3s both; }
 .animate-fade-in-up-delayed-4 { animation: fade-in-up 0.6s ease-out 0.4s both; }
 .animate-fade-in-up-delayed-5 { animation: fade-in-up 0.6s ease-out 0.5s both; }
-
-/* New animation classes for modals */
-.animate-fade-in { animation: fadeIn 0.3s ease-out both; }
-.animate-slide-up { animation: slideUp 0.3s ease-out both; }
-.animate-modal-appear { animation: modalAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
-
-/* Background pattern for modal headers */
-.bg-pattern {
-  background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="white" fill-opacity="1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
-}
 
 
 /* Modal base styles (unchanged as per instructions) */
@@ -95,15 +54,21 @@
   scroll-behavior: smooth;
 }
 
-/* Prevent body scroll when modal is open */
-:host ::ng-deep body.modal-open {
-  overflow: hidden;
-}
-
 /* Responsive adjustments for modals on small screens */
 @media (max-width: 640px) {
   .modal-panel {
     margin: 1rem;
     max-width: calc(100vw - 2rem);
   }
+}
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+modals on small screens */
+@media (max-width: 640px) {
+  .modal-panel {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
 }

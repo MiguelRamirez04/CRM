@@ -1,0 +1,45 @@
+// ============================================
+// CONFIGURACIÓN DE SERVICIOS DE ARCHIVOS
+// ============================================
+// Agregar al final de la sección de servicios en Program.cs
+
+// Servicio genérico de almacenamiento de archivos
+builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, back_cabs.CRM.services.Files.FileStorageService>();
+
+// Nota: ImageProcessingService ya debe estar registrado
+// Si no está, agregar:
+// builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
+
+// ============================================
+// CONFIGURACIÓN EN appsettings.json
+// ============================================
+/*
+Agregar esta sección en appsettings.json:
+
+{
+  "FileStorage": {
+    "UploadPath": "uploads",
+    "MaxFileSizeMB": 10,
+    "WebPQuality": 80,
+    "MaxImageWidth": 1920,
+    "MaxImageHeight": 1080
+  }
+}
+*/
+
+// ============================================
+// PERMISOS DE CARPETA (IMPORTANTE)
+// ============================================
+/*
+Asegurarse de que la carpeta "uploads" tiene permisos de escritura.
+
+Windows:
+- Crear carpeta: C:\inetpub\wwwroot\uploads
+- Click derecho > Propiedades > Seguridad
+- Dar permisos de escritura a IIS_IUSRS y NETWORK SERVICE
+
+Linux:
+- mkdir -p /var/www/uploads
+- chmod 755 /var/www/uploads
+- chown www-data:www-data /var/www/uploads
+*/

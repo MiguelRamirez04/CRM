@@ -290,7 +290,7 @@ public class ReadOnlyContext : DbContext
                 .HasConstraintName("FK_ejecuciones_orden_tecnico")
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne<Vehiculo>()
+            entity.HasOne(e => e.Vehiculo)
                 .WithMany()
                 .HasForeignKey(e => e.VehiculoId)
                 .HasConstraintName("FK_ejecuciones_orden_vehiculo")
