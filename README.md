@@ -78,7 +78,7 @@ front_cabs/src/app/
 ### Frontend
 - ✅ Angular 17+ con Standalone Components
 - ✅ Bootstrap 5 + ng-bootstrap para UI
-- ✅ FontAwesome para iconos
+- ✅ heroicons para iconos
 - ✅ ngx-cookie-service para manejo seguro
 - ✅ Reactive Forms para validación
 - ✅ RxJS para programación reactiva
