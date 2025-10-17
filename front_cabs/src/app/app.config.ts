@@ -29,5 +29,7 @@ export const appConfig: ApplicationConfig = {
       useClass: SecureAuthInterceptor,
       multi: true
     },
+    
+ 
   ]
 };

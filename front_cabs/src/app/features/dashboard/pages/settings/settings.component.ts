@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ],
   template: `
     <div class="container-fluid">
       <div class="row">
