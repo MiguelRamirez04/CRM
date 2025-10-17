@@ -27,6 +27,7 @@ export interface OrdenTrabajo {
   nuevoCliente: boolean;
   nombreCliente: string;
   clienteId?: number;
+  clienteTelefono?: number; // Teléfono para cliente nuevo
   prioridad: number;
   estado: EstadoOrden;
   ubicacionText?: string;
@@ -52,6 +53,7 @@ export interface OrdenTrabajoRequest {
     nuevoCliente: boolean;
     nombreCliente?: string;
     clienteId?: number;
+    clienteTelefono?: number; // Teléfono para cliente nuevo
     prioridad: number;
     estado: EstadoOrden;
     ubicacionText?: string;

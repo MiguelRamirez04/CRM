@@ -225,7 +225,6 @@ namespace back_cabs.CRM.controllers.Recepcion
                     CreadoPorUserId = userId
                 };
 
-                // Intentar crear la orden para ver si pasa las validaciones
                 try {
                     var orden = await _ordenTrabajoService.CrearOrdenTrabajoAsync(testDto);
                     return Ok(new {
