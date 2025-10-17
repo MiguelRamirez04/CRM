@@ -77,12 +77,39 @@ namespace back_cabs.CRM.models.Files
         public string RutaAlmacenamiento { get; set; } = string.Empty;
 
         /// <summary>
-        /// Nombre original del archivo.
+        /// Nombre del archivo almacenado en el servidor.
         /// </summary>
         [Required]
         [StringLength(255)]
         [Column("nombre_archivo")]
         public string NombreArchivo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Nombre original del archivo (antes de procesamiento).
+        /// </summary>
+        [StringLength(255)]
+        [Column("nombre_original")]
+        public string? NombreOriginal { get; set; }
+
+        /// <summary>
+        /// Indica si el documento está activo (no eliminado).
+        /// </summary>
+        [Required]
+        [Column("activo")]
+        public bool Activo { get; set; } = true;
+
+        /// <summary>
+        /// Fecha y hora de última actualización del registro.
+        /// </summary>
+        [Column("actualizado_en", TypeName = "DATETIME2(0)")]
+        public DateTime? ActualizadoEn { get; set; }
+
+        /// <summary>
+        /// Checksum SHA256 del archivo para validación de integridad.
+        /// </summary>
+        [StringLength(64)]
+        [Column("checksum_sha256", TypeName = "varchar(64)")]
+        public string? ChecksumSHA256 { get; set; }
 
         // --- Propiedades de Navegación ---
         [ForeignKey("CreadoPorUsuarioId")]

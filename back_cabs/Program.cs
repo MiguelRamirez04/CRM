@@ -61,6 +61,9 @@ builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
+// Servicio genérico de almacenamiento de archivos
+builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, back_cabs.CRM.services.Files.FileStorageService>();
+
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
     new Microsoft.Data.SqlClient.SqlConnection(

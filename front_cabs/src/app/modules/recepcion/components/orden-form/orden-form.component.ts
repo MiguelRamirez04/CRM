@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { OrdenTrabajoRequest, OrdenTrabajo, EstadoOrden, TipoOrden, Modalidad, ClienteLegacy } from '../../../../core/models/orden-trabajo.interface';
+import { OrdenTrabajoRequest, EstadoOrden, TipoOrden, Modalidad, ClienteLegacy } from '../../../../core/models/orden-trabajo.interface';
 import { Cliente } from '../../../../core/models/cliente.interface';
 import { ClienteSearchComponent } from '../cliente-search/cliente-search.component';
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
@@ -15,8 +15,6 @@ import { SecureAuthService } from '../../../../core/services/secure-auth.service
 })
 export class OrdenFormComponent implements OnInit {
   @Input() loading = false;
-  @Input() tipoCliente: 'nuevo' | 'legacy' = 'nuevo'; // Tipo de cliente predefinido
-  @Input() ordenExistente?: OrdenTrabajo | null; // Para modo edición
   @Output() guardar = new EventEmitter<OrdenTrabajoRequest>();
   @Output() cancelar = new EventEmitter<void>();
 
@@ -34,20 +32,8 @@ export class OrdenFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Configurar formulario según tipo de cliente predefinido
-    if (this.tipoCliente === 'nuevo') {
-      this.form.patchValue({ nuevoCliente: true });
-    } else {
-      this.form.patchValue({ nuevoCliente: false });
-    }
-    
     this.setupFormBasedOnTipoCliente();
     this.setCurrentUser();
-    
-    // Si hay una orden existente (modo edición), cargar datos
-    if (this.ordenExistente) {
-      this.cargarDatosOrdenExistente();
-    }
   }
 
   private setCurrentUser(): void {
@@ -119,42 +105,6 @@ export class OrdenFormComponent implements OnInit {
       clienteId: cliente.id,
       nombreCliente: cliente.nombre // Guardar nombre para visualización
     });
-  }
-
-  private cargarDatosOrdenExistente(): void {
-    if (!this.ordenExistente) return;
-    
-    this.form.patchValue({
-      nuevoCliente: this.ordenExistente.nuevoCliente,
-      clienteId: this.ordenExistente.clienteId,
-      nombreCliente: this.ordenExistente.nombreCliente,
-      clienteTelefono: this.ordenExistente.clienteTelefono?.toString() || '',
-      tipoOrden: this.ordenExistente.tipoOrden,
-      modalidad: this.ordenExistente.modalidad,
-      prioridad: this.ordenExistente.prioridad,
-      estado: this.ordenExistente.estado,
-      citaProgramadaInicio: this.formatearFechaParaInput(this.ordenExistente.citaProgramadaInicio),
-      citaProgramadaFin: this.ordenExistente.citaProgramadaFin ? this.formatearFechaParaInput(this.ordenExistente.citaProgramadaFin) : '',
-      ubicacionText: this.ordenExistente.ubicacionText || '',
-      notas: this.ordenExistente.notas || '',
-      cotizaciones: this.ordenExistente.cotizaciones || '',
-      estadoFacturado: this.ordenExistente.estadoFacturado || 'NO_FACTURADO',
-      RequiereFactura: this.ordenExistente.requiereFactura,
-      FacturaFolio: this.ordenExistente.facturaFolio || 0,
-      costoEstimado: this.ordenExistente.costoEstimado || 0,
-      costoReal: this.ordenExistente.costoReal || 0
-    });
-  }
-
-  private formatearFechaParaInput(fecha: string): string {
-    // Convertir ISO string a formato datetime-local (YYYY-MM-DDTHH:mm)
-    const date = new Date(fecha);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   onSubmit() {
