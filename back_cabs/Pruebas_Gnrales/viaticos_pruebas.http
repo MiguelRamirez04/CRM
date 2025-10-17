@@ -1,0 +1,50 @@
+@back_cabs_HostAddress = http://localhost:5176
+
+# =====================================================================================
+# PRUEBAS DE VIÁTICOS
+# =====================================================================================
+
+### 1. CREAR GASTO DE VIÁTICO (POST)
+POST {{back_cabs_HostAddress}}/api/GastosViaticos
+Content-Type: application/json
+
+{
+  "tipoViatico": 1,  // Ajusta el valor según tu enum (ej: 1=Transporte, 2=Comida)
+  "ordenId": 1,
+  "usuarioId": 2,
+  "tieneFactura": true,
+  "descripcion": "Viático para visita a cliente",
+  "proveedorNombre": "Gasolinera X",
+  "fecha": "2025-10-18T00:00:00Z",  // Formato ISO 8601
+  "kmRecorridos": 150,
+  "lugarDestino": "Oficinas del cliente",
+  "observaciones": "Viático para reunión importante",
+  "detalles": [
+    {
+      "tipoGasto": "Gasolina",
+      "monto": 800.00,
+      "descripcion": "Gasolina para el viaje"
+    },
+    {
+      "tipoGasto": "Comida",
+      "monto": 300.00,
+      "descripcion": "Comida durante el viaje"
+    }
+  ]
+}
+
+### 2. OBTENER TODOS LOS GASTOS DE VIÁTICOS (GET)
+GET {{back_cabs_HostAddress}}/api/GastosViaticos
+Accept: application/json
+
+### 3. OBTENER GASTO DE VIÁTICO POR ID (GET)
+GET {{back_cabs_HostAddress}}/api/GastosViaticos/1
+Accept: application/json
+
+### 4. MODIFICAR ESTADO DEL GASTO DE VIÁTICO (PATCH)
+PATCH {{back_cabs_HostAddress}}/api/GastosViaticos/1/estado
+Content-Type: application/json
+
+{
+  "estadoGasto": 2  // Ajusta el valor según tu enum (ej: 1=Pendiente, 2=Aprobado, 3=Rechazado)
+}

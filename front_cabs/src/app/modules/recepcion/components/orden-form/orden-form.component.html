@@ -6,24 +6,8 @@
       <h3 class="text-xl font-bold text-gray-900">Información del Cliente</h3>
     </div>
     
-    <!-- Badge informativo del tipo de cliente (sin toggle editable) -->
-    <div class="mb-6" *ngIf="tipoCliente && !ordenExistente">
-      <div class="inline-flex items-center px-4 py-2 rounded-lg font-semibold text-sm shadow-sm"
-           [ngClass]="{
-             'bg-emerald-100 text-emerald-800 border border-emerald-300': tipoCliente === 'nuevo',
-             'bg-blue-100 text-blue-800 border border-blue-300': tipoCliente === 'legacy'
-           }">
-        <i class="mr-2"
-           [ngClass]="{
-             'fas fa-user-plus': tipoCliente === 'nuevo',
-             'fas fa-address-book': tipoCliente === 'legacy'
-           }"></i>
-        {{ tipoCliente === 'nuevo' ? 'Cliente Nuevo' : 'Cliente Legacy' }}
-      </div>
-    </div>
-    
-    <!-- Toggle Cliente Nuevo/Existente (solo visible en modo edición) -->
-    <div class="mb-6" *ngIf="ordenExistente">
+    <!-- Toggle Cliente Nuevo/Existente -->
+    <div class="mb-6">
       <div class="relative">
         <label class="flex items-center cursor-pointer">
           <input
