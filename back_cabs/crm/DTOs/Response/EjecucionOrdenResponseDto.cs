@@ -45,6 +45,16 @@ namespace back_cabs.CRM.DTOs.Response
         public DateTime? HrFin { get; set; }
 
         /// <summary>
+        /// Duración en minutos (calculado si HrInicio y HrFin existen).
+        /// </summary>
+        public int? DuracionMinutos { get; set; }
+
+        /// <summary>
+        /// Estado de la ejecución: EN_CURSO, FINALIZADA.
+        /// </summary>
+        public string EstadoEjecucion { get; set; } = "EN_CURSO";
+
+        /// <summary>
         /// Comentarios sobre la ejecución.
         /// </summary>
         public string? Comentarios { get; set; }
@@ -70,7 +80,12 @@ namespace back_cabs.CRM.DTOs.Response
         /// </summary>
         public int? KmFinal { get; set; }
 
-        // Campos específicos para REMOTO (sin contraseñas por seguridad)
+        /// <summary>
+        /// Kilómetros recorridos (calculado si KmInicial y KmFinal existen).
+        /// </summary>
+        public int? KmRecorridos { get; set; }
+
+        // Campos específicos para REMOTO
         /// <summary>
         /// Herramientas utilizadas.
         /// </summary>
@@ -81,6 +96,9 @@ namespace back_cabs.CRM.DTOs.Response
         /// </summary>
         public string? CodigoSesion { get; set; }
 
+        /// <summary>
+        /// Contraseña de sesión remota.
+        /// </summary>
         public string? ContrasenaSesion { get; set; }
         
     }

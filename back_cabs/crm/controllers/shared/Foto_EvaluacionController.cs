@@ -99,14 +99,14 @@ public class FotosEvaluacionController : ControllerBase
         {
             _logger.LogInformation("Descargando foto {FotoId}", id);
             
-            var result = await _fotosService.DownloadFotoAsync(id);
+            var result = await _fotosService.GetFotoFileAsync(id);
             if (result == null)
             {
                 _logger.LogWarning("Foto {FotoId} no encontrada", id);
                 return NotFound(new { Error = "Foto no encontrada." });
             }
 
-            return File(result.Value.fileStream, result.Value.contentType, result.Value.fileName);
+            return File(result.Value.FileBytes, result.Value.MimeType, result.Value.FileName);
         }
         catch (Exception ex)
         {
@@ -116,33 +116,27 @@ public class FotosEvaluacionController : ControllerBase
     }
 
     /// <summary>
-    /// PUT: api/FotosEvaluacion/5
-    /// Actualiza metadatos de una foto (tipo y descripción).
-    /// </summary>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateFotoMetadataDto requestDto)
-    {
-        var fotoActualizada = await _fotosService.UpdateFotoAsync(id, requestDto.Tipo, requestDto.Descripcion);
-        if (fotoActualizada == null)
-        {
-            return NotFound();
-        }
-        return NoContent();
-    }
-
-    /// <summary>
     /// DELETE: api/FotosEvaluacion/5
     /// Elimina una foto de evaluación por su ID (archivo físico + BD).
     /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var resultado = await _fotosService.DeleteFotoAsync(id);
-        if (!resultado)
+        try
         {
-            return NotFound();
+            var usuarioId = GetCurrentUserId();
+            var resultado = await _fotosService.DeleteFotoAsync(id, usuarioId);
+            if (!resultado)
+            {
+                return NotFound(new { Error = "Foto no encontrada." });
+            }
+            return NoContent();
         }
-        return NoContent();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar foto {FotoId}", id);
+            return StatusCode(500, new { Error = "Error al eliminar foto." });
+        }
     }
 
     /// <summary>
@@ -157,14 +151,5 @@ public class FotosEvaluacionController : ControllerBase
             throw new UnauthorizedAccessException("Usuario no autenticado.");
         }
         return userId;
-    }
-
-    /// <summary>
-    /// DTO simple para actualizar metadatos.
-    /// </summary>
-    public class UpdateFotoMetadataDto
-    {
-        public string? Tipo { get; set; }
-        public string? Descripcion { get; set; }
     }
 }

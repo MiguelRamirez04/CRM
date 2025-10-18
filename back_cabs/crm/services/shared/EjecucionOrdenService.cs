@@ -32,55 +32,127 @@ namespace back_cabs.CRM.services.shared
 
         /// <summary>
         /// Crea una nueva ejecución de orden de trabajo.
-        /// Valida que el técnico tenga rol SOPORTE y que la orden exista.
+        /// Valida que el técnico tenga rol SOPORTE, la orden exista, 
+        /// y los campos específicos según el tipo de ejecución.
         /// </summary>
         /// <param name="dto">Datos de la ejecución a crear.</param>
         /// <returns>DTO de respuesta con la ejecución creada.</returns>
-        /// <exception cref="ArgumentException">Si el técnico no tiene rol SOPORTE o la orden no existe.</exception>
+        /// <exception cref="ArgumentException">Si las validaciones fallan.</exception>
         public async Task<EjecucionOrdenResponseDto> CreateEjecucionAsync(EjecucionOrdenCreateRequestDto dto)
         {
             _logger.LogInformation("Creando nueva ejecución para orden {OrdenId} con técnico {TecnicoId}", dto.OrdenId, dto.TecnicoId);
 
-            // Validar que la orden exista
-            var orden = await _readContext.OrdenesTrabajo.FindAsync(dto.OrdenId);
+            // 1. Validar que la orden exista
+            var orden = await _readContext.OrdenesTrabajo
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == dto.OrdenId);
+            
             if (orden == null)
-                throw new ArgumentException("La orden de trabajo especificada no existe.", nameof(dto.OrdenId));
+            {
+                _logger.LogWarning("Orden {OrdenId} no encontrada", dto.OrdenId);
+                throw new ArgumentException($"La orden de trabajo con ID {dto.OrdenId} no existe.", nameof(dto.OrdenId));
+            }
 
-            // Validar que el técnico exista y tenga rol SOPORTE
-            var tecnico = await _readContext.UsuariosAuth.FindAsync(dto.TecnicoId);
-            if (tecnico == null || tecnico.Rol != RolUsuario.SOPORTE.ToString())
-                throw new ArgumentException("El técnico debe existir y tener rol SOPORTE.", nameof(dto.TecnicoId));
+            // 2. Validar que el técnico exista y tenga rol SOPORTE
+            var tecnico = await _readContext.UsuariosAuth
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == dto.TecnicoId);
+            
+            if (tecnico == null)
+            {
+                _logger.LogWarning("Técnico {TecnicoId} no encontrado", dto.TecnicoId);
+                throw new ArgumentException($"El técnico con ID {dto.TecnicoId} no existe.", nameof(dto.TecnicoId));
+            }
 
+            if (tecnico.Rol != RolUsuario.SOPORTE.ToString())
+            {
+                _logger.LogWarning("Usuario {TecnicoId} no tiene rol SOPORTE (tiene {Rol})", dto.TecnicoId, tecnico.Rol);
+                throw new ArgumentException($"El usuario {tecnico.Nombre} no tiene rol SOPORTE.", nameof(dto.TecnicoId));
+            }
+
+            // 3. Validaciones específicas según tipo de ejecución
+            if (dto.TipoEjecucion == TipoEjecucion.CAMPO)
+            {
+                // Para ejecuciones de CAMPO, el vehículo es OBLIGATORIO
+                if (!dto.VehiculoId.HasValue)
+                {
+                    _logger.LogWarning("Ejecución de CAMPO sin VehiculoId");
+                    throw new ArgumentException("Las ejecuciones de tipo CAMPO requieren un vehículo asignado.", nameof(dto.VehiculoId));
+                }
+
+                // Validar que el vehículo exista y esté activo
+                var vehiculo = await _readContext.Vehiculos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(v => v.Id == dto.VehiculoId.Value);
+
+                if (vehiculo == null)
+                {
+                    _logger.LogWarning("Vehículo {VehiculoId} no encontrado", dto.VehiculoId);
+                    throw new ArgumentException($"El vehículo con ID {dto.VehiculoId.Value} no existe.", nameof(dto.VehiculoId));
+                }
+
+                if (!vehiculo.Activo)
+                {
+                    _logger.LogWarning("Vehículo {VehiculoId} está inactivo", dto.VehiculoId);
+                    throw new ArgumentException($"El vehículo {vehiculo.Placas} no está activo.", nameof(dto.VehiculoId));
+                }
+
+                // Si se proporciona KmInicial, validar que sea positivo
+                if (dto.KmInicial.HasValue && dto.KmInicial.Value < 0)
+                {
+                    _logger.LogWarning("KmInicial negativo: {KmInicial}", dto.KmInicial);
+                    throw new ArgumentException("El kilometraje inicial debe ser mayor o igual a cero.", nameof(dto.KmInicial));
+                }
+            }
+            else if (dto.TipoEjecucion == TipoEjecucion.REMOTO)
+            {
+                // Para REMOTO, los campos de vehículo deben ser null
+                if (dto.VehiculoId.HasValue || dto.KmInicial.HasValue)
+                {
+                    _logger.LogWarning("Ejecución REMOTO con datos de vehículo");
+                    throw new ArgumentException("Las ejecuciones de tipo REMOTO no deben incluir datos de vehículo.", nameof(dto.VehiculoId));
+                }
+            }
+
+            // 4. Crear la ejecución con transacción
             var strategy = _writeContext.Database.CreateExecutionStrategy();
 
             var ejecucionResult = await strategy.ExecuteAsync(async () =>
             {
-                // Crear la entidad
-                var ejecucion = new EjecucionOrden
-                {
-                    OrdenId = dto.OrdenId,
-                    TipoEjecucion = dto.TipoEjecucion,
-                    TecnicoId = dto.TecnicoId,
-                    HrInicio = dto.HrInicio,
-                    Comentarios = dto.Comentarios,
-                    VehiculoId = dto.VehiculoId,
-                    KmInicial = dto.KmInicial,
-                    Herramientas = dto.Herramientas,
-                    CodigoSesion = dto.CodigoSesion,
-                    ContrasenaSesion = dto.ContrasenaSesion
-                };
-
-
-                using IDbContextTransaction transaction = await _writeContext.Database.BeginTransactionAsync();
+                using var transaction = await _writeContext.Database.BeginTransactionAsync();
                 try
                 {
+                    // Crear la entidad con datos validados
+                    var ejecucion = new EjecucionOrden
+                    {
+                        OrdenId = dto.OrdenId,
+                        TipoEjecucion = dto.TipoEjecucion,
+                        TecnicoId = dto.TecnicoId,
+                        HrInicio = dto.HrInicio ?? DateTime.Now, // Si no se proporciona, usar NOW
+                        Comentarios = dto.Comentarios,
+                        // Campos específicos CAMPO
+                        VehiculoId = dto.TipoEjecucion == TipoEjecucion.CAMPO ? dto.VehiculoId : null,
+                        KmInicial = dto.TipoEjecucion == TipoEjecucion.CAMPO ? dto.KmInicial : null,
+                        // Campos específicos REMOTO
+                        Herramientas = dto.TipoEjecucion == TipoEjecucion.REMOTO ? dto.Herramientas : null,
+                        CodigoSesion = dto.TipoEjecucion == TipoEjecucion.REMOTO ? dto.CodigoSesion : null,
+                        ContrasenaSesion = dto.TipoEjecucion == TipoEjecucion.REMOTO ? dto.ContrasenaSesion : null
+                    };
+
                     _writeContext.EjecucionesOrden.Add(ejecucion);
                     await _writeContext.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    _logger.LogInformation("Ejecución creada exitosamente con ID {EjecucionId}", ejecucion.Id);
-                    // Mapear a response
-                    return MapToResponseDto(ejecucion);
+                    _logger.LogInformation("Ejecución {EjecucionId} creada exitosamente para orden {OrdenId}", ejecucion.Id, dto.OrdenId);
+
+                    // Recargar con navegaciones para mapear correctamente
+                    var ejecucionCompleta = await _readContext.EjecucionesOrden
+                        .Include(e => e.Tecnico)
+                        .Include(e => e.Vehiculo)
+                        .AsNoTracking()
+                        .FirstAsync(e => e.Id == ejecucion.Id);
+
+                    return MapToResponseDto(ejecucionCompleta);
                 }
                 catch (Exception ex)
                 {
@@ -91,7 +163,6 @@ namespace back_cabs.CRM.services.shared
             });
 
             return ejecucionResult;
-
         }
 
         /// <summary>
@@ -217,30 +288,80 @@ namespace back_cabs.CRM.services.shared
         /// <summary>
         /// Actualiza campos de una ejecución (ej. finalizar con HrFin, KmFinal).
         /// Solo el técnico asignado puede actualizar.
+        /// Valida que KmFinal > KmInicial si aplica.
         /// </summary>
         /// <param name="id">ID de la ejecución.</param>
         /// <param name="usuarioId">ID del usuario que actualiza.</param>
         /// <param name="updates">Campos a actualizar.</param>
         /// <exception cref="UnauthorizedAccessException">Si no es el técnico asignado.</exception>
+        /// <exception cref="KeyNotFoundException">Si la ejecución no existe.</exception>
+        /// <exception cref="ArgumentException">Si las validaciones fallan.</exception>
         public async Task UpdateEjecucionAsync(int id, int usuarioId, EjecucionOrdenUpdateRequestDto updates)
         {
             _logger.LogInformation("Actualizando ejecución {EjecucionId} por usuario {UsuarioId}", id, usuarioId);
 
             var ejecucion = await _writeContext.EjecucionesOrden.FindAsync(id);
             if (ejecucion == null)
+            {
+                _logger.LogWarning("Ejecución {EjecucionId} no encontrada", id);
                 throw new KeyNotFoundException($"Ejecución con ID {id} no encontrada.");
+            }
 
             // Validar que sea el técnico asignado
             if (ejecucion.TecnicoId != usuarioId)
+            {
+                _logger.LogWarning("Usuario {UsuarioId} intentó actualizar ejecución {EjecucionId} asignada a {TecnicoId}", 
+                    usuarioId, id, ejecucion.TecnicoId);
                 throw new UnauthorizedAccessException("Solo el técnico asignado puede actualizar la ejecución.");
+            }
 
-            // Aplicar updates
-            if (updates.HrFin.HasValue) ejecucion.HrFin = updates.HrFin;
-            if (updates.KmFinal.HasValue) ejecucion.KmFinal = updates.KmFinal;
-            if (!string.IsNullOrEmpty(updates.Comentarios))
+            // Validación: Si ya está finalizada, no permitir cambios
+            if (ejecucion.HrFin.HasValue && !updates.Comentarios?.Contains("[CORRECCIÓN]") == true)
+            {
+                _logger.LogWarning("Intento de modificar ejecución {EjecucionId} ya finalizada", id);
+                throw new ArgumentException("La ejecución ya está finalizada. Use comentarios con [CORRECCIÓN] para modificar.");
+            }
+
+            // Aplicar updates con validaciones
+            if (updates.HrFin.HasValue)
+            {
+                // Validar que HrFin > HrInicio
+                if (ejecucion.HrInicio.HasValue && updates.HrFin.Value < ejecucion.HrInicio.Value)
+                {
+                    _logger.LogWarning("HrFin {HrFin} anterior a HrInicio {HrInicio}", updates.HrFin, ejecucion.HrInicio);
+                    throw new ArgumentException("La hora de fin no puede ser anterior a la hora de inicio.");
+                }
+                ejecucion.HrFin = updates.HrFin;
+            }
+
+            if (updates.KmFinal.HasValue)
+            {
+                // Solo aplicable para ejecuciones de CAMPO
+                if (ejecucion.TipoEjecucion != TipoEjecucion.CAMPO)
+                {
+                    _logger.LogWarning("Intento de actualizar KmFinal en ejecución {TipoEjecucion}", ejecucion.TipoEjecucion);
+                    throw new ArgumentException("El kilometraje final solo aplica para ejecuciones de tipo CAMPO.");
+                }
+
+                // Validar que KmFinal >= KmInicial
+                if (ejecucion.KmInicial.HasValue && updates.KmFinal.Value < ejecucion.KmInicial.Value)
+                {
+                    _logger.LogWarning("KmFinal {KmFinal} menor que KmInicial {KmInicial}", updates.KmFinal, ejecucion.KmInicial);
+                    throw new ArgumentException($"El kilometraje final ({updates.KmFinal}) no puede ser menor que el inicial ({ejecucion.KmInicial}).");
+                }
+
+                ejecucion.KmFinal = updates.KmFinal;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updates.Comentarios))
+            {
+                var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+                var nuevoComentario = $"[{timestamp}] {updates.Comentarios}";
+                
                 ejecucion.Comentarios = string.IsNullOrEmpty(ejecucion.Comentarios)
-                    ? updates.Comentarios
-                    : $"{ejecucion.Comentarios}\n{updates.Comentarios}";
+                    ? nuevoComentario
+                    : $"{ejecucion.Comentarios}\n{nuevoComentario}";
+            }
 
             await _writeContext.SaveChangesAsync();
 
@@ -249,25 +370,51 @@ namespace back_cabs.CRM.services.shared
 
         /// <summary>
         /// Mapea una entidad EjecucionOrden a DTO de respuesta.
+        /// Calcula campos derivados como DuracionMinutos, KmRecorridos y EstadoEjecucion.
         /// </summary>
         private EjecucionOrdenResponseDto MapToResponseDto(EjecucionOrden ejecucion)
         {
+            // Calcular duración si ambas fechas existen
+            int? duracionMinutos = null;
+            if (ejecucion.HrInicio.HasValue && ejecucion.HrFin.HasValue)
+            {
+                duracionMinutos = (int)(ejecucion.HrFin.Value - ejecucion.HrInicio.Value).TotalMinutes;
+            }
+
+            // Calcular kilómetros recorridos
+            int? kmRecorridos = null;
+            if (ejecucion.KmInicial.HasValue && ejecucion.KmFinal.HasValue)
+            {
+                kmRecorridos = ejecucion.KmFinal.Value - ejecucion.KmInicial.Value;
+            }
+
+            // Determinar estado
+            string estadoEjecucion = ejecucion.HrFin.HasValue ? "FINALIZADA" : "EN_CURSO";
+
             return new EjecucionOrdenResponseDto
             {
                 Id = ejecucion.Id,
                 OrdenId = ejecucion.OrdenId,
                 TipoEjecucion = ejecucion.TipoEjecucion,
                 TecnicoId = ejecucion.TecnicoId,
-                TecnicoNombre = ejecucion.Tecnico?.Nombre + " " + ejecucion.Tecnico?.Apellido,
+                TecnicoNombre = ejecucion.Tecnico != null 
+                    ? $"{ejecucion.Tecnico.Nombre} {ejecucion.Tecnico.Apellido}".Trim() 
+                    : null,
                 HrInicio = ejecucion.HrInicio,
                 HrFin = ejecucion.HrFin,
+                DuracionMinutos = duracionMinutos,
+                EstadoEjecucion = estadoEjecucion,
                 Comentarios = ejecucion.Comentarios,
+                // Campos CAMPO
                 VehiculoId = ejecucion.VehiculoId,
                 VehiculoPlacas = ejecucion.Vehiculo?.Placas,
                 KmInicial = ejecucion.KmInicial,
                 KmFinal = ejecucion.KmFinal,
+                KmRecorridos = kmRecorridos,
+                // Campos REMOTO
                 Herramientas = ejecucion.Herramientas,
-                CodigoSesion = ejecucion.CodigoSesion
+                CodigoSesion = ejecucion.CodigoSesion,
+                ContrasenaSesion = ejecucion.ContrasenaSesion
             };
         }
     }

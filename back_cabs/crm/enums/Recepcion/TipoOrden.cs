@@ -13,12 +13,14 @@
 // =====================================================================================
 
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.enums
 {
     /// <summary>
     /// Tipo de orden de trabajo: cotización o asesoría
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum TipoOrden
     {
         [Description("Orden de cotización")]

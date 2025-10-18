@@ -16,9 +16,11 @@
 // =====================================================================================
 
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.enums
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EtapaReparacion
     {
         [Description("Recibido")]
@@ -34,6 +36,7 @@ namespace back_cabs.CRM.enums
         OTRO = 4
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ResultadoReparacion
     {
         [Description("Irreparable")]
@@ -52,6 +55,7 @@ namespace back_cabs.CRM.enums
         SIN_REPARAR = 5
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum TipoEntrega
     {
         [Description("Recoge_Cliente")]

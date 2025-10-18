@@ -13,12 +13,14 @@
 // =====================================================================================
 
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.enums
 {
     /// <summary>
     /// Prioridad de la orden de trabajo (1 = más baja, 5 = más alta)
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Prioridad
     {
         [Description("Muy baja")]

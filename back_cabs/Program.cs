@@ -56,12 +56,9 @@ builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationServic
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
-
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>();
-builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
-builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
 // Servicio genérico de almacenamiento de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, back_cabs.CRM.services.Files.FileStorageService>();

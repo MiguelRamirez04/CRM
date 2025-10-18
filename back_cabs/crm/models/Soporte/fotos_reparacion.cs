@@ -55,10 +55,11 @@ namespace back_cabs.CRM.models.Soporte
         [Column("documento_id")]
         public int DocumentoId { get; set; }
 
-        // NOTA: Se asume que existe una entidad 'Documento' que mapea a 'files_documentos'.
-        // Si no existe, deberás crearla.
+        /// <summary>
+        /// Navegación al documento/archivo físico almacenado en files_documentos
+        /// </summary>
         [ForeignKey("DocumentoId")]
-        public virtual FilesDocumento Documento { get; set; } = null!;
+        public virtual FilesDocumento? Documento { get; set; }
 
         /// <summary>
         /// Etapa de la reparación en la que se tomó la foto (Recibido, Proceso, Entregado, Otro).

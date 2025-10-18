@@ -61,14 +61,3 @@
     max-width: calc(100vw - 2rem);
   }
 }
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-  }
-}
-modals on small screens */
-@media (max-width: 640px) {
-  .modal-panel {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-  }
-}

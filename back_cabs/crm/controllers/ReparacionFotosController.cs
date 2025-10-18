@@ -108,7 +108,7 @@ namespace back_cabs.CRM.controllers
             try
             {
                 _logger.LogInformation("Obteniendo fotos de reparación {ReparacionId}", reparacionId);
-                var fotos = await _service.GetFotosByReparacionIdAsync(reparacionId);
+                var fotos = await _service.GetFotosByReparacionAsync(reparacionId);
                 return Ok(fotos);
             }
             catch (Exception ex)
@@ -135,14 +135,14 @@ namespace back_cabs.CRM.controllers
             {
                 _logger.LogInformation("Descargando foto {FotoId} de reparación {ReparacionId}", id, reparacionId);
                 
-                var result = await _service.DownloadFotoAsync(id);
+                var result = await _service.GetFotoFileAsync(id);
                 if (result == null)
                 {
                     _logger.LogWarning("Foto {FotoId} no encontrada", id);
                     return NotFound(new { Error = "Foto no encontrada." });
                 }
 
-                return File(result.Value.fileStream, result.Value.contentType, result.Value.fileName);
+                return File(result.Value.FileBytes, result.Value.MimeType, result.Value.FileName);
             }
             catch (Exception ex)
             {
@@ -170,13 +170,12 @@ namespace back_cabs.CRM.controllers
                 _logger.LogInformation("Usuario {UsuarioId} eliminando foto {FotoId} de reparación {ReparacionId}", 
                     usuarioId, id, reparacionId);
 
-                await _service.DeleteFotoAsync(id);
+                var deleted = await _service.DeleteFotoAsync(id, usuarioId);
+                if (!deleted)
+                {
+                    return NotFound(new { Error = "Foto no encontrada." });
+                }
                 return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "Foto {FotoId} no encontrada", id);
-                return NotFound(new { Error = ex.Message });
             }
             catch (Exception ex)
             {

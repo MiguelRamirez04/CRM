@@ -54,6 +54,16 @@ namespace back_cabs.CRM.models.Shared
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
 
         // --- Propiedades de Navegación ---
+        
+        /// <summary>
+        /// Navegación al detalle de evaluación asociado
+        /// </summary>
+        [ForeignKey("DetalleId")]
+        public virtual EvaluacionDetalle? Detalle { get; set; }
+
+        /// <summary>
+        /// Navegación al documento/archivo físico
+        /// </summary>
         [ForeignKey("DocumentoId")]
         public virtual back_cabs.CRM.models.Files.FilesDocumento? Documento { get; set; }
     }

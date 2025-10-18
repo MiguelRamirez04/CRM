@@ -106,11 +106,13 @@ public class FileStorageService : IFileStorageService
 
         if (existingFile != null)
         {
-            _logger.LogWarning(
-                "Archivo duplicado detectado. Checksum: {Checksum}, DocumentoId: {Id}",
+            _logger.LogInformation(
+                "Archivo duplicado detectado - Reutilizando documento existente. Checksum: {Checksum}, DocumentoId: {Id}",
                 checksum, existingFile.Id);
-            throw new InvalidOperationException(
-                $"Este archivo ya fue subido anteriormente (ID: {existingFile.Id}).");
+            
+            // Retornar el documento existente en lugar de lanzar excepción
+            // Esto permite reutilizar archivos idénticos (ej: misma foto en diferentes relaciones)
+            return existingFile;
         }
 
         // 4. Determinar si es imagen

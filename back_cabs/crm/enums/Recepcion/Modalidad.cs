@@ -13,12 +13,14 @@
 // =====================================================================================
 
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.enums
 {
     /// <summary>
     /// Modalidad de la orden de trabajo: presencial o virtual
     /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Modalidad
     {
         [Description("Asesoría presencial")]

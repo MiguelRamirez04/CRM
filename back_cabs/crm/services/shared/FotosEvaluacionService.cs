@@ -3,32 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using back_cabs.CRM.contexts;
-using back_cabs.CRM.models.Soporte;
-using back_cabs.CRM.DTOs.Request;
-using back_cabs.CRM.DTOs.Response;
+using back_cabs.CRM.models.Shared;
+using back_cabs.CRM.DTOs.shared;
 using back_cabs.CRM.services.Files;
 using back_cabs.CRM.enums.Files;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace back_cabs.CRM.services.Soporte
+namespace back_cabs.CRM.services.shared
 {
     /// <summary>
-    /// Servicio para gestionar fotos de reparaciones.
+    /// Servicio para gestionar fotos de evaluaciones.
     /// Delega el almacenamiento físico a FileStorageService.
     /// </summary>
-    public class ReparacionFotoService
+    public class FotosEvaluacionService
     {
         private readonly ReadOnlyContext _readContext;
         private readonly WriteContext _writeContext;
         private readonly IFileStorageService _fileStorageService;
-        private readonly ILogger<ReparacionFotoService> _logger;
+        private readonly ILogger<FotosEvaluacionService> _logger;
 
-        public ReparacionFotoService(
+        public FotosEvaluacionService(
             ReadOnlyContext readContext,
             WriteContext writeContext,
             IFileStorageService fileStorageService,
-            ILogger<ReparacionFotoService> logger)
+            ILogger<FotosEvaluacionService> logger)
         {
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
@@ -39,64 +38,90 @@ namespace back_cabs.CRM.services.Soporte
         #region Create
 
         /// <summary>
-        /// Sube una foto para una reparación
+        /// Sube una foto para una evaluación
         /// </summary>
-        public async Task<ReparacionFotoResponseDto> UploadFotoAsync(
-            int reparacionId, 
-            ReparacionFotoUploadRequestDto dto, 
+        public async Task<EvaluacionFotoResponseDto> CreateFotoAsync(
+            EvaluacionFotoRequestDto dto, 
             int usuarioId)
         {
             _logger.LogInformation(
-                "Subiendo foto para reparacion {ReparacionId} por usuario {UsuarioId}", 
-                reparacionId, usuarioId);
+                "Subiendo foto para detalle evaluacion {DetalleId} por usuario {UsuarioId}", 
+                dto.DetalleId, usuarioId);
 
-            // Validar que la reparación existe
-            var reparacionExists = await _readContext.Reparaciones
-                .AnyAsync(r => r.Id == reparacionId);
+            // Validar que el detalle de evaluación existe
+            var detalleExists = await _readContext.EvaluacionesDetalles
+                .AnyAsync(d => d.Id == dto.DetalleId);
             
-            if (!reparacionExists)
+            if (!detalleExists)
             {
-                throw new KeyNotFoundException($"Reparacion con ID {reparacionId} no encontrada");
+                throw new KeyNotFoundException($"Detalle de evaluacion con ID {dto.DetalleId} no encontrado");
             }
 
             // Delegar subida a FileStorageService
             var documento = await _fileStorageService.UploadFileAsync(
                 dto.Archivo,
-                TipoEntidadDocumento.Reparacion,
-                reparacionId,
+                TipoEntidadDocumento.Evaluacion,
+                dto.DetalleId,
                 usuarioId,
                 dto.Descripcion,
-                dto.Etapa
+                dto.Tipo
             );
 
-            // Crear registro en reparacion_fotos
-            var fotoReparacion = new ReparacionFoto
+            // Verificar si ya existe la relación DetalleId + DocumentoId
+            var fotoExistente = await _readContext.EvaluacionesFotos
+                .FirstOrDefaultAsync(f => 
+                    f.DetalleId == dto.DetalleId && 
+                    f.DocumentoId == documento.Id);
+
+            if (fotoExistente != null)
             {
-                ReparacionId = reparacionId,
+                _logger.LogInformation(
+                    "Relación foto existente encontrada - Retornando registro {FotoId} (DetalleId: {DetalleId}, DocumentoId: {DocumentoId})",
+                    fotoExistente.Id, dto.DetalleId, documento.Id);
+
+                return new EvaluacionFotoResponseDto
+                {
+                    Id = fotoExistente.Id,
+                    DetalleId = fotoExistente.DetalleId,
+                    DocumentoId = documento.Id,
+                    NombreArchivo = documento.NombreArchivo,
+                    MimeType = documento.MimeType,
+                    TamanoBytes = documento.TamanoBytes,
+                    Tipo = fotoExistente.Tipo,
+                    Descripcion = fotoExistente.Descripcion,
+                    CreadoEn = fotoExistente.CreadoEn
+                };
+            }
+
+            // Crear registro en evaluacion_fotos
+            var fotoEvaluacion = new EvaluacionFoto
+            {
+                DetalleId = dto.DetalleId,
                 DocumentoId = documento.Id,
-                Etapa = dto.Etapa,
+                Tipo = dto.Tipo,
                 Descripcion = dto.Descripcion,
                 CreadoEn = DateTime.UtcNow
             };
 
-            await _writeContext.ReparacionesFotos.AddAsync(fotoReparacion);
+            await _writeContext.EvaluacionesFotos.AddAsync(fotoEvaluacion);
             await _writeContext.SaveChangesAsync();
 
             _logger.LogInformation(
                 "Foto {FotoId} creada con documento {DocumentoId}", 
-                fotoReparacion.Id, documento.Id);
+                fotoEvaluacion.Id, documento.Id);
 
-            return new ReparacionFotoResponseDto
+            return new EvaluacionFotoResponseDto
             {
-                Id = fotoReparacion.Id,
-                ReparacionId = fotoReparacion.ReparacionId,
+                Id = fotoEvaluacion.Id,
+                DetalleId = fotoEvaluacion.DetalleId,
                 DocumentoId = documento.Id,
                 NombreArchivo = documento.NombreArchivo,
                 MimeType = documento.MimeType,
                 TamanoBytes = documento.TamanoBytes,
-                Etapa = fotoReparacion.Etapa,
-                Descripcion = fotoReparacion.Descripcion,
-                CreadoEn = fotoReparacion.CreadoEn
+                Tipo = fotoEvaluacion.Tipo,
+                Descripcion = fotoEvaluacion.Descripcion,
+                CreadoEn = fotoEvaluacion.CreadoEn,
+                UrlDescarga = $"/api/FotosEvaluacion/{fotoEvaluacion.Id}/download"
             };
         }
 
@@ -105,56 +130,82 @@ namespace back_cabs.CRM.services.Soporte
         #region Read
 
         /// <summary>
-        /// Obtiene todas las fotos de una reparación
+        /// Obtiene todas las fotos de evaluación
         /// </summary>
-        public async Task<List<ReparacionFotoResponseDto>> GetFotosByReparacionAsync(int reparacionId)
+        public async Task<List<EvaluacionFotoResponseDto>> GetAllFotosAsync()
         {
-            var fotos = await _readContext.ReparacionesFotos
+            var fotos = await _readContext.EvaluacionesFotos
                 .Include(f => f.Documento)
-                .Where(f => f.ReparacionId == reparacionId 
+                .Where(f => f.Documento != null && f.Documento.Activo)
+                .OrderByDescending(f => f.CreadoEn)
+                .ToListAsync();
+
+            return fotos.Select(f => new EvaluacionFotoResponseDto
+            {
+                Id = f.Id,
+                DetalleId = f.DetalleId,
+                DocumentoId = f.DocumentoId,
+                NombreArchivo = f.Documento?.NombreArchivo ?? "desconocido",
+                MimeType = f.Documento?.MimeType ?? "application/octet-stream",
+                TamanoBytes = f.Documento?.TamanoBytes ?? 0,
+                Tipo = f.Tipo,
+                Descripcion = f.Descripcion,
+                CreadoEn = f.CreadoEn,
+                UrlDescarga = $"/api/FotosEvaluacion/{f.Id}/download"
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Obtiene fotos por detalle de evaluación
+        /// </summary>
+        public async Task<List<EvaluacionFotoResponseDto>> GetFotosByDetalleAsync(int detalleId)
+        {
+            var fotos = await _readContext.EvaluacionesFotos
+                .Include(f => f.Documento)
+                .Where(f => f.DetalleId == detalleId 
                     && f.Documento != null 
                     && f.Documento.Activo)
                 .OrderByDescending(f => f.CreadoEn)
                 .ToListAsync();
 
-            return fotos.Select(f => new ReparacionFotoResponseDto
+            return fotos.Select(f => new EvaluacionFotoResponseDto
             {
                 Id = f.Id,
-                ReparacionId = f.ReparacionId,
+                DetalleId = f.DetalleId,
                 DocumentoId = f.DocumentoId,
                 NombreArchivo = f.Documento?.NombreArchivo ?? "desconocido",
                 MimeType = f.Documento?.MimeType ?? "application/octet-stream",
                 TamanoBytes = f.Documento?.TamanoBytes ?? 0,
-                Etapa = f.Etapa,
+                Tipo = f.Tipo,
                 Descripcion = f.Descripcion,
                 CreadoEn = f.CreadoEn,
-                UrlDescarga = $"/api/reparaciones/{reparacionId}/fotos/{f.Id}/download"
+                UrlDescarga = $"/api/FotosEvaluacion/{f.Id}/download"
             }).ToList();
         }
 
         /// <summary>
         /// Obtiene una foto por su ID
         /// </summary>
-        public async Task<ReparacionFotoResponseDto?> GetFotoByIdAsync(int fotoId)
+        public async Task<EvaluacionFotoResponseDto?> GetFotoByIdAsync(int fotoId)
         {
-            var foto = await _readContext.ReparacionesFotos
+            var foto = await _readContext.EvaluacionesFotos
                 .Include(f => f.Documento)
                 .FirstOrDefaultAsync(f => f.Id == fotoId);
 
             if (foto == null) return null;
 
-            return new ReparacionFotoResponseDto
+            return new EvaluacionFotoResponseDto
             {
                 Id = foto.Id,
-                ReparacionId = foto.ReparacionId,
+                DetalleId = foto.DetalleId,
                 DocumentoId = foto.DocumentoId,
                 NombreArchivo = foto.Documento?.NombreArchivo ?? "desconocido",
                 MimeType = foto.Documento?.MimeType ?? "application/octet-stream",
                 TamanoBytes = foto.Documento?.TamanoBytes ?? 0,
-                Etapa = foto.Etapa,
+                Tipo = foto.Tipo,
                 Descripcion = foto.Descripcion,
                 CreadoEn = foto.CreadoEn,
-                UrlDescarga = $"/api/reparaciones/{foto.ReparacionId}/fotos/{foto.Id}/download"
+                UrlDescarga = $"/api/FotosEvaluacion/{foto.Id}/download"
             };
         }
 
@@ -163,7 +214,7 @@ namespace back_cabs.CRM.services.Soporte
         /// </summary>
         public async Task<(byte[] FileBytes, string FileName, string MimeType)?> GetFotoFileAsync(int fotoId)
         {
-            var foto = await _readContext.ReparacionesFotos
+            var foto = await _readContext.EvaluacionesFotos
                 .Include(f => f.Documento)
                 .FirstOrDefaultAsync(f => f.Id == fotoId);
 
@@ -200,7 +251,7 @@ namespace back_cabs.CRM.services.Soporte
         {
             _logger.LogInformation("Eliminando foto {FotoId} por usuario {UsuarioId}", fotoId, usuarioId);
 
-            var fotoAEliminar = await _writeContext.ReparacionesFotos
+            var fotoAEliminar = await _writeContext.EvaluacionesFotos
                 .FirstOrDefaultAsync(f => f.Id == fotoId);
 
             if (fotoAEliminar == null)
@@ -218,8 +269,8 @@ namespace back_cabs.CRM.services.Soporte
                 return false;
             }
 
-            // Eliminar registro de reparacion_fotos
-            _writeContext.ReparacionesFotos.Remove(fotoAEliminar);
+            // Eliminar registro de evaluacion_fotos
+            _writeContext.EvaluacionesFotos.Remove(fotoAEliminar);
             await _writeContext.SaveChangesAsync();
 
             _logger.LogInformation("Foto {FotoId} eliminada exitosamente", fotoId);
