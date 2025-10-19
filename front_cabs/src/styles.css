@@ -1,6 +1,13 @@
-/* TailwindCSS Imports */
+/* Montserrat Import */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+/* Tailwind v4 */
 @import 'tailwindcss';
 
+/* Declara Montserrat como la fuente "sans" por defecto */
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+}
 
 
 /* Minimal Global Styles */
@@ -8,6 +15,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  @apply font-sans;
 }
 
 /* Custom Scrollbar */
