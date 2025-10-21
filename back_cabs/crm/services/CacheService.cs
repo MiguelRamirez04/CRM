@@ -13,6 +13,7 @@ namespace back_cabs.CRM.services
     public class CacheService : ICacheService
     {
         private readonly IDistributedCache _cache;
+        private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
         public CacheService(IDistributedCache cache)
         {
@@ -23,19 +24,13 @@ namespace back_cabs.CRM.services
         {
             try
             {
-                string? cachedValue = await _cache.GetStringAsync(key);
-
-                if (string.IsNullOrEmpty(cachedValue))
-                {
-                    return default;
-                }
-
-                return JsonSerializer.Deserialize<T>(cachedValue);
+                var json = await _cache.GetStringAsync(key);
+                if (string.IsNullOrEmpty(json)) return default;
+                return JsonSerializer.Deserialize<T>(json, _jsonOptions);
             }
-            catch (Exception ex)
+            catch
             {
-                // Manejar la excepción (log, etc.)
-                Console.WriteLine($"Error al obtener del caché: {ex.Message}");
+                // Fall back seguro: si falla el cache, devolvemos null para que el flujo normal haga la consulta
                 return default;
             }
         }
@@ -46,14 +41,12 @@ namespace back_cabs.CRM.services
             {
                 var options = new DistributedCacheEntryOptions()
                     .SetAbsoluteExpiration(expiration);
-
-                string jsonValue = JsonSerializer.Serialize(value);
-                await _cache.SetStringAsync(key, jsonValue, options);
+                var json = JsonSerializer.Serialize(value, _jsonOptions);
+                await _cache.SetStringAsync(key, json, options);
             }
-            catch (Exception ex)
+            catch
             {
-                // Manejar la excepción (log, etc.)
-                Console.WriteLine($"Error al guardar en el caché: {ex.Message}");
+                // Ignorar fallo de cache para no romper la respuesta
             }
         }
 
@@ -63,10 +56,9 @@ namespace back_cabs.CRM.services
             {
                 await _cache.RemoveAsync(key);
             }
-            catch (Exception ex)
+            catch
             {
-                // Manejar la excepción (log, etc.)
-                Console.WriteLine($"Error al eliminar del caché: {ex.Message}");
+                // Ignorar
             }
         }
     }

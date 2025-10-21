@@ -3,6 +3,8 @@ using CRM.DTOs.Response;
 using back_cabs.CRM.services.Fleet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
+using back_cabs.CRM.services;
 
 namespace back_cabs.CRM.controllers.Fleet;
 
@@ -13,20 +15,27 @@ public class VehiculosController : ControllerBase
 {
     private readonly VehiculosService _service;
     private readonly ILogger<VehiculosController> _logger;
+    private readonly ICacheService _cache;
 
-    public VehiculosController(VehiculosService service, ILogger<VehiculosController> logger)
+    public VehiculosController(VehiculosService service, ILogger<VehiculosController> logger, ICacheService cache)
     {
         _service = service;
         _logger = logger;
+        _cache = cache;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<VehiculoResponseDto>), 200)]
     public async Task<IActionResult> GetAll()
     {
+        var key = "vehiculos:all";
+        var cached = await _cache.GetAsync<IEnumerable<VehiculoResponseDto>>(key);
+        if (cached != null) return Ok(cached);
+
         try
         {
             var resultado = await _service.ObtenerTodosAsync();
+            await _cache.SetAsync(key, resultado, TimeSpan.FromMinutes(10));
             return Ok(resultado);
         }
         catch (Exception ex)
@@ -41,12 +50,16 @@ public class VehiculosController : ControllerBase
     [ProducesResponseType(404)]
     public async Task<IActionResult> GetById(int id)
     {
+        var key = $"vehiculos:id:{id}";
+        var cached = await _cache.GetAsync<VehiculoResponseDto>(key);
+        if (cached != null) return Ok(cached);
+
         try
         {
             var resultado = await _service.ObtenerPorIdAsync(id);
-            if (resultado == null)
-                return NotFound(new { message = $"Vehículo con ID {id} no encontrado." });
+            if (resultado == null) return NotFound(new { message = $"Vehículo con ID {id} no encontrado." });
 
+            await _cache.SetAsync(key, resultado, TimeSpan.FromMinutes(10));
             return Ok(resultado);
         }
         catch (Exception ex)

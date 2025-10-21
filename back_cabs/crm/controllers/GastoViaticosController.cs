@@ -7,6 +7,7 @@ using back_cabs.CRM.services.shared;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using back_cabs.CRM.Services.Shared;
+using back_cabs.CRM.services;
 using CRM.DTOs.Response;
 
 namespace back_cabs.CRM.controllers
@@ -18,11 +19,13 @@ namespace back_cabs.CRM.controllers
     {
         private readonly GastoViaticoService _service;
         private readonly ILogger<GastoViaticosController> _logger;
+        private readonly ICacheService _cache;
 
-        public GastoViaticosController(GastoViaticoService service, ILogger<GastoViaticosController> logger)
+        public GastoViaticosController(GastoViaticoService service, ILogger<GastoViaticosController> logger, ICacheService cache)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cache = cache;
         }
 
         /// <summary>
@@ -45,6 +48,8 @@ namespace back_cabs.CRM.controllers
             try
             {
                 var result = await _service.CreateViaticoAsync(dto);
+                // invalidar listas
+                await _cache.RemoveAsync("viaticos:list:all");
                 _logger.LogInformation("Viático creado exitosamente con ID {Id}", result.Id);
                 return CreatedAtAction(nameof(GetViaticoById), new { id = result.Id }, result);
             }
@@ -71,21 +76,14 @@ namespace back_cabs.CRM.controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetViaticoById(int id)
         {
-            try
-            {
-                var result = await _service.GetViaticoByIdAsync(id);
-                if (result == null)
-                {
-                    _logger.LogWarning("Viático con ID {Id} no encontrado", id);
-                    return NotFound($"Viático con ID {id} no encontrado");
-                }
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener viático con ID {Id}", id);
-                return StatusCode(500, "Error interno del servidor");
-            }
+            var key = $"viatico:id:{id}";
+            var cached = await _cache.GetAsync<GastoViaticoResponseDto>(key);
+            if (cached != null) return Ok(cached);
+
+            var result = await _service.GetViaticoByIdAsync(id);
+            if (result == null) return NotFound();
+            await _cache.SetAsync(key, result, TimeSpan.FromMinutes(10));
+            return Ok(result);
         }
 
         /// <summary>
@@ -113,17 +111,14 @@ namespace back_cabs.CRM.controllers
             [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1,
             [FromQuery][Range(1, 100)] int pageSize = 10)
         {
-            try
-            {
-                var result = await _service.GetViaticosAsync(
-                    usuarioId, tipoViatico, estadoGasto, fechaDesde, fechaHasta, ordenId, pageNumber, pageSize);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al listar viáticos");
-                return StatusCode(500, "Error interno del servidor");
-            }
+            var key = $"viaticos:list:{/*build from filters*/ "all"}";
+            var cached = await _cache.GetAsync<PaginatedResponseDto<GastoViaticoResponseDto>>(key);
+            if (cached != null) return Ok(cached);
+
+            var result = await _service.GetViaticosAsync(
+                usuarioId, tipoViatico, estadoGasto, fechaDesde, fechaHasta, ordenId, pageNumber, pageSize);
+            await _cache.SetAsync(key, result, TimeSpan.FromMinutes(5));
+            return Ok(result);
         }
 
         /// <summary>

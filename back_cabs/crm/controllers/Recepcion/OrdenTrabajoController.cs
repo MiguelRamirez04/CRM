@@ -88,15 +88,18 @@ namespace back_cabs.CRM.controllers.Recepcion
         private readonly OrdenTrabajoService _ordenTrabajoService;
         private readonly ClientesCompletosService _clientesCompletosService;
         private readonly ILogger<OrdenTrabajoController> _logger;
+        private readonly ICacheService _cacheService; // <-- nuevo
 
         public OrdenTrabajoController(
             OrdenTrabajoService ordenTrabajoService,
             ClientesCompletosService clientesCompletosService,
-            ILogger<OrdenTrabajoController> logger)
+            ILogger<OrdenTrabajoController> logger,
+            ICacheService cacheService) // <-- inyectar
         {
             _ordenTrabajoService = ordenTrabajoService ?? throw new ArgumentNullException(nameof(ordenTrabajoService));
             _clientesCompletosService = clientesCompletosService ?? throw new ArgumentNullException(nameof(clientesCompletosService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cacheService = cacheService;
         }
 
         // ----------------------------------------------------------------------
@@ -150,6 +153,10 @@ namespace back_cabs.CRM.controllers.Recepcion
             [FromQuery] int? take = null,
             [FromQuery] string? estado = null)
         {
+            string cacheKey = $"ordenes:all:{skip ?? 0}:{take ?? 0}:{estado ?? "all"}";
+            var cached = await _cacheService.GetAsync<IEnumerable<OrdenTrabajoResponseDto>>(cacheKey);
+            if (cached != null) return Ok(cached);
+
             try
             {
                 _logger.LogInformation("Obteniendo órdenes de trabajo. Estado={Estado}, Skip={Skip}, Take={Take}", 
@@ -173,6 +180,7 @@ namespace back_cabs.CRM.controllers.Recepcion
 
                 var ordenes = await _ordenTrabajoService.ObtenerTodasLasOrdenesAsync(skip, take, estado);
 
+                await _cacheService.SetAsync(cacheKey, ordenes, TimeSpan.FromMinutes(5));
                 return Ok(ordenes);
             }
             catch (Exception ex)
@@ -265,6 +273,10 @@ namespace back_cabs.CRM.controllers.Recepcion
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult<OrdenTrabajoResponseDto>> GetOrdenPorId(int id)
         {
+            string cacheKey = $"ordenes:id:{id}";
+            var cached = await _cacheService.GetAsync<OrdenTrabajoResponseDto>(cacheKey);
+            if (cached != null) return Ok(cached);
+
             try
             {
                 _logger.LogInformation("Buscando orden de trabajo con ID: {Id}", id);
@@ -281,6 +293,7 @@ namespace back_cabs.CRM.controllers.Recepcion
                 }
 
                 _logger.LogInformation("Orden encontrada exitosamente: ID {Id}", id);
+                await _cacheService.SetAsync(cacheKey, orden, TimeSpan.FromMinutes(10));
                 return Ok(orden);
             }
             catch (Exception ex)
@@ -465,6 +478,10 @@ namespace back_cabs.CRM.controllers.Recepcion
                 }
 
                 _logger.LogInformation("Orden actualizada exitosamente: ID {Id}", id);
+
+                // invalidar cache por id y lista
+                await _cacheService.RemoveAsync($"ordenes:id:{id}");
+                await _cacheService.RemoveAsync("ordenes:all:0:0:all");
 
                 return NoContent();
             }

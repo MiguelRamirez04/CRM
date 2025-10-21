@@ -14,27 +14,25 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using back_cabs.CRM.Middleware;
 using StackExchange.Redis;
+using back_cabs.CRM.services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-//Configuracion de Redis
+// Redis cache registration (si aún no está)
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
     options.InstanceName = "CABS_";
 });
 
-//Conexion multiplexer
+// opcional: ConnectionMultiplexer si lo usaras directamente
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var configurationOptions = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
-    return ConnectionMultiplexer.Connect(configurationOptions);
+    var cfg = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
+    return ConnectionMultiplexer.Connect(cfg);
 });
 
+// registrar CacheService
 builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Configurar Serilog temprano para capturar logs de startup

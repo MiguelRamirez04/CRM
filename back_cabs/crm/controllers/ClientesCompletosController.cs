@@ -21,11 +21,13 @@ namespace back_cabs.CRM.controllers
     {
         private readonly ClientesCompletosService _service;
         private readonly ILogger<ClientesCompletosController> _logger;
+        private readonly ICacheService _cache; // nuevo
 
-        public ClientesCompletosController(ClientesCompletosService service, ILogger<ClientesCompletosController> logger)
+        public ClientesCompletosController(ClientesCompletosService service, ILogger<ClientesCompletosController> logger, ICacheService cache)
         {
             _service = service;
             _logger = logger;
+            _cache = cache;
         }
 
         /// <summary>
@@ -59,6 +61,10 @@ namespace back_cabs.CRM.controllers
                 _logger.LogInformation("Obteniendo clientes completos con paginación. Página {Pagina}, Resultados por página {PorPagina}, Búsqueda general: {Busqueda}",
                     pagina, porPagina, busqueda ?? "ninguna");
 
+                string key = $"clientes:pag:{busqueda ?? "all"}:{pagina}:{porPagina}";
+                var cached = await _cache.GetAsync<PaginatedResponseDto<ClienteResumenDto>>(key);
+                if (cached != null) return Ok(cached);
+
                 var request = new ClientesCompletosPaginadoRequestDto
                 {
                     NombreBusqueda = busqueda,
@@ -67,6 +73,7 @@ namespace back_cabs.CRM.controllers
                 };
 
                 var resultado = await _service.GetClientesPaginadosAsync(request);
+                await _cache.SetAsync(key, resultado, TimeSpan.FromMinutes(5));
                 return Ok(resultado);
             }
             catch (Exception ex)
