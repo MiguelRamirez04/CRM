@@ -28,6 +28,7 @@ export class SidebarComponent {
 
   user$: Observable<User | null>;
 
+<<<<<<< HEAD
   // 👇 ============ SECCIÓN MODIFICADA ============ 👇
   mainNav: NavItem[] = [
     { label: 'Resumen', icon: 'resumen', link: '/dashboard' },
@@ -40,6 +41,15 @@ export class SidebarComponent {
     { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
   ];
   // 👆 ============ FIN DE SECCIÓN MODIFICADA ============ 👆
+=======
+  mainNav: NavItem[] = [
+    { label: 'Resumen', icon: 'resumen', link: '/dashboard' },
+    { label: 'Registros', icon: 'registros', link: 'src/app/modules/recepcion/pages/dashboard' },
+    { label: 'Reportes', icon: 'reportes', link: '/dashboard/profile' },
+    { label: 'Usuarios', icon: 'usuarios', link: '/dashboard/usuarios' },
+    { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
+  ];
+>>>>>>> d708b7e (🎨 Modificando estilos del navbar)
 
   secondaryNav: NavItem[] = [
     { label: 'Notificaciones', icon: 'notificaciones', link: '/dashboard/notificaciones', notify: true },
@@ -66,6 +76,7 @@ constructor(
   this.user$ = this.authService.currentUser$;
 }
 
+<<<<<<< HEAD
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
   }
@@ -78,4 +89,17 @@ constructor(
   isActive(link?: string): boolean {
     return !!link && this.router.url === link;
   }
+=======
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+  }
+  
+
+  toggleBandejaPerfil(): void {
+    this.mostrarBandejaPerfil = !this.mostrarBandejaPerfil;
+  }
+  isActive(link?: string): boolean {
+    return !!link && this.router.url === link;
+  }
+>>>>>>> d708b7e (🎨 Modificando estilos del navbar)
 }
