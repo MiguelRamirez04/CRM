@@ -43,6 +43,8 @@ builder.Services.AddDbContext<WriteContext>(options =>
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IVehiculoRepository, back_cabs.CRM.repositories.Shared.VehiculoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IEjecucionOrdenRepository, back_cabs.CRM.repositories.Recepcion.EjecucionOrdenRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository, back_cabs.CRM.repositories.Auth.UsuarioAuthRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IOrdenTrabajoRepository, back_cabs.CRM.repositories.Recepcion.OrdenTrabajoRepository>(); // Assuming this is the correct path
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRepository, back_cabs.CRM.repositories.ClientesLegacyValidationRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<ServicioJwt>();

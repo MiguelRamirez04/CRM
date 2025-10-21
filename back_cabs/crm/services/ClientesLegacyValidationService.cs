@@ -12,10 +12,11 @@ using back_cabs.CRM.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using back_cabs.CRM.Interfaces;
 
 namespace back_cabs.CRM.services
 {
-    public class ClientesLegacyValidationService
+    public class ClientesLegacyValidationService : IClientesLegacyValidationRepository
     {
         private readonly ReadOnlyContext _readContext;
         private readonly ILogger<ClientesLegacyValidationService> _logger;
