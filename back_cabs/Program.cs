@@ -56,6 +56,10 @@ builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
 
+//Interfaces del los servicios que acabamos de realizar
+// Registra el repositorio para que el servicio pueda usarlo
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
+
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
@@ -100,21 +104,21 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SecureFrontend", policy =>
     {
         policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:5176", "https://localhost:5176") // Angular
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
-              .SetIsOriginAllowedToAllowWildcardSubdomains()
-              .WithExposedHeaders("X-CSRF-Token"); // Para CSRF protection
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
+            .WithExposedHeaders("X-CSRF-Token"); // Para CSRF protection
     });
     
     // Política más restrictiva para producción
     options.AddPolicy("Production", policy =>
     {
         policy.WithOrigins("https://your-production-domain.com")
-              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token")
-              .AllowCredentials()
-              .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight 24h
+            .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token")
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight 24h
     });
 });
 
