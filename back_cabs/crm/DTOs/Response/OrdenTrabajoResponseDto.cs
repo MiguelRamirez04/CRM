@@ -29,6 +29,8 @@ namespace CRM.DTOs.Response
         public bool? NuevoCliente { get; init; }
         [JsonPropertyName("nombreCliente")]
         public string? NombreCliente { get; init; }
+        [JsonPropertyName("clienteTelefono")]
+        public long? ClienteTelefono { get; init; }
         [JsonPropertyName("clienteId")]
         public int? ClienteId { get; init; }
         [JsonPropertyName("prioridad")]
@@ -120,5 +122,30 @@ namespace CRM.DTOs.Response
         /// </summary>
         [JsonPropertyName("legacyClientId")]
         public int? LegacyClientId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para clientes nuevos registrados en órdenes de trabajo.
+    /// Solo contiene nombre y teléfono.
+    /// </summary>
+    public class ClienteNuevoDto
+    {
+        /// <summary>
+        /// Nombre del cliente nuevo
+        /// </summary>
+        [JsonPropertyName("nombreCliente")]
+        public string NombreCliente { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Teléfono del cliente nuevo
+        /// </summary>
+        [JsonPropertyName("telefono")]
+        public long? Telefono { get; set; }
+        
+        /// <summary>
+        /// Número de órdenes asociadas a este cliente
+        /// </summary>
+        [JsonPropertyName("numeroOrdenes")]
+        public int NumeroOrdenes { get; set; }
     }
 }

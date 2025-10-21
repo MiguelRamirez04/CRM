@@ -165,33 +165,32 @@ namespace back_cabs.CRM.services.Recepcion
                     }
                 }
 
-                var nuevaOrden = new OrdenTrabajo
-                {
-                    // Manejo del modelo híbrido de clientes
-                    NuevoCliente = request.NuevoCliente,
-                    // Para clientes nuevos, ClienteId es NULL; para legacy, usar el ClienteId proporcionado
-                    ClienteId = request.NuevoCliente ? null : request.ClienteId,
-                    NombreCliente = request.NuevoCliente ? request.NombreCliente : null, // Solo para clientes nuevos
-                    CreadoPorUserId = request.CreadoPorUserId,
-                    AsignadaAUserId = request.CreadoPorUserId, // Por ahora mismo usuario
-                    Notas = request.Notas,
-                    CitaProgramadaInicio = request.CitaProgramadaInicio,
-                    CitaProgramadaFin = request.CitaProgramadaFin,
-                    Modalidad = request.Modalidad,
-                    TipoOrden = request.TipoOrden,
-                    Prioridad = request.Prioridad,
-                    Estado = estadoOrden.ToDbValue(), // Usar el valor de la BD desde el enum
-                    UbicacionText = request.UbicacionText,
-                    RequiereFactura = request.RequiereFactura,
-                    EstadoFacturado = request.EstadoFacturado, // Ya viene como string desde el DTO
-                    FacturaFolio = request.FacturaFolio?.ToString(), // int? a string?
-                    CostoEstimado = request.CostoEstimado,
-                    CostoReal = request.CostoReal,
-                    CreadoEn = DateTime.UtcNow,
-                    ActualizadoEn = DateTime.UtcNow
-                };
-
-                _logger.LogInformation("Intentando guardar orden con ClienteId: {ClienteId}, NuevoCliente: {NuevoCliente}", 
+            var nuevaOrden = new OrdenTrabajo
+            {
+                // Manejo del modelo híbrido de clientes
+                NuevoCliente = request.NuevoCliente,
+                // Para clientes nuevos, ClienteId es NULL; para legacy, usar el ClienteId proporcionado
+                ClienteId = request.NuevoCliente ? null : request.ClienteId,
+                NombreCliente = request.NuevoCliente ? request.NombreCliente : null, // Solo para clientes nuevos
+                ClienteTelefono = request.NuevoCliente ? request.ClienteTelefono : null, // Solo para clientes nuevos
+                CreadoPorUserId = request.CreadoPorUserId,
+                AsignadaAUserId = request.CreadoPorUserId, // Por ahora mismo usuario
+                Notas = request.Notas,
+                CitaProgramadaInicio = request.CitaProgramadaInicio,
+                CitaProgramadaFin = request.CitaProgramadaFin,
+                Modalidad = request.Modalidad,
+                TipoOrden = request.TipoOrden,
+                Prioridad = request.Prioridad,
+                Estado = estadoOrden.ToDbValue(), // Usar el valor de la BD desde el enum
+                UbicacionText = request.UbicacionText,
+                RequiereFactura = request.RequiereFactura,
+                EstadoFacturado = request.EstadoFacturado, // Ya viene como string desde el DTO
+                FacturaFolio = request.FacturaFolio?.ToString(), // int? a string?
+                CostoEstimado = request.CostoEstimado,
+                CostoReal = request.CostoReal,
+                CreadoEn = DateTime.UtcNow,
+                ActualizadoEn = DateTime.UtcNow
+            };                _logger.LogInformation("Intentando guardar orden con ClienteId: {ClienteId}, NuevoCliente: {NuevoCliente}", 
                     nuevaOrden.ClienteId, nuevaOrden.NuevoCliente);
                 
                 _writeContext.OrdenesTrabajo.Add(nuevaOrden);
@@ -386,31 +385,74 @@ namespace back_cabs.CRM.services.Recepcion
         }
         
         /// <summary>
-        /// Busca clientes por nombre o RFC para autocompletado
+        /// Busca clientes legacy por nombre o RFC para autocompletado
         /// </summary>
-        public async Task<List<Dictionary<string, object>>> BuscarClientesPorNombreORfcAsync(string termino, int limite = 10)
+        public async Task<List<ClienteResumenDto>> BuscarClientesPorNombreORfcAsync(string termino, int limite = 10)
         {
             if (string.IsNullOrWhiteSpace(termino))
-                return new List<Dictionary<string, object>>();
+                return new List<ClienteResumenDto>();
                 
-            _logger.LogInformation("Buscando clientes por nombre o RFC: {Termino}", termino);
+            _logger.LogInformation("Buscando clientes legacy por nombre o RFC: {Termino}", termino);
             
-            // Buscar clientes que coincidan por nombre o RFC
-            var clientes = await _readContext.ClientesCompletos
-                .Where(c => (c.NombreComercial != null && c.NombreComercial.Contains(termino)) || 
-                           (c.RFC != null && c.RFC.Contains(termino)))
-                .Take(limite)
-                .ToListAsync();
-                
-            // Mapear a un diccionario para flexibilidad
-            return clientes.Select(c => new Dictionary<string, object>
+            try
             {
-                ["clienteId"] = c.ClienteId,
-                ["nombreComercial"] = c.NombreComercial ?? string.Empty,
-                ["rfc"] = c.RFC ?? string.Empty,
-                ["legacyClientId"] = (object?)c.LegacyClientId ?? DBNull.Value
-            }).ToList();
+                // Buscar clientes que coincidan por nombre o RFC
+                var clientes = await _readContext.ClientesCompletos
+                    .Where(c => (c.NombreComercial != null && c.NombreComercial.Contains(termino)) || 
+                               (c.RFC != null && c.RFC.Contains(termino)))
+                    .Take(limite)
+                    .ToListAsync();
+                    
+                // Mapear a ClienteResumenDto
+                return clientes.Select(c => new ClienteResumenDto
+                {
+                    ClienteId = c.ClienteId,
+                    NombreComercial = c.NombreComercial ?? string.Empty,
+                    RFC = c.RFC ?? string.Empty,
+                    LegacyClientId = c.LegacyClientId
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar clientes legacy: {Message}", ex.Message);
+                return new List<ClienteResumenDto>();
+            }
         }
+        
+        /// <summary>
+        /// Obtiene la lista de clientes nuevos registrados en órdenes de trabajo
+        /// </summary>
+        public async Task<List<ClienteNuevoDto>> ObtenerClientesNuevosAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo lista de clientes nuevos");
+                
+                var clientesNuevos = await _readContext.OrdenesTrabajo
+                    .Where(o => o.NuevoCliente == true && o.NombreCliente != null)
+                    .GroupBy(o => new { o.NombreCliente, o.ClienteTelefono })
+                    .Select(g => new ClienteNuevoDto
+                    {
+                        NombreCliente = g.Key.NombreCliente ?? string.Empty,
+                        Telefono = g.Key.ClienteTelefono,
+                        NumeroOrdenes = g.Count()
+                    })
+                    .OrderBy(c => c.NombreCliente)
+                    .ToListAsync();
+                
+                _logger.LogInformation("Se encontraron {Count} clientes nuevos", clientesNuevos.Count);
+                return clientesNuevos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener clientes nuevos: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        // =====================================================================================
+        // MÉTODOS PRIVADOS
+        // =====================================================================================
 
         /// <summary>
         /// Mapea OrdenTrabajo a OrdenTrabajoResponseDto (usando estructura actualizada)
@@ -439,6 +481,7 @@ namespace back_cabs.CRM.services.Recepcion
                 TipoOrden = orden.TipoOrden,
                 NuevoCliente = orden.NuevoCliente,
                 NombreCliente = orden.NombreCliente,
+                ClienteTelefono = orden.ClienteTelefono,
                 // ClienteId puede ser null independientemente del valor de NuevoCliente
                 ClienteId = orden.ClienteId,
                 Prioridad = orden.Prioridad,
