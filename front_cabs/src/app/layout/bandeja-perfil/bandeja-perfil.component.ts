@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 
 @Component({
@@ -12,7 +13,9 @@ import { SecureAuthService, User } from '../../../../src/app/core/services/secur
   styleUrls: ['./bandeja-perfil.css']
 })
 export class BandejaPerfilComponent {
-  private authService = inject<SecureAuthService>(SecureAuthService); // ✅ Tipado explícito
+  private authService = inject(SecureAuthService);
+  private router = inject(Router);
+
   user$: Observable<User | null> = this.authService.currentUser$;
   isCollapsed = false;
 
@@ -27,16 +30,23 @@ export class BandejaPerfilComponent {
     }
     return '';
   }
-    logout(): void {
-    // El servicio ya maneja la redirección automáticamente
+
+  logout(): void {
     this.authService.logout().subscribe({
       next: () => {
         console.log('Logout exitoso');
       },
       error: (error) => {
         console.error('Error durante logout:', error);
-        // El servicio ya redirige automáticamente incluso en caso de error
       }
     });
+  }
+
+  verPerfil(): void {
+    this.router.navigate(['/dashboard/profile']);
+  }
+
+  abrirConfiguracion(): void {
+    this.router.navigate(['/dashboard/settings']);
   }
 }

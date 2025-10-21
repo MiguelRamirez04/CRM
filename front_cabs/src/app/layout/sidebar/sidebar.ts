@@ -30,7 +30,7 @@ export class SidebarComponent {
 
   mainNav: NavItem[] = [
     { label: 'Resumen', icon: 'resumen', link: '/dashboard' },
-    { label: 'Registros', icon: 'registros', link: '/dashboard/settings' },
+    { label: 'Registros', icon: 'registros', link: 'src/app/modules/recepcion/pages/dashboard' },
     { label: 'Reportes', icon: 'reportes', link: '/dashboard/profile' },
     { label: 'Usuarios', icon: 'usuarios', link: '/dashboard/usuarios' },
     { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
@@ -72,6 +72,4 @@ constructor(
   isActive(link?: string): boolean {
     return !!link && this.router.url === link;
   }
-
-
 }
