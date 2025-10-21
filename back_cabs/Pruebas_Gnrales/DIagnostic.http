@@ -1,65 +1,76 @@
+# =====================================================================================
+# VARIABLES DE ENTORNO
+# =====================================================================================
 @back_cabs_HostAddress = http://localhost:5176
+# ⚠️ IMPORTANTE: Reemplaza este token por uno válido y vigente antes de ejecutar.
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwiZW1haWwiOiJhZG1pbkBnbWFpw7EuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiBhZG1pbiIsInJvbGUiOiJBRE1JTklTVFJBQ0lPTiIsIm5iZiI6MTc2MDcyMDgyOSwiZXhwIjoxNzYwNzIyNjI5LCJpYXQiOjE3NjA3MjA4MjksImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.5Wfg73cXZAja9VzEpmYvOqNxrO1o2eemwktaXwoJ4Ss
+
+# IDs para pruebas de endpoints
+@clienteId = 1
+@userId = 1
+
+# IDs para pruebas de recursos no existentes (404 Not Found)
+@clienteIdInexistente = 9999
+@userIdInexistente = 9999
+
+
 # =====================================================================================
-# PRUEBAS DE DIAGNOSTIC - CRM API
+# PRUEBAS DE API - MÓDULO DE DIAGNÓSTICO
 # =====================================================================================
-# 
-# MÓDULO: Recepción - Gestión de Órdenes de Trabajo
-# BASE URL: http://localhost:5176/api/Diagnostic/
+#
+# BASE URL: {{back_cabs_HostAddress}}/api/Diagnostic
 #
 # ENDPOINTS DISPONIBLES:
-# ┌──────────────────────────────────────────────────────────────────────────────────────────────┐
-# │ GET    /api/Diagnostic/estructura-clientes           → Obtener todas las órdenes             │
-# │ GET    /api/Diagnostic/validar-cliente/{clienteId}      → Obtener orden por ID                 │
-# │ GET   /api/Diagnostic/validar-usuario/{userId}         → Crear nueva orden de trabajo         │
-# │ GET    /api/Diagnostic/test-legacy-client/{clienteId}      → Actualizar orden existente           │
-# └─────────────────────────────────────────────────────────────────────────┘
-#
-# NOTAS:
-# - Reemplaza {{token}} con un JWT válido obtenido de /api/Auth/login
-# - Las fechas deben estar en formato ISO 8601: "2025-10-05T09:00:00"
-# - Los campos con "?" son opcionales (nullable)
-#
+# ┌────────────────────────────────────────────────────────────────────────────────────────┐
+# │ VERBO  | RUTA                                  | DESCRIPCIÓN                            │
+# ├────────────────────────────────────────────────────────────────────────────────────────┤
+# │ GET    | /api/Diagnostic/estructura-clientes   | Obtiene una estructura de clientes.    │
+# │ GET    | /api/Diagnostic/validar-cliente/{id}  | Valida si un cliente existe.           │
+# │ GET    | /api/Diagnostic/validar-usuario/{id}  | Valida si un usuario existe.           │
+# │ GET    | /api/Diagnostic/test-legacy-client/{id} | Realiza un test en un cliente legacy.  │
+# └────────────────────────────────────────────────────────────────────────────────────────┘
 # =====================================================================================
 
-### ============================================================================
-### 1. GET -  OBTENER LA INFORMACIÓN DE LOS CLIENTES
-### ============================================================================
-# Descripción: Toma la respuesta de la peticion y regresa eñ campo estructura
-# Respuesta esperada: 200 OK con array de OrdenTrabajoResponseDto
+###
+# ============================================================================
+# 1. GET - OBTENER ESTRUCTURA DE CLIENTES
+# Endpoint: /api/Diagnostic/estructura-clientes
 # ============================================================================
 
+# ----------------------------------------------------------------------------
+# 1.1 Prueba de Éxito: Obtener la estructura correctamente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
 GET {{back_cabs_HostAddress}}/api/Diagnostic/estructura-clientes
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### ============================================================================
-### 2. GET -  OBTENER LA INFORMACIÓN DE LOS CLIENTES
-### ============================================================================
-# Descripción: Toma la respuesta de la peticion y regresa eñ campo estructura-cliente
-# Respuesta esperada: 200 OK con array de OrdenTrabajoResponseDto
+# ----------------------------------------------------------------------------
+# 1.2 Prueba de Error: Intento sin autenticación
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 401 Unauthorized
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/Diagnostic/estructura-clientes
+Accept: application/json
+
+
+###
+# ============================================================================
+# 2. GET - VALIDAR CLIENTE POR ID
+# Endpoint: /api/Diagnostic/validar-cliente/{clienteId}
 # ============================================================================
 
-GET {{back_cabs_HostAddress}}/api/Diagnostic/estructura-cliente/{clienteId}
+# ----------------------------------------------------------------------------
+# 2.1 Prueba de Éxito: Validar un cliente existente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/Diagnostic/validar-cliente/{{clienteId}}
 Accept: application/json
 Authorization: Bearer {{token}}
 
-### ============================================================================
-### 3. GET - ONTEMNER LA VALIDACION EL USUARIO
-### ============================================================================
-# Descripción: Toma la respuesta de la peticion y regresa eñ campo estructura segun el id que tiene
-# Respuesta esperada: 200 OK con array de OrdenTrabajoResponseDto
-# ============================================================================
-GET  {{back_cabs_HostAddress}}/api/Diagnotsic/validar-usuario/{userId}
-Accept: application/json
-Authorization: Bearer
-
-### ============================================================================
-### 4. GET - OBTENER EL DIAGNOSTICO SEGUN EL ID DEL CLIENTE
-### ============================================================================
-# Descripción: Toma la respuesta de la peticion y regresa eñ campo estructura segun el cleinte legacy que se coloque
-# Respuesta esperada: 200 OK con array de OrdenTrabajoResponseDto
-# ============================================================================
-GET {{back_cabs_HostAddress}}/api/Diagnotic/test-legacy-client/{clienteId}
-Accept: application/json
-Authorization: Bearer
+# ----------------------------------------------------------------------------
+# 2.2 Prueba de Error: Intentar validar un cliente con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 40
