@@ -1,6 +1,7 @@
 using back_cabs.CRM.models.Auth;
 using back_cabs.CRM.models.Shared;
 using back_cabs.CRM.models.Recepcion;
+using back_cabs.CRM.models.Sales;
 using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
@@ -31,6 +32,11 @@ public class WriteContext : DbContext
     /// Órdenes de trabajo del módulo de Recepción
     /// </summary>
     public DbSet<OrdenTrabajo> OrdenesTrabajo { get; set; } = null!;
+
+    /// <summary>
+    /// Cotizaciones del módulo de Recepción
+    /// </summary>
+    public DbSet<Cotizacion> Cotizaciones { get; set; } = null!;
 
     /// <summary>
     /// Vehículos de la flota
