@@ -57,7 +57,7 @@ namespace CRM.DTOs.Request
         /// </summary>
         /// <example>5512345678</example>
         [Required(ErrorMessage = "El teléfono es obligatorio")]
-        [Range(10000000000, 99999999998, ErrorMessage = "El teléfono debe ser un número válido de 10 dígitos")]
+        [Range(0, 999999999998, ErrorMessage = "El teléfono debe ser un número válido de 10 dígitos")]
         [JsonPropertyName("telefono")]
         public long Telefono { get; set; }
 
