@@ -6,6 +6,7 @@ using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
 using back_cabs.CRM.enums;
+using back_cabs.CRM.Interfaces.Recepcion;
 using back_cabs.CRM.models.Soporte;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -19,12 +20,18 @@ namespace back_cabs.CRM.services.shared
     /// </summary>
     public class EjecucionOrdenService
     {
+        private readonly IEjecucionOrdenRepository _ejecucionRepository;
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
         private readonly ILogger<EjecucionOrdenService> _logger;
 
-        public EjecucionOrdenService(WriteContext writeContext, ReadOnlyContext readContext, ILogger<EjecucionOrdenService> logger)
+        public EjecucionOrdenService(
+            IEjecucionOrdenRepository ejecucionRepository,
+            WriteContext writeContext,
+            ReadOnlyContext readContext,
+            ILogger<EjecucionOrdenService> logger)
         {
+            _ejecucionRepository = ejecucionRepository ?? throw new ArgumentNullException(nameof(ejecucionRepository));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -139,20 +146,16 @@ namespace back_cabs.CRM.services.shared
                         ContrasenaSesion = dto.TipoEjecucion == TipoEjecucion.REMOTO ? dto.ContrasenaSesion : null
                     };
 
-                    _writeContext.EjecucionesOrden.Add(ejecucion);
-                    await _writeContext.SaveChangesAsync();
+                    // ✅ Repository Pattern: crear ejecución
+                    var ejecucionCreada = await _ejecucionRepository.CreateAsync(ejecucion);
                     await transaction.CommitAsync();
 
-                    _logger.LogInformation("Ejecución {EjecucionId} creada exitosamente para orden {OrdenId}", ejecucion.Id, dto.OrdenId);
+                    _logger.LogInformation("Ejecución {EjecucionId} creada exitosamente para orden {OrdenId}", ejecucionCreada.Id, dto.OrdenId);
 
                     // Recargar con navegaciones para mapear correctamente
-                    var ejecucionCompleta = await _readContext.EjecucionesOrden
-                        .Include(e => e.Tecnico)
-                        .Include(e => e.Vehiculo)
-                        .AsNoTracking()
-                        .FirstAsync(e => e.Id == ejecucion.Id);
+                    var ejecucionCompleta = await _ejecucionRepository.GetByIdAsync(ejecucionCreada.Id);
 
-                    return MapToResponseDto(ejecucionCompleta);
+                    return MapToResponseDto(ejecucionCompleta!);
                 }
                 catch (Exception ex)
                 {
@@ -174,12 +177,8 @@ namespace back_cabs.CRM.services.shared
         {
             _logger.LogInformation("Consultando ejecución con ID {EjecucionId}", id);
 
-            var ejecucion = await _readContext.EjecucionesOrden
-                .Include(e => e.Orden)
-                .Include(e => e.Tecnico)
-                .Include(e => e.Vehiculo)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.Id == id);
+            // ✅ Repository Pattern: obtener ejecución con relaciones
+            var ejecucion = await _ejecucionRepository.GetByIdAsync(id);
 
             if (ejecucion == null)
             {
@@ -209,25 +208,10 @@ namespace back_cabs.CRM.services.shared
             _logger.LogInformation("Consultando ejecuciones con filtros: OrdenId={OrdenId}, TecnicoId={TecnicoId}, Tipo={Tipo}, Desde={Desde}, Hasta={Hasta}",
                 ordenId, tecnicoId, tipoEjecucion, fechaDesde, fechaHasta);
 
-            var query = _readContext.EjecucionesOrden
-                .Include(e => e.Orden)
-                .Include(e => e.Tecnico)
-                .Include(e => e.Vehiculo)
-                .AsNoTracking()
-                .AsQueryable();
+            // ✅ Repository Pattern: obtener ejecuciones con filtros
+            var ejecuciones = await _ejecucionRepository.GetAllAsync(
+                ordenId, tecnicoId, tipoEjecucion, fechaDesde, fechaHasta);
 
-            if (ordenId.HasValue)
-                query = query.Where(e => e.OrdenId == ordenId.Value);
-            if (tecnicoId.HasValue)
-                query = query.Where(e => e.TecnicoId == tecnicoId.Value);
-            if (tipoEjecucion.HasValue)
-                query = query.Where(e => e.TipoEjecucion == tipoEjecucion.Value);
-            if (fechaDesde.HasValue)
-                query = query.Where(e => e.HrInicio >= fechaDesde.Value);
-            if (fechaHasta.HasValue)
-                query = query.Where(e => e.HrInicio <= fechaHasta.Value);
-
-            var ejecuciones = await query.ToListAsync();
             var result = new List<EjecucionOrdenResponseDto>();
             foreach (var ejecucion in ejecuciones)
             {
@@ -273,14 +257,8 @@ namespace back_cabs.CRM.services.shared
             if (ejecucion.TecnicoId == nuevoTecnicoId)
                 throw new ArgumentException("No se puede delegar a sí mismo.", nameof(nuevoTecnicoId));
 
-            // Actualizar y registrar cambio
-            var comentarioDelegacion = $"[DELEGACIÓN {DateTime.Now:yyyy-MM-dd HH:mm}] De {usuarioActual.Nombre} {usuarioActual.Apellido} a {nuevoTecnico.Nombre} {nuevoTecnico.Apellido}. Motivo: {motivo}";
-            ejecucion.TecnicoId = nuevoTecnicoId;
-            ejecucion.Comentarios = string.IsNullOrEmpty(ejecucion.Comentarios)
-                ? comentarioDelegacion
-                : $"{ejecucion.Comentarios}\n{comentarioDelegacion}";
-
-            await _writeContext.SaveChangesAsync();
+            // ✅ Repository Pattern: delegar ejecución con validaciones y auditoría
+            await _ejecucionRepository.DelegateAsync(ejecucionId, nuevoTecnicoId, usuarioActualId);
 
             _logger.LogInformation("Ejecución {EjecucionId} delegada exitosamente a técnico {NuevoTecnicoId}", ejecucionId, nuevoTecnicoId);
         }
@@ -300,7 +278,8 @@ namespace back_cabs.CRM.services.shared
         {
             _logger.LogInformation("Actualizando ejecución {EjecucionId} por usuario {UsuarioId}", id, usuarioId);
 
-            var ejecucion = await _writeContext.EjecucionesOrden.FindAsync(id);
+            // ✅ Repository Pattern: obtener ejecución para actualización
+            var ejecucion = await _ejecucionRepository.GetByIdAsync(id);
             if (ejecucion == null)
             {
                 _logger.LogWarning("Ejecución {EjecucionId} no encontrada", id);
@@ -363,7 +342,8 @@ namespace back_cabs.CRM.services.shared
                     : $"{ejecucion.Comentarios}\n{nuevoComentario}";
             }
 
-            await _writeContext.SaveChangesAsync();
+            // ✅ Repository Pattern: actualizar ejecución con validaciones
+            await _ejecucionRepository.UpdateAsync(ejecucion);
 
             _logger.LogInformation("Ejecución {EjecucionId} actualizada exitosamente", id);
         }

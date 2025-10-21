@@ -19,6 +19,7 @@
 // =====================================================================================
 
 using back_cabs.CRM.contexts;
+using back_cabs.CRM.Interfaces.Auth;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Auth;
@@ -35,6 +36,7 @@ namespace back_cabs.CRM.services.Auth
     /// </summary>
     public class UsuarioAuthService
     {
+        private readonly IUsuarioAuthRepository _usuarioRepository;
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
         private readonly ServicioJwt _servicioJwt;
@@ -42,12 +44,14 @@ namespace back_cabs.CRM.services.Auth
         private readonly UsuarioRegistroValidator _validator;
 
         public UsuarioAuthService(
+            IUsuarioAuthRepository usuarioRepository,
             WriteContext writeContext,
             ReadOnlyContext readContext,
             ServicioJwt servicioJwt,
             ILogger<UsuarioAuthService> logger,
             UsuarioRegistroValidator validator)
         {
+            _usuarioRepository = usuarioRepository ?? throw new ArgumentNullException(nameof(usuarioRepository));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _servicioJwt = servicioJwt ?? throw new ArgumentNullException(nameof(servicioJwt));
@@ -80,8 +84,7 @@ namespace back_cabs.CRM.services.Auth
                 }
 
                 // PASO 2: VERIFICAR UNICIDAD DEL EMAIL (doble verificación)
-                var emailExiste = await _readContext.UsuariosAuth
-                    .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
+                var emailExiste = await _usuarioRepository.ExistsByEmailAsync(request.Email);
                 
                 if (emailExiste)
                 {
@@ -110,8 +113,7 @@ namespace back_cabs.CRM.services.Auth
                 };
 
                 // PASO 5: GUARDAR EN BASE DE DATOS
-                _writeContext.UsuariosAuth.Add(nuevoUsuario);
-                await _writeContext.SaveChangesAsync();
+                nuevoUsuario = await _usuarioRepository.CreateAsync(nuevoUsuario);
 
                 _logger.LogInformation("Usuario registrado exitosamente: {UserId} - {Email}", 
                     nuevoUsuario.Id, nuevoUsuario.Email);
@@ -190,8 +192,7 @@ namespace back_cabs.CRM.services.Auth
         {
             try
             {
-                return await _readContext.UsuariosAuth
-                    .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+                return await _usuarioRepository.GetByEmailAsync(email);
             }
             catch (Exception ex)
             {
@@ -209,8 +210,8 @@ namespace back_cabs.CRM.services.Auth
         {
             try
             {
-                return await _readContext.UsuariosAuth
-                    .AnyAsync(u => u.Email.ToLower() == email.ToLower());
+                // Use repository to check existence
+                return await _usuarioRepository.ExistsByEmailAsync(email);
             }
             catch (Exception ex)
             {
@@ -231,37 +232,15 @@ namespace back_cabs.CRM.services.Auth
             {
                 _logger.LogInformation($"Validando credenciales para usuario: {email}");
 
-                // Buscar usuario por email
-                var usuario = await _readContext.UsuariosAuth
-                    .FirstOrDefaultAsync(u => u.Email == email);
+                // Use repository which already encapsulates credential validation
+                var usuario = await _usuarioRepository.ValidateCredentialsAsync(email, contrasena);
 
+                // If repository returned a user, credentials were validated
                 if (usuario == null)
                 {
-                    _logger.LogWarning($"Usuario no encontrado: {email}");
+                    _logger.LogWarning($"Credenciales inválidas o usuario no encontrado: {email}");
                     return null;
                 }
-
-                // Validar contraseña (soportar tanto Password en texto plano como Hash)
-                bool contrasenaValida = false;
-                
-                // Primero intentar con password en texto plano
-                if (!string.IsNullOrEmpty(usuario.Password) && usuario.Password == contrasena)
-                {
-                    contrasenaValida = true;
-                }
-                // Si no, intentar con hash
-                else if (!string.IsNullOrEmpty(usuario.Password))
-                {
-                    var contrasenaHash = back_cabs.CRM.Middleware.ApiUtilities.GenerateSha256Hash(contrasena);
-                    contrasenaValida = usuario.Password == contrasenaHash;
-                }
-
-                if (!contrasenaValida)
-                {
-                    _logger.LogWarning($"Contraseña inválida para usuario: {email}");
-                    return null;
-                }
-
                 _logger.LogInformation($"Credenciales válidas para usuario: {email}");
                 return usuario;
             }
@@ -283,8 +262,13 @@ namespace back_cabs.CRM.services.Auth
             {
                 _logger.LogInformation("Obteniendo usuario por ID: {UserId}", id);
 
-                var usuario = await _readContext.UsuariosAuth
-                    .FirstOrDefaultAsync(u => u.Id == id && u.Activo);
+                var usuario = await _usuarioRepository.GetByIdAsync(id);
+
+                if (usuario == null || !usuario.Activo)
+                {
+                    _logger.LogWarning("Usuario no encontrado con ID: {UserId}", id);
+                    return null;
+                }
 
                 if (usuario == null)
                 {
@@ -322,8 +306,13 @@ namespace back_cabs.CRM.services.Auth
                 }
 
                 // Buscar el usuario
-                var usuario = await _writeContext.UsuariosAuth
-                    .FirstOrDefaultAsync(u => u.Id == userId && u.Activo);
+                // Use repository to fetch and update user
+                var usuario = await _usuarioRepository.GetByIdAsync(userId);
+                if (usuario == null || !usuario.Activo)
+                {
+                    _logger.LogWarning("Usuario no encontrado para actualizar contraseña: {UserId}", userId);
+                    return false;
+                }
 
                 if (usuario == null)
                 {
@@ -342,12 +331,12 @@ namespace back_cabs.CRM.services.Auth
                 }
 
                 // Actualizar ambos campos de contraseña y fecha de modificación
-                usuario.Password = nuevaContrasena;
                 usuario.Password = nuevoHash;
                 usuario.ActualizarFechaModificacion();
 
-                // Guardar cambios en la base de datos
-                var filasAfectadas = await _writeContext.SaveChangesAsync();
+                // Use repository Update to persist
+                var usuarioActualizado = await _usuarioRepository.UpdateAsync(usuario);
+                var filasAfectadas = usuarioActualizado != null ? 1 : 0;
                 
                 if (filasAfectadas > 0)
                 {

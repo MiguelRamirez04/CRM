@@ -13,6 +13,7 @@ namespace back_cabs.CRM.contexts;
 /// Contexto básico para operaciones de escritura (POST, PUT, DELETE)
 /// </summary>
 public class WriteContext : DbContext
+
 {
     public WriteContext(DbContextOptions<WriteContext> options) : base(options)
     {

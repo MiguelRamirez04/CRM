@@ -1,4 +1,5 @@
 using back_cabs.CRM.contexts;
+using back_cabs.CRM.Interfaces.Shared;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Shared;
@@ -8,59 +9,52 @@ namespace back_cabs.CRM.services.Fleet;
 
 /// <summary>
 /// Servicio que maneja la lógica de negocio para vehículos.
-/// Usa las configuraciones mapeadas en WriteContext.cs para validaciones automáticas.
+/// Usa Repository Pattern para acceso a datos con separación de responsabilidades.
 /// </summary>
 public class VehiculosService
 {
-    // ✅ Inyección de dependencias: ReadOnlyContext para lecturas optimizadas (sin tracking)
-    // WriteContext para operaciones de escritura con validaciones completas
-    private readonly ReadOnlyContext _readContext;
-    private readonly WriteContext _writeContext;
+    // ✅ Inyección de dependencias: Repository Pattern para acceso a datos
+    // desacoplado y testeable
+    private readonly IVehiculoRepository _vehiculoRepository;
     private readonly ILogger<VehiculosService> _logger;
 
     public VehiculosService(
-        ReadOnlyContext readContext,
-        WriteContext writeContext,
+        IVehiculoRepository vehiculoRepository,
         ILogger<VehiculosService> logger)
     {
-        _readContext = readContext;
-        _writeContext = writeContext;
+        _vehiculoRepository = vehiculoRepository;
         _logger = logger;
     }
 
     /// <summary>
     /// Obtiene todos los vehículos ordenados por placas.
-    /// ✅ Usa AsNoTracking() para rendimiento (configurado en ReadOnlyContext)
-    /// ✅ El OrderBy usa el índice configurado en WriteContext para Placas
+    /// ✅ Usa Repository Pattern para acceso optimizado a datos
+    /// ✅ El OrderBy usa el índice configurado en la base de datos para Placas
     /// </summary>
     public async Task<IEnumerable<VehiculoResponseDto>> ObtenerTodosAsync()
     {
-        // ✅ ReadOnlyContext optimizado para lecturas (QueryTrackingBehavior.NoTracking)
-        var vehiculos = await _readContext.Vehiculos
-            .AsNoTracking() // Optimización adicional (ya configurada en contexto)
-            .OrderBy(v => v.Placas) // ✅ Usa índice único configurado: HasIndex(e => e.Placas).IsUnique()
-            .ToListAsync();
+        // ✅ Repository Pattern: abstracción completa del acceso a datos
+        var vehiculos = await _vehiculoRepository.GetAllAsync();
 
         return vehiculos.Select(MapToResponseDto);
     }
 
     /// <summary>
     /// Obtiene un vehículo por ID.
-    /// ✅ Usa AsNoTracking() para evitar overhead de tracking
+    /// ✅ Usa Repository Pattern para consulta optimizada
     /// </summary>
     public async Task<VehiculoResponseDto?> ObtenerPorIdAsync(int id)
     {
-        // ✅ ReadOnlyContext sin tracking para consulta rápida
-        var vehiculo = await _readContext.Vehiculos
-            .AsNoTracking()
-            .FirstOrDefaultAsync(v => v.Id == id);
+        // ✅ Repository Pattern: consulta optimizada sin tracking
+        var vehiculo = await _vehiculoRepository.GetByIdAsync(id);
 
         return vehiculo == null ? null : MapToResponseDto(vehiculo);
     }
 
     /// <summary>
     /// Crea un nuevo vehículo.
-    /// ✅ Aplica todas las validaciones configuradas en WriteContext:
+    /// ✅ Usa Repository Pattern para validaciones y creación
+    /// ✅ Aplica todas las validaciones configuradas en la base de datos:
     /// - HasMaxLength(50) para TipoVehiculo
     /// - HasMaxLength(20) para Placas
     /// - IsUnique() para Placas (validado manualmente)
@@ -68,7 +62,7 @@ public class VehiculosService
     /// </summary>
     public async Task<VehiculoResponseDto> CrearAsync(VehiculoRequestDto request)
     {
-        // ✅ Validación manual usando el índice único configurado en contexto
+        // ✅ Validación manual usando el índice único configurado en la base de datos
         await ValidarPlacaUnica(request.Placas);
 
         // ✅ Creación del modelo - EF aplicará automáticamente:
@@ -86,29 +80,28 @@ public class VehiculosService
             Observaciones = request.Observaciones   // ✅ NVARCHAR(MAX) aplicado automáticamente
         };
 
-        // ✅ WriteContext aplica todas las configuraciones al guardar
-        _writeContext.Vehiculos.Add(vehiculo);
-        await _writeContext.SaveChangesAsync(); // ✅ Valida constraints y aplica defaults
+        // ✅ Repository Pattern: creación con validaciones automáticas
+        var vehiculoCreado = await _vehiculoRepository.CreateAsync(vehiculo);
 
-        _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}", vehiculo.Id, vehiculo.Placas);
-        return MapToResponseDto(vehiculo);
+        _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}", vehiculoCreado.Id, vehiculoCreado.Placas);
+        return MapToResponseDto(vehiculoCreado);
     }
 
     /// <summary>
     /// Actualiza un vehículo existente.
-    /// ✅ Aplica validaciones de WriteContext durante la actualización
+    /// ✅ Usa Repository Pattern para validaciones y actualización
     /// ✅ Verifica unicidad de placas usando el índice configurado
     /// </summary>
     public async Task<VehiculoResponseDto?> ActualizarAsync(int id, VehiculoRequestDto request)
     {
-        // ✅ WriteContext permite tracking para actualizaciones
-        var vehiculo = await _writeContext.Vehiculos.FindAsync(id);
+        // ✅ Repository Pattern: obtener vehículo existente
+        var vehiculo = await _vehiculoRepository.GetByIdAsync(id);
         if (vehiculo == null)
         {
             return null;
         }
 
-        // ✅ Validación de unicidad usando el índice único configurado
+        // ✅ Validación de unicidad usando Repository Pattern
         if (vehiculo.Placas != request.Placas)
         {
             await ValidarPlacaUnica(request.Placas);
@@ -124,36 +117,33 @@ public class VehiculosService
         vehiculo.Activo = request.Activo;                // ✅ BIT DEFAULT 1
         vehiculo.Observaciones = request.Observaciones;  // ✅ NVARCHAR(MAX)
 
-        // ✅ WriteContext valida todas las constraints al guardar
-        await _writeContext.SaveChangesAsync();
-        _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}", vehiculo.Id);
+        // ✅ Repository Pattern: actualización con validaciones automáticas
+        var vehiculoActualizado = await _vehiculoRepository.UpdateAsync(vehiculo);
+        _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}", vehiculoActualizado.Id);
 
-        return MapToResponseDto(vehiculo);
+        return MapToResponseDto(vehiculoActualizado);
     }
 
     /// <summary>
     /// Elimina un vehículo.
-    /// ✅ Usa WriteContext para operaciones de eliminación
+    /// ✅ Usa Repository Pattern para operaciones de eliminación
     /// </summary>
     public async Task<bool> EliminarAsync(int id)
     {
-        // ✅ WriteContext maneja eliminación con constraints
-        var vehiculo = await _writeContext.Vehiculos.FindAsync(id);
-        if (vehiculo == null)
+        // ✅ Repository Pattern: eliminación con validaciones automáticas
+        var eliminado = await _vehiculoRepository.DeleteAsync(id);
+
+        if (eliminado)
         {
-            return false;
+            _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}", id);
         }
 
-        _writeContext.Vehiculos.Remove(vehiculo);
-        await _writeContext.SaveChangesAsync(); // ✅ Verifica FKs y constraints
-        _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}", id);
-
-        return true;
+        return eliminado;
     }
 
     /// <summary>
     /// Valida que las placas sean únicas.
-    /// ✅ Usa el índice único configurado en WriteContext para consulta eficiente
+    /// ✅ Usa Repository Pattern para consulta eficiente
     /// </summary>
     private async Task ValidarPlacaUnica(string? placas)
     {
@@ -162,11 +152,10 @@ public class VehiculosService
             return;
         }
 
-        // ✅ ReadOnlyContext + índice único hacen esta validación eficiente
-        var existente = await _readContext.Vehiculos
-            .AnyAsync(v => v.Placas == placas); // ✅ Usa HasIndex(e => e.Placas).IsUnique()
+        // ✅ Repository Pattern: validación eficiente usando índice único
+        var existe = await _vehiculoRepository.PlacasExistAsync(placas);
 
-        if (existente)
+        if (existe)
         {
             _logger.LogWarning("Intento de crear/actualizar vehículo con placas duplicadas: {Placas}", placas);
             throw new InvalidOperationException($"Las placas '{placas}' ya están registradas.");
@@ -175,7 +164,7 @@ public class VehiculosService
 
     /// <summary>
     /// Mapea un modelo Vehiculo a VehiculoResponseDto.
-    /// ✅ Las propiedades ya están validadas por las configuraciones del contexto
+    /// ✅ Las propiedades ya están validadas por las configuraciones de EF
     /// </summary>
     private VehiculoResponseDto MapToResponseDto(Vehiculo vehiculo)
     {

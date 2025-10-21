@@ -39,6 +39,11 @@ builder.Services.AddDbContext<ReadOnlyContext>(options =>
 builder.Services.AddDbContext<WriteContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Inyección de repositorios (Repository Pattern)
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IVehiculoRepository, back_cabs.CRM.repositories.Shared.VehiculoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IEjecucionOrdenRepository, back_cabs.CRM.repositories.Recepcion.EjecucionOrdenRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository, back_cabs.CRM.repositories.Auth.UsuarioAuthRepository>();
+
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<UsuarioAuthService>();
