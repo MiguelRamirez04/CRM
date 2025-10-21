@@ -79,22 +79,28 @@ namespace CRM.DTOs.Request
         [JsonPropertyName("nuevoCliente")]
         public bool NuevoCliente { get; set; }
 
-        /// <summary>
-        /// Nombre del cliente (obligatorio si nuevoCliente = true)
-        /// </summary>
-        [StringLength(120)]
-        [JsonPropertyName("nombreCliente")]
-        [RequiredIf("NuevoCliente", true, ErrorMessage = "El nombre del cliente es obligatorio para clientes nuevos")]
-        public string? NombreCliente { get; set; }
+    /// <summary>
+    /// Nombre del cliente (obligatorio si nuevoCliente = true)
+    /// </summary>
+    [StringLength(120)]
+    [JsonPropertyName("nombreCliente")]
+    [RequiredIf("NuevoCliente", true, ErrorMessage = "El nombre del cliente es obligatorio para clientes nuevos")]
+    public string? NombreCliente { get; set; }
 
-        /// <summary>
-        /// ID del cliente registrado de la base existente (obligatorio si nuevoCliente = false)
-        /// </summary>
-        [JsonPropertyName("clienteId")]
-        [RequiredIf("NuevoCliente", false, ErrorMessage = "El ID del cliente es obligatorio para clientes existentes")]
-        public int? ClienteId { get; set; }
+    /// <summary>
+    /// Teléfono del cliente nuevo (opcional si nuevoCliente = true)
+    /// Debe ser un número de 10 dígitos
+    /// </summary>
+    [JsonPropertyName("clienteTelefono")]
+    [Range(1000000000, 9999999999, ErrorMessage = "El teléfono debe ser un número válido de 10 dígitos")]
+    public long? ClienteTelefono { get; set; }
 
-        /// <summary>
+    /// <summary>
+    /// ID del cliente registrado de la base existente (obligatorio si nuevoCliente = false)
+    /// </summary>
+    [JsonPropertyName("clienteId")]
+    [RequiredIf("NuevoCliente", false, ErrorMessage = "El ID del cliente es obligatorio para clientes existentes")]
+    public int? ClienteId { get; set; }        /// <summary>
         /// Niveles de prioridad sobre la asesoria
         /// </summary>
         [Range(1, 5, ErrorMessage = "La prioridad debe estar entre 1 y 5.")]

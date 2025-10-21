@@ -6,8 +6,24 @@
       <h3 class="text-xl font-bold text-gray-900">Información del Cliente</h3>
     </div>
     
-    <!-- Toggle Cliente Nuevo/Existente -->
-    <div class="mb-6">
+    <!-- Badge informativo del tipo de cliente (sin toggle editable) -->
+    <div class="mb-6" *ngIf="tipoCliente && !ordenExistente">
+      <div class="inline-flex items-center px-4 py-2 rounded-lg font-semibold text-sm shadow-sm"
+           [ngClass]="{
+             'bg-emerald-100 text-emerald-800 border border-emerald-300': tipoCliente === 'nuevo',
+             'bg-blue-100 text-blue-800 border border-blue-300': tipoCliente === 'legacy'
+           }">
+        <i class="mr-2"
+           [ngClass]="{
+             'fas fa-user-plus': tipoCliente === 'nuevo',
+             'fas fa-address-book': tipoCliente === 'legacy'
+           }"></i>
+        {{ tipoCliente === 'nuevo' ? 'Cliente Nuevo' : 'Cliente Legacy' }}
+      </div>
+    </div>
+    
+    <!-- Toggle Cliente Nuevo/Existente (solo visible en modo edición) -->
+    <div class="mb-6" *ngIf="ordenExistente">
       <div class="relative">
         <label class="flex items-center cursor-pointer">
           <input
@@ -55,6 +71,38 @@
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
           </svg>
           {{ getFieldError('nombreCliente') }}
+        </p>
+      </div>
+
+      <!-- Campo Teléfono Cliente Nuevo -->
+      <div>
+        <label for="clienteTelefono" class="block text-sm font-medium text-gray-700 mb-2">
+          <span class="flex items-center">
+            <svg class="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+            </svg>
+            Teléfono del Cliente
+          </span>
+        </label>
+        <input
+          id="clienteTelefono"
+          name="clienteTelefono"
+          type="tel"
+          formControlName="clienteTelefono"
+          placeholder="Ej. 6182171064"
+          maxlength="10"
+          class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          [ngClass]="{ 'border-red-500 focus:ring-red-500': isFieldInvalid('clienteTelefono') }"
+        />
+        <p *ngIf="isFieldInvalid('clienteTelefono')" class="mt-2 text-sm text-red-600 flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          {{ getFieldError('clienteTelefono') }}
+        </p>
+        <p class="mt-1 text-xs text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Opcional. Debe ser exactamente 10 dígitos numéricos
         </p>
       </div>
     </div>
