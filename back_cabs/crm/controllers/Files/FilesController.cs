@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Json;
+using back_cabs.CRM.services;
 
 namespace back_cabs.CRM.controllers.Files;
 
@@ -20,13 +21,16 @@ public class FilesController : ControllerBase
 {
     private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<FilesController> _logger;
+    private readonly ICacheService _cacheService;
 
     public FilesController(
         IFileStorageService fileStorageService,
-        ILogger<FilesController> logger)
+        ILogger<FilesController> logger,
+        ICacheService cacheService)
     {
         _fileStorageService = fileStorageService;
         _logger = logger;
+        _cacheService = cacheService;
     }
 
     /// <summary>
@@ -229,6 +233,15 @@ public class FilesController : ControllerBase
     {
         try
         {
+            string cacheKey = $"file_{id}";
+
+            // Intentar obtener del caché
+            var cached = await _cacheService.GetAsync<FileResponseDto>(cacheKey);
+            if (cached != null)
+            {
+                return Ok(cached);
+            }
+
             var documento = await _fileStorageService.GetFileByIdAsync(id);
 
             if (documento == null)
@@ -236,9 +249,12 @@ public class FilesController : ControllerBase
                 return NotFound("Archivo no encontrado");
             }
 
-            var response = MapToFileResponseDto(documento);
+            var responseDto = MapToFileResponseDto(documento);
 
-            return Ok(response);
+            // Guardar en caché
+            await _cacheService.SetAsync(cacheKey, responseDto, TimeSpan.FromMinutes(10));
+
+            return Ok(responseDto);
         }
         catch (Exception ex)
         {

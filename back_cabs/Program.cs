@@ -13,8 +13,29 @@ using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using back_cabs.CRM.Middleware;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+//Configuracion de Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "CABS_";
+});
+
+//Conexion multiplexer
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configurationOptions = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
+    return ConnectionMultiplexer.Connect(configurationOptions);
+});
+
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Configurar Serilog temprano para capturar logs de startup
 builder.Host.UseSerilog();
@@ -44,6 +65,8 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IVehiculoRepository, 
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IEjecucionOrdenRepository, back_cabs.CRM.repositories.Recepcion.EjecucionOrdenRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository, back_cabs.CRM.repositories.Auth.UsuarioAuthRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.ICotizacionRepository, back_cabs.CRM.repositories.Recepcion.CotizacionRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IOrdenTrabajoRepository, back_cabs.CRM.repositories.Recepcion.OrdenTrabajoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRepository, back_cabs.CRM.repositories.ClientesLegacyValidationRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<ServicioJwt>();
@@ -57,6 +80,10 @@ builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
+
+//Interfaces del los servicios que acabamos de realizar
+// Registra el repositorio para que el servicio pueda usarlo
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
@@ -102,21 +129,21 @@ builder.Services.AddCors(options =>
     options.AddPolicy("SecureFrontend", policy =>
     {
         policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:5176", "https://localhost:5176") // Angular
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
-              .SetIsOriginAllowedToAllowWildcardSubdomains()
-              .WithExposedHeaders("X-CSRF-Token"); // Para CSRF protection
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
+            .WithExposedHeaders("X-CSRF-Token"); // Para CSRF protection
     });
     
     // Política más restrictiva para producción
     options.AddPolicy("Production", policy =>
     {
         policy.WithOrigins("https://your-production-domain.com")
-              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token")
-              .AllowCredentials()
-              .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight 24h
+            .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token")
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight 24h
     });
 });
 

@@ -4,12 +4,14 @@ using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
+using back_cabs.CRM.services;
 
 namespace back_cabs.CRM.services.Fleet;
 
 /// <summary>
 /// Servicio que maneja la lógica de negocio para vehículos.
 /// Usa Repository Pattern para acceso a datos con separación de responsabilidades.
+/// ✅ REDIS: Implementa caché para mejorar rendimiento en consultas frecuentes
 /// </summary>
 public class VehiculosService
 {
@@ -17,38 +19,81 @@ public class VehiculosService
     // desacoplado y testeable
     private readonly IVehiculoRepository _vehiculoRepository;
     private readonly ILogger<VehiculosService> _logger;
+    private readonly ICacheService _cacheService; // ✅ REDIS: Servicio de caché
+
+    // ✅ REDIS: Constantes para claves de caché (consistencia y mantenibilidad)
+    private const string CACHE_KEY_ALL_VEHICULOS = "vehiculos:all";
+    private const string CACHE_KEY_VEHICULO_PREFIX = "vehiculos:id:";
+    private const int CACHE_EXPIRATION_MINUTES = 30; // Catálogos estables
 
     public VehiculosService(
         IVehiculoRepository vehiculoRepository,
-        ILogger<VehiculosService> logger)
+        ILogger<VehiculosService> logger,
+        ICacheService cacheService)
     {
         _vehiculoRepository = vehiculoRepository;
         _logger = logger;
+        _cacheService = cacheService;
     }
 
     /// <summary>
     /// Obtiene todos los vehículos ordenados por placas.
     /// ✅ Usa Repository Pattern para acceso optimizado a datos
     /// ✅ El OrderBy usa el índice configurado en la base de datos para Placas
+    /// ✅ REDIS: Implementa cache-aside pattern para reducir consultas a BD
     /// </summary>
     public async Task<IEnumerable<VehiculoResponseDto>> ObtenerTodosAsync()
     {
-        // ✅ Repository Pattern: abstracción completa del acceso a datos
-        var vehiculos = await _vehiculoRepository.GetAllAsync();
+        // ✅ REDIS: Paso 1 - Intentar obtener del caché (Cache-Aside Pattern)
+        var cached = await _cacheService.GetAsync<IEnumerable<VehiculoResponseDto>>(CACHE_KEY_ALL_VEHICULOS);
+        if (cached != null)
+        {
+            _logger.LogDebug("Vehículos obtenidos desde caché Redis");
+            return cached;
+        }
 
-        return vehiculos.Select(MapToResponseDto);
+        // ✅ REDIS: Paso 2 - Si no está en caché, consultar a la BD
+        _logger.LogDebug("Caché miss: Consultando vehículos desde base de datos");
+        var vehiculos = await _vehiculoRepository.GetAllAsync();
+        var dtos = vehiculos.Select(MapToResponseDto).ToList();
+
+        // ✅ REDIS: Paso 3 - Guardar en caché para futuras consultas
+        await _cacheService.SetAsync(CACHE_KEY_ALL_VEHICULOS, dtos, TimeSpan.FromMinutes(CACHE_EXPIRATION_MINUTES));
+        _logger.LogDebug("Vehículos guardados en caché Redis por {Minutes} minutos", CACHE_EXPIRATION_MINUTES);
+
+        return dtos;
     }
 
     /// <summary>
     /// Obtiene un vehículo por ID.
     /// ✅ Usa Repository Pattern para consulta optimizada
+    /// ✅ REDIS: Caché individual por ID para consultas frecuentes
     /// </summary>
     public async Task<VehiculoResponseDto?> ObtenerPorIdAsync(int id)
     {
+        // ✅ REDIS: Intentar obtener del caché individual
+        string cacheKey = $"{CACHE_KEY_VEHICULO_PREFIX}{id}";
+        var cached = await _cacheService.GetAsync<VehiculoResponseDto>(cacheKey);
+        if (cached != null)
+        {
+            _logger.LogDebug("Vehículo {Id} obtenido desde caché Redis", id);
+            return cached;
+        }
+
         // ✅ Repository Pattern: consulta optimizada sin tracking
         var vehiculo = await _vehiculoRepository.GetByIdAsync(id);
+        if (vehiculo == null)
+        {
+            return null;
+        }
 
-        return vehiculo == null ? null : MapToResponseDto(vehiculo);
+        var dto = MapToResponseDto(vehiculo);
+
+        // ✅ REDIS: Guardar en caché individual
+        await _cacheService.SetAsync(cacheKey, dto, TimeSpan.FromMinutes(CACHE_EXPIRATION_MINUTES));
+        _logger.LogDebug("Vehículo {Id} guardado en caché Redis", id);
+
+        return dto;
     }
 
     /// <summary>
@@ -59,6 +104,7 @@ public class VehiculosService
     /// - HasMaxLength(20) para Placas
     /// - IsUnique() para Placas (validado manualmente)
     /// - HasDefaultValue(true) para Activo si no se especifica
+    /// ✅ REDIS: Invalida caché para mantener consistencia
     /// </summary>
     public async Task<VehiculoResponseDto> CrearAsync(VehiculoRequestDto request)
     {
@@ -83,7 +129,11 @@ public class VehiculosService
         // ✅ Repository Pattern: creación con validaciones automáticas
         var vehiculoCreado = await _vehiculoRepository.CreateAsync(vehiculo);
 
-        _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}", vehiculoCreado.Id, vehiculoCreado.Placas);
+        // ✅ REDIS: Invalidar caché de listado completo (Write-Through Pattern)
+        await _cacheService.RemoveAsync(CACHE_KEY_ALL_VEHICULOS);
+        _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}. Caché invalidado.", 
+            vehiculoCreado.Id, vehiculoCreado.Placas);
+
         return MapToResponseDto(vehiculoCreado);
     }
 
@@ -91,6 +141,7 @@ public class VehiculosService
     /// Actualiza un vehículo existente.
     /// ✅ Usa Repository Pattern para validaciones y actualización
     /// ✅ Verifica unicidad de placas usando el índice configurado
+    /// ✅ REDIS: Invalida caché para mantener consistencia
     /// </summary>
     public async Task<VehiculoResponseDto?> ActualizarAsync(int id, VehiculoRequestDto request)
     {
@@ -119,7 +170,10 @@ public class VehiculosService
 
         // ✅ Repository Pattern: actualización con validaciones automáticas
         var vehiculoActualizado = await _vehiculoRepository.UpdateAsync(vehiculo);
-        _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}", vehiculoActualizado.Id);
+
+        // ✅ REDIS: Invalidar ambos cachés (listado y detalle)
+        await InvalidarCacheVehiculo(id);
+        _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}. Caché invalidado.", vehiculoActualizado.Id);
 
         return MapToResponseDto(vehiculoActualizado);
     }
@@ -127,6 +181,7 @@ public class VehiculosService
     /// <summary>
     /// Elimina un vehículo.
     /// ✅ Usa Repository Pattern para operaciones de eliminación
+    /// ✅ REDIS: Invalida caché para mantener consistencia
     /// </summary>
     public async Task<bool> EliminarAsync(int id)
     {
@@ -135,10 +190,30 @@ public class VehiculosService
 
         if (eliminado)
         {
-            _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}", id);
+            // ✅ REDIS: Invalidar ambos cachés
+            await InvalidarCacheVehiculo(id);
+            _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}. Caché invalidado.", id);
         }
 
         return eliminado;
+    }
+
+    #region Métodos Auxiliares
+
+    /// <summary>
+    /// ✅ REDIS: Invalida el caché de un vehículo específico y el listado general.
+    /// Patrón: Write-Through / Cache Invalidation
+    /// </summary>
+    private async Task InvalidarCacheVehiculo(int id)
+    {
+        // Invalidar caché individual
+        string cacheKey = $"{CACHE_KEY_VEHICULO_PREFIX}{id}";
+        await _cacheService.RemoveAsync(cacheKey);
+        
+        // Invalidar listado completo
+        await _cacheService.RemoveAsync(CACHE_KEY_ALL_VEHICULOS);
+        
+        _logger.LogDebug("Caché de vehículo {Id} invalidado", id);
     }
 
     /// <summary>
@@ -179,5 +254,7 @@ public class VehiculosService
             Observaciones = vehiculo.Observaciones     // ✅ Mapeado correctamente
         };
     }
+
+    #endregion
 }
 

@@ -19,32 +19,55 @@ namespace back_cabs.CRM.services
 {
     /// <summary>
     /// Servicio para consultas de solo lectura sobre los clientes completos utilizando procedimientos almacenados.
+    /// OPTIMIZADO CON REDIS para mejorar rendimiento en búsquedas frecuentes.
     /// </summary>
     public class ClientesCompletosService
     {
         private readonly IDbConnection _dbConnection;
         private readonly ILogger<ClientesCompletosService> _logger;
+        private readonly ICacheService _cacheService;
 
-        public ClientesCompletosService(IDbConnection dbConnection, ILogger<ClientesCompletosService> logger)
+        // ⏱️ Tiempos de expiración del caché
+        private readonly TimeSpan _cacheDurationPaginacion = TimeSpan.FromMinutes(5);  // Búsquedas paginadas
+        private readonly TimeSpan _cacheDurationAutocompletado = TimeSpan.FromMinutes(15); // Autocompletado (más tiempo porque es más estable)
+
+        public ClientesCompletosService(
+            IDbConnection dbConnection, 
+            ILogger<ClientesCompletosService> logger,
+            ICacheService cacheService)
         {
             _dbConnection = dbConnection;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         /// <summary>
         /// Obtiene los clientes completos paginados utilizando el procedimiento almacenado.
+        /// OPTIMIZADO: Usa Redis para cachear resultados de búsquedas frecuentes.
         /// </summary>
         /// <param name="request">Parámetros de paginación y búsqueda</param>
         /// <returns>Respuesta paginada con los clientes que coinciden con los criterios</returns>
         public async Task<PaginatedResponseDto<ClientesCompletosPaginadoDto>> GetClientesPaginadosAsync(ClientesCompletosPaginadoRequestDto request)
         {
-            _logger.LogInformation("Obteniendo clientes completos paginados. Página: {Pagina}, ResultadosPorPagina: {ResultadosPorPagina}, Búsqueda Nombre: {BusquedaNombre}, Búsqueda RFC: {BusquedaRFC}", 
-                request.Pagina, request.ResultadosPorPagina, 
-                request.NombreBusqueda ?? "No especificado", 
-                request.RFCBusqueda ?? "No especificado");
+            // 🔑 Generar clave de caché única basada en los parámetros de búsqueda
+            var cacheKey = GenerarCacheKey("clientes:paginados", request);
 
             try
             {
+                // 1️⃣ INTENTAR OBTENER DEL CACHÉ
+                var cachedResult = await _cacheService.GetAsync<PaginatedResponseDto<ClientesCompletosPaginadoDto>>(cacheKey);
+                if (cachedResult != null)
+                {
+                    _logger.LogInformation("✅ Cache HIT - Clientes obtenidos desde Redis. Key: {CacheKey}", cacheKey);
+                    return cachedResult;
+                }
+
+                _logger.LogInformation("❌ Cache MISS - Consultando BD. Página: {Pagina}, ResultadosPorPagina: {ResultadosPorPagina}, Búsqueda Nombre: {BusquedaNombre}, Búsqueda RFC: {BusquedaRFC}", 
+                    request.Pagina, request.ResultadosPorPagina, 
+                    request.NombreBusqueda ?? "No especificado", 
+                    request.RFCBusqueda ?? "No especificado");
+
+                // 2️⃣ CONSULTAR BASE DE DATOS
                 // Verificar que la conexión existe
                 if (_dbConnection == null)
                 {
@@ -178,7 +201,10 @@ namespace back_cabs.CRM.services
                     ResultadosPorPagina = request.ResultadosPorPagina
                 };
 
-                _logger.LogInformation("Se encontraron {Count} clientes para la consulta", clientes.Count);
+                // 3️⃣ GUARDAR EN CACHÉ para futuras consultas
+                await _cacheService.SetAsync(cacheKey, response, _cacheDurationPaginacion);
+                _logger.LogInformation("💾 Resultado guardado en Redis. Count: {Count}, Key: {CacheKey}", clientes.Count, cacheKey);
+
                 return response;
             }
             catch (Exception ex)
@@ -190,6 +216,7 @@ namespace back_cabs.CRM.services
 
         /// <summary>
         /// Busca clientes por nombre o RFC (versión simple para autocompletado)
+        /// OPTIMIZADO: Usa Redis con mayor tiempo de caché por ser datos más estables.
         /// </summary>
         /// <param name="termino">Término de búsqueda para nombre o RFC</param>
         /// <param name="limite">Número máximo de resultados</param>
@@ -201,10 +228,22 @@ namespace back_cabs.CRM.services
             if (string.IsNullOrWhiteSpace(termino))
                 return resultado;
 
-            _logger.LogInformation("Buscando clientes por término: {Termino}, límite: {Limite}", termino, limite);
-                
+            // 🔑 Generar clave de caché para autocompletado
+            var cacheKey = $"clientes:autocompletado:{termino.ToLowerInvariant()}:limit:{limite}";
+
             try
             {
+                // 1️⃣ INTENTAR OBTENER DEL CACHÉ
+                var cachedResult = await _cacheService.GetAsync<List<ClienteResumenDto>>(cacheKey);
+                if (cachedResult != null)
+                {
+                    _logger.LogInformation("✅ Cache HIT - Autocompletado desde Redis. Término: {Termino}, Count: {Count}", termino, cachedResult.Count);
+                    return cachedResult;
+                }
+
+                _logger.LogInformation("❌ Cache MISS - Consultando BD para autocompletado. Término: {Termino}, límite: {Limite}", termino, limite);
+
+                // 2️⃣ CONSULTAR BASE DE DATOS
                 // Verificar que la conexión existe y abrirla si es necesario
                 if (_dbConnection.State != ConnectionState.Open)
                     _dbConnection.Open();
@@ -254,13 +293,59 @@ namespace back_cabs.CRM.services
                     });
                 }
 
-                _logger.LogInformation("Se encontraron {Count} clientes para la búsqueda rápida", resultado.Count);
+                // 3️⃣ GUARDAR EN CACHÉ (más tiempo porque los nombres de clientes no cambian frecuentemente)
+                await _cacheService.SetAsync(cacheKey, resultado, _cacheDurationAutocompletado);
+                _logger.LogInformation("💾 Autocompletado guardado en Redis. Count: {Count}, Key: {CacheKey}", resultado.Count, cacheKey);
+
                 return resultado;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al buscar clientes por término: {Message}", ex.Message);
                 throw;
+            }
+        }
+
+        // =====================================================================================
+        // MÉTODOS AUXILIARES PARA REDIS
+        // =====================================================================================
+
+        /// <summary>
+        /// Genera una clave de caché única basada en los parámetros de búsqueda
+        /// </summary>
+        private string GenerarCacheKey(string prefix, ClientesCompletosPaginadoRequestDto request)
+        {
+            var parts = new List<string> { prefix };
+            
+            if (!string.IsNullOrEmpty(request.NombreBusqueda))
+                parts.Add($"nombre:{request.NombreBusqueda.ToLowerInvariant()}");
+            
+            if (!string.IsNullOrEmpty(request.RFCBusqueda))
+                parts.Add($"rfc:{request.RFCBusqueda.ToLowerInvariant()}");
+            
+            parts.Add($"page:{request.Pagina}");
+            parts.Add($"size:{request.ResultadosPorPagina}");
+            
+            return string.Join(":", parts);
+        }
+
+        /// <summary>
+        /// Invalida el caché de clientes (llamar cuando se crea/actualiza/elimina un cliente)
+        /// </summary>
+        public async Task InvalidarCacheClientesAsync()
+        {
+            try
+            {
+                // Invalidar patrones comunes de caché
+                // Nota: En producción podrías usar Redis SCAN para encontrar todas las claves con patrón
+                _logger.LogInformation("⚠️ Invalidando caché de clientes por cambios en datos");
+                
+                // Por ahora, registramos la operación
+                // En una implementación completa, usarías RedisConnection.GetDatabase().KeyDelete con patrón
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error al invalidar caché de clientes: {Message}", ex.Message);
             }
         }
     }

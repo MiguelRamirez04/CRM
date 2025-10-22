@@ -18,6 +18,7 @@ using back_cabs.CRM.enums;
 using back_cabs.CRM.models.Recepcion;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using back_cabs.CRM.Interfaces.Recepcion;
 
 namespace back_cabs.CRM.services.Recepcion
 {
@@ -26,19 +27,19 @@ namespace back_cabs.CRM.services.Recepcion
     /// </summary>
     public class OrdenTrabajoService
     {
-        private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
+        private readonly IOrdenTrabajoRepository _ordenTrabajoRepository;
         private readonly ILogger<OrdenTrabajoService> _logger;
         private readonly ClientesLegacyValidationService _clientesLegacyValidationService;
 
         public OrdenTrabajoService(
-            WriteContext writeContext,
             ReadOnlyContext readContext,
+            IOrdenTrabajoRepository ordenTrabajoRepository,
             ClientesLegacyValidationService clientesLegacyValidationService,
             ILogger<OrdenTrabajoService> logger)
         {
-            _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
+            _ordenTrabajoRepository = ordenTrabajoRepository ?? throw new ArgumentNullException(nameof(ordenTrabajoRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _clientesLegacyValidationService = clientesLegacyValidationService ?? throw new ArgumentNullException(nameof(clientesLegacyValidationService));
         }
@@ -59,22 +60,18 @@ namespace back_cabs.CRM.services.Recepcion
             try
             {
                 _logger.LogInformation("Obteniendo órdenes de trabajo. Estado={Estado}", estado ?? "TODOS");
-
-                var query = _readContext.OrdenesTrabajo.AsQueryable();
-
                 // Aplicar filtro de estado si se especifica
                 if (!string.IsNullOrEmpty(estado))
                 {
-                    query = query.Where(o => o.Estado == estado);
+                    var estadosValidos = Enum.GetNames(typeof(EstadoOrden));
+                    if (!estadosValidos.Contains(estado))
+                    {
+                        throw new ArgumentException($"El estado '{estado}' no es válido. Use uno de los estados permitidos: " + 
+                            string.Join(", ", estadosValidos));
+                    }
                 }
 
-                // Aplicar paginación
-                if (skip.HasValue) query = query.Skip(skip.Value);
-                if (take.HasValue) query = query.Take(take.Value);
-
-                var ordenes = await query
-                    .OrderByDescending(o => o.CreadoEn ?? DateTime.MinValue)
-                    .ToListAsync();
+                var ordenes = await _ordenTrabajoRepository.GetAllFilteredAsync(skip, take, estado);
 
                 return ordenes.Select(MapearAResponseDto).ToList();
             }
@@ -92,8 +89,7 @@ namespace back_cabs.CRM.services.Recepcion
         {
             try
             {
-                var orden = await _readContext.OrdenesTrabajo
-                    .FirstOrDefaultAsync(o => o.Id == id);
+                var orden = await _ordenTrabajoRepository.GetByIdAsync(id);
 
                 return orden != null ? MapearAResponseDto(orden) : null;
             }
@@ -119,7 +115,7 @@ namespace back_cabs.CRM.services.Recepcion
 
                 // Validar que el usuario existe
                 _logger.LogInformation("Verificando existencia del usuario ID: {UserId}", request.CreadoPorUserId);
-                var usuarioExiste = await _readContext.UsuariosAuth.AnyAsync(u => u.Id == request.CreadoPorUserId);
+                var usuarioExiste = await _ordenTrabajoRepository.UsuarioExistsAsync(request.CreadoPorUserId);
                 _logger.LogInformation("Usuario ID {UserId} existe: {Existe}", request.CreadoPorUserId, usuarioExiste);
                 
                 if (!usuarioExiste)
@@ -193,10 +189,8 @@ namespace back_cabs.CRM.services.Recepcion
             };                _logger.LogInformation("Intentando guardar orden con ClienteId: {ClienteId}, NuevoCliente: {NuevoCliente}", 
                     nuevaOrden.ClienteId, nuevaOrden.NuevoCliente);
                 
-                _writeContext.OrdenesTrabajo.Add(nuevaOrden);
-                _logger.LogInformation("Orden agregada al contexto, guardando...");
                 
-                await _writeContext.SaveChangesAsync();
+                await _ordenTrabajoRepository.CreateAsync(nuevaOrden);
 
                 _logger.LogInformation("Orden creada exitosamente con ID: {Id}", nuevaOrden.Id);
 
@@ -227,7 +221,7 @@ namespace back_cabs.CRM.services.Recepcion
         {
             try
             {
-                var orden = await _writeContext.OrdenesTrabajo.FindAsync(id);
+                var orden = await _ordenTrabajoRepository.GetByIdAsync(id);
                 if (orden == null) return false;
 
                 // Actualizar campos si vienen en el request
@@ -264,7 +258,7 @@ namespace back_cabs.CRM.services.Recepcion
                     orden.AsignadaAUserId = request.AsignadaAUserId.Value;
                 orden.ActualizadoEn = DateTime.UtcNow;
 
-                await _writeContext.SaveChangesAsync();
+                await _ordenTrabajoRepository.UpdateAsync(orden);
                 return true;
             }
             catch (Exception ex)
@@ -284,9 +278,7 @@ namespace back_cabs.CRM.services.Recepcion
                 _logger.LogInformation("Calculando estadísticas detalladas de recepción");
                 
                 // Obtener todas las órdenes con sus estados
-                var ordenes = await _readContext.OrdenesTrabajo
-                    .Select(o => o.Estado)
-                    .ToListAsync();
+                var ordenes = (await _ordenTrabajoRepository.GetAllEstadosAsync()).ToList();
                 
                 var totalOrdenes = ordenes.Count;
                 
