@@ -17,6 +17,10 @@ export const dashboardRoutes: Routes = [
       {
         path: 'settings',
         loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
+      },
+      {
+        path: 'calendario',
+        loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent)
       }
     ]
   }
