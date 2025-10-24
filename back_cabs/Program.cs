@@ -14,27 +14,28 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using back_cabs.CRM.Middleware;
 using StackExchange.Redis;
+using back_cabs.CRM.Interfaces;
+using back_cabs.CRM.services.shared;
+using back_cabs.CRM.Repositories;
+using back_cabs.CRM.Services.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-//Configuracion de Redis
+// Redis cache registration (si aún no está)
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
     options.InstanceName = "CABS_";
 });
 
-//Conexion multiplexer
+// opcional: ConnectionMultiplexer si lo usaras directamente
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var configurationOptions = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
-    return ConnectionMultiplexer.Connect(configurationOptions);
+    var cfg = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
+    return ConnectionMultiplexer.Connect(cfg);
 });
 
+// registrar CacheService
 builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Configurar Serilog temprano para capturar logs de startup
@@ -73,6 +74,7 @@ builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interf
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
+builder.Services.AddScoped<IFotosEvaluacion, FotosEvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.CotizacionService>();
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
@@ -84,7 +86,8 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
-
+builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
+builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();

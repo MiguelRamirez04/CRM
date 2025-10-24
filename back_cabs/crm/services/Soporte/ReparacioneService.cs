@@ -2,28 +2,37 @@ using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Soporte;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.enums;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
+using back_cabs.CRM.Interfaces.Soporte;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace back_cabs.CRM.services.Soporte
 {
-    public class ReparacionService
+    /// <summary>
+    /// Servicio de lógica de negocio para Reparaciones y Componentes.
+    /// Utiliza IReparacionRepository para el acceso a datos.
+    /// </summary>
+    public class ReparacionService 
     {
-        private readonly WriteContext _writeContext;
-        private readonly ReadOnlyContext _readOnlyContext;
+        // ELIMINAMOS _writeContext y _readOnlyContext. Mantenemos el repositorio.
+        private readonly IReparacionRepository _reparacionRepository;
         private readonly ILogger<ReparacionService> _logger;
 
         public ReparacionService(
-            WriteContext writeContext,
-            ReadOnlyContext readOnlyContext,
+            IReparacionRepository reparacionRepository,
             ILogger<ReparacionService> logger
         )
         {
-            _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
-            _readOnlyContext = readOnlyContext ?? throw new ArgumentNullException(nameof(readOnlyContext));
+            _reparacionRepository = reparacionRepository ?? throw new ArgumentNullException(nameof(reparacionRepository));
             _logger = logger ?? throw new ArgumentException(nameof(logger));
         }
+
+        // =====================================================================
+        // OPERACIONES DE REPARACIÓN (CRUD)
+        // =====================================================================
 
         public async Task<ReparacionResponseDto> CrearReparacionAsync(ReparacionCreacionRequestDto request)
         {
@@ -31,59 +40,29 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Iniciando creación de reparación para la orden ID: {OrdenId}", request.OrdenId);
 
-                //Validacion de Referencias
-                var ordenExistente = await _readOnlyContext.OrdenesTrabajo.AnyAsync(o => o.Id == request.OrdenId);
+                // Validacion de Referencias: DELEGADO AL REPOSITORIO
+                var ordenExistente = await _reparacionRepository.OrdenExisteAsync(request.OrdenId);
                 if (!ordenExistente)
                 {
-                    _logger.LogWarning("No se encontró la orden de trabajo con ID: {OrdenId}", request.OrdenId);
                     throw new KeyNotFoundException($"No se encontró la orden de trabajo con ID: {request.OrdenId}");
                 }
-                var tecnicoExistente = await _readOnlyContext.UsuariosAuth.AnyAsync(u => u.Id == request.TecnicoId);
+                var tecnicoExistente = await _reparacionRepository.TecnicoExisteAsync(request.TecnicoId);
                 if (!tecnicoExistente)
                 {
-                    _logger.LogWarning("No se encontró el técnico con ID: {TecnicoId}", request.TecnicoId);
                     throw new KeyNotFoundException($"No se encontró el técnico con ID: {request.TecnicoId}");
                 }
 
-                //Mapeo de Valores sobre el modelo
+                // Persistencia: DELEGADO AL REPOSITORIO
+                var reparacionCreada = await _reparacionRepository.CrearReparacionAsync(request);
 
-                var nuevaReparacion = new Reparacion
-                {
-                    OrdenId = request.OrdenId,
-                    TecnicoId = request.TecnicoId,
-                    DispositivoTipo = request.DispositivoTipo,
-                    Marca = request.Marca,
-                    Modelo = request.Modelo,
-                    AccesoriosRecibidos = request.AccesoriosRecibidos,
-                    DescripcionFalla = request.DescripcionFalla,
-                    Diagnostico = request.Diagnostico,
-                    Resultado = ResultadoReparacion.COTIZAR.ToString().ToUpper(), // Valor por defecto al crear
-                    CausaIrreparable = request.CausaIrreparable,
-                    RespaldoDatosAutorizado = request.RespaldoDatosAutorizado,
-                    CostoManoObra = request.CostoManoObra,
-                    CostoRefaccionesCompra = request.CostoRefaccionesCompra,
-                    CostoRefaccionesPublico = request.CostoRefaccionesPublico,
-                    GarantiaDias = request.GarantiaDias,
-                    FechaLlegada = DateTime.UtcNow,
-                    EmpezadoEn = request.EmpezadoEn,
-                    EntregadoEn = request.EntregadoEn,
-                    TipoEntrega = TipoEntrega.RECOGE_CLIENTE.ToString().ToUpper(), // Valor por defecto al crear
-                    UbicacionAlmacenamiento = request.UbicacionAlmacenamiento,
-                    Notas = request.Notas
-                };
+                _logger.LogInformation("Reparacion creada con ID: {Id}", reparacionCreada.Id);
 
-                //Resistencia del modelo
-                _writeContext.Reparaciones.Add(nuevaReparacion);
-                await _writeContext.SaveChangesAsync();
-
-                _logger.LogInformation("Reparacion creada con ID: {Id}", nuevaReparacion.Id);
-
-                return MapearAResponseDto(nuevaReparacion);
+                return reparacionCreada;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear la reparación para la orden ID: {OrdenId}", request.OrdenId);
-                throw; // Re-lanzar la excepción para que pueda ser manejada por el controlador
+                throw; 
             }
         }
 
@@ -93,68 +72,49 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Iniciando actualización de reparación con ID: {Id}", id);
 
-                var reparacionExistente = await _writeContext.Reparaciones.FindAsync(id);
+                // Obtener entidad con tracking: DELEGADO AL REPOSITORIO
+                var reparacionExistente = await _reparacionRepository.GetReparacionForUpdateAsync(id); 
                 if (reparacionExistente == null)
                 {
-                    _logger.LogWarning("No se encontró la reparación con ID: {Id}", id);
                     throw new KeyNotFoundException($"No se encontró la reparación con ID: {id}");
                 }
 
                 // ----------------------------------------------------------------------
-                // 1. MANEJO Y VALIDACIÓN DEL ENUM RESULTADO
+                // 1. MANEJO Y VALIDACIÓN DEL ENUM RESULTADO (Lógica de Negocio)
                 // ----------------------------------------------------------------------
-                ResultadoReparacion nuevoResultadoEnum = ResultadoReparacion.SIN_REPARAR; // Valor por defecto
+                ResultadoReparacion nuevoResultadoEnum = ResultadoReparacion.SIN_REPARAR; 
 
-                // Intentar convertir el string del DTO a Enum.
-                // Se usa 'true' para ignorar mayúsculas/minúsculas.
-                if (request.Resultado != null && !Enum.TryParse(request.Resultado, true, out nuevoResultadoEnum))
+                if (request.Resultado != null)
                 {
-                    // Si la conversión falla, se lanza una excepción con los valores válidos.
-                    string validos = string.Join(", ", Enum.GetNames(typeof(ResultadoReparacion)));
-                    throw new ArgumentException($"El resultado '{request.Resultado}' no es válido. Valores permitidos: {validos}");
-                }
-                else if (request.Resultado != null)
-                {
-                    // La conversión fue exitosa. Asignamos el nombre del Enum al campo string de la entidad.
-                    // Esto es crucial si el campo de la DB es un string (NVARCHAR).
+                    if (!Enum.TryParse(request.Resultado, true, out nuevoResultadoEnum))
+                    {
+                        string validos = string.Join(", ", Enum.GetNames(typeof(ResultadoReparacion)));
+                        throw new ArgumentException($"El resultado '{request.Resultado}' no es válido. Valores permitidos: {validos}");
+                    }
                     reparacionExistente.Resultado = nuevoResultadoEnum.ToString().ToUpper();
                 }
-
 
                 if (request.TipoEntrega != null)
                 {
                     TipoEntrega nuevoTipoEntregaEnum;
-
-                    // A. Validación del Enum
                     if (!Enum.TryParse(request.TipoEntrega, true, out nuevoTipoEntregaEnum))
                     {
                         string validos = string.Join(", ", Enum.GetNames(typeof(TipoEntrega)));
                         throw new ArgumentException($"El tipo de entrega '{request.TipoEntrega}' no es válido. Valores permitidos: {validos}");
                     }
-
-                    // B. Normalización del Valor para SQL
-                    // Si la DB espera 'RECOGE_CLIENTE' y 'DOMICILIO' (con underscore):
-                    string valorParaDB = nuevoTipoEntregaEnum.ToString().ToUpper();
                     reparacionExistente.TipoEntrega = nuevoTipoEntregaEnum.ToString().ToUpper();
                 }
+                
                 // ----------------------------------------------------------------------
-                // 2. ACTUALIZACIÓN DE CAMPOS Y VALIDACIONES DE NEGOCIO
+                // 2. ACTUALIZACIÓN DE CAMPOS Y VALIDACIONES DE NEGOCIO (Mapeo Parcial)
                 // ----------------------------------------------------------------------
-
-                // Actualizar solo los campos que vengan en el Request.
-                // Usamos la comprobación de nulidad para no sobrescribir con null o valores vacíos.
-
-                // Campos de solo lectura (FKs), se mantienen
-                // reparacionExistente.OrdenId = reparacionExistente.OrdenId; 
-                // reparacionExistente.TecnicoId = reparacionExistente.TecnicoId;
 
                 if (request.SolucionAplicada != null)
                     reparacionExistente.SolucionAplicada = request.SolucionAplicada;
-
                 if (request.CausaIrreparable != null)
                     reparacionExistente.CausaIrreparable = request.CausaIrreparable;
 
-                // Se actualizan solo si tienen valor. Los tipos 'decimal?' se comprueban con HasValue.
+                // Actualizar solo si tienen valor (Se asume que los FKs OrdenId y TecnicoId NO se actualizan aquí)
                 if (request.CostoManoObra.HasValue)
                     reparacionExistente.CostoManoObra = request.CostoManoObra.Value;
                 if (request.CostoRefaccionesCompra.HasValue)
@@ -167,45 +127,38 @@ namespace back_cabs.CRM.services.Soporte
                     reparacionExistente.EmpezadoEn = request.EmpezadoEn.Value;
                 if (request.EntregadoEn.HasValue)
                     reparacionExistente.EntregadoEn = request.EntregadoEn.Value;
-
                 if (request.Notas != null)
                     reparacionExistente.Notas = request.Notas;
 
                 // 2.1 Aplicar Regla de Negocio de Irreparable
                 if (request.Resultado != null && nuevoResultadoEnum == ResultadoReparacion.IRREPARABLE)
                 {
-                    if (string.IsNullOrWhiteSpace(request.CausaIrreparable))
+                    if (string.IsNullOrWhiteSpace(reparacionExistente.CausaIrreparable))
                     {
                         throw new ArgumentException("Si el resultado es 'IRREPARABLE', la causa es obligatoria.");
                     }
                 }
 
                 // 2.2 Sellar fecha de entrega al finalizar la reparación
-                if (request.Resultado != null && nuevoResultadoEnum is ResultadoReparacion.REPARADO or ResultadoReparacion.DEVUELTO_SIN_REPARAR)
+                if (request.Resultado != null && (nuevoResultadoEnum is ResultadoReparacion.REPARADO or ResultadoReparacion.DEVUELTO_SIN_REPARAR) && !reparacionExistente.EntregadoEn.HasValue)
                 {
-                    // Solo actualizamos si no se proporcionó una fecha de entrega en el request
-                    if (!reparacionExistente.EntregadoEn.HasValue)
-                    {
-                        reparacionExistente.EntregadoEn = DateTime.UtcNow;
-                    }
+                    reparacionExistente.EntregadoEn = DateTime.UtcNow;
                 }
 
                 // ----------------------------------------------------------------------
-                // 3. PERSISTENCIA
+                // 3. PERSISTENCIA: DELEGADO AL REPOSITORIO
                 // ----------------------------------------------------------------------
 
-                int filasAfectadas = await _writeContext.SaveChangesAsync();
-
+                var (filasAfectadas, reparacionActualizada) = await _reparacionRepository.ActualizarReparacionAsync(reparacionExistente);
+                
                 _logger.LogInformation("Reparación ID {Id} actualizada. Filas afectadas: {Filas}", id, filasAfectadas);
 
-                var DTOMapeado = MapearAResponseDto(reparacionExistente);
-
-
-                return (filasAfectadas, DTOMapeado);
+                // Devolver el objeto actualizado mapeado
+                return (filasAfectadas, reparacionActualizada);
             }
             catch (KeyNotFoundException)
             {
-                throw; // Re-lanzar la excepción específica para que el controlador pueda devolver 404
+                throw; 
             }
             catch (Exception ex)
             {
@@ -220,24 +173,11 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Obteniendo lista de reparaciones. Skip: {Skip}, Take: {Take}", skip, take);
 
-                var query = _readOnlyContext.Reparaciones.AsQueryable();
+                // DELEGADO AL REPOSITORIO
+                var reparaciones = await _reparacionRepository.ObtenerReparacionesAsync(skip, take);
 
-                if (skip.HasValue)
-                {
-                    query = query.Skip(skip.Value);
-                }
-                if (take.HasValue)
-                {
-                    query = query.Take(take.Value);
-                }
-
-                //Query lanzado a la BD para obtencion de registros
-                var reparaciones = await query
-                .OrderByDescending(r => r.FechaLlegada)
-                .ToListAsync();
-
-                //Mapeo de response dto
-                return reparaciones.Select(MapearAResponseDto).ToList();
+                // Mapeo de response dto
+                return reparaciones;
             }
             catch (Exception ex)
             {
@@ -253,15 +193,16 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Buscando Reparacion por ID: {Id}", id);
 
-                var reparacion = await _readOnlyContext.Reparaciones.FirstOrDefaultAsync(r => r.Id == id);
+                // DELEGADO AL REPOSITORIO
+                var reparacion = await _reparacionRepository.ObtenerReparacionPorIdAsync(id);
 
                 if (reparacion == null)
                 {
                     _logger.LogWarning("Reparacion no encontrada por ID  {Id}", id);
                     return null;
                 }
-                //Mapeo de la entidad localizada
-                return MapearAResponseDto(reparacion);
+                
+                return reparacion;
             }
             catch (Exception ex)
             {
@@ -269,7 +210,6 @@ namespace back_cabs.CRM.services.Soporte
                 throw;
             }
         }
-
 
         // =====================================================================================
         // LOGICA DE NEGOCIO DE REPARACION COMPONENTES
@@ -279,20 +219,11 @@ namespace back_cabs.CRM.services.Soporte
             try
             {
                 _logger.LogInformation("Buscando componentes de reparación");
-                var query = _readOnlyContext.ReparacionesComponentes.AsQueryable();
+                
+                // DELEGADO AL REPOSITORIO
+                var componenteReparacion = await _reparacionRepository.ObtenerComponentesReparacionAsync(skip, take);
 
-                if (skip.HasValue)
-                {
-                    query = query.Skip(skip.Value);
-                }
-                if (take.HasValue)
-                {
-                    query = query.Take(take.Value);
-                }
-
-                var componenteReparacion = await query.OrderByDescending(r => r.Id).ToListAsync();
-
-                return componenteReparacion.Select(MapearAResponseComponenteDto).ToList();
+                return componenteReparacion;
             }
             catch (Exception ex)
             {
@@ -307,14 +238,14 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Buscando componente de reparación por ID: {Id}", id);
 
-                var componenteReparacion = await _readOnlyContext.ReparacionesComponentes.FirstOrDefaultAsync(r => r.Id == id);
+                // DELEGADO AL REPOSITORIO
+                var componenteReparacion = await _reparacionRepository.ObtenerComponenteReparacionPorIdAsync(id);
 
                 if (componenteReparacion == null)
                 {
-                    _logger.LogWarning("Componente de reparación no encontrada por ID  {Id}", id);
-                    return null;
+                    throw new KeyNotFoundException($"Componente de reparación no encontrada por ID  {id}");
                 }
-                return MapearAResponseComponenteDto(componenteReparacion);
+                return componenteReparacion;
             }
             catch (Exception ex)
             {
@@ -329,47 +260,31 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Iniciando creación de componente de reparación para la reparación ID: {ReparacionId}", request.ReparacionId);
 
-                //Validacion de Referencias
-                var reparacionExistente = await _readOnlyContext.Reparaciones.AnyAsync(r => r.Id == request.ReparacionId);
-                if (!reparacionExistente)
+                // Validacion de Referencias: DELEGADO AL REPOSITORIO
+                var reparacionExistente = await _reparacionRepository.ObtenerReparacionPorIdAsync(request.ReparacionId);
+                if (reparacionExistente == null)
                 {
-                    _logger.LogWarning("No se encontró la reparación con ID: {ReparacionId}", request.ReparacionId);
                     throw new KeyNotFoundException($"No se encontró la reparación con ID: {request.ReparacionId}");
                 }
 
-                //Mapeo de Valores sobre el modelo
-
+                // Lógica de Negocio
                 if (string.IsNullOrEmpty(request.Componente))
                 {
                     throw new ArgumentException("El componente no puede ser nulo o vacío.");
                 }
 
-                var nuevoComponenteReparacion = new ReparacionComponente
-                {
-                    ReparacionId = request.ReparacionId,
-                    Componente = request.Componente,
-                    Cantidad = request.Cantidad,
-                    Proveedor = request.Proveedor,
-                    GarantiaMeses = request.GarantiaMeses,
-                    CostoUnitarioCompra = request.CostoUnitarioCompra,
-                    CostoUnitarioPublico = request.CostoUnitarioPublico,
-                    Notas = request.Notas
-                };
 
-                //Resistencia del modelo
-                _writeContext.ReparacionesComponentes.Add(nuevoComponenteReparacion);
+                // Persistencia: DELEGADO AL REPOSITORIO
+                var componenteCreado = await _reparacionRepository.CrearComponenteReparacionAsync(request);
 
-                await _writeContext.SaveChangesAsync();
+                _logger.LogInformation("Componente de reparación creado con ID: {Id}", componenteCreado.Id);
 
-                _logger.LogInformation("Componente de reparación creado con ID: {Id}", nuevoComponenteReparacion.Id);
-
-                return MapearAResponseComponenteDto(nuevoComponenteReparacion);
+                return componenteCreado;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear el componente de reparación para la reparación ID: {ReparacionId}", request.ReparacionId);
-                throw; // Re-lanzar la excepción para que pueda ser manejada por el controlador
-
+                throw; 
             }
         }
 
@@ -379,16 +294,16 @@ namespace back_cabs.CRM.services.Soporte
             {
                 _logger.LogInformation("Iniciando actualización de componente de reparación con ID: {Id}", id);
 
-                var componenteReparacionExistente = await _writeContext.ReparacionesComponentes.FindAsync(id);
+                // Obtener entidad con tracking: DELEGADO AL REPOSITORIO (usamos un método con tracking)
+                var componenteReparacionExistente = await _reparacionRepository.GetComponenteForUpdateAsync(id);
 
                 if (componenteReparacionExistente == null)
                 {
-                    _logger.LogWarning("No se encontró el componente de reparación con ID: {Id}", id);
                     throw new KeyNotFoundException($"No se encontró el componente de reparación con ID: {id}");
                 }
-                //Actualizar los campos del DTO
                 
-                    componenteReparacionExistente.Cantidad = request.cantidad;
+                // Actualizar los campos del DTO (Mapeo Parcial)
+                componenteReparacionExistente.Cantidad = request.cantidad;
                 if (request.GarantiaMeses != null)
                 {
                     componenteReparacionExistente.GarantiaMeses = request.GarantiaMeses;
@@ -406,10 +321,12 @@ namespace back_cabs.CRM.services.Soporte
                     componenteReparacionExistente.Notas = request.Notas;
                 }
 
-                int filasAfectadas = await _writeContext.SaveChangesAsync();
+                // Persistencia: DELEGADO AL REPOSITORIO
+                var (filasAfectadas, componenteActualizado) = await _reparacionRepository.ActualizarComponenteReparacionAsync(componenteReparacionExistente);
+                
                 _logger.LogInformation("Componente de reparación ID {Id} actualizado. Filas afectadas: {Filas}", id, filasAfectadas);
-                var dtoMapeado = MapearAResponseComponenteDto(componenteReparacionExistente);
-                return (filasAfectadas, dtoMapeado);
+                
+                return (filasAfectadas, componenteActualizado);
             }
             catch (Exception ex)
             {
@@ -425,11 +342,10 @@ namespace back_cabs.CRM.services.Soporte
 
 
 
-
         // Método auxiliar para mantener el código DRY (Don't Repeat Yourself)
-        private ReparacionResponseDto MapearAResponseDto(Reparacion reparacion)
+        private ReparacionResponseDto? MapearAResponseDto(Reparacion reparacion)
         {
-            // Lógica para mapear de Entidad a DTO de Respuesta
+            // ... (Mapeo de Reparacion a ReparacionResponseDto)
             return new ReparacionResponseDto
             {
                 Id = reparacion.Id,
@@ -459,8 +375,9 @@ namespace back_cabs.CRM.services.Soporte
                 CostoTotalPublico = reparacion.CostoTotalPublico
             };
         }
-        private ReparacionComponenteResponseDto MapearAResponseComponenteDto(ReparacionComponente componente)
+        private ReparacionComponenteResponseDto? MapearAResponseComponenteDto(ReparacionComponente componente)
         {
+            // ... (Mapeo de Componente a ComponenteResponseDto)
             return new ReparacionComponenteResponseDto
             {
                 Id = componente.Id,
