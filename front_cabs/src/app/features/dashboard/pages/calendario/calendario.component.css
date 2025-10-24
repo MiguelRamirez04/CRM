@@ -1,0 +1,63 @@
+:host ::ng-deep .fc-button {
+    background-color: transparent;
+    color: var(--color-text-tabnavegation);
+    font-size: var(--font-text-sm);
+    font-weight: var(--peso-text-medium);
+    padding: var(--padding--sm) var(--padding--lg);
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-right: 0.5rem;
+    transition: all 0.2s ease;
+    border-radius: 0;
+}
+
+:host ::ng-deep .fc-button:hover {
+    color: var(--color-text-enlace);
+    border-bottom: 2px solid var(--color-text-enlace);
+}
+
+:host ::ng-deep .fc-button-active {
+    color: var(--color-text-enlace);
+    font-weight: var(--peso-text-bold);
+    border-bottom: 2px solid var(--color-text-enlace);
+}
+.tab-nav {
+    display: inline-flex;
+    background-color: #F4F4F5; 
+    border-radius: 5px;
+    padding: 5px;
+    gap: 8px;
+    width: fit-content;
+    border: 1px;
+    border: solid;
+    border-color: #D9D9D9;
+}
+
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    font-size: 14px;
+    font-weight: var(--peso-text-medium);
+    color: var(--color-text-tabnavegation);
+    background-color: transparent;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    width: fit-content;
+    min-width: 50px;
+    
+
+}
+
+.tab-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.tab-btn.active {
+    background-color: #fff; /* azul activo */
+    color: #34428F;
+    font-weight: var(--peso-text-bold);
+}
