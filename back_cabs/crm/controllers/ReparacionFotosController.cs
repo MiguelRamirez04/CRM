@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
+using back_cabs.CRM.services;
 using back_cabs.CRM.services.Soporte;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,13 +24,16 @@ namespace back_cabs.CRM.controllers
     {
         private readonly ReparacionFotoService _service;
         private readonly ILogger<ReparacionFotosController> _logger;
+        private readonly ICacheService _cache;
 
         public ReparacionFotosController(
             ReparacionFotoService service, 
-            ILogger<ReparacionFotosController> logger)
+            ILogger<ReparacionFotosController> logger,
+            ICacheService cache)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cache = cache;
         }
 
         /// <summary>
@@ -70,12 +74,14 @@ namespace back_cabs.CRM.controllers
                 _logger.LogInformation("Usuario {UsuarioId} subiendo foto a reparación {ReparacionId}", 
                     usuarioId, reparacionId);
 
-                var result = await _service.UploadFotoAsync(reparacionId, dto, usuarioId);
-                
+                var created = await _service.UploadFotoAsync(reparacionId, dto, usuarioId);
+                // invalidar lista de fotos de la reparación
+                await _cache.RemoveAsync($"rep:{reparacionId}:fotos:list");
+
                 return CreatedAtAction(
                     nameof(DownloadFoto), 
-                    new { reparacionId, id = result.Id }, 
-                    result);
+                    new { reparacionId, id = created.Id }, 
+                    created);
             }
             catch (KeyNotFoundException ex)
             {
@@ -105,17 +111,14 @@ namespace back_cabs.CRM.controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetFotos(int reparacionId)
         {
-            try
-            {
-                _logger.LogInformation("Obteniendo fotos de reparación {ReparacionId}", reparacionId);
-                var fotos = await _service.GetFotosByReparacionAsync(reparacionId);
-                return Ok(fotos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener fotos de reparación {ReparacionId}", reparacionId);
-                return StatusCode(500, new { Error = "Error al obtener fotos." });
-            }
+            var key = $"rep:{reparacionId}:fotos:list";
+            var cached = await _cache.GetAsync<List<ReparacionFotoResponseDto>>(key);
+            if (cached != null) return Ok(cached);
+
+            var fotos = await _service.GetFotosByReparacionAsync(reparacionId);
+            // cachear solo metadatos/DTOs, no bytes
+            await _cache.SetAsync(key, fotos, TimeSpan.FromMinutes(10));
+            return Ok(fotos);
         }
 
         /// <summary>
@@ -131,24 +134,10 @@ namespace back_cabs.CRM.controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DownloadFoto(int reparacionId, int id)
         {
-            try
-            {
-                _logger.LogInformation("Descargando foto {FotoId} de reparación {ReparacionId}", id, reparacionId);
-                
-                var result = await _service.GetFotoFileAsync(id);
-                if (result == null)
-                {
-                    _logger.LogWarning("Foto {FotoId} no encontrada", id);
-                    return NotFound(new { Error = "Foto no encontrada." });
-                }
-
-                return File(result.Value.FileBytes, result.Value.MimeType, result.Value.FileName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al descargar foto {FotoId}", id);
-                return StatusCode(500, new { Error = "Error al descargar foto." });
-            }
+            // No cachear bytes por seguridad; si quisieras mejorar performance, cache metadata o usar CDN/local FS
+            var result = await _service.GetFotoFileAsync(id);
+            if (result == null) return NotFound();
+            return File(result.Value.FileBytes, result.Value.MimeType, result.Value.FileName);
         }
 
         /// <summary>
