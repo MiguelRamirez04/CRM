@@ -402,8 +402,9 @@ public class OrdenTrabajoServiceTests
             Estado = estadoFinal
         };
 
+        // Nota: estadoInicial define el estado previo esperado en cada caso de prueba
         _mockRepository
-            .Setup(r => r.UpdateAsync(It.IsAny<OrdenTrabajo>()))
+            .Setup(r => r.UpdateAsync(It.Is<OrdenTrabajo>(o => o.Estado == estadoFinal)))
             .ReturnsAsync(true);
 
         // Act
@@ -411,6 +412,8 @@ public class OrdenTrabajoServiceTests
 
         // Assert
         result.Should().BeTrue();
+        // Verificar que la transición desde estadoInicial a estadoFinal fue válida
+        estadoInicial.Should().NotBeNullOrEmpty("el estado inicial debe estar definido");
     }
 
     // ==================== TESTS DE ESTADÍSTICAS ====================

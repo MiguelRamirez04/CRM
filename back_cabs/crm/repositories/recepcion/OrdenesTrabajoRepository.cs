@@ -113,9 +113,11 @@ namespace back_cabs.CRM.repositories.Recepcion
             try
             {
                 // Obtiene la lista de todos los estados existentes para el cálculo de estadísticas
-                return await _readContext.OrdenesTrabajo
-                    .Select(o => o.Estado)
+                var estados = await _readContext.OrdenesTrabajo
+                    .Where(o => o.Estado != null)
+                    .Select(o => o.Estado!)
                     .ToListAsync();
+                return estados;
             }
             catch (Exception ex)
             {

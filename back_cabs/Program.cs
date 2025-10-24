@@ -68,6 +68,7 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository,
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.ICotizacionRepository, back_cabs.CRM.repositories.Recepcion.CotizacionRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IOrdenTrabajoRepository, back_cabs.CRM.repositories.Recepcion.OrdenTrabajoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRepository, back_cabs.CRM.repositories.ClientesLegacyValidationRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionRepository, back_cabs.CRM.repositories.Soporte.ReparacionRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interfaz para mejor testabilidad

@@ -332,7 +332,7 @@ namespace back_cabs.CRM.services
         /// <summary>
         /// Invalida el caché de clientes (llamar cuando se crea/actualiza/elimina un cliente)
         /// </summary>
-        public async Task InvalidarCacheClientesAsync()
+        public Task InvalidarCacheClientesAsync()
         {
             try
             {
@@ -342,10 +342,12 @@ namespace back_cabs.CRM.services
                 
                 // Por ahora, registramos la operación
                 // En una implementación completa, usarías RedisConnection.GetDatabase().KeyDelete con patrón
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error al invalidar caché de clientes: {Message}", ex.Message);
+                return Task.CompletedTask;
             }
         }
     }
