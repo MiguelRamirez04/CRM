@@ -47,7 +47,7 @@ export class SidebarComponent {
     { label: 'Registros', icon: 'registros', link: 'src/app/modules/recepcion/pages/dashboard' },
     { label: 'Reportes', icon: 'reportes', link: '/dashboard/profile' },
     { label: 'Usuarios', icon: 'usuarios', link: '/dashboard/usuarios' },
-    { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
+    { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true},
   ];
 >>>>>>> d708b7e (🎨 Modificando estilos del navbar)
 
