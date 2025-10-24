@@ -149,62 +149,102 @@ public class MiddlewareManejoErrores
     /// <returns>Task que representa la operación asíncrona</returns>
     private async Task ManejarExcepcionAsync(HttpContext contexto, Exception excepcion)
     {
+        // Generar ID único para el error (para trazabilidad)
+        var errorId = Guid.NewGuid().ToString("N")[..12]; // 12 caracteres únicos
+
         // Inicializar respuesta de error por defecto (500 Internal Server Error)
         var respuestaError = new RespuestaError
         {
             Exito = false,
             Mensaje = "Ha ocurrido un error inesperado.",
+            ErrorId = errorId,
             Timestamp = DateTime.UtcNow
         };
 
         var codigoEstado = HttpStatusCode.InternalServerError;
 
-        // MAPEO DE EXCEPCIONES A CÓDIGOS HTTP:
-        // Este switch categoriza automáticamente los tipos de excepciones comunes
-        // y asigna los códigos HTTP más apropiados según las mejores prácticas REST
-        switch (excepcion)
+        // PRIORIDAD 1: EXCEPCIONES PERSONALIZADAS DE LA APLICACIÓN
+        // Estas excepciones tienen toda la información estructurada necesaria
+        if (excepcion is Core.Exceptions.ApplicationException excepcionApp)
         {
-            // 400 Bad Request - Errores de validación de datos de entrada
-            case ArgumentException excArg:
-                codigoEstado = HttpStatusCode.BadRequest;
-                respuestaError.Mensaje = excArg.Message;
-                respuestaError.Detalles = "Argumento inválido proporcionado.";
-                break;
+            // Mapear TipoError a HttpStatusCode
+            codigoEstado = (HttpStatusCode)excepcionApp.TipoError.ToHttpStatusCode();
+            
+            // Extraer información estructurada de la excepción personalizada
+            respuestaError.Mensaje = excepcionApp.Message;
+            respuestaError.CodigoError = excepcionApp.CodigoError;
+            respuestaError.Detalles = excepcionApp.Detalles;
 
-            // 401 Unauthorized - Errores de autenticación/autorización
-            case UnauthorizedAccessException excNoAuth:
-                codigoEstado = HttpStatusCode.Unauthorized;
-                respuestaError.Mensaje = "Acceso no autorizado.";
-                respuestaError.Detalles = excNoAuth.Message;
-                break;
+            // Log diferenciado según severidad del error
+            if (codigoEstado == HttpStatusCode.InternalServerError)
+            {
+                _logger.LogError(excepcionApp, 
+                    "[ErrorID: {ErrorId}] Error interno: {Mensaje} - Código: {CodigoError}",
+                    errorId, excepcionApp.Message, excepcionApp.CodigoError);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "[ErrorID: {ErrorId}] {TipoError}: {Mensaje} - Código: {CodigoError}",
+                    errorId, excepcionApp.TipoError, excepcionApp.Message, excepcionApp.CodigoError);
+            }
+        }
+        // PRIORIDAD 2: EXCEPCIONES ESTÁNDAR DE .NET
+        // Mapeo de excepciones comunes a códigos HTTP apropiados
+        else
+        {
+            switch (excepcion)
+            {
+                // 400 Bad Request - Errores de validación de datos de entrada
+                case ArgumentException excArg:
+                    codigoEstado = HttpStatusCode.BadRequest;
+                    respuestaError.Mensaje = excArg.Message;
+                    respuestaError.CodigoError = "INVALID_ARGUMENT";
+                    respuestaError.Detalles = "Argumento inválido proporcionado.";
+                    break;
 
-            // 404 Not Found - Recursos que no existen
-            case KeyNotFoundException excNoEncontrado:
-                codigoEstado = HttpStatusCode.NotFound;
-                respuestaError.Mensaje = "Recurso no encontrado.";
-                respuestaError.Detalles = excNoEncontrado.Message;
-                break;
+                // 401 Unauthorized - Errores de autenticación/autorización
+                case UnauthorizedAccessException excNoAuth:
+                    codigoEstado = HttpStatusCode.Unauthorized;
+                    respuestaError.Mensaje = "Acceso no autorizado.";
+                    respuestaError.CodigoError = "UNAUTHORIZED";
+                    respuestaError.Detalles = excNoAuth.Message;
+                    break;
 
-            // 409 Conflict - Operaciones que no se pueden completar debido al estado actual
-            case InvalidOperationException excOperacionInvalida:
-                codigoEstado = HttpStatusCode.Conflict;
-                respuestaError.Mensaje = "Operación no permitida.";
-                respuestaError.Detalles = excOperacionInvalida.Message;
-                break;
+                // 404 Not Found - Recursos que no existen
+                case KeyNotFoundException excNoEncontrado:
+                    codigoEstado = HttpStatusCode.NotFound;
+                    respuestaError.Mensaje = "Recurso no encontrado.";
+                    respuestaError.CodigoError = "NOT_FOUND";
+                    respuestaError.Detalles = excNoEncontrado.Message;
+                    break;
 
-            // 408 Request Timeout - Timeouts en operaciones
-            case TimeoutException excTimeout:
-                codigoEstado = HttpStatusCode.RequestTimeout;
-                respuestaError.Mensaje = "Tiempo de espera agotado.";
-                respuestaError.Detalles = excTimeout.Message;
-                break;
+                // 409 Conflict - Operaciones que no se pueden completar debido al estado actual
+                case InvalidOperationException excOperacionInvalida:
+                    codigoEstado = HttpStatusCode.Conflict;
+                    respuestaError.Mensaje = "Operación no permitida.";
+                    respuestaError.CodigoError = "INVALID_OPERATION";
+                    respuestaError.Detalles = excOperacionInvalida.Message;
+                    break;
 
-            // 500 Internal Server Error - Errores no categorizados (default)
-            default:
-                // Loggear errores inesperados con stack trace completo para debugging
-                _logger.LogError(excepcion, "Excepción no manejada: {Mensaje}", excepcion.Message);
-                respuestaError.Detalles = "Por favor contacte al soporte si este problema persiste.";
-                break;
+                // 408 Request Timeout - Timeouts en operaciones
+                case TimeoutException excTimeout:
+                    codigoEstado = HttpStatusCode.RequestTimeout;
+                    respuestaError.Mensaje = "Tiempo de espera agotado.";
+                    respuestaError.CodigoError = "TIMEOUT";
+                    respuestaError.Detalles = excTimeout.Message;
+                    break;
+
+                // 500 Internal Server Error - Errores no categorizados (default)
+                default:
+                    // Loggear errores inesperados con stack trace completo para debugging
+                    _logger.LogError(excepcion, 
+                        "[ErrorID: {ErrorId}] Excepción no manejada: {Mensaje}", 
+                        errorId, excepcion.Message);
+                    respuestaError.CodigoError = "INTERNAL_ERROR";
+                    respuestaError.Detalles = "Por favor contacte al soporte si este problema persiste.";
+                    break;
+            }
         }
 
         // LOGGING ESTRUCTURADO:
@@ -253,11 +293,23 @@ public class RespuestaError
     public string Mensaje { get; set; } = string.Empty;
 
     /// <summary>
-    /// Detalles adicionales del error (opcional).
-    /// Proporciona información técnica adicional para debugging.
-    /// En producción, puede estar vacío por seguridad.
+    /// Código de error único para identificar el tipo específico de error.
+    /// Útil para manejo programático de errores en el frontend.
     /// </summary>
-    public string? Detalles { get; set; }
+    public string? CodigoError { get; set; }
+
+    /// <summary>
+    /// Detalles adicionales del error (opcional).
+    /// Proporciona información técnica adicional o contexto estructurado.
+    /// Puede ser un string simple o un objeto complejo serializado.
+    /// </summary>
+    public object? Detalles { get; set; }
+
+    /// <summary>
+    /// ID único del error para trazabilidad y correlación en logs.
+    /// Facilita el seguimiento de errores específicos en producción.
+    /// </summary>
+    public string? ErrorId { get; set; }
 
     /// <summary>
     /// Timestamp UTC cuando ocurrió el error.

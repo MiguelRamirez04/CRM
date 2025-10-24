@@ -17,6 +17,7 @@ namespace back_cabs.CRM.Interfaces.Shared
         /// <summary>
         /// Obtiene un vehículo por su ID
         /// </summary>
+        /// <param name="id">ID del vehículo</param>
         Task<Vehiculo?> GetByIdAsync(int id);
 
         /// <summary>

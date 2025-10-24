@@ -108,7 +108,7 @@ namespace back_cabs.services;
 /// Servicio principal para la gestión de tokens JWT en la aplicación.
 /// Proporciona métodos seguros para generar, validar y gestionar tokens de autenticación.
 /// </summary>
-public class ServicioJwt
+public class ServicioJwt : IServicioJwt
 {
     private readonly IConfiguration _configuracion;
     private readonly ILogger<ServicioJwt> _logger;

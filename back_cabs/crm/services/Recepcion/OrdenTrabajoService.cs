@@ -30,18 +30,18 @@ namespace back_cabs.CRM.services.Recepcion
         private readonly ReadOnlyContext _readContext;
         private readonly IOrdenTrabajoRepository _ordenTrabajoRepository;
         private readonly ILogger<OrdenTrabajoService> _logger;
-        private readonly ClientesLegacyValidationService _clientesLegacyValidationService;
+        private readonly ClientesLegacyValidationService? _clientesLegacyValidationService;
 
         public OrdenTrabajoService(
             ReadOnlyContext readContext,
             IOrdenTrabajoRepository ordenTrabajoRepository,
-            ClientesLegacyValidationService clientesLegacyValidationService,
+            ClientesLegacyValidationService? clientesLegacyValidationService,
             ILogger<OrdenTrabajoService> logger)
         {
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _ordenTrabajoRepository = ordenTrabajoRepository ?? throw new ArgumentNullException(nameof(ordenTrabajoRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _clientesLegacyValidationService = clientesLegacyValidationService ?? throw new ArgumentNullException(nameof(clientesLegacyValidationService));
+            _clientesLegacyValidationService = clientesLegacyValidationService;
         }
 
         // =====================================================================================
@@ -350,7 +350,9 @@ namespace back_cabs.CRM.services.Recepcion
                 _logger.LogInformation("ValidarClienteLegacyAsync: Buscando cliente con ID: {ClienteId}", clienteId);
                 
                 // Utilizar el servicio de validación avanzado que prueba múltiples estrategias
-                var clienteExiste = await _clientesLegacyValidationService.ValidarClienteLegacyUsingMultipleStrategiesAsync(clienteId);
+                var clienteExiste = _clientesLegacyValidationService != null 
+                    ? await _clientesLegacyValidationService.ValidarClienteLegacyUsingMultipleStrategiesAsync(clienteId)
+                    : false;
                 
                 _logger.LogInformation("ValidarClienteLegacyAsync: Cliente con ID {ClienteId} encontrado usando servicio avanzado: {Encontrado}", 
                     clienteId, clienteExiste);

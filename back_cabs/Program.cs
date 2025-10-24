@@ -69,7 +69,7 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IOrdenTrabajoRepos
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRepository, back_cabs.CRM.repositories.ClientesLegacyValidationRepository>();
 
 // Inyección de servicios de la aplicación
-builder.Services.AddScoped<ServicioJwt>();
+builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interfaz para mejor testabilidad
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();

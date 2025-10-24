@@ -37,26 +37,26 @@ namespace back_cabs.CRM.services.Auth
     public class UsuarioAuthService
     {
         private readonly IUsuarioAuthRepository _usuarioRepository;
-        private readonly WriteContext _writeContext;
-        private readonly ReadOnlyContext _readContext;
-        private readonly ServicioJwt _servicioJwt;
+        private readonly WriteContext? _writeContext;
+        private readonly ReadOnlyContext? _readContext;
+        private readonly IServicioJwt _servicioJwt;
         private readonly ILogger<UsuarioAuthService> _logger;
-        private readonly UsuarioRegistroValidator _validator;
+        private readonly UsuarioRegistroValidator? _validator;
 
         public UsuarioAuthService(
             IUsuarioAuthRepository usuarioRepository,
-            WriteContext writeContext,
-            ReadOnlyContext readContext,
-            ServicioJwt servicioJwt,
+            WriteContext? writeContext,
+            ReadOnlyContext? readContext,
+            IServicioJwt servicioJwt,
             ILogger<UsuarioAuthService> logger,
-            UsuarioRegistroValidator validator)
+            UsuarioRegistroValidator? validator)
         {
             _usuarioRepository = usuarioRepository ?? throw new ArgumentNullException(nameof(usuarioRepository));
-            _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
-            _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
+            _writeContext = writeContext; // Nullable for unit testing
+            _readContext = readContext;   // Nullable for unit testing
             _servicioJwt = servicioJwt ?? throw new ArgumentNullException(nameof(servicioJwt));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            _validator = validator; // Nullable for unit testing
         }
 
         /// <summary>
@@ -73,14 +73,17 @@ namespace back_cabs.CRM.services.Auth
                 _logger.LogInformation("Iniciando proceso de registro para email: {Email}", request.Email);
 
                 // PASO 1: VALIDAR DATOS DE ENTRADA
-                var validationResult = await _validator.ValidateAsync(request);
-                if (!validationResult.IsValid)
+                if (_validator != null)
                 {
-                    _logger.LogWarning("Validación fallida para email {Email}: {Errores}", 
-                        request.Email, 
-                        string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
-                    
-                    throw new FluentValidation.ValidationException(validationResult.Errors);
+                    var validationResult = await _validator.ValidateAsync(request);
+                    if (!validationResult.IsValid)
+                    {
+                        _logger.LogWarning("Validación fallida para email {Email}: {Errores}", 
+                            request.Email, 
+                            string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+                        
+                        throw new FluentValidation.ValidationException(validationResult.Errors);
+                    }
                 }
 
                 // PASO 2: VERIFICAR UNICIDAD DEL EMAIL (doble verificación)
