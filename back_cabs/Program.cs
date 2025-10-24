@@ -16,6 +16,8 @@ using back_cabs.CRM.Middleware;
 using StackExchange.Redis;
 using back_cabs.CRM.Interfaces;
 using back_cabs.CRM.services.shared;
+using back_cabs.CRM.Repositories;
+using back_cabs.CRM.Services.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,7 +84,8 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
-
+builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
+builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
