@@ -14,7 +14,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using back_cabs.CRM.Middleware;
 using StackExchange.Redis;
-using back_cabs.CRM.services;
+using back_cabs.CRM.Interfaces;
+using back_cabs.CRM.services.shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,7 @@ builder.Services.AddScoped<ServicioJwt>();
 builder.Services.AddScoped<UsuarioAuthService>();
 builder.Services.AddScoped<VehiculosService>();
 builder.Services.AddScoped<ClientesCompletosService>();
+builder.Services.AddScoped<IFotosEvaluacion, FotosEvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();

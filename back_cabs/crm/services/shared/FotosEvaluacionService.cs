@@ -9,6 +9,7 @@ using back_cabs.CRM.services.Files;
 using back_cabs.CRM.enums.Files;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using back_cabs.CRM.Interfaces;
 
 namespace back_cabs.CRM.services.shared
 {
@@ -16,7 +17,7 @@ namespace back_cabs.CRM.services.shared
     /// Servicio para gestionar fotos de evaluaciones.
     /// Delega el almacenamiento físico a FileStorageService.
     /// </summary>
-    public class FotosEvaluacionService
+    public class FotosEvaluacionService : IFotosEvaluacion
     {
         private readonly ReadOnlyContext _readContext;
         private readonly WriteContext _writeContext;
