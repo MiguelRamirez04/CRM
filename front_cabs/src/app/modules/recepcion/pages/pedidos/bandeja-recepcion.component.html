@@ -1,0 +1,161 @@
+<!-- Encabezado y Controles -->
+<div class="mb-4">
+  <h1 class="text-3xl font-bold text-gray-900">Bandeja de Recepción</h1>
+</div>
+
+<!--
+  SECCIÓN DE CONTROLES MODIFICADA
+  Cambiamos el 'justify-between' por 'flex-col md:flex-row' para apilar en móvil
+  y agregamos los nuevos botones.
+-->
+<div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
+
+  <!-- Grupo Izquierdo: Búsqueda y Filtros -->
+  <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+    <!-- Barra de Búsqueda -->
+    <div class="relative w-full sm:w-auto">
+      <input 
+        type="text" 
+        placeholder="Buscar por folio, cliente..." 
+        class="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <!-- Icono de Lupa (Heroicons) -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+      </span>
+    </div>
+
+    <!-- Filtro por Estado (basado en el param 'estado' de tu API) -->
+    <select 
+      [(ngModel)]="filtroEstado" 
+      (change)="aplicarFiltro()"
+      class="border rounded-lg text-gray-700 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
+      <option value="">Todos los Estados</option>
+      <option value="Activo">Activo</option>
+      <option value="Finalizado">Finalizado</option>
+      <option value="Cancelar">Cancelar</option>
+      <!-- Agrega más estados si los tienes -->
+    </select>
+  </div>
+
+  <!-- 👇 GRUPO DE BOTONES NUEVO (copiado de tu dashboard) 👇 -->
+  <div class="flex items-center gap-3 w-full md:w-auto">
+    <!-- Botón Cliente Nuevo -->
+    <button
+      type="button"
+      class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+      (click)="onNuevaOrdenClienteNuevo()"
+    >
+      <i class="fa-solid fa-user-plus h-4 w-4"></i>
+      Cliente Nuevo
+    </button>
+    <!-- Botón Cliente Legacy -->
+    <button
+      type="button"
+      class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+      (click)="onNuevaOrdenClienteLegacy()"
+    >
+      <i class="fa-solid fa-address-book h-4 w-4"></i>
+      Cliente Legacy
+    </button>
+  </div>
+</div>
+
+<!-- Contenedor de la Tabla -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <!-- Tabla (overflow-x-auto para responsiveness) -->
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-max">
+      <!-- Encabezados de la Tabla -->
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Folio</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo Orden</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Problemática</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+        </tr>
+      </thead>
+
+      <!-- Cuerpo de la Tabla -->
+      <tbody class="bg-white divide-y divide-gray-200">
+        
+        <!-- Estado de Carga -->
+        <tr *ngIf="isLoading">
+          <td colspan="6" class="p-4 text-center text-gray-500">
+            Cargando datos...
+          </td>
+        </tr>
+
+        <!-- Estado Vacío -->
+        <tr *ngIf="!isLoading && tickets.length === 0">
+          <td colspan="6" class="p-4 text-center text-gray-500">
+            No se encontraron registros.
+          </td>
+        </tr>
+
+        <!-- Filas de Datos -->
+        <tr *ngFor="let ticket of tickets" class="hover:bg-gray-50">
+          <td class="py-4 px-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">{{ ticket.nombreCliente }}</div>
+          </td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            <div class="text-sm text-gray-700">{{ ticket.folio }}</div>
+          </td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            <div class="text-sm text-gray-700">{{ ticket.telefono }}</div>
+          </td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            <div class="text-sm text-gray-700">{{ ticket.tipoOrden }}</div>
+          </td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            <div class="text-sm text-gray-700 truncate max-w-xs">{{ ticket.falla || 'N/A' }}</div>
+          </td>
+          <td class="py-4 px-4 whitespace-nowrap">
+            <!-- Badge de Estatus (como en la maqueta de Soportes) -->
+            <span 
+              class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+              [ngClass]="getStatusClass(ticket.estado)">
+              {{ ticket.estado }}
+            </span>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación (copiada de la maqueta de Soportes) -->
+  <div class="flex justify-between items-center px-4 py-3 border-t">
+    <div class="text-sm text-gray-700">
+      <!-- Ajusta los cálculos según los datos de paginación -->
+      Visualizando {{(currentPage - 1) * pageSize + 1}} - {{currentPage * pageSize}} de {{totalItems}} entradas
+    </div>
+    
+    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+      <button (click)="paginaAnterior()" [disabled]="currentPage === 1" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+        Atrás
+      </button>
+      
+      <!-- Lógica de números de página (simplificada) -->
+      <button 
+        *ngFor="let page of [1, 2, 3]" 
+        (click)="irAPagina(page)" 
+        [ngClass]="{'z-10 bg-blue-50 border-blue-500 text-blue-600': currentPage === page, 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': currentPage !== page}"
+        class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+        {{ page }}
+      </button>
+      <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+        ...
+      </span>
+      <!-- Faltaría lógica para últimas páginas -->
+
+      <button (click)="paginaSiguiente()" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+        Siguiente
+      </button>
+    </nav>
+  </div>
+</div>
+
