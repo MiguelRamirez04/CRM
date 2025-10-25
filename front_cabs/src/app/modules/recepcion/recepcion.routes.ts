@@ -13,8 +13,5 @@ export const recepcionRoutes: Routes = [
     path: 'clientes-completos',
     loadComponent: () => import('./pages/clientes-completos/clientes-completos.component').then(m => m.ClientesCompletosComponent)
   },
-  {
-    path: 'bandeja',
-    loadComponent: () => import('./pages/pedidos/bandeja-recepcion.component').then(m => m.BandejaRecepcionComponent)
-  }
+
 ];
