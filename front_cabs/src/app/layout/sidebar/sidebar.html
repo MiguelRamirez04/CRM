@@ -1,0 +1,155 @@
+<aside
+  [ngClass]="{
+    'max-w-[280px] justify-between': !isCollapsed,
+    'w-[88px] items-center justify-between': isCollapsed
+  }"
+  class="relative flex h-full max-w-[280px] flex-col justify-between rounded-r-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.1)]">
+
+  <!-- Botón toggle -->
+  <button
+    type="button"
+    (click)="toggleSidebar()"
+    class="absolute top-[35px] right-0 translate-x-[12px] grid h-6 w-6 place-items-center border border-slate-200 rounded-full bg-white text-black hover:bg-blue-50"
+    aria-label="Colapsar">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+  </button>
+  <div class="p-[24px] flex items-center justify-center">
+    <img *ngIf="!isCollapsed" src="/logoCompleto.png" alt="Logo de la empresa" class="h-[48px] w-auto" />
+    <img *ngIf="isCollapsed" src="/logo.png" alt="Logo de la empresa" class="w-[48px] h-[48px]" />
+  </div>
+  <!-- Lista principal -->
+  <div class="px-[24px]">
+    <nav class="mt-6 space-y-1">
+      @for (item of mainNav; track $index) {
+        <a [routerLink]="item.link"
+          routerLinkActive="!font-semibold !text-[#4F39F6]"
+          [routerLinkActiveOptions]="{exact:true}"
+          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50"
+          [ngClass]="{
+            'gap-[12px] px-4 text-[14px] text-slate-500': !isCollapsed,
+            'w-[44px] h-[44px] justify-center': isCollapsed
+          }"
+            routerLinkActive="bg-[#EFF2FF] text-[#2753FF] font-semibold"
+            [routerLinkActiveOptions]="{ exact: true }">
+          <span class="relative" [ngClass]="{ 'text-[#2753FF]': isActive(item.link), 'text-slate-500': !isActive(item.link) }">
+            @if (item.icon === 'resumen') {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0 0 20.25 18V6A2.25 2.25 0 0 0 18 3.75H6A2.25 2.25 0 0 0 3.75 6v12A2.25 2.25 0 0 0 6 20.25Z" />
+              </svg>
+            }
+            @if (item.icon === 'registros') { 
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v7.5m2.25-6.466a9.016 9.016 0 0 0-3.461-.203c-.536.072-.974.478-1.021 1.017a4.559 4.559 0 0 0-.018.402c0 .464.336.844.775.994l2.95 1.012c.44.15.775.53.775.994 0 .136-.006.27-.018.402-.047.539-.485.945-1.021 1.017a9.077 9.077 0 0 1-3.461-.203M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+            }
+            @if (item.icon === 'reportes') { 
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m7.875 14.25 1.214 1.942a2.25 2.25 0 0 0 1.908 1.058h2.006c.776 0 1.497-.4 1.908-1.058l1.214-1.942M2.41 9h4.636a2.25 2.25 0 0 1 1.872 1.002l.164.246a2.25 2.25 0 0 0 1.872 1.002h2.092a2.25 2.25 0 0 0 1.872-1.002l.164-.246A2.25 2.25 0 0 1 16.954 9h4.636M2.41 9a2.25 2.25 0 0 0-.16.832V12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 12V9.832c0-.287-.055-.57-.16-.832M2.41 9a2.25 2.25 0 0 1 .382-.632l3.285-3.832a2.25 2.25 0 0 1 1.708-.786h8.43c.657 0 1.281.287 1.709.786l3.284 3.832c.163.19.291.404.382.632M4.5 20.25h15A2.25 2.25 0 0 0 21.75 18v-2.625c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125V18a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            }
+            @if (item.icon === 'usuarios') { 
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+              </svg>
+            }
+            @if (item.icon === 'calendario'){
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+              </svg>
+            }
+            @if (item.notify) {
+              <span class="absolute -right-1 -top-1 block h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white"></span>
+            }
+          </span>
+          @if (!isCollapsed) {
+            <span class="flex-1" [ngClass]="{ 'text-[#2753FF]': isActive(item.link), 'text-slate-500': !isActive(item.link) }">
+              {{ item.label }}
+            </span>
+          }
+        </a>
+      }
+    </nav>
+  </div>
+  <!-- Divider -->
+    <div class="w-full h-[1px] my-[24px] bg-slate-100"></div>
+  <!-- Secundario -->
+  <div class="px-[24px]">
+    <nav class="space-y-1 pb-4">
+      @for (item of secondaryNav; track $index) {
+        <a [routerLink]="item.link"
+          routerLinkActive="!font-semibold !text-[#2753FF]"
+          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50"
+          [ngClass]="{
+            'gap-[12px] px-4 text-[14px] text-slate-500': !isCollapsed,
+            'w-[44px] h-[44px] justify-center': isCollapsed
+          }">
+          <span class="relative" [ngClass]="{ 'text-[#2753FF]': isActive(item.link), 'text-slate-500': !isActive(item.link) }">
+            @if (item.icon === 'notificaciones') { 
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+            }
+            @if (item.icon === 'configuracion') { 
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+            }
+            @if (item.icon === 'tutorial') {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+              </svg>
+            }
+            @if (item.notify) {
+              <span class="absolute -right-1 -top-1 block h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white"></span>
+            }
+          </span>
+          @if (!isCollapsed) {
+            <span class="flex-1" [ngClass]="{ 'text-[#2753FF]': isActive(item.link), 'text-slate-500': !isActive(item.link) }">
+              {{ item.label }}
+            </span>
+          }
+        </a>
+      }
+    </nav>
+  </div>
+  <!-- Footer usuario -->
+    <div class="mt-auto w-full border-t border-slate-100">
+      <button (click)="toggleBandejaPerfil()" class="flex w-full items-center justify-between bg-white p-[24px] hover:bg-gray-50">
+        <div class="flex items-center gap-3">
+        <!-- Iniciales -->
+          <div class="grid h-10 w-10 place-items-center rounded-full bg-gray-900 text-xs font-semibold text-white">
+            {{ getInitials(user$ | async) }}
+          </div>
+        <!-- Nombre y rol -->
+          @if (!isCollapsed) {
+            <div class="text-left leading-tight">
+              <p class="text-sm font-medium text-gray-800">
+                {{ (user$ | async)?.nombreCompleto || (user$ | async)?.name || ((user$ | async)?.nombre + ' ' + (user$ | async)?.apellido) }}
+              </p>
+              <p class="text-xs text-gray-500">
+                {{ (user$ | async)?.role || 'Sin rol' }}
+              </p>
+            </div>
+          }
+        </div>
+        <!-- Flecha -->
+        @if (!isCollapsed) {
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+          </svg>
+        }
+      </button>
+  </div>
+  <!-- BandejaPerfil -->
+    @if (mostrarBandejaPerfil) {
+      <app-bandeja-perfil
+        class="absolute bottom-[345px] left-full ml-4 w-[271px] bg-white shadow-xl rounded-xl z-50">
+      </app-bandeja-perfil>
+    }
+</aside>
+
+
+
