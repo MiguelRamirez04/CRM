@@ -7,75 +7,71 @@ import { Observable } from 'rxjs';
 import { Router } from '@angular/router';
 
 type NavItem = {
-  label: string;
-  icon: 'resumen' | 'registros' | 'reportes' | 'usuarios' | 'calendario' | 'notificaciones' | 'configuracion' | 'tutorial';
-  link?: string;
-  notify?: boolean;
+  label: string;
+  icon: 'resumen' | 'registros' | 'reportes' | 'usuarios' | 'calendario' | 'notificaciones' | 'configuracion' | 'tutorial';
+  link?: string;
+  notify?: boolean;
 };
 
 @Component({
-  selector: 'app-sidebar',
-  standalone: true,
-  imports: [CommonModule, RouterModule, BandejaPerfilComponent],
-  templateUrl: './sidebar.html',
-  styleUrls: ['./sidebar.css']
+  selector: 'app-sidebar',
+  standalone: true,
+  imports: [CommonModule, RouterModule, BandejaPerfilComponent],
+  templateUrl: './sidebar.html',
+  styleUrls: ['./sidebar.css']
 })
-export class SidebarComponent {
-  @Input() activeLabel: string | null = null;
+export class Sidebar {
+  @Input() activeLabel: string | null = null;
 
-  isCollapsed = false;
-  mostrarBandejaPerfil = false;
+  isCollapsed = false;
+  mostrarBandejaPerfil = false;
 
-  user$: Observable<User | null>;
+  user$: Observable<User | null>;
 
-  // 👇 ============ SECCIÓN MODIFICADA ============ 👇
-  mainNav: NavItem[] = [
-    { label: 'Resumen', icon: 'resumen', link: '/dashboard' },
-    // CORREGIDO: Apunta a la ruta del dashboard de recepción
-    { label: 'Registros', icon: 'registros', link: '/recepcion' }, 
-    // NUEVO: Enlace a la nueva bandeja que creamos
-    { label: 'Bandeja', icon: 'reportes', link: '/recepcion/bandeja' }, 
-    { label: 'Reportes', icon: 'reportes', link: '/dashboard/profile' },
-    { label: 'Usuarios', icon: 'usuarios', link: '/dashboard/usuarios' },
-    { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
-  ];
-  // 👆 ============ FIN DE SECCIÓN MODIFICADA ============ 👆
+  // Navegación principal - Visible para todos
+  mainNav: NavItem[] = [
+    { label: 'Resumen', icon: 'resumen', link: '/dashboard' },
+    { label: 'Recepción', icon: 'registros', link: '/recepcion' },
+    { label: 'Clientes Legacy', icon: 'usuarios', link: '/recepcion/clientes-completos' },
+    { label: 'Bandeja', icon: 'reportes', link: '/recepcion/bandeja' },
+    { label: 'Reportes', icon: 'reportes', link: '/dashboard/reportes' },
+    { label: 'Calendario', icon: 'calendario', link: '/dashboard/calendario', notify: true },
+  ];
 
-  secondaryNav: NavItem[] = [
-    { label: 'Notificaciones', icon: 'notificaciones', link: '/dashboard/notificaciones', notify: true },
-    { label: 'Configuración', icon: 'configuracion', link: '/dashboard/configuracion' },
-    { label: 'Tutorial', icon: 'tutorial', link: '/dashboard/tutorial' },
-  ];
+  secondaryNav: NavItem[] = [
+    { label: 'Notificaciones', icon: 'notificaciones', link: '/dashboard/notificaciones', notify: true },
+    { label: 'Configuración', icon: 'configuracion', link: '/dashboard/configuracion' },
+    { label: 'Tutorial', icon: 'tutorial', link: '/dashboard/tutorial' },
+  ];
 
-  getInitials(user: User | null): string {
-    if (!user) return '';
-    if (user.nombre && user.apellido) {
-      return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
-    }
-    if (user.name) {
-      const parts = user.name.split(' ');
-      return parts.map(p => p.charAt(0)).join('').toUpperCase();
-    }
-    return '';
-  }
+  getInitials(user: User | null): string {
+    if (!user) return '';
+    if (user.nombre && user.apellido) {
+      return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
+    }
+    if (user.name) {
+      const parts = user.name.split(' ');
+      return parts.map(p => p.charAt(0)).join('').toUpperCase();
+    }
+    return '';
+  }
 
-constructor(
-  private authService: SecureAuthService,
-  private router: Router
-) {
-  this.user$ = this.authService.currentUser$;
-}
+  constructor(
+    private authService: SecureAuthService,
+    private router: Router
+  ) {
+    this.user$ = this.authService.currentUser$;
+  }
 
-  toggleSidebar(): void {
-    this.isCollapsed = !this.isCollapsed;
-  }
-  
+  toggleSidebar(): void {
+    this.isCollapsed = !this.isCollapsed;
+  }
 
-  toggleBandejaPerfil(): void {
-    this.mostrarBandejaPerfil = !this.mostrarBandejaPerfil;
-  }
+  toggleBandejaPerfil(): void {
+    this.mostrarBandejaPerfil = !this.mostrarBandejaPerfil;
+  }
 
-  isActive(link?: string): boolean {
-    return !!link && this.router.url === link;
-  }
+  isActive(link?: string): boolean {
+    return !!link && this.router.url === link;
+  }
 }

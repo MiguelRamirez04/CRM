@@ -1,1 +1,245 @@
-<p>nueva-orden-cliente-nuevo works!</p>
+<div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+  <!-- Header Mejorado -->
+  <div class="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 px-6 py-5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+          <i class="fas fa-user-plus text-white text-2xl"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-white">Nueva Orden - Cliente Nuevo</h2>
+          <p class="text-emerald-100 text-sm mt-0.5">Registrar nuevo cliente y crear orden de trabajo</p>
+        </div>
+      </div>
+      <button type="button" 
+              class="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2.5 transition-all duration-200"
+              (click)="onCancel()">
+        <i class="fas fa-times text-2xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+    <!-- Error Message -->
+    <div *ngIf="errorMessage()" class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+      <div class="flex">
+        <i class="fas fa-exclamation-circle text-red-500 mr-3 mt-0.5"></i>
+        <div class="text-red-800">{{ errorMessage() }}</div>
+      </div>
+    </div>
+
+    <form [formGroup]="ordenForm" (ngSubmit)="onSubmit()">
+      <!-- Sección: Datos del Cliente Nuevo -->
+      <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+        <h3 class="text-lg font-semibold text-green-900 mb-4 flex items-center">
+          <i class="fas fa-user-plus mr-2"></i>
+          Datos del Cliente
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Nombre del Cliente -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Cliente <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              formControlName="nombreCliente"
+              placeholder="Nombre completo o razón social"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('nombreCliente')?.invalid && ordenForm.get('nombreCliente')?.touched"
+            />
+            <p *ngIf="ordenForm.get('nombreCliente')?.invalid && ordenForm.get('nombreCliente')?.touched" 
+               class="mt-1 text-sm text-red-600">
+              El nombre es requerido (mínimo 3 caracteres)
+            </p>
+          </div>
+
+          <!-- Teléfono -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Teléfono (Opcional)
+            </label>
+            <input
+              type="tel"
+              formControlName="clienteTelefono"
+              placeholder="10 dígitos"
+              maxlength="10"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('clienteTelefono')?.invalid && ordenForm.get('clienteTelefono')?.touched"
+            />
+            <p *ngIf="ordenForm.get('clienteTelefono')?.invalid && ordenForm.get('clienteTelefono')?.touched" 
+               class="mt-1 text-sm text-red-600">
+              El teléfono debe tener 10 dígitos
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Datos de la Orden -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-clipboard-list mr-2"></i>
+          Datos de la Orden
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Fecha/Hora Inicio Cita -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Fecha y Hora de Cita <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              formControlName="citaProgramadaInicio"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('citaProgramadaInicio')?.invalid && ordenForm.get('citaProgramadaInicio')?.touched"
+            />
+          </div>
+
+          <!-- Fecha/Hora Fin Cita (Opcional) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Fecha y Hora Fin (Opcional)
+            </label>
+            <input
+              type="datetime-local"
+              formControlName="citaProgramadaFin"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Modalidad -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Modalidad <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="modalidad"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('modalidad')?.invalid && ordenForm.get('modalidad')?.touched">
+              <option *ngFor="let mod of modalidades" [value]="mod">{{ mod }}</option>
+            </select>
+          </div>
+
+          <!-- Tipo de Orden -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Orden <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="tipoOrden"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('tipoOrden')?.invalid && ordenForm.get('tipoOrden')?.touched">
+              <option *ngFor="let tipo of tiposOrden" [value]="tipo">{{ tipo }}</option>
+            </select>
+          </div>
+
+          <!-- Estado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Estado <span class="text-red-500">*</span>
+            </label>
+            <select
+              formControlName="estado"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+              <option *ngFor="let est of estados" [value]="est">{{ est }}</option>
+            </select>
+          </div>
+
+          <!-- Prioridad -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Prioridad <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              formControlName="prioridad"
+              min="1"
+              max="5"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              [class.border-red-500]="ordenForm.get('prioridad')?.invalid && ordenForm.get('prioridad')?.touched"
+            />
+            <p class="text-xs text-gray-500 mt-1">1 = Baja, 5 = Alta</p>
+          </div>
+
+          <!-- Costo Estimado -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Costo Estimado (Opcional)
+            </label>
+            <input
+              type="number"
+              formControlName="costoEstimado"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Requiere Factura -->
+          <div class="flex items-center space-x-3 pt-7">
+            <input
+              type="checkbox"
+              formControlName="requiereFactura"
+              id="requiereFactura"
+              class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+            />
+            <label for="requiereFactura" class="text-sm font-medium text-gray-700 cursor-pointer">
+              Requiere Factura
+            </label>
+          </div>
+        </div>
+
+        <!-- Ubicación -->
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Ubicación (Opcional)
+          </label>
+          <input
+            type="text"
+            formControlName="ubicacionText"
+            placeholder="Ej: Oficina Principal, Sucursal Norte..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Notas -->
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Notas Adicionales (Opcional)
+          </label>
+          <textarea
+            formControlName="notas"
+            rows="3"
+            placeholder="Observaciones, detalles especiales..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+          ></textarea>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+    <button
+      type="button"
+      class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+      (click)="onCancel()"
+      [disabled]="guardandoOrden()">
+      <i class="fas fa-times mr-2"></i>
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      (click)="onSubmit()"
+      [disabled]="ordenForm.invalid || guardandoOrden()">
+      <i class="fas fa-spinner fa-spin mr-2" *ngIf="guardandoOrden()"></i>
+      <i class="fas fa-save mr-2" *ngIf="!guardandoOrden()"></i>
+      {{ guardandoOrden() ? 'Guardando...' : 'Crear Orden' }}
+    </button>
+  </div>
+</div>

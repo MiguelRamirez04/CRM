@@ -1,45 +1,75 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed, WritableSignal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import {
   OrdenTrabajo,
   EstadisticaRecepcion,
-  OrdenTrabajoRequest,
-  OrdenTrabajoUpdateRequest,
 } from '../../../../core/models/orden-trabajo.interface';
 import { RecepcionService } from '../../services/recepcion.service';
+import { DialogService } from '../../services/dialog.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
-import { OrdenFormComponent } from '../../components/orden-form/orden-form.component';
-import { SecureAuthService } from '../../../../core/services/secure-auth.service';
+import { OrdenDetalleDialogComponent } from '../../components/orden-detalle-dialog/orden-detalle-dialog.component';
+// import { SecureAuthService } from '../../../../core/services/secure-auth.service'; // Ya no es necesario
+
+// Define los estados posibles para el filtro
+type EstadoOrden = 'CAPTURADA' | 'ASIGNADA' | 'EN_PROCESO' | 'COMPLETADA' | 'CANCELADA';
 
 @Component({
   selector: 'app-recepcion-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
-    OrdenListComponent,
-    OrdenFormComponent
-],
+    OrdenListComponent
+  ],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css'],
+  styleUrls: ['./dashboard.component.css'], // Tu CSS original
 })
 export class RecepcionDashboardComponent implements OnInit {
   private recepcionService = inject(RecepcionService);
-  private authService = inject(SecureAuthService);
+  private dialogService = inject(DialogService);
+  private dialog = inject(MatDialog);
+  // private authService = inject(SecureAuthService); // Eliminado
 
-  // Signals para estado reactivo
-  ordenes = signal<OrdenTrabajo[]>([]);
-  estadisticas = signal<EstadisticaRecepcion | null>(null);
-  loading = signal(false);
-  mostrarFormulario = signal(false);
-  mostrarDetallesOrden = signal(false);
-  mostrarFormularioEdicion = signal(false);
-  ordenSeleccionada = signal<OrdenTrabajo | null>(null);
-  ordenParaEditar = signal<OrdenTrabajo | null>(null);
-  error = signal<string | null>(null);
+  // Signals de datos
+  ordenes: WritableSignal<OrdenTrabajo[]> = signal([]);
+  estadisticas: WritableSignal<EstadisticaRecepcion | null> = signal(null);
+  loading: WritableSignal<boolean> = signal(false);
+  error: WritableSignal<string | null> = signal(null);
   
-  // Propiedad para fecha actual
+  // --- NUEVO: Signals para Filtros ---
+  filtroBusqueda: WritableSignal<string> = signal('');
+  filtroEstado: WritableSignal<string> = signal('TODOS'); // 'TODOS' o un EstadoOrden
+  
+  // Lista de estados para el dropdown
+  readonly estadosOrden: EstadoOrden[] = ['CAPTURADA', 'ASIGNADA', 'EN_PROCESO', 'COMPLETADA', 'CANCELADA'];
+
+  // --- NUEVO: Signal Computada para Órdenes Filtradas ---
+  ordenesFiltradas: Signal<OrdenTrabajo[]> = computed(() => {
+    const busqueda = this.filtroBusqueda().toLowerCase().trim();
+    const estado = this.filtroEstado();
+    
+    // Si no hay filtros, devuelve todo
+    if (!busqueda && estado === 'TODOS') {
+      return this.ordenes();
+    }
+
+    return this.ordenes().filter(orden => {
+      // 1. Filtrar por Estado
+      const matchEstado = (estado === 'TODOS') || (orden.estado === estado);
+      if (!matchEstado) return false;
+
+      // 2. Filtrar por Búsqueda
+      if (!busqueda) return true; // Ya pasó el filtro de estado
+      
+      return (
+        orden.id.toString().includes(busqueda) ||
+        orden.nombreCliente.toLowerCase().includes(busqueda) ||
+        orden.tipoOrden.toLowerCase().includes(busqueda) ||
+        (orden.clienteId && orden.clienteId.toString().includes(busqueda))
+      );
+    });
+  });
+
   get fechaActual(): Date {
     return new Date();
   }
@@ -51,6 +81,8 @@ export class RecepcionDashboardComponent implements OnInit {
   cargarDatosIniciales() {
     this.loading.set(true);
     this.error.set(null);
+    
+    // Carga de Órdenes
     this.recepcionService.getOrdenes().subscribe({
       next: (ordenes) => {
         this.ordenes.set(ordenes);
@@ -58,6 +90,8 @@ export class RecepcionDashboardComponent implements OnInit {
       },
       error: (err) => this.handleError('Error al cargar las órdenes.', err),
     });
+
+    // Carga de Estadísticas
     this.recepcionService.getEstadisticas().subscribe({
       next: (stats) => this.estadisticas.set(stats),
       error: (err) =>
@@ -65,133 +99,68 @@ export class RecepcionDashboardComponent implements OnInit {
     });
   }
 
-  onNuevaOrden() {
-    this.mostrarFormulario.set(true);
-    // Prevenir scroll del body cuando el modal está abierto
-    document.body.classList.add('modal-open');
+  // --- NUEVO: Métodos para actualizar filtros ---
+  onBusquedaChange(event: Event) {
+    const valor = (event.target as HTMLInputElement).value;
+    this.filtroBusqueda.set(valor);
+  }
+
+  onEstadoChange(event: Event) {
+    const valor = (event.target as HTMLSelectElement).value;
+    this.filtroEstado.set(valor);
+  }
+
+  // Métodos de Acciones de Órdenes (sin cambios)
+  onNuevaOrdenLegacy() {
+    this.dialogService.openNuevaOrdenLegacy().subscribe(ordenCreada => {
+      if (ordenCreada) this.cargarDatosIniciales();
+    });
+  }
+
+  onNuevaOrdenNuevo() {
+    this.dialogService.openNuevaOrdenNuevo().subscribe(ordenCreada => {
+      if (ordenCreada) this.cargarDatosIniciales();
+    });
   }
 
   onEditarOrden(id: number) {
-    // Buscar la orden en la lista actual
     const orden = this.ordenes().find(o => o.id === id);
     if (orden) {
-      this.ordenParaEditar.set(orden);
-      this.mostrarFormularioEdicion.set(true);
-      // Prevenir scroll del body cuando el modal está abierto
-      document.body.classList.add('modal-open');
+      this.dialogService.openEditarOrden(orden).subscribe(ordenActualizada => {
+        if (ordenActualizada) this.cargarDatosIniciales();
+      });
     } else {
       this.handleError('No se encontró la orden seleccionada para editar.', null);
     }
   }
 
+  // Métodos del Sidebar (Modificados para usar Dialog)
   onVerDetalles(id: number) {
-    // Buscar la orden en la lista actual
     const orden = this.ordenes().find(o => o.id === id);
     if (orden) {
-      this.ordenSeleccionada.set(orden);
-      this.mostrarDetallesOrden.set(true);
-      // Prevenir scroll del body cuando el modal está abierto
-      document.body.classList.add('modal-open');
+      const dialogRef = this.dialog.open(OrdenDetalleDialogComponent, {
+        data: { orden },
+        panelClass: 'orden-detalle-dialog',
+        position: { right: '0' },
+        maxWidth: '600px',
+        width: '600px',
+        height: '100vh',
+        hasBackdrop: true,
+        backdropClass: 'bg-black/30'
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result?.action === 'edit') {
+          this.onEditarOrden(result.ordenId);
+        }
+      });
     } else {
       this.handleError('No se encontró la orden seleccionada.', null);
     }
   }
 
-
-
-  onGuardarOrden(ordenRequest: OrdenTrabajoRequest) {
-    this.loading.set(true);
-    this.error.set(null);
-    
-    this.recepcionService.crearOrden(ordenRequest).subscribe({
-      next: (ordenCreada) => {
-        console.log('Orden creada exitosamente:', ordenCreada);
-        this.mostrarFormulario.set(false);
-        this.loading.set(false);
-        // Restaurar scroll del body
-        document.body.classList.remove('modal-open');
-        this.cargarDatosIniciales(); // Recargar lista de órdenes
-      },
-      error: (err: any) => {
-        console.error('Error al crear la orden:', err);
-        this.handleError('Error al guardar la orden. Por favor intente nuevamente.', err);
-      },
-    });
-  }
-
-  onGuardarEdicion(ordenRequest: OrdenTrabajoRequest) {
-    const ordenId = this.ordenParaEditar()?.id;
-    if (!ordenId) {
-      this.handleError('No se pudo identificar la orden a editar.', null);
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set(null);
-    
-    const updateRequest: OrdenTrabajoUpdateRequest = {
-      requestDto: ordenRequest.requestDto
-    };
-
-    this.recepcionService.actualizarOrden(ordenId, updateRequest).subscribe({
-      next: () => {
-        console.log('Orden actualizada exitosamente');
-        this.mostrarFormularioEdicion.set(false);
-        this.ordenParaEditar.set(null);
-        this.loading.set(false);
-        // Restaurar scroll del body
-        document.body.classList.remove('modal-open');
-        this.cargarDatosIniciales(); // Recargar lista de órdenes
-      },
-      error: (err: any) => {
-        console.error('Error al actualizar la orden:', err);
-        this.handleError('Error al actualizar la orden. Por favor intente nuevamente.', err);
-      },
-    });
-  }
-
-  onCancelarFormulario() {
-    this.mostrarFormulario.set(false);
-    this.error.set(null);
-    // Restaurar scroll del body cuando se cierra el modal
-    document.body.classList.remove('modal-open');
-  }
-
-  onCancelarEdicion() {
-    this.mostrarFormularioEdicion.set(false);
-    this.ordenParaEditar.set(null);
-    this.error.set(null);
-    // Restaurar scroll del body cuando se cierra el modal
-    document.body.classList.remove('modal-open');
-  }
-
-  onCerrarDetallesOrden() {
-    this.mostrarDetallesOrden.set(false);
-    this.ordenSeleccionada.set(null);
-    // Restaurar scroll del body cuando se cierra el modal
-    document.body.classList.remove('modal-open');
-  }
-
-  onBuscarCliente(term: string) {
-    // Lógica para buscar cliente si es necesario en el dashboard
-    console.log('Buscando cliente con término:', term);
-  }
-
-  onLogout() {
-    if (confirm('¿Está seguro de que desea cerrar sesión?')) {
-      this.authService.logout().subscribe({
-        next: () => {
-          // El servicio maneja la redirección automáticamente
-          console.log('Sesión cerrada exitosamente');
-        },
-        error: (error) => {
-          console.error('Error al cerrar sesión:', error);
-          // Forzar logout si falla la llamada al servidor
-          this.authService.forceLogout();
-        }
-      });
-    }
-  }
+  // Método de Logout Eliminado
+  // onLogout() { ... }
 
   private handleError(
     message: string,

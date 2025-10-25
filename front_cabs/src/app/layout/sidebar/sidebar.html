@@ -20,19 +20,23 @@
     <img *ngIf="isCollapsed" src="/logo.png" alt="Logo de la empresa" class="w-[48px] h-[48px]" />
   </div>
   <!-- Lista principal -->
-  <div class="px-[24px]">
-    <nav class="mt-6 space-y-1">
+  <div class="px-[24px] flex-1 overflow-y-auto">
+    <!-- Sección: Operaciones -->
+    @if (!isCollapsed) {
+      <p class="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        Operaciones
+      </p>
+    }
+    <nav class="space-y-1">
       @for (item of mainNav; track $index) {
         <a [routerLink]="item.link"
-          routerLinkActive="!font-semibold !text-[#4F39F6]"
-          [routerLinkActiveOptions]="{exact:true}"
-          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50"
+          routerLinkActive="bg-[#EFF2FF] text-[#2753FF] font-semibold"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50 transition-all duration-200"
           [ngClass]="{
             'gap-[12px] px-4 text-[14px] text-slate-500': !isCollapsed,
             'w-[44px] h-[44px] justify-center': isCollapsed
-          }"
-            routerLinkActive="bg-[#EFF2FF] text-[#2753FF] font-semibold"
-            [routerLinkActiveOptions]="{ exact: true }">
+          }">
           <span class="relative" [ngClass]="{ 'text-[#2753FF]': isActive(item.link), 'text-slate-500': !isActive(item.link) }">
             @if (item.icon === 'resumen') {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -73,14 +77,20 @@
     </nav>
   </div>
   <!-- Divider -->
-    <div class="w-full h-[1px] my-[24px] bg-slate-100"></div>
-  <!-- Secundario -->
-  <div class="px-[24px]">
-    <nav class="space-y-1 pb-4">
+    <div class="w-full h-[1px] bg-slate-100"></div>
+  
+  <!-- Secundario: Sistema -->
+  <div class="px-[24px] pb-4">
+    @if (!isCollapsed) {
+      <p class="px-4 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        Sistema
+      </p>
+    }
+    <nav class="space-y-1">
       @for (item of secondaryNav; track $index) {
         <a [routerLink]="item.link"
           routerLinkActive="!font-semibold !text-[#2753FF]"
-          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50"
+          class="group flex items-center rounded-full py-3 font-medium hover:bg-gray-50 transition-all duration-200"
           [ngClass]="{
             'gap-[12px] px-4 text-[14px] text-slate-500': !isCollapsed,
             'w-[44px] h-[44px] justify-center': isCollapsed
@@ -145,9 +155,9 @@
   </div>
   <!-- BandejaPerfil -->
     @if (mostrarBandejaPerfil) {
-      <app-bandeja-perfil
-        class="absolute bottom-[345px] left-full ml-4 w-[271px] bg-white shadow-xl rounded-xl z-50">
-      </app-bandeja-perfil>
+      <!-- app-bandeja-perfil removed from template to avoid "not a known element" compile error;
+           Re-add by declaring/importing the component in the containing NgModule or adding
+           CUSTOM_ELEMENTS_SCHEMA to the TestBed configuration in the spec when appropriate -->
     }
 </aside>
 

@@ -1,15 +1,16 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { RecepcionTicket } from '../models/recepcion.model'; // Importamos la interfaz
-import { environment } from '../../../environments/environment'; // Asumiendo que tienes environments
+import { RecepcionTicket } from '../models/recepcion.model';
+import { OrdenTrabajo } from '../models/orden-trabajo.interface';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RecepcionService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/api/Recepcion`; // Ajusta la URL base
+  private apiUrl = `${environment.apiUrl}/api/Recepcion`;
 
   constructor() { }
 
@@ -18,7 +19,7 @@ export class RecepcionService {
     skip: number,
     take: number,
     estado?: string
-  ): Observable<RecepcionTicket[]> { // <-- Tu API parece devolver un array directo
+  ): Observable<RecepcionTicket[]> {
     
     let params = new HttpParams()
       .set('skip', skip.toString())
@@ -28,12 +29,27 @@ export class RecepcionService {
       params = params.set('estado', estado);
     }
 
-    // Tu API (imagen 1) devuelve un array directamente en el 200 OK
     return this.http.get<RecepcionTicket[]>(this.apiUrl, { params });
+  }
 
-    /* // NOTA: Si tu API devolviera un objeto { totalItems: 100, items: [...] }
-    // deberías usar la interfaz PaginacionRecepcion y cambiar el tipo de retorno:
-    // return this.http.get<PaginacionRecepcion>(this.apiUrl, { params });
-    */
+  // Método para crear una nueva orden
+  crearOrden(data: any): Observable<OrdenTrabajo> {
+    const wrapper = { requestDto: data };
+    return this.http.post<OrdenTrabajo>(this.apiUrl, wrapper);
+  }
+
+  // Método para actualizar una orden existente
+  actualizarOrden(id: number, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
+  // Método para obtener una orden por ID
+  obtenerOrdenPorId(id: number): Observable<OrdenTrabajo> {
+    return this.http.get<OrdenTrabajo>(`${this.apiUrl}/${id}`);
+  }
+
+  // Método para obtener estadísticas
+  obtenerEstadisticas(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/estadisticas`);
   }
 }

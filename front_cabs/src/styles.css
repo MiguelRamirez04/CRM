@@ -1,6 +1,3 @@
-/* Montserrat Import */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-
 /* Tailwind v4 */
 @import 'tailwindcss';
 
@@ -90,4 +87,67 @@ html, body {
   .no-print {
     display: none !important;
   }
+}
+
+/* ============================================
+   Angular Material Dialog Custom Styles
+   ============================================ */
+
+/* Dialog Container */
+.custom-dialog-container {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Dialog Overlay/Backdrop */
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Animation for dialog entrance */
+.cdk-overlay-pane {
+  animation: dialogFadeIn 0.3s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive dialog sizing */
+@media (max-width: 768px) {
+  .custom-dialog-container {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 16px !important;
+  }
+}
+
+/* Dialog form inputs focus states */
+.custom-dialog-container input:focus,
+.custom-dialog-container select:focus,
+.custom-dialog-container textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smooth transitions for dialog buttons */
+.custom-dialog-container button {
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-dialog-container button:hover {
+  transform: translateY(-1px);
+}
+
+.custom-dialog-container button:active {
+  transform: translateY(0);
 }
