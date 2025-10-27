@@ -8,6 +8,7 @@ import {
 import { RecepcionService } from '../../services/recepcion.service';
 import { DialogService } from '../../services/dialog.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
+import { HeaderComponent } from '../../../../shared/components/header/header';
 import { OrdenDetalleDialogComponent } from '../../components/orden-detalle-dialog/orden-detalle-dialog.component';
 // import { SecureAuthService } from '../../../../core/services/secure-auth.service'; // Ya no es necesario
 
@@ -19,7 +20,8 @@ type EstadoOrden = 'CAPTURADA' | 'ASIGNADA' | 'EN_PROCESO' | 'COMPLETADA' | 'CAN
   standalone: true,
   imports: [
     CommonModule,
-    OrdenListComponent
+    OrdenListComponent,
+    HeaderComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'], // Tu CSS original
@@ -69,6 +71,13 @@ export class RecepcionDashboardComponent implements OnInit {
       );
     });
   });
+
+  getPorcentaje(valor: number, total: number): number {
+    if (total === 0) {
+      return 0;
+    }
+    return (valor / total) * 100;
+  }
 
   get fechaActual(): Date {
     return new Date();

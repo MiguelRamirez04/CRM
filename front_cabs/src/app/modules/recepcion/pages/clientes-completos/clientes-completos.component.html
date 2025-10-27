@@ -1,25 +1,7 @@
 <!-- Rediseñado con TailwindCSS y colores azules -->
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
-  <!-- Header con degradado azul -->
-  <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-xl">
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            <i class="fas fa-users mr-3"></i>
-            Clientes Legacy
-          </h1>
-          <p class="mt-2 text-blue-100">Consulta y gestión de clientes de la base de datos legacy.</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <div class="rounded-lg bg-white/20 px-4 py-2 text-white backdrop-blur">
-            <span class="text-sm font-medium">Total: {{ totalRegistros() }} clientes</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <app-header></app-header>
 
   <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     
@@ -45,10 +27,10 @@
     </div>
 
     <!-- Panel de búsquedas con diseño azul -->
-    <div class="mb-8 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100 p-6 shadow-sm">
+  <div class="mb-8 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 p-6 shadow-sm">
       <div class="mb-6">
-        <h2 class="text-xl font-semibold text-blue-900 mb-4">
-          <i class="fas fa-search mr-2"></i>
+        <h2 class="text-xl font-semibold text-indigo-900 mb-4">
+          <i class="fas fa-search mr-2 text-indigo-600"></i>
           Opciones de Búsqueda
         </h2>
         
@@ -58,8 +40,8 @@
             type="button"
             class="rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
             [ngClass]="{
-              'bg-blue-600 text-white shadow-md': modoBusqueda() === 'todos',
-              'bg-blue-200 text-blue-800 hover:bg-blue-300': modoBusqueda() !== 'todos'
+              'bg-indigo-600 text-white shadow-md': modoBusqueda() === 'todos',
+              'bg-indigo-200 text-indigo-800 hover:bg-indigo-300': modoBusqueda() !== 'todos'
             }"
             (click)="cargarClientes()">
             <i class="fas fa-list mr-2"></i>
@@ -70,8 +52,8 @@
             type="button"
             class="rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
             [ngClass]="{
-              'bg-blue-600 text-white shadow-md': modoBusqueda() === 'nombre',
-              'bg-blue-200 text-blue-800 hover:bg-blue-300': modoBusqueda() !== 'nombre'
+              'bg-indigo-600 text-white shadow-md': modoBusqueda() === 'nombre',
+              'bg-indigo-200 text-indigo-800 hover:bg-indigo-300': modoBusqueda() !== 'nombre'
             }"
             (click)="modoBusqueda.set('nombre')">
             <i class="fas fa-user mr-2"></i>
@@ -82,8 +64,8 @@
             type="button"
             class="rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200"
             [ngClass]="{
-              'bg-blue-600 text-white shadow-md': modoBusqueda() === 'rfc',
-              'bg-blue-200 text-blue-800 hover:bg-blue-300': modoBusqueda() !== 'rfc'
+              'bg-indigo-600 text-white shadow-md': modoBusqueda() === 'rfc',
+              'bg-indigo-200 text-indigo-800 hover:bg-indigo-300': modoBusqueda() !== 'rfc'
             }"
             (click)="modoBusqueda.set('rfc')">
             <i class="fas fa-id-card mr-2"></i>
@@ -162,13 +144,13 @@
     </div>
 
     <!-- Tabla de resultados -->
-    <div class="rounded-xl border border-blue-200 bg-white shadow-lg overflow-hidden">
+  <div class="rounded-2xl border border-indigo-100 bg-white shadow-lg overflow-hidden">
       <!-- Encabezado de tabla -->
-      <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-        <h3 class="text-lg font-semibold text-white">
-          <i class="fas fa-table mr-2"></i>
+      <div class="bg-gradient-to-r from-[#667eea] to-[#764ba2] px-6 py-4">
+        <h3 class="text-lg font-semibold text-white drop-shadow">
+          <i class="fas fa_table mr-2"></i>
           Resultados de Búsqueda
-          <span class="ml-2 rounded-full bg-blue-500 px-3 py-1 text-sm">{{ clientes().length }} de {{ totalRegistros() }}</span>
+          <span class="ml-2 rounded-full bg-white/20 ring-1 ring-white/20 px-3 py-1 text-sm">{{ clientes().length }} de {{ totalRegistros() }}</span>
         </h3>
       </div>
 
@@ -182,8 +164,8 @@
 
       <!-- Tabla -->
       <div *ngIf="!cargando()" class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-blue-200">
-          <thead class="bg-blue-50">
+        <table class="min-w-full divide-y divide-indigo-200">
+          <thead class="bg-indigo-50">
             <tr>
               <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
                 <i class="fas fa-hashtag mr-2"></i>ID

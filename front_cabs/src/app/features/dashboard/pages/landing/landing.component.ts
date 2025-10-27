@@ -2,28 +2,32 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
+import { HeaderComponent } from '../../../../shared/components/header/header';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ],
-  template: `
-    <div class=" flex min-h-screen bg-gray-50">
-
-
-      <!-- Contenido principal -->
-      <main class="flex-1 p-6">
-        <h1 class="text-xl font-semibold text-gray-800">Bienvenido, {{ currentUser?.name }}</h1>
-        <!-- Aquí puedes renderizar tus stats o widgets -->
-      </main>
-    </div>
-  `
+  imports: [CommonModule, HeaderComponent],
+  templateUrl: './landing.component.html',
+  styleUrls: ['./landing.component.css']
 })
 export class DashboardComponent {
   private authService = inject(SecureAuthService);
 
-
   currentUser = this.authService.getCurrentUser();
 
+  get nombreUsuario(): string {
+    if (this.currentUser?.nombreCompleto) {
+      return this.currentUser.nombreCompleto;
+    }
+    if (this.currentUser?.nombre && this.currentUser?.apellido) {
+      return `${this.currentUser.nombre} ${this.currentUser.apellido}`;
+    }
+    if (this.currentUser?.name) {
+      return this.currentUser.name;
+    }
+    return 'Usuario';
+  }
 
   refreshData(): void {
     console.log('Refrescando datos del dashboard...');

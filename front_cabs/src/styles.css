@@ -1,9 +1,33 @@
 /* Tailwind v4 */
 @import 'tailwindcss';
 
-/* Declara Montserrat como la fuente "sans" por defecto */
+/* Configuración de Tailwind v4 */
 @theme {
   --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #667eea;
+  --color-primary-dark: #764ba2;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-light: #f8f9fa;
+  --color-dark: #343a40;
+
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-slide-in-left: slideInLeft 0.5s ease-out;
+  --animate-pulse-custom: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
 }
 
 :root {
@@ -45,7 +69,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  @apply font-sans;
+  font-family: var(--font-sans);
 }
 
 /* Custom Scrollbar */
@@ -54,26 +78,35 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background-color: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded;
+  background-color: #9ca3af;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  background-color: #6b7280;
 }
 
 /* Loading States */
 .loading-overlay {
-  @apply fixed inset-0 bg-white/90 flex items-center justify-center z-50;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
 }
 
 .spinner-custom {
   width: 50px;
   height: 50px;
-  @apply border-4 border-gray-200 border-t-blue-600 rounded-full;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
@@ -93,61 +126,88 @@ html, body {
    Angular Material Dialog Custom Styles
    ============================================ */
 
-/* Dialog Container */
-.custom-dialog-container {
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-}
-
-/* Dialog Overlay/Backdrop */
-.cdk-overlay-dark-backdrop {
-  background: rgba(0, 0, 0, 0.6) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-/* Animation for dialog entrance */
-.cdk-overlay-pane {
-  animation: dialogFadeIn 0.3s ease-out;
-}
-
-@keyframes dialogFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-/* Responsive dialog sizing */
-@media (max-width: 768px) {
+@layer components {
+  /* Dialog Container */
   .custom-dialog-container {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    margin: 16px !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  /* Dialog Overlay/Backdrop */
+  .cdk-overlay-dark-backdrop {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  /* Animation for dialog entrance */
+  .cdk-overlay-pane {
+    animation: dialogFadeIn 0.3s ease-out;
+  }
+
+  @keyframes dialogFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Responsive dialog sizing */
+  @media (max-width: 768px) {
+    .custom-dialog-container {
+      width: 95vw !important;
+      max-width: 95vw !important;
+      margin: 16px !important;
+    }
+  }
+
+  /* Dialog form inputs focus states */
+  .custom-dialog-container input:focus,
+  .custom-dialog-container select:focus,
+  .custom-dialog-container textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Smooth transitions for dialog buttons */
+  .custom-dialog-container button {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .custom-dialog-container button:hover {
+    transform: translateY(-1px);
+  }
+
+  .custom-dialog-container button:active {
+    transform: translateY(0);
   }
 }
 
-/* Dialog form inputs focus states */
-.custom-dialog-container input:focus,
-.custom-dialog-container select:focus,
-.custom-dialog-container textarea:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
+/* ============================================
+   Dashboard Recepción Custom Styles
+   ============================================ */
 
-/* Smooth transitions for dialog buttons */
-.custom-dialog-container button {
-  transition: all 0.2s ease-in-out;
-}
+@layer components {
+  /* --- Animaciones --- */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-.custom-dialog-container button:hover {
-  transform: translateY(-1px);
-}
-
-.custom-dialog-container button:active {
-  transform: translateY(0);
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  .animate-fade-in-up-delayed-1 { animation: fade-in-up 0.6s ease-out 0.1s forwards; }
+  .animate-fade-in-up-delayed-2 { animation: fade-in-up 0.6s ease-out 0.2s forwards; }
+  .animate-fade-in-up-delayed-3 { animation: fade-in-up 0.6s ease-out 0.3s forwards; }
 }

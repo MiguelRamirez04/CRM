@@ -1,0 +1,160 @@
+/* Estilos base para el contenedor principal */
+.landing-container {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Contenedor de imagen de fondo */
+.landing-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.landing-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Overlay con gradiente */
+.landing-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to right,
+    rgba(30, 58, 138, 0.88) 0%,
+    rgba(30, 58, 138, 0.75) 35%,
+    rgba(30, 58, 138, 0.5) 60%,
+    rgba(30, 58, 138, 0.1) 100%
+  );
+  z-index: 2;
+}
+
+/* Contenido principal */
+.landing-content {
+  position: relative;
+  z-index: 10;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: flex-start;
+  padding-top: 3rem;
+}
+
+/* Texto con sombra para legibilidad */
+.text-shadow-strong {
+  text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.text-shadow-medium {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Tarjetas con efecto glassmorphism */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.2), 0 12px 15px -6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+/* Animaciones personalizadas */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 1.2s ease-out;
+}
+
+/* Colores personalizados */
+.text-white-90 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.text-white-95 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.text-yellow-custom {
+  color: #fbbf24;
+}
+
+.text-blue-custom {
+  color: #2563eb;
+}
+
+.bg-yellow-custom {
+  background-color: #fbbf24;
+}
+
+.bg-red-custom {
+  background-color: #dc2626;
+}
+
+.bg-red-custom-hover:hover {
+  background-color: #b91c1c;
+}
+
+/* Responsive: ajustar overlay y espaciado en móviles */
+@media (max-width: 768px) {
+  .landing-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(30, 58, 138, 0.92) 0%,
+      rgba(30, 58, 138, 0.88) 100%
+    );
+  }
+  
+  .landing-content {
+    padding-top: 2rem;
+  }
+  
+  .animate-slide-in-left {
+    animation: slide-in-left 1s ease-out;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-content {
+    padding-top: 5rem;
+  }
+}

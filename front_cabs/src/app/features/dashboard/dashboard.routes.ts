@@ -8,7 +8,7 @@ export const dashboardRoutes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./pages/landing/landing.component').then(m => m.DashboardComponent)
       },
       {
         path: 'profile',

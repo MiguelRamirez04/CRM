@@ -14,12 +14,13 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesCompletosService } from '../../services/clientes-completos.service';
+import { HeaderComponent } from '../../../../shared/components/header/header';
 import { ClienteCompleto, PagedResponse } from '../../../../core/models/cliente-completo.interface';
 
 @Component({
   selector: 'app-clientes-completos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HeaderComponent],
   templateUrl: './clientes-completos.component.html',
   styleUrls: ['./clientes-completos.component.css']
 })
