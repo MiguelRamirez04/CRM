@@ -19,4 +19,10 @@ export const recepcionRoutes: Routes = [
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.RecepcionDashboardComponent)
   }
 
+  ,
+  {
+    path: 'ordenes-trabajo/ejecuciones',
+    loadComponent: () => import('../modulesShared/pages/ejecuciones-orden/ejecuciones-orden.component').then(m => m.EjecucionesOrdenComponent)
+  }
+
 ];

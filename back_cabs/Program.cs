@@ -210,6 +210,6 @@ app.Logger.LogInformation("🚀 CRM API iniciada correctamente");
 app.Run();
 
 
-Console.WriteLine("Hola");
+Console.WriteLine("jajaja quien dejo un console writeline aqui");
 
 

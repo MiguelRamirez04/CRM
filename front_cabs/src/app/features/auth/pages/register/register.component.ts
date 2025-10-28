@@ -7,27 +7,34 @@ import { SecureAuthService, RegisterRequest } from '../../../../core/services/se
 import { RolUsuario } from '../../../../core/enums/rol-usuario.enum';
 import { TipoTransmision } from '../../../../core/enums/tipo-transmision.enum';
 
-// ✅ Validador para coincidencia de contraseñas
+// Validador para coincidencia de contraseñas
 export function passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
   const pass = group.get('contrasena')?.value;
   const confirmPass = group.get('confirmarContrasena')?.value;
+  
+  // Si no hay contraseña, no validar coincidencia
+  if (!pass) return null;
+  
+  // Si hay contraseña pero no confirmación, marcar error
+  if (pass && !confirmPass) return { required: true };
+  
   return pass === confirmPass ? null : { mismatch: true };
 }
 
-// ✅ Validador personalizado para contraseña robusta
+//Validador personalizado para contraseña robusta
 export function strongPasswordValidator(control: AbstractControl): ValidationErrors | null {
   const value = control.value;
   if (!value) return null;
 
   const hasNumber = /[0-9]/.test(value);
   const hasUpperCase = /[A-Z]/.test(value);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+  const hasLowerCase = /[a-z]/.test(value);
 
-  const passwordValid = hasNumber && hasUpperCase && hasSpecialChar;
+  const passwordValid = hasNumber && hasUpperCase && hasLowerCase && value.length >= 8;
 
   return !passwordValid
     ? {
-        strongPassword: { hasNumber, hasUpperCase, hasSpecialChar },
+        strongPassword: { hasNumber, hasUpperCase, hasLowerCase },
       }
     : null;
 }
@@ -51,12 +58,12 @@ export class RegisterComponent {
   // Enums
   RolUsuario = RolUsuario;
   TipoTransmision = TipoTransmision;
-  roles = Object.values(RolUsuario);
-  transmisiones = Object.values(TipoTransmision);
+  roles: RolUsuario[] = Object.values(RolUsuario) as RolUsuario[];
+  transmisiones: TipoTransmision[] = Object.values(TipoTransmision) as TipoTransmision[];
 
-  mostrarVehiculo: any;
+  mostrarVehiculo: boolean = false;
 
-  // 🧩 Propiedades para mostrar/ocultar contraseña y validaciones visuales
+  //Propiedades para mostrar/ocultar contraseña y validaciones visuales
   showPassword = false;
   passwordChecks = {
     length: false,
@@ -65,6 +72,9 @@ export class RegisterComponent {
     number: false,
   };
   allValid = false;
+  rolAbierto = false;
+  transmisionAbierto = false;
+  formularioEnviado = false;
 
   constructor() {
     this.registerForm = this.fb.group(
@@ -75,8 +85,8 @@ export class RegisterComponent {
         email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
         contrasena: ['', [Validators.required, Validators.minLength(8), strongPasswordValidator]],
         confirmarContrasena: ['', Validators.required],
-        rol: [RolUsuario.Recepcion, Validators.required],
-        transmisionHabilitada: [TipoTransmision.Ninguna],
+        rol: ['', Validators.required],
+        transmisionHabilitada: ['', Validators.required],
         activo: [false],
       },
       { validators: [passwordMatchValidator] }
@@ -88,13 +98,12 @@ export class RegisterComponent {
     });
   }
 
-  // 👁️ Mostrar / ocultar contraseña
+  //Mostrar / ocultar contraseña
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
-  
 
-  // 🧠 Validación visual de la contraseña
+  //Validación visual de la contraseña
   checkPasswordStrength(): void {
     const value = this.registerForm.get('contrasena')?.value || '';
     this.passwordChecks.length = value.length >= 8;
@@ -104,8 +113,32 @@ export class RegisterComponent {
     this.allValid = Object.values(this.passwordChecks).every((v) => v);
   }
 
-  // 🚀 Enviar formulario
+  //oggle dropdowns
+  toggleRol(): void {
+    this.rolAbierto = !this.rolAbierto;
+    if (this.rolAbierto) this.transmisionAbierto = false;
+  }
+
+  toggleTransmision(): void {
+    this.transmisionAbierto = !this.transmisionAbierto;
+    if (this.transmisionAbierto) this.rolAbierto = false;
+  }
+
+  //Seleccionar valores
+  seleccionarRol(rol: RolUsuario): void {
+    this.registerForm.patchValue({ rol });
+    this.rolAbierto = false;
+  }
+
+  seleccionarTransmision(transmision: TipoTransmision): void {
+    this.registerForm.patchValue({ transmisionHabilitada: transmision });
+    this.transmisionAbierto = false;
+  }
+
+  // Enviar formulario
   onSubmit(): void {
+    this.formularioEnviado = true;
+
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
@@ -137,5 +170,62 @@ export class RegisterComponent {
         this.errorMessage = err;
       },
     });
+  }
+
+  //Verificar si confirmar contraseña debe mostrar error
+  mostrarErrorConfirmarContrasena(): boolean {
+    const contrasenaControl = this.registerForm.get('contrasena');
+    const confirmarControl = this.registerForm.get('confirmarContrasena');
+    
+    return (
+      (confirmarControl?.touched || this.formularioEnviado) &&
+      (confirmarControl?.hasError('required') || this.registerForm.hasError('mismatch'))
+    );
+  }
+
+  // Obtener mensaje de error para confirmar contraseña
+  obtenerMensajeErrorConfirmar(): string {
+    const contrasenaControl = this.registerForm.get('contrasena');
+    const confirmarControl = this.registerForm.get('confirmarContrasena');
+    
+    if (!contrasenaControl?.value) {
+      return 'Primero debe ingresar una contraseña';
+    }
+    
+    if (confirmarControl?.hasError('required')) {
+      return 'Este campo es obligatorio';
+    }
+    
+    if (this.registerForm.hasError('mismatch')) {
+      return 'Las contraseñas no coinciden';
+    }
+    
+    return '';
+  }
+
+  // Verificar si el teléfono debe mostrar error
+  mostrarErrorTelefono(): boolean {
+    const telefonoControl = this.registerForm.get('telefono');
+    
+    return (
+      (telefonoControl?.touched || this.formularioEnviado) &&
+      !!telefonoControl?.invalid
+    );
+  }
+
+  // Obtener mensaje de error para teléfono
+  obtenerMensajeErrorTelefono(): string {
+    const telefonoControl = this.registerForm.get('telefono');
+    if (!telefonoControl) return '';
+    
+    if (telefonoControl?.hasError('required')) {
+      return 'El teléfono es obligatorio';
+    }
+    
+    if (telefonoControl?.hasError('pattern')) {
+      return 'Debe contener exactamente 10 dígitos';
+    }
+    
+    return '';
   }
 }

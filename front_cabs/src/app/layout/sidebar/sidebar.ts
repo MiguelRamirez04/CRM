@@ -90,7 +90,7 @@ export class Sidebar implements OnInit {
         {
           label: 'Ejecuciones de Orden',
           icon: 'ordenes',
-          link: '/ordenes-trabajo/ejecuciones',
+              link: '/recepcion/ordenes-trabajo/ejecuciones',
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
         }
       ]

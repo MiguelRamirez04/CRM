@@ -7,11 +7,11 @@ using back_cabs.CRM.services.shared;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
-namespace back_cabs.CRM.controllers
+namespace back_cabs.CRM.controllers.shared
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "SOPORTE, ADMINISTRACION")]
+    [Authorize(Roles = "SOPORTE, ADMINISTRACION, RECEPCION")]
     public class EjecucionOrdenController : ControllerBase
     {
         private readonly EjecucionOrdenService _service;

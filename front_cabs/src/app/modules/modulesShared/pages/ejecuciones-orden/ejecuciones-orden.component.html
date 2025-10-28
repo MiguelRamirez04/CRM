@@ -1,0 +1,443 @@
+<!-- Header con título y botón crear -->
+<div class="header-container">
+  <div class="header-content">
+    <h1 class="title">
+      <span class="icon">📋</span>
+      Ejecuciones de Órdenes
+    </h1>
+    <button class="btn-primary" (click)="abrirModalCrear()">
+      <span class="icon">➕</span>
+      Nueva Ejecución
+    </button>
+  </div>
+</div>
+
+<!-- Filtros y estadísticas -->
+<div class="filters-stats-container">
+  <!-- Filtros -->
+  <div class="filters-card">
+    <h3 class="filter-title">🔍 Filtros</h3>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label>Cliente / Orden</label>
+        <select 
+          [(ngModel)]="filtroOrdenId" 
+          class="input-field"
+        >
+          <option [ngValue]="undefined">-- Todas las órdenes --</option>
+          <option *ngFor="let orden of ordenes()" [ngValue]="orden.id">
+            {{ orden.clienteNombre }} - Orden #{{ orden.id }}
+            <span *ngIf="orden.vehiculoPlacas"> ({{ orden.vehiculoPlacas }})</span>
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Técnico</label>
+        <select 
+          [(ngModel)]="filtroTecnicoId" 
+          class="input-field"
+        >
+          <option [ngValue]="undefined">-- Todos los técnicos --</option>
+          <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
+            {{ tecnico.nombreCompleto }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label>Tipo de Ejecución</label>
+        <select [(ngModel)]="filtroTipo" class="input-field">
+          <option [ngValue]="undefined">-- Todos los tipos --</option>
+          <option [ngValue]="TipoEjecucion.CAMPO">🚗 Campo</option>
+          <option [ngValue]="TipoEjecucion.REMOTO">💻 Remoto</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-filter" (click)="aplicarFiltros()">
+          Aplicar
+        </button>
+        <button class="btn-clear" (click)="limpiarFiltros()">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon">📊</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ totalEjecuciones() }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-progress">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ ejecucionesEnCurso() }}</div>
+        <div class="stat-label">En Curso</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-completed">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ ejecucionesFinalizadas() }}</div>
+        <div class="stat-label">Finalizadas</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loader -->
+<div *ngIf="cargando()" class="loader-container">
+  <div class="loader"></div>
+  <p>Cargando ejecuciones...</p>
+</div>
+
+<!-- Error -->
+<div *ngIf="error()" class="alert-error">
+  <span class="icon">⚠️</span>
+  {{ error() }}
+  <button class="btn-close" (click)="error.set(null)">✕</button>
+</div>
+
+<!-- Lista de ejecuciones -->
+<div *ngIf="!cargando()" class="ejecuciones-grid">
+  <div *ngFor="let ejecucion of ejecucionesFiltradas()" class="ejecucion-card">
+    <!-- Header de la card -->
+    <div class="card-header" [ngClass]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'header-campo' : 'header-remoto'">
+      <div class="card-title">
+        <span class="tipo-icon">{{ getIconoTipo(ejecucion.tipoEjecucion) }}</span>
+        <span class="tipo-text">{{ ejecucion.tipoEjecucion }}</span>
+      </div>
+      <div class="card-status">
+        <span class="status-badge" [ngClass]="ejecucion.hrFin ? 'status-finalizado' : 'status-activo'">
+          {{ ejecucion.hrFin ? '✓ Finalizado' : '⏳ En curso' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="card-body">
+      <!-- Info principal -->
+      <div class="info-row">
+        <div class="info-item">
+          <span class="info-label">� Cliente:</span>
+          <span class="info-value">{{ getClienteNombre(ejecucion.ordenId) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">�📋 Orden:</span>
+          <span class="info-value">#{{ ejecucion.ordenId }}</span>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-item">
+          <span class="info-label">� Técnico:</span>
+          <span class="info-value">{{ ejecucion.tecnicoNombre || getTecnicoNombre(ejecucion.tecnicoId) }}</span>
+        </div>
+      </div>
+
+      <!-- Detalles específicos por tipo -->
+      <div class="detalles-tipo">
+        <!-- CAMPO -->
+        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" class="campo-detalles">
+          <div class="detalle-item">
+            <span class="detalle-icon">🚗</span>
+            <span class="detalle-text">{{ ejecucion.vehiculoPlacas }}</span>
+          </div>
+          <div class="detalle-item">
+            <span class="detalle-icon">📏</span>
+            <span class="detalle-text">
+              {{ ejecucion.kmInicial }} km 
+              <span *ngIf="ejecucion.kmFinal"> → {{ ejecucion.kmFinal }} km</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- REMOTO -->
+        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO" class="remoto-detalles">
+          <div class="detalle-item" *ngIf="ejecucion.herramientas">
+            <span class="detalle-icon">🛠️</span>
+            <span class="detalle-text">{{ ejecucion.herramientas }}</span>
+          </div>
+          <div class="detalle-item" *ngIf="ejecucion.codigoSesion">
+            <span class="detalle-icon">🔑</span>
+            <span class="detalle-text">Sesión: {{ ejecucion.codigoSesion }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tiempos -->
+      <div class="tiempos-section">
+        <div class="tiempo-item">
+          <span class="tiempo-label">Inicio:</span>
+          <span class="tiempo-value">{{ formatearFecha(ejecucion.hrInicio) }}</span>
+        </div>
+        <div class="tiempo-item" *ngIf="ejecucion.hrFin">
+          <span class="tiempo-label">Fin:</span>
+          <span class="tiempo-value">{{ formatearFecha(ejecucion.hrFin) }}</span>
+        </div>
+        <div class="duracion">
+          <span class="duracion-icon">⏱️</span>
+          <span class="duracion-text">{{ calcularDuracion(ejecucion) }}</span>
+        </div>
+      </div>
+
+      <!-- Comentarios -->
+      <div *ngIf="ejecucion.comentarios" class="comentarios">
+        <span class="comentarios-icon">💬</span>
+        <p class="comentarios-text">{{ ejecucion.comentarios }}</p>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card-actions">
+      <button 
+        *ngIf="!ejecucion.hrFin" 
+        class="btn-action btn-finalizar"
+        (click)="abrirModalFinalizar(ejecucion)"
+      >
+        <span class="icon">✓</span>
+        Finalizar
+      </button>
+      <button 
+        *ngIf="!ejecucion.hrFin" 
+        class="btn-action btn-delegar"
+        (click)="abrirModalDelegar(ejecucion)"
+      >
+        <span class="icon">🔄</span>
+        Delegar
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensaje vacío -->
+  <div *ngIf="ejecucionesFiltradas().length === 0" class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>No hay ejecuciones</h3>
+    <p>Crea una nueva ejecución para comenzar</p>
+  </div>
+</div>
+
+<!-- MODAL: Crear Ejecución -->
+<div *ngIf="mostrarModalCrear()" class="modal-overlay" (click)="cerrarModal('crear')">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>➕ Nueva Ejecución</h2>
+      <button class="btn-close" (click)="cerrarModal('crear')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Tipo de Ejecución -->
+      <div class="form-group">
+        <label class="required">Tipo de Ejecución</label>
+        <div class="tipo-selector">
+          <button 
+            class="tipo-btn"
+            [ngClass]="{'active': formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO}"
+            (click)="cambiarTipoEjecucion(TipoEjecucion.CAMPO)"
+          >
+            🚗 Campo
+          </button>
+          <button 
+            class="tipo-btn"
+            [ngClass]="{'active': formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO}"
+            (click)="cambiarTipoEjecucion(TipoEjecucion.REMOTO)"
+          >
+            💻 Remoto
+          </button>
+        </div>
+      </div>
+
+      <!-- Campos comunes -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required">Cliente / Orden de Trabajo</label>
+          <select 
+            [(ngModel)]="formularioCrear().ordenId" 
+            class="input-field"
+          >
+            <option [ngValue]="0">-- Seleccione una orden --</option>
+            <option *ngFor="let orden of ordenes()" [ngValue]="orden.id">
+              {{ orden.clienteNombre }} - Orden #{{ orden.id }}
+              <span *ngIf="orden.vehiculoPlacas"> ({{ orden.vehiculoPlacas }})</span>
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="required">Técnico Asignado</label>
+          <select 
+            [(ngModel)]="formularioCrear().tecnicoId" 
+            class="input-field"
+          >
+            <option [ngValue]="0">-- Seleccione un técnico --</option>
+            <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
+              {{ tecnico.nombreCompleto }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Campos específicos CAMPO -->
+      <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="required">Vehículo</label>
+            <select 
+              [(ngModel)]="formularioCrear().vehiculoId" 
+              class="input-field"
+            >
+              <option [ngValue]="undefined">-- Seleccione un vehículo --</option>
+              <option *ngFor="let vehiculo of vehiculos()" [ngValue]="vehiculo.id">
+                {{ vehiculo.descripcion }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="required">Km Inicial</label>
+            <input 
+              type="number" 
+              [(ngModel)]="formularioCrear().kmInicial" 
+              class="input-field"
+              placeholder="ej: 45000"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos específicos REMOTO -->
+      <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO">
+        <div class="form-group">
+          <label>Herramientas</label>
+          <input 
+            type="text" 
+            [(ngModel)]="formularioCrear().herramientas" 
+            class="input-field"
+            placeholder="TeamViewer, AnyDesk"
+          />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Código Sesión</label>
+            <input 
+              type="text" 
+              [(ngModel)]="formularioCrear().codigoSesion" 
+              class="input-field"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña Sesión</label>
+            <input 
+              type="text" 
+              [(ngModel)]="formularioCrear().contrasenaSesion" 
+              class="input-field"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Comentarios -->
+      <div class="form-group">
+        <label>Comentarios</label>
+        <textarea 
+          [(ngModel)]="formularioCrear().comentarios" 
+          class="textarea-field"
+          rows="3"
+          placeholder="Notas adicionales..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal('crear')">Cancelar</button>
+      <button class="btn-primary" (click)="crearEjecucion()">Crear Ejecución</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Finalizar Ejecución -->
+<div *ngIf="mostrarModalFinalizar()" class="modal-overlay" (click)="cerrarModal('finalizar')">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>✓ Finalizar Ejecución</h2>
+      <button class="btn-close" (click)="cerrarModal('finalizar')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="ejecucionSeleccionada()?.tipoEjecucion === TipoEjecucion.CAMPO" class="form-group">
+        <label class="required">Km Final</label>
+        <input 
+          type="number" 
+          [(ngModel)]="formularioFinalizar().kmFinal" 
+          class="input-field"
+          placeholder="Kilometraje al finalizar"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Comentarios Finales</label>
+        <textarea 
+          [(ngModel)]="formularioFinalizar().comentarios" 
+          class="textarea-field"
+          rows="4"
+          placeholder="Describe el trabajo realizado..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal('finalizar')">Cancelar</button>
+      <button class="btn-success" (click)="finalizarEjecucion()">Finalizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Delegar Ejecución -->
+<div *ngIf="mostrarModalDelegar()" class="modal-overlay" (click)="cerrarModal('delegar')">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>🔄 Delegar Ejecución</h2>
+      <button class="btn-close" (click)="cerrarModal('delegar')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="required">Nuevo Técnico</label>
+        <select 
+          [(ngModel)]="formularioDelegacion().nuevoTecnicoId" 
+          class="input-field"
+        >
+          <option [ngValue]="0">-- Seleccione un técnico --</option>
+          <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
+            {{ tecnico.nombreCompleto }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="required">Motivo de Delegación</label>
+        <textarea 
+          [(ngModel)]="formularioDelegacion().motivo" 
+          class="textarea-field"
+          rows="4"
+          placeholder="Explica por qué se delega esta ejecución..."
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal('delegar')">Cancelar</button>
+      <button class="btn-warning" (click)="delegarEjecucion()">Delegar</button>
+    </div>
+  </div>
+</div>
