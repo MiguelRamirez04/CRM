@@ -61,10 +61,10 @@ namespace back_cabs.CRM.services.Recepcion
             {
                 _logger.LogInformation("Obteniendo órdenes de trabajo. Estado={Estado}", estado ?? "TODOS");
                 // Aplicar filtro de estado si se especifica
-                if (!string.IsNullOrEmpty(estado))
+                if (estado != null)
                 {
                     var estadosValidos = Enum.GetNames(typeof(EstadoOrden));
-                    if (!estadosValidos.Contains(estado))
+                    if (string.IsNullOrWhiteSpace(estado) || !estadosValidos.Contains(estado))
                     {
                         throw new ArgumentException($"El estado '{estado}' no es válido. Use uno de los estados permitidos: " + 
                             string.Join(", ", estadosValidos));
@@ -190,11 +190,11 @@ namespace back_cabs.CRM.services.Recepcion
                     nuevaOrden.ClienteId, nuevaOrden.NuevoCliente);
                 
                 
-                await _ordenTrabajoRepository.CreateAsync(nuevaOrden);
+                var ordenCreada = await _ordenTrabajoRepository.CreateAsync(nuevaOrden);
 
-                _logger.LogInformation("Orden creada exitosamente con ID: {Id}", nuevaOrden.Id);
+                _logger.LogInformation("Orden creada exitosamente con ID: {Id}", ordenCreada.Id);
 
-                return MapearAResponseDto(nuevaOrden);
+                return MapearAResponseDto(ordenCreada);
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
             {

@@ -26,10 +26,12 @@ using back_cabs.CRM.enums;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.models.Auth;
 using back_cabs.CRM.Middleware;
+using back_cabs.CRM.utils.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -49,15 +51,18 @@ namespace back_cabs.CRM.controllers.Auth
         private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<AuthController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IAntiforgery _antiforgery;
 
         public AuthController(
             UsuarioAuthService usuarioAuthService,
             ILogger<AuthController> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAntiforgery antiforgery)
         {
             _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _antiforgery = antiforgery ?? throw new ArgumentNullException(nameof(antiforgery));
         }
 
         /// <summary>
@@ -133,6 +138,38 @@ namespace back_cabs.CRM.controllers.Auth
                     "Error interno del servidor",
                     "Ocurrió un error inesperado durante el proceso de registro"));
             }
+        }
+
+        /// <summary>
+        /// ✅ MEJORA 5: Obtiene un token CSRF para proteger requests subsecuentes
+        /// </summary>
+        /// <remarks>
+        /// Este endpoint debe ser llamado antes de cualquier operación POST/PUT/DELETE.
+        /// El token se almacena en una cookie y también se retorna en el body.
+        /// 
+        /// Flujo:
+        /// 1. Cliente hace GET /api/auth/csrf-token
+        /// 2. Server genera token y lo almacena en cookie XSRF-TOKEN
+        /// 3. Cliente incluye token en header X-XSRF-TOKEN en requests POST/PUT/DELETE
+        /// </remarks>
+        /// <returns>Token CSRF y su nombre de header</returns>
+        /// <response code="200">Token CSRF generado exitosamente</response>
+        [HttpGet("csrf-token")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
+        public IActionResult GetCsrfToken()
+        {
+            var tokens = _antiforgery.GetAndStoreTokens(HttpContext);
+            
+            _logger.LogDebug("CSRF token generated for {IpAddress}", 
+                HttpContext.Connection.RemoteIpAddress);
+
+            return Ok(new
+            {
+                csrfToken = tokens.RequestToken,
+                headerName = tokens.HeaderName ?? "X-XSRF-TOKEN",
+                message = "Include this token in the X-XSRF-TOKEN header for POST/PUT/DELETE requests"
+            });
         }
 
         /// <summary>
@@ -292,15 +329,9 @@ namespace back_cabs.CRM.controllers.Auth
                 };
                 var tokens = GenerateTokens(user);
 
-                // Configurar cookie HttpOnly con el access token
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Expires = DateTime.UtcNow.AddMinutes(30),
-                    Secure = Request.IsHttps, // true en producción
-                    SameSite = SameSiteMode.Lax // O Strict si el frontend está en el mismo dominio
-                };
-                Response.Cookies.Append("AuthToken", tokens.AccessToken, cookieOptions);
+                // ✅ MEJORA 2: Usar CookieHelper con flags de seguridad completas
+                // HttpOnly=true, Secure=true, SameSite=Strict
+                CookieHelper.SetSecureJwtCookie(Response, tokens.AccessToken, expiryMinutes: 30);
 
                 _logger.LogInformation($"Usuario {user.Email} inició sesión exitosamente");
 
@@ -698,48 +729,20 @@ namespace back_cabs.CRM.controllers.Auth
 
         private void SetRefreshTokenCookie(string refreshToken)
         {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true, // CRÍTICO: No accesible desde JavaScript
-                Secure = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production",
-                SameSite = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" 
-                    ? SameSiteMode.Strict 
-                    : SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddDays(7), // Refresh token dura 7 días
-                Path = "/api/auth" // Solo disponible para rutas de auth
-            };
-
-            Response.Cookies.Append("RefreshToken", refreshToken, cookieOptions);
+            // ✅ MEJORA 2: Usar CookieHelper para refresh token con seguridad completa
+            CookieHelper.SetSecureRefreshCookie(Response, refreshToken, expiryDays: 7);
         }
 
         private void SetAccessTokenCookie(string accessToken)
         {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true, // CRÍTICO: No accesible desde JavaScript
-                Secure = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production",
-                SameSite = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production" 
-                    ? SameSiteMode.Strict 
-                    : SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddMinutes(30), // Access token dura 30 minutos
-                Path = "/" // Disponible para toda la aplicación
-            };
-
-            Response.Cookies.Append("AccessToken", accessToken, cookieOptions);
+            // ✅ MEJORA 2: Usar CookieHelper para access token con seguridad completa
+            CookieHelper.SetSecureJwtCookie(Response, accessToken, expiryMinutes: 30);
         }
 
         private void ClearAuthCookies()
         {
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production",
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(-1) // Expirar inmediatamente
-            };
-
-            Response.Cookies.Append("RefreshToken", "", cookieOptions);
-            Response.Cookies.Append("AccessToken", "", cookieOptions);
+            // ✅ MEJORA 2: Usar CookieHelper para eliminar cookies de forma segura
+            CookieHelper.DeleteAllAuthCookies(Response);
         }
 
         private (string AccessToken, string RefreshToken) GenerateTokens(User user)

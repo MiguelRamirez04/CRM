@@ -37,7 +37,7 @@ namespace back_cabs.CRM.services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "⚠️ Error al obtener del caché Redis. Key: {Key}. La aplicación continuará sin caché.", key);
+                _logger.LogWarning(ex, "Error al obtener del caché Redis. Key: {Key}. La aplicación continuará sin caché.", key);
                 return default;
             }
         }
