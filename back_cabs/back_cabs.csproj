@@ -49,4 +49,11 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <!-- Excluir Tests para debug -->
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+
 </Project>

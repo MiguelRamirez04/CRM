@@ -71,40 +71,39 @@ namespace back_cabs.CRM.services.shared
                 throw new ArgumentException($"El técnico con ID {dto.TecnicoId} no existe.", nameof(dto.TecnicoId));
             }
 
-            if (tecnico.Rol != RolUsuario.SOPORTE.ToString())
+            // Permitir que usuarios con rol SOPORTE o ADMINISTRACION puedan crear ejecuciones
+            var allowedRoles = new[] { RolUsuario.SOPORTE.ToString(), RolUsuario.ADMINISTRACION.ToString() };
+            if (!allowedRoles.Contains(tecnico.Rol))
             {
-                _logger.LogWarning("Usuario {TecnicoId} no tiene rol SOPORTE (tiene {Rol})", dto.TecnicoId, tecnico.Rol);
-                throw new ArgumentException($"El usuario {tecnico.Nombre} no tiene rol SOPORTE.", nameof(dto.TecnicoId));
+                _logger.LogWarning("Usuario {TecnicoId} no tiene rol permitido para crear ejecuciones (tiene {Rol})", dto.TecnicoId, tecnico.Rol);
+                throw new ArgumentException($"El usuario {tecnico.Nombre} no tiene rol SOPORTE o ADMINISTRACION.", nameof(dto.TecnicoId));
             }
 
             // 3. Validaciones específicas según tipo de ejecución
             if (dto.TipoEjecucion == TipoEjecucion.CAMPO)
             {
-                // Para ejecuciones de CAMPO, el vehículo es OBLIGATORIO
-                if (!dto.VehiculoId.HasValue)
+                // Para ejecuciones de CAMPO, el vehículo es OPCIONAL (usuario puede no seleccionar vehículo)
+                if (dto.VehiculoId.HasValue)
                 {
-                    _logger.LogWarning("Ejecución de CAMPO sin VehiculoId");
-                    throw new ArgumentException("Las ejecuciones de tipo CAMPO requieren un vehículo asignado.", nameof(dto.VehiculoId));
+                    // Si se proporciona vehículo, validar que exista y esté activo
+                    var vehiculo = await _readContext.Vehiculos
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(v => v.Id == dto.VehiculoId.Value);
+
+                    if (vehiculo == null)
+                    {
+                        _logger.LogWarning("Vehículo {VehiculoId} no encontrado", dto.VehiculoId);
+                        throw new ArgumentException($"El vehículo con ID {dto.VehiculoId.Value} no existe.", nameof(dto.VehiculoId));
+                    }
+
+                    if (!vehiculo.Activo)
+                    {
+                        _logger.LogWarning("Vehículo {VehiculoId} está inactivo", dto.VehiculoId);
+                        throw new ArgumentException($"El vehículo {vehiculo.Placas} no está activo.", nameof(dto.VehiculoId));
+                    }
                 }
 
-                // Validar que el vehículo exista y esté activo
-                var vehiculo = await _readContext.Vehiculos
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(v => v.Id == dto.VehiculoId.Value);
-
-                if (vehiculo == null)
-                {
-                    _logger.LogWarning("Vehículo {VehiculoId} no encontrado", dto.VehiculoId);
-                    throw new ArgumentException($"El vehículo con ID {dto.VehiculoId.Value} no existe.", nameof(dto.VehiculoId));
-                }
-
-                if (!vehiculo.Activo)
-                {
-                    _logger.LogWarning("Vehículo {VehiculoId} está inactivo", dto.VehiculoId);
-                    throw new ArgumentException($"El vehículo {vehiculo.Placas} no está activo.", nameof(dto.VehiculoId));
-                }
-
-                // Si se proporciona KmInicial, validar que sea positivo
+                // Si se proporciona KmInicial, validar que sea positivo (ahora es completamente opcional)
                 if (dto.KmInicial.HasValue && dto.KmInicial.Value < 0)
                 {
                     _logger.LogWarning("KmInicial negativo: {KmInicial}", dto.KmInicial);
@@ -113,11 +112,25 @@ namespace back_cabs.CRM.services.shared
             }
             else if (dto.TipoEjecucion == TipoEjecucion.REMOTO)
             {
-                // Para REMOTO, los campos de vehículo deben ser null
-                if (dto.VehiculoId.HasValue || dto.KmInicial.HasValue)
+                // Para REMOTO, permitir que tenga datos de vehículo si el usuario los pone (más flexible)
+                // Solo validar si se proporcionan
+                if (dto.VehiculoId.HasValue)
                 {
-                    _logger.LogWarning("Ejecución REMOTO con datos de vehículo");
-                    throw new ArgumentException("Las ejecuciones de tipo REMOTO no deben incluir datos de vehículo.", nameof(dto.VehiculoId));
+                    var vehiculo = await _readContext.Vehiculos
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(v => v.Id == dto.VehiculoId.Value);
+
+                    if (vehiculo == null)
+                    {
+                        _logger.LogWarning("Vehículo {VehiculoId} no encontrado para REMOTO", dto.VehiculoId);
+                        throw new ArgumentException($"El vehículo con ID {dto.VehiculoId.Value} no existe.", nameof(dto.VehiculoId));
+                    }
+                }
+
+                if (dto.KmInicial.HasValue && dto.KmInicial.Value < 0)
+                {
+                    _logger.LogWarning("KmInicial negativo en REMOTO: {KmInicial}", dto.KmInicial);
+                    throw new ArgumentException("El kilometraje inicial debe ser mayor o igual a cero.", nameof(dto.KmInicial));
                 }
             }
 

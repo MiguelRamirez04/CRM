@@ -51,5 +51,20 @@ namespace back_cabs.CRM.Interfaces.Auth
         /// <param name="password">Contraseña en texto plano</param>
         /// <returns>Usuario si las credenciales son válidas, null si no</returns>
         Task<UsuarioAuth?> ValidateCredentialsAsync(string email, string password);
+
+        /// <summary>
+        /// Obtiene todos los usuarios del sistema
+        /// </summary>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
+        /// <returns>Lista de usuarios</returns>
+        Task<IEnumerable<UsuarioAuth>> GetAllAsync(bool incluirInactivos = false);
+
+        /// <summary>
+        /// Obtiene usuarios filtrados por rol
+        /// </summary>
+        /// <param name="rol">Rol a filtrar (SOPORTE, ADMINISTRACION, RECEPCION)</param>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
+        /// <returns>Lista de usuarios del rol especificado</returns>
+        Task<IEnumerable<UsuarioAuth>> GetByRolAsync(string rol, bool incluirInactivos = false);
     }
 }

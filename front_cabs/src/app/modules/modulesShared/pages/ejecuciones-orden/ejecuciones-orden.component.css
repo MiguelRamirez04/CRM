@@ -9,6 +9,84 @@
 }
 
 /* ========================================
+   BANNER CONTEXTUAL (desde Orden)
+======================================== */
+.context-banner {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(66, 153, 225, 0.3);
+  animation: slideDown 0.4s ease-out;
+}
+
+.context-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.btn-back {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.btn-back:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateX(-4px);
+}
+
+.context-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: white;
+}
+
+.context-icon {
+  font-size: 2rem;
+}
+
+.context-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.context-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.context-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
    HEADER
 ======================================== */
 .header-container {
@@ -629,12 +707,67 @@
   padding: 2rem;
 }
 
+/* Banner informativo dentro del modal */
+.info-banner {
+  background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+  border-left: 4px solid #3182ce;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+}
+
+.info-text {
+  color: #2c5282;
+  font-size: 0.938rem;
+  line-height: 1.5;
+}
+
+.info-text strong {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
 .modal-footer {
   padding: 1.5rem 2rem;
   border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+/* Mensaje de error en modales */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 0.5rem;
+  color: #c33;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  animation: shake 0.4s ease-in-out;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
 }
 
 /* Formularios */

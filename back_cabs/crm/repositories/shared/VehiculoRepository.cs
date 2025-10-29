@@ -34,10 +34,11 @@ namespace back_cabs.CRM.repositories.Shared
             {
                 var vehiculos = await _readContext.Vehiculos
                     .AsNoTracking()
+                    .Where(v => v.Activo) // ✅ Solo vehículos activos
                     .OrderBy(v => v.Placas)
                     .ToListAsync();
 
-                _logger.LogDebug("Obtenidos {Count} vehículos", vehiculos.Count);
+                _logger.LogDebug("Obtenidos {Count} vehículos activos", vehiculos.Count);
                 return vehiculos;
             }
             catch (Exception ex)

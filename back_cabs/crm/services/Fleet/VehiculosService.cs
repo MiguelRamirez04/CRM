@@ -12,7 +12,7 @@ namespace back_cabs.CRM.services.Fleet;
 /// Servicio que maneja la lógica de negocio para vehículos.
 /// Usa Repository Pattern para acceso a datos con separación de responsabilidades.
 /// ✅ REDIS: Implementa caché para mejorar rendimiento en consultas frecuentes
-/// </summary>
+/// </summary> 
 public class VehiculosService
 {
     // ✅ Inyección de dependencias: Repository Pattern para acceso a datos
@@ -22,7 +22,7 @@ public class VehiculosService
     private readonly ICacheService _cacheService; // ✅ REDIS: Servicio de caché
 
     // ✅ REDIS: Constantes para claves de caché (consistencia y mantenibilidad)
-    private const string CACHE_KEY_ALL_VEHICULOS = "vehiculos:all";
+    private const string CACHE_KEY_ALL_VEHICULOS = "vehiculos:active"; // Solo activos
     private const string CACHE_KEY_VEHICULO_PREFIX = "vehiculos:id:";
     private const int CACHE_EXPIRATION_MINUTES = 30; // Catálogos estables
 
@@ -37,10 +37,11 @@ public class VehiculosService
     }
 
     /// <summary>
-    /// Obtiene todos los vehículos ordenados por placas.
+    /// Obtiene todos los vehículos ACTIVOS ordenados por placas.
     /// ✅ Usa Repository Pattern para acceso optimizado a datos
     /// ✅ El OrderBy usa el índice configurado en la base de datos para Placas
     /// ✅ REDIS: Implementa cache-aside pattern para reducir consultas a BD
+    /// ✅ Solo devuelve vehículos activos para evitar mostrar inactivos en UI
     /// </summary>
     public async Task<IEnumerable<VehiculoResponseDto>> ObtenerTodosAsync()
     {
@@ -52,10 +53,20 @@ public class VehiculosService
             return cached;
         }
 
-        // ✅ REDIS: Paso 2 - Si no está en caché, consultar a la BD
+        // ✅ REDIS: Paso 2 - Cache miss: Consultar base de datos
         _logger.LogDebug("Caché miss: Consultando vehículos desde base de datos");
         var vehiculos = await _vehiculoRepository.GetAllAsync();
-        var dtos = vehiculos.Select(MapToResponseDto).ToList();
+        
+        var dtos = vehiculos.Select(v => new VehiculoResponseDto
+        {
+            Id = v.Id,
+            Placas = v.Placas,
+            TipoVehiculo = v.TipoVehiculo,
+            EsDeEmpresa = v.EsDeEmpresa,
+            Observaciones = v.Observaciones,
+            Transmision = v.Transmision,
+            Activo = v.Activo
+        }).ToList();
 
         // ✅ REDIS: Paso 3 - Guardar en caché para futuras consultas
         await _cacheService.SetAsync(CACHE_KEY_ALL_VEHICULOS, dtos, TimeSpan.FromMinutes(CACHE_EXPIRATION_MINUTES));

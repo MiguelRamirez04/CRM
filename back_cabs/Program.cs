@@ -207,9 +207,14 @@ app.MapControllers();
 // Logging de inicio
 app.Logger.LogInformation("🚀 CRM API iniciada correctamente");
 
-app.Run();
-
-
-Console.WriteLine("jajaja quien dejo un console writeline aqui");
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Error fatal en la aplicación");
+    throw;
+}
 
 

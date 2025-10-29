@@ -1,0 +1,196 @@
+### ==================================================
+### PRUEBAS DE EJECUCIÓN ORDEN - POST CREATE
+### Verificar creación de ejecuciones
+### ==================================================
+
+@baseUrl = https://localhost:7165
+@token = {{login.response.body.token}}
+
+### ==================================================
+### 1. Login para obtener token
+### ==================================================
+
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "soporte@cabs.com",
+  "password": "Soporte123!"
+}
+
+### ==================================================
+### 2. Crear Ejecución CAMPO
+### ==================================================
+
+### 2.1 Ejecución CAMPO con todos los campos
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000,
+  "hrInicio": "2025-10-28T13:30:00Z",
+  "comentarios": "Reparación programada - verificar sistema de frenos"
+}
+
+### 2.2 Ejecución CAMPO sin hrInicio (se debe asignar automáticamente)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000,
+  "comentarios": "Sin hora de inicio especificada"
+}
+
+### 2.3 Ejecución CAMPO sin campos opcionales
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 50000
+}
+
+### ==================================================
+### 3. Crear Ejecución REMOTO
+### ==================================================
+
+### 3.1 Ejecución REMOTO con todos los campos
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "tipoEjecucion": "REMOTO",
+  "herramientas": "TeamViewer, AnyDesk",
+  "codigoSesion": "123456789",
+  "contrasenaSesion": "abc123",
+  "hrInicio": "2025-10-28T14:00:00Z",
+  "comentarios": "Soporte remoto - instalación de software"
+}
+
+### 3.2 Ejecución REMOTO sin campos opcionales
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "tipoEjecucion": "REMOTO"
+}
+
+### ==================================================
+### 4. Casos de Error (Validación)
+### ==================================================
+
+### 4.1 Sin ordenId (debe fallar)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tecnicoId": 7,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000
+}
+
+### 4.2 Sin tecnicoId (debe fallar)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000
+}
+
+### 4.3 Sin tipo de ejecución (debe fallar)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 7,
+  "vehiculoId": 1,
+  "kmInicial": 45000
+}
+
+### 4.4 OrdenId inválido (no existe)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 99999,
+  "tecnicoId": 7,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000
+}
+
+### 4.5 TecnicoId inválido (no existe)
+POST {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "ordenId": 16,
+  "tecnicoId": 99999,
+  "tipoEjecucion": "CAMPO",
+  "vehiculoId": 1,
+  "kmInicial": 45000
+}
+
+### ==================================================
+### 5. Verificar ejecuciones creadas
+### ==================================================
+
+### 5.1 Listar todas las ejecuciones
+GET {{baseUrl}}/api/EjecucionOrden
+Authorization: Bearer {{token}}
+
+### 5.2 Filtrar por orden específica
+GET {{baseUrl}}/api/EjecucionOrden?ordenId=16
+Authorization: Bearer {{token}}
+
+### 5.3 Filtrar por técnico
+GET {{baseUrl}}/api/EjecucionOrden?tecnicoId=7
+Authorization: Bearer {{token}}
+
+### 5.4 Filtrar por tipo CAMPO
+GET {{baseUrl}}/api/EjecucionOrden?tipoEjecucion=CAMPO
+Authorization: Bearer {{token}}
+
+### 5.5 Filtrar por tipo REMOTO
+GET {{baseUrl}}/api/EjecucionOrden?tipoEjecucion=REMOTO
+Authorization: Bearer {{token}}
+
+### ==================================================
+### NOTAS:
+### - El backend debe aceptar hrInicio como DateTime? (nullable)
+### - Si no se proporciona hrInicio, debe asignarse automáticamente
+### - Validar que ordenId, tecnicoId, vehiculoId existan en BD
+### - TipoEjecucion debe ser enum: "CAMPO" o "REMOTO"
+### - Comentarios es opcional (max 1000 caracteres)
+### ==================================================

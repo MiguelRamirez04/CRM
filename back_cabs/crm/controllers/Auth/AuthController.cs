@@ -473,6 +473,152 @@ namespace back_cabs.CRM.controllers.Auth
         }
 
         /// <summary>
+        /// Obtiene todos los usuarios del sistema
+        /// </summary>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos (opcional, default: false)</param>
+        /// <returns>Lista de todos los usuarios</returns>
+        /// <response code="200">Lista de usuarios obtenida exitosamente</response>
+        /// <response code="401">No autorizado</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("usuarios")]
+        [Authorize(Roles = "ADMINISTRACION")]
+        [ProducesResponseType(typeof(IEnumerable<UsuarioResponseDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetAllUsuarios([FromQuery] bool incluirInactivos = false)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo todos los usuarios (incluir inactivos: {IncluirInactivos})", incluirInactivos);
+
+                var usuarios = await _usuarioAuthService.ObtenerTodosLosUsuariosAsync(incluirInactivos);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = usuarios,
+                    count = usuarios.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener todos los usuarios");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
+                    success = false,
+                    message = "Error al obtener los usuarios",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene usuarios filtrados por rol (para selectores de técnicos, etc.)
+        /// </summary>
+        /// <param name="rol">Rol a filtrar (SOPORTE, ADMINISTRACION, RECEPCION)</param>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos (opcional, default: false)</param>
+        /// <returns>Lista de usuarios del rol especificado</returns>
+        /// <response code="200">Lista de usuarios obtenida exitosamente</response>
+        /// <response code="400">Rol inválido</response>
+        /// <response code="401">No autorizado</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("usuarios/rol/{rol}")]
+        [Authorize(Roles = "ADMINISTRACION, RECEPCION, SOPORTE")]
+        [ProducesResponseType(typeof(IEnumerable<UsuarioResponseDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetUsuariosPorRol(string rol, [FromQuery] bool incluirInactivos = false)
+        {
+            try
+            {
+                // Validar que el rol sea válido
+                var rolesValidos = new[] { "SOPORTE", "ADMINISTRACION", "RECEPCION" };
+                if (!rolesValidos.Contains(rol.ToUpper()))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = $"Rol inválido. Roles válidos: {string.Join(", ", rolesValidos)}"
+                    });
+                }
+
+                _logger.LogInformation("Obteniendo usuarios por rol: {Rol} (incluir inactivos: {IncluirInactivos})", 
+                    rol, incluirInactivos);
+
+                var usuarios = await _usuarioAuthService.ObtenerUsuariosPorRolAsync(rol, incluirInactivos);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = usuarios,
+                    count = usuarios.Count(),
+                    rol = rol.ToUpper()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios por rol: {Rol}", rol);
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
+                    success = false,
+                    message = $"Error al obtener usuarios con rol {rol}",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene técnicos disponibles (SOPORTE y ADMINISTRACION activos)
+        /// Endpoint simplificado para selectores en formularios
+        /// </summary>
+        /// <returns>Lista de técnicos disponibles</returns>
+        /// <response code="200">Lista de técnicos obtenida exitosamente</response>
+        /// <response code="401">No autorizado</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("tecnicos")]
+        [Authorize(Roles = "ADMINISTRACION, RECEPCION, SOPORTE")]
+        [ProducesResponseType(typeof(IEnumerable<UsuarioResponseDto>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetTecnicos()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo técnicos disponibles (SOPORTE y ADMINISTRACION)");
+
+                // Obtener usuarios de SOPORTE
+                var soporte = await _usuarioAuthService.ObtenerUsuariosPorRolAsync("SOPORTE", incluirInactivos: false);
+                
+                // Obtener usuarios de ADMINISTRACION
+                var administracion = await _usuarioAuthService.ObtenerUsuariosPorRolAsync("ADMINISTRACION", incluirInactivos: false);
+
+                // Combinar ambas listas
+                var tecnicos = soporte.Concat(administracion)
+                    .OrderBy(u => u.Nombre)
+                    .ThenBy(u => u.Apellido)
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = tecnicos,
+                    count = tecnicos.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener técnicos disponibles");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
+                    success = false,
+                    message = "Error al obtener técnicos disponibles",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
         /// Cambia la contraseña del usuario autenticado
         /// </summary>
         /// <param name="request">Contraseña actual y nueva contraseña</param>

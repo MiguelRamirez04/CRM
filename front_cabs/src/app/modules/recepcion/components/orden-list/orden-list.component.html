@@ -104,23 +104,30 @@
           <div class="text-xs text-gray-500">{{ orden.citaProgramadaInicio | date:'EEEE' }}</div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-          <div class="flex space-x-3">
-            <!-- Botón Ver Detalles Mejorado -->
+          <div class="flex space-x-2">
+            <!-- Botón Crear Ejecución (Nuevo - Destaca más) -->
             <button type="button"
-                    class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    (click)="onCrearEjecucion(orden)"
+                    title="Crear nueva ejecución para esta orden">
+              <i class="fas fa-play-circle mr-2"></i>
+              Crear Ejecución
+            </button>
+
+            <!-- Botón Ver Detalles -->
+            <button type="button"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
                     (click)="onVerDetalles(orden.id)"
                     title="Ver detalles completos">
-              <i class="fas fa-eye mr-2"></i>
-              Ver Detalles
+              <i class="fas fa-eye"></i>
             </button>
             
-            <!-- Botón Editar Mejorado -->
+            <!-- Botón Editar -->
             <button type="button"
-                    class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
                     (click)="onEditar(orden.id)"
                     title="Editar orden de trabajo">
-              <i class="fas fa-edit mr-2"></i>
-              Editar
+              <i class="fas fa-edit"></i>
             </button>
           </div>
         </td>

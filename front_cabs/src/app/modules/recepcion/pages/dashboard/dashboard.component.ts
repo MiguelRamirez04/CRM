@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject, computed, WritableSignal, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import {
   OrdenTrabajo,
   EstadisticaRecepcion,
@@ -30,6 +31,7 @@ export class RecepcionDashboardComponent implements OnInit {
   private recepcionService = inject(RecepcionService);
   private dialogService = inject(DialogService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
   // private authService = inject(SecureAuthService); // Eliminado
 
   // Signals de datos
@@ -170,6 +172,24 @@ export class RecepcionDashboardComponent implements OnInit {
 
   // Método de Logout Eliminado
   // onLogout() { ... }
+
+  /**
+   * Maneja la creación de una nueva ejecución desde una orden
+   * Navega a la página de ejecuciones con datos pre-llenados
+   */
+  onCrearEjecucion(orden: OrdenTrabajo) {
+    console.log('🚀 Creando ejecución para orden:', orden);
+    
+    // Navegar con query params para pre-llenar el formulario
+    this.router.navigate(['/recepcion/ordenes-trabajo/ejecuciones'], {
+      queryParams: {
+        ordenId: orden.id,
+        clienteNombre: orden.nombreCliente,
+        clienteId: orden.clienteId,
+        autoOpen: 'true' // Flag para abrir modal automáticamente
+      }
+    });
+  }
 
   private handleError(
     message: string,

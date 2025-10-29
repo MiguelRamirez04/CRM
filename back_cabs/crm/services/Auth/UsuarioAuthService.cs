@@ -438,5 +438,82 @@ namespace back_cabs.CRM.services.Auth
                 throw;
             }
         }
+
+        /// <summary>
+        /// Obtiene todos los usuarios del sistema
+        /// </summary>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
+        /// <returns>Lista de usuarios mapeados a DTO</returns>
+        public async Task<IEnumerable<UsuarioResponseDto>> ObtenerTodosLosUsuariosAsync(bool incluirInactivos = false)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo todos los usuarios desde el servicio");
+
+                var usuarios = await _usuarioRepository.GetAllAsync(incluirInactivos);
+
+                var usuariosDto = usuarios.Select(u => new UsuarioResponseDto
+                {
+                    Id = u.Id,
+                    Nombre = u.Nombre,
+                    Apellido = u.Apellido,
+                    NombreCompleto = u.NombreCompleto,
+                    Telefono = u.Telefono,
+                    Email = u.Email,
+                    Rol = u.Rol,
+                    Activo = u.Activo,
+                    CreadoEn = u.CreadoEn,
+                    TransmisionHabilitada = u.TransmisionHabilitada,
+                    PuedeUsarVehiculo = u.PuedeUsarVehiculo
+                }).ToList();
+
+                _logger.LogInformation("Se obtuvieron {Count} usuarios", usuariosDto.Count);
+                return usuariosDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener todos los usuarios desde el servicio");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene usuarios filtrados por rol
+        /// </summary>
+        /// <param name="rol">Rol a filtrar</param>
+        /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
+        /// <returns>Lista de usuarios del rol especificado</returns>
+        public async Task<IEnumerable<UsuarioResponseDto>> ObtenerUsuariosPorRolAsync(string rol, bool incluirInactivos = false)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuarios por rol: {Rol}", rol);
+
+                var usuarios = await _usuarioRepository.GetByRolAsync(rol, incluirInactivos);
+
+                var usuariosDto = usuarios.Select(u => new UsuarioResponseDto
+                {
+                    Id = u.Id,
+                    Nombre = u.Nombre,
+                    Apellido = u.Apellido,
+                    NombreCompleto = u.NombreCompleto,
+                    Telefono = u.Telefono,
+                    Email = u.Email,
+                    Rol = u.Rol,
+                    Activo = u.Activo,
+                    CreadoEn = u.CreadoEn,
+                    TransmisionHabilitada = u.TransmisionHabilitada,
+                    PuedeUsarVehiculo = u.PuedeUsarVehiculo
+                }).ToList();
+
+                _logger.LogInformation("Se obtuvieron {Count} usuarios con rol {Rol}", usuariosDto.Count, rol);
+                return usuariosDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios por rol: {Rol}", rol);
+                throw;
+            }
+        }
     }
 }

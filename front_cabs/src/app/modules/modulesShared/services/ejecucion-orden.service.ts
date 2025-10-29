@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, tap, throwError, map } from 'rxjs';
+import { Observable, of, catchError, tap, throwError, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   EjecucionOrdenCreateDto,
@@ -29,10 +29,12 @@ export class EjecucionOrdenService {
    * @returns Observable con la ejecución creada
    */
   createEjecucion(dto: EjecucionOrdenCreateDto): Observable<EjecucionOrdenResponse> {
+    console.log('🚀 Enviando DTO al backend:', JSON.stringify(dto, null, 2));
     return this.http.post<EjecucionOrdenResponse>(this.apiUrl, dto).pipe(
       tap(response => console.log('✅ Ejecución creada:', response)),
       catchError(error => {
         console.error('❌ Error al crear ejecución:', error);
+        console.error('❌ Detalles del error:', error.error);
         return throwError(() => error);
       })
     );
@@ -199,10 +201,10 @@ export class EjecucionOrdenService {
    * @returns Observable con órdenes simplificadas (con nombre de cliente)
    */
   getOrdenesDisponibles(): Observable<OrdenTrabajoSimple[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/OrdenTrabajo`).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/api/Recepcion`).pipe(
       map(ordenes => ordenes.map(orden => ({
         id: orden.id,
-        clienteNombre: orden.clienteNombre || orden.cliente?.nombre || `Cliente #${orden.clienteId}`,
+        clienteNombre: orden.nombreCliente || orden.cliente?.nombre || `Cliente #${orden.clienteId}`,
         vehiculoPlacas: orden.vehiculoPlacas || orden.vehiculo?.placas,
         descripcion: orden.descripcion,
         estado: orden.estado
@@ -216,24 +218,30 @@ export class EjecucionOrdenService {
   }
 
   /**
-   * Obtiene la lista de técnicos disponibles
+   * Obtiene la lista de técnicos disponibles desde el backend
+   * Obtiene usuarios con roles SOPORTE y ADMINISTRACION que estén activos
    * @returns Observable con técnicos simplificados
    */
   getTecnicosDisponibles(): Observable<TecnicoSimple[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/auth/usuarios`).pipe(
-      map(usuarios => usuarios
-        .filter(u => u.rol === 'SOPORTE' || u.rol === 'ADMINISTRACION')
-        .map(user => ({
-          id: user.id,
-          nombre: user.nombre || '',
-          apellido: user.apellido || '',
-          nombreCompleto: `${user.nombre || ''} ${user.apellido || ''}`.trim() || user.correo,
-          correo: user.correo
-        }))),
-      tap(tecnicos => console.log('👷 Técnicos disponibles:', tecnicos.length)),
+    return this.http.get<any>(`${environment.apiUrl}/api/auth/tecnicos`).pipe(
+      map(response => {
+        // El backend devuelve { success: true, data: [...], count: X }
+        if (response.success && Array.isArray(response.data)) {
+          console.log('👷 Técnicos disponibles desde backend:', response.count);
+          return response.data.map((usuario: any) => ({
+            id: usuario.id,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            nombreCompleto: usuario.nombreCompleto,
+            correo: usuario.email
+          }));
+        }
+        console.warn('⚠️ Respuesta inesperada al obtener técnicos');
+        return [];
+      }),
       catchError(error => {
         console.error('❌ Error al obtener técnicos:', error);
-        return throwError(() => error);
+        return of([]); // Retornar array vacío en caso de error
       })
     );
   }
@@ -243,7 +251,7 @@ export class EjecucionOrdenService {
    * @returns Observable con vehículos simplificados
    */
   getVehiculosDisponibles(): Observable<VehiculoSimple[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/Vehiculo`).pipe(
+    return this.http.get<any[]>(`${environment.apiUrl}/api/Vehiculos`).pipe(
       map(vehiculos => vehiculos.map(v => ({
         id: v.id,
         placas: v.placas,

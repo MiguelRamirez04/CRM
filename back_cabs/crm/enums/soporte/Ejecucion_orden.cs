@@ -13,9 +13,11 @@
 // =====================================================================================
 
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace back_cabs.CRM.enums
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum TipoEjecucion
     {
         REMOTO,

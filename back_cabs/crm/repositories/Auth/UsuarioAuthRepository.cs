@@ -174,5 +174,64 @@ namespace back_cabs.CRM.repositories.Auth
                 throw;
             }
         }
+
+        public async Task<IEnumerable<UsuarioAuth>> GetAllAsync(bool incluirInactivos = false)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo todos los usuarios (incluir inactivos: {IncluirInactivos})", incluirInactivos);
+
+                var query = _readContext.UsuariosAuth.AsNoTracking();
+
+                if (!incluirInactivos)
+                {
+                    query = query.Where(u => u.Activo);
+                }
+
+                var usuarios = await query
+                    .OrderBy(u => u.Nombre)
+                    .ThenBy(u => u.Apellido)
+                    .ToListAsync();
+
+                _logger.LogInformation("Se obtuvieron {Count} usuarios", usuarios.Count);
+                return usuarios;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener todos los usuarios");
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<UsuarioAuth>> GetByRolAsync(string rol, bool incluirInactivos = false)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuarios por rol: {Rol} (incluir inactivos: {IncluirInactivos})", 
+                    rol, incluirInactivos);
+
+                var query = _readContext.UsuariosAuth
+                    .AsNoTracking()
+                    .Where(u => u.Rol.ToUpper() == rol.ToUpper());
+
+                if (!incluirInactivos)
+                {
+                    query = query.Where(u => u.Activo);
+                }
+
+                var usuarios = await query
+                    .OrderBy(u => u.Nombre)
+                    .ThenBy(u => u.Apellido)
+                    .ToListAsync();
+
+                _logger.LogInformation("Se obtuvieron {Count} usuarios con rol {Rol}", usuarios.Count, rol);
+                return usuarios;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios por rol: {Rol}", rol);
+                throw;
+            }
+        }
     }
 }

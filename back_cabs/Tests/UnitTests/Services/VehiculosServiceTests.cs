@@ -25,7 +25,7 @@ public class VehiculosServiceTests
 {
     private readonly Mock<IVehiculoRepository> _mockRepository;
     private readonly Mock<ILogger<VehiculosService>> _mockLogger;
-    private readonly Mock<ICacheService> _mockCache;
+    // private readonly Mock<ICacheService> _mockCache;
     private readonly VehiculosService _service;
 
     /// <summary>
@@ -35,12 +35,12 @@ public class VehiculosServiceTests
     {
         _mockRepository = new Mock<IVehiculoRepository>();
         _mockLogger = new Mock<ILogger<VehiculosService>>();
-        _mockCache = new Mock<ICacheService>();
+        // _mockCache = new Mock<ICacheService>();
         
         _service = new VehiculosService(
             _mockRepository.Object,
-            _mockLogger.Object,
-            _mockCache.Object
+            _mockLogger.Object
+            // _mockCache.Object
         );
     }
 

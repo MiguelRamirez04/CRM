@@ -41,12 +41,12 @@ namespace back_cabs.CRM.DTOs.Request
 
         // Campos específicos para CAMPO (Visita)
         /// <summary>
-        /// ID del vehículo utilizado (solo para tipo CAMPO, opcional).
+        /// ID del vehículo utilizado (opcional para ambos tipos de ejecución).
         /// </summary>
         public int? VehiculoId { get; set; }
 
         /// <summary>
-        /// Kilometraje inicial del vehículo (solo para tipo CAMPO, opcional).
+        /// Kilometraje inicial del vehículo (completamente opcional).
         /// </summary>
         [Range(0, int.MaxValue, ErrorMessage = "El kilometraje inicial debe ser positivo.")]
         public int? KmInicial { get; set; }
