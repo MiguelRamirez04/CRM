@@ -23,47 +23,42 @@ namespace back_cabs.Tests.UnitTests.Services
     /// <summary>
     /// Pruebas unitarias para EjecucionOrdenService.
     /// Valida toda la lógica de negocio mediante mocks.
+    /// ✅ CORREGIDO: Usa contextos InMemory reales en lugar de mocks
     /// </summary>
     public class EjecucionOrdenServiceTests : IDisposable
     {
         private readonly Mock<IEjecucionOrdenRepository> _mockRepository;
-        private readonly Mock<WriteContext> _mockWriteContext;
-        private readonly Mock<ReadOnlyContext> _mockReadContext;
+        private readonly WriteContext _writeContext;              // ✅ Contexto REAL
+        private readonly ReadOnlyContext _readContext;            // ✅ Contexto REAL
         private readonly Mock<ILogger<EjecucionOrdenService>> _mockLogger;
         private readonly EjecucionOrdenService _service;
-        private readonly Mock<DbSet<OrdenTrabajo>> _mockOrdenesSet;
-        private readonly Mock<DbSet<UsuarioAuth>> _mockUsuariosSet;
-        private readonly Mock<DbSet<Vehiculo>> _mockVehiculosSet;
-        private readonly Mock<DbSet<EjecucionOrden>> _mockEjecucionesSet;
 
         public EjecucionOrdenServiceTests()
         {
             _mockRepository = new Mock<IEjecucionOrdenRepository>();
             _mockLogger = new Mock<ILogger<EjecucionOrdenService>>();
 
-            // Configurar DbContextOptions para los contextos
+            // ✅ Crear contextos REALES con InMemory database - USAR LA MISMA DATABASE
+            var databaseName = Guid.NewGuid().ToString();
+            
             var writeOptions = new DbContextOptionsBuilder<WriteContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: databaseName)
+                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
             
             var readOptions = new DbContextOptionsBuilder<ReadOnlyContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: databaseName)
+                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
 
-            _mockWriteContext = new Mock<WriteContext>(writeOptions);
-            _mockReadContext = new Mock<ReadOnlyContext>(readOptions);
+            _writeContext = new WriteContext(writeOptions);
+            _readContext = new ReadOnlyContext(readOptions);
 
-            // Configurar DbSets mockeados
-            _mockOrdenesSet = new Mock<DbSet<OrdenTrabajo>>();
-            _mockUsuariosSet = new Mock<DbSet<UsuarioAuth>>();
-            _mockVehiculosSet = new Mock<DbSet<Vehiculo>>();
-            _mockEjecucionesSet = new Mock<DbSet<EjecucionOrden>>();
-
-            // Instanciar el servicio con las dependencias mockeadas
+            // Instanciar el servicio con las dependencias
             _service = new EjecucionOrdenService(
                 _mockRepository.Object,
-                _mockWriteContext.Object,
-                _mockReadContext.Object,
+                _writeContext,              // ✅ Contexto real
+                _readContext,               // ✅ Contexto real
                 _mockLogger.Object
             );
         }
@@ -89,10 +84,8 @@ namespace back_cabs.Tests.UnitTests.Services
             var tecnico = new UsuarioAuth { Id = 7, Nombre = "Carlos", Apellido = "Técnico", Rol = "SOPORTE" };
             var vehiculo = new Vehiculo { Id = 5, Placas = "ABC123", Activo = true };
 
-            // Mockear consultas de validación
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, new[] { orden }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockUsuariosSet, new[] { tecnico }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockVehiculosSet, new[] { vehiculo }.AsQueryable());
+            // ✅ Agregar datos al contexto real
+            SeedReadOnlyData(orden, tecnico, vehiculo);
 
             var ejecucionCreada = new EjecucionOrden
             {
@@ -150,8 +143,8 @@ namespace back_cabs.Tests.UnitTests.Services
             var orden = new OrdenTrabajo { Id = 16, Estado = "ASIGNADA" };
             var tecnico = new UsuarioAuth { Id = 7, Nombre = "María", Apellido = "Soporte", Rol = "SOPORTE" };
 
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, new[] { orden }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockUsuariosSet, new[] { tecnico }.AsQueryable());
+            SeedReadOnlyData(orden: orden);
+            SeedReadOnlyData(usuario: tecnico);
 
             var ejecucionCreada = new EjecucionOrden
             {
@@ -200,7 +193,7 @@ namespace back_cabs.Tests.UnitTests.Services
                 VehiculoId = 5
             };
 
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, Enumerable.Empty<OrdenTrabajo>().AsQueryable());
+            // No seed data needed for empty test
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateEjecucionAsync(dto));
@@ -221,9 +214,13 @@ namespace back_cabs.Tests.UnitTests.Services
 
             var orden = new OrdenTrabajo { Id = 16, Estado = "ASIGNADA" };
             var tecnicoInvalido = new UsuarioAuth { Id = 7, Nombre = "Juan", Apellido = "Admin", Rol = "ADMINISTRACION" };
+            var vehiculo = new Vehiculo { Id = 5, Placas = "XYZ789", Activo = true }; // ✅ Agregar vehículo
 
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, new[] { orden }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockUsuariosSet, new[] { tecnicoInvalido }.AsQueryable());
+            // ✅ Seed all required data
+            _readContext.OrdenesTrabajo.Add(orden);
+            _readContext.UsuariosAuth.Add(tecnicoInvalido);
+            _readContext.Vehiculos.Add(vehiculo);
+            _readContext.SaveChanges();
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateEjecucionAsync(dto));
@@ -245,8 +242,8 @@ namespace back_cabs.Tests.UnitTests.Services
             var orden = new OrdenTrabajo { Id = 16, Estado = "ASIGNADA" };
             var tecnico = new UsuarioAuth { Id = 7, Nombre = "Carlos", Rol = "SOPORTE" };
 
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, new[] { orden }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockUsuariosSet, new[] { tecnico }.AsQueryable());
+            SeedReadOnlyData(orden: orden);
+            SeedReadOnlyData(usuario: tecnico);
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateEjecucionAsync(dto));
@@ -268,9 +265,13 @@ namespace back_cabs.Tests.UnitTests.Services
 
             var orden = new OrdenTrabajo { Id = 16, Estado = "ASIGNADA" };
             var tecnico = new UsuarioAuth { Id = 7, Nombre = "María", Rol = "SOPORTE" };
+            var vehiculo = new Vehiculo { Id = 5, Placas = "ABC789", Activo = true }; // ✅ Agregar vehículo para validación
 
-            SetupReadonlyQuery(_mockReadContext, _mockOrdenesSet, new[] { orden }.AsQueryable());
-            SetupReadonlyQuery(_mockReadContext, _mockUsuariosSet, new[] { tecnico }.AsQueryable());
+            // ✅ Seed all required data
+            _readContext.OrdenesTrabajo.Add(orden);
+            _readContext.UsuariosAuth.Add(tecnico);
+            _readContext.Vehiculos.Add(vehiculo); // El servicio valida que el vehículo exista
+            _readContext.SaveChanges();
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateEjecucionAsync(dto));
@@ -553,8 +554,9 @@ namespace back_cabs.Tests.UnitTests.Services
 
             var usuarioActual = new UsuarioAuth { Id = usuarioActualId, Nombre = "Admin", Rol = "ADMINISTRACION" };
 
-            _mockReadContext.Setup(c => c.UsuariosAuth.FindAsync(usuarioActualId))
-                .ReturnsAsync(usuarioActual);
+            // ✅ Agregar usuario al contexto real
+            _readContext.UsuariosAuth.Add(usuarioActual);
+            _readContext.SaveChanges();
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(
@@ -574,10 +576,10 @@ namespace back_cabs.Tests.UnitTests.Services
             var usuarioActual = new UsuarioAuth { Id = usuarioActualId, Nombre = "Carlos", Rol = "SOPORTE" };
             var nuevoTecnico = new UsuarioAuth { Id = nuevoTecnicoId, Nombre = "Admin", Rol = "ADMINISTRACION" };
 
-            _mockReadContext.Setup(c => c.UsuariosAuth.FindAsync(usuarioActualId))
-                .ReturnsAsync(usuarioActual);
-            _mockReadContext.Setup(c => c.UsuariosAuth.FindAsync(nuevoTecnicoId))
-                .ReturnsAsync(nuevoTecnico);
+            // ✅ Agregar usuarios al contexto real
+            _readContext.UsuariosAuth.Add(usuarioActual);
+            _readContext.UsuariosAuth.Add(nuevoTecnico);
+            _readContext.SaveChanges();
 
             // Act & Assert
             var ex = await Assert.ThrowsAsync<ArgumentException>(
@@ -591,30 +593,31 @@ namespace back_cabs.Tests.UnitTests.Services
         #region Helper Methods
 
         /// <summary>
-        /// Configura un DbSet mockeado para consultas readonly.
+        /// ✅ Agrega datos de prueba al contexto ReadOnly real
         /// </summary>
-        private void SetupReadonlyQuery<T>(Mock<ReadOnlyContext> mockContext, Mock<DbSet<T>> mockSet, IQueryable<T> data) where T : class
+        private void SeedReadOnlyData(OrdenTrabajo? orden = null, UsuarioAuth? usuario = null, Vehiculo? vehiculo = null)
         {
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(data.Provider);
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(data.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(data.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(data.GetEnumerator());
-            
-            // Configurar el contexto para retornar el DbSet mockeado
-            if (typeof(T) == typeof(OrdenTrabajo))
-                mockContext.Setup(c => c.OrdenesTrabajo).Returns((DbSet<OrdenTrabajo>)(object)mockSet.Object);
-            else if (typeof(T) == typeof(UsuarioAuth))
-                mockContext.Setup(c => c.UsuariosAuth).Returns((DbSet<UsuarioAuth>)(object)mockSet.Object);
-            else if (typeof(T) == typeof(Vehiculo))
-                mockContext.Setup(c => c.Vehiculos).Returns((DbSet<Vehiculo>)(object)mockSet.Object);
+            if (orden != null)
+            {
+                _readContext.OrdenesTrabajo.Add(orden);
+            }
+            if (usuario != null)
+            {
+                _readContext.UsuariosAuth.Add(usuario);
+            }
+            if (vehiculo != null)
+            {
+                _readContext.Vehiculos.Add(vehiculo);
+            }
+            _readContext.SaveChanges();
         }
 
         #endregion
 
         public void Dispose()
         {
-            _mockWriteContext.Object?.Dispose();
-            _mockReadContext.Object?.Dispose();
+            _writeContext?.Dispose();
+            _readContext?.Dispose();
         }
     }
 }

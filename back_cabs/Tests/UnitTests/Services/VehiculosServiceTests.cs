@@ -25,7 +25,7 @@ public class VehiculosServiceTests
 {
     private readonly Mock<IVehiculoRepository> _mockRepository;
     private readonly Mock<ILogger<VehiculosService>> _mockLogger;
-    // private readonly Mock<ICacheService> _mockCache;
+    private readonly Mock<ICacheService> _mockCache;
     private readonly VehiculosService _service;
 
     /// <summary>
@@ -35,12 +35,12 @@ public class VehiculosServiceTests
     {
         _mockRepository = new Mock<IVehiculoRepository>();
         _mockLogger = new Mock<ILogger<VehiculosService>>();
-        // _mockCache = new Mock<ICacheService>();
+        _mockCache = new Mock<ICacheService>();
         
         _service = new VehiculosService(
             _mockRepository.Object,
-            _mockLogger.Object
-            // _mockCache.Object
+            _mockLogger.Object,
+            _mockCache.Object
         );
     }
 
@@ -58,7 +58,7 @@ public class VehiculosServiceTests
 
         // Configurar que el cache TIENE datos (cache hit)
         _mockCache
-            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:all"))
+            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:active"))
             .ReturnsAsync(vehiculosEnCache);
 
         // Act
@@ -74,7 +74,7 @@ public class VehiculosServiceTests
             "porque debería obtener los datos del caché, no de la BD");
         
         // ✅ Verificar que SÍ llamó al cache
-        _mockCache.Verify(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:all"), Times.Once);
+        _mockCache.Verify(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:active"), Times.Once);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class VehiculosServiceTests
 
         // Cache vacío (cache miss)
         _mockCache
-            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:all"))
+            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:active"))
             .ReturnsAsync((IEnumerable<VehiculoResponseDto>)null!);
 
         _mockRepository
@@ -110,7 +110,7 @@ public class VehiculosServiceTests
         
         // ✅ Verificar que guardó en caché los resultados
         _mockCache.Verify(c => c.SetAsync(
-            "vehiculos:all",
+            "vehiculos:active",
             It.IsAny<IEnumerable<VehiculoResponseDto>>(),
             It.IsAny<TimeSpan>()
         ), Times.Once, "porque debe guardar los resultados en caché para futuras consultas");
@@ -121,7 +121,7 @@ public class VehiculosServiceTests
     {
         // Arrange
         _mockCache
-            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:all"))
+            .Setup(c => c.GetAsync<IEnumerable<VehiculoResponseDto>>("vehiculos:active"))
             .ReturnsAsync((IEnumerable<VehiculoResponseDto>)null!);
 
         _mockRepository
@@ -293,7 +293,7 @@ public class VehiculosServiceTests
         )), Times.Once);
         
         // ✅ IMPORTANTE: Verificar que invalidó el caché del listado
-        _mockCache.Verify(c => c.RemoveAsync("vehiculos:all"), Times.Once,
+        _mockCache.Verify(c => c.RemoveAsync("vehiculos:active"), Times.Once,
             "porque al crear un vehículo nuevo, el caché del listado queda desactualizado");
     }
 
@@ -415,7 +415,7 @@ public class VehiculosServiceTests
         
         // ✅ Debe invalidar AMBOS cachés (listado + detalle)
         _mockCache.Verify(c => c.RemoveAsync("vehiculos:id:1"), Times.Once);
-        _mockCache.Verify(c => c.RemoveAsync("vehiculos:all"), Times.Once);
+        _mockCache.Verify(c => c.RemoveAsync("vehiculos:active"), Times.Once);
     }
 
     [Fact]
@@ -523,7 +523,7 @@ public class VehiculosServiceTests
         
         // ✅ Verificar que invalidó AMBOS cachés
         _mockCache.Verify(c => c.RemoveAsync("vehiculos:id:1"), Times.Once);
-        _mockCache.Verify(c => c.RemoveAsync("vehiculos:all"), Times.Once);
+        _mockCache.Verify(c => c.RemoveAsync("vehiculos:active"), Times.Once);
     }
 
     [Fact]

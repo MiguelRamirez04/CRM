@@ -6,6 +6,8 @@ using back_cabs.CRM.services.Recepcion;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -30,26 +32,55 @@ namespace back_cabs.Tests.UnitTests.Services;
 /// - Estadísticas
 /// - Manejo de errores
 /// </summary>
-public class OrdenTrabajoServiceTests
+public class OrdenTrabajoServiceTests : IDisposable
 {
-    private readonly Mock<ReadOnlyContext> _mockReadContext;
+    private readonly ReadOnlyContext _readContext;
     private readonly Mock<IOrdenTrabajoRepository> _mockRepository;
     private readonly Mock<ILogger<OrdenTrabajoService>> _mockLogger;
     private readonly OrdenTrabajoService _service;
 
     public OrdenTrabajoServiceTests()
     {
-        _mockReadContext = new Mock<ReadOnlyContext>();
+        // Configurar InMemory database
+        var readOptions = new DbContextOptionsBuilder<ReadOnlyContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
+            .Options;
+
+        _readContext = new ReadOnlyContext(readOptions);
         _mockRepository = new Mock<IOrdenTrabajoRepository>();
         _mockLogger = new Mock<ILogger<OrdenTrabajoService>>();
 
         // ✅ ClientesLegacyValidationService es nullable para unit tests
         _service = new OrdenTrabajoService(
-            _mockReadContext.Object,
+            _readContext,
             _mockRepository.Object,
             null,
             _mockLogger.Object
         );
+    }
+
+    public void Dispose()
+    {
+        _readContext?.Dispose();
+    }
+
+    // Helper method para agregar usuarios al contexto
+    private void SeedUsuario(int id = 1, string nombre = "Test", string apellido = "Usuario")
+    {
+        var usuario = new back_cabs.CRM.models.Auth.UsuarioAuth
+        {
+            Id = id,
+            Nombre = nombre,
+            Apellido = apellido,
+            Email = $"test{id}@test.com",
+            Password = "hash",
+            Rol = "RECEPCION",
+            Activo = true,
+            CreadoEn = DateTime.Now
+        };
+        _readContext.UsuariosAuth.Add(usuario);
+        _readContext.SaveChanges();
     }
 
     // ==================== TESTS DE CONSULTA ====================
@@ -232,8 +263,11 @@ public class OrdenTrabajoServiceTests
     public async Task CrearOrdenTrabajoAsync_ConClienteNuevo_DebeCrearOrden()
     {
         // Arrange
+        SeedUsuario(1); // Agregar usuario al contexto
+        
         var request = new OrdenTrabajoRequestDto
         {
+            CreadoPorUserId = 1,
             NuevoCliente = true,
             NombreCliente = "Juan Pérez",
             ClienteTelefono = 5551234567,
@@ -254,6 +288,10 @@ public class OrdenTrabajoServiceTests
             CreadoEn = DateTime.Now
         };
 
+        _mockRepository
+            .Setup(r => r.UsuarioExistsAsync(1))
+            .ReturnsAsync(true);
+        
         _mockRepository
             .Setup(r => r.CreateAsync(It.IsAny<OrdenTrabajo>()))
             .ReturnsAsync(ordenCreada);
@@ -277,8 +315,11 @@ public class OrdenTrabajoServiceTests
     public async Task CrearOrdenTrabajoAsync_ConClienteLegacy_DebeCrearOrden()
     {
         // Arrange
+        SeedUsuario(1); // Agregar usuario al contexto
+        
         var request = new OrdenTrabajoRequestDto
         {
+            CreadoPorUserId = 1,
             NuevoCliente = false,
             ClienteId = 100,
             Notas = "Cliente existente",
@@ -297,6 +338,10 @@ public class OrdenTrabajoServiceTests
             CreadoEn = DateTime.Now
         };
 
+        _mockRepository
+            .Setup(r => r.UsuarioExistsAsync(1))
+            .ReturnsAsync(true);
+        
         _mockRepository
             .Setup(r => r.CreateAsync(It.IsAny<OrdenTrabajo>()))
             .ReturnsAsync(ordenCreada);
@@ -320,8 +365,11 @@ public class OrdenTrabajoServiceTests
     public async Task CrearOrdenTrabajoAsync_DebeEstablecerEstadoInicialCAPTURADA()
     {
         // Arrange
+        SeedUsuario(1); // Agregar usuario al contexto
+        
         var request = new OrdenTrabajoRequestDto
         {
+            CreadoPorUserId = 1,
             NuevoCliente = false,
             ClienteId = 100,
             CitaProgramadaInicio = DateTime.Now.AddDays(1),
@@ -330,6 +378,11 @@ public class OrdenTrabajoServiceTests
         };
 
         OrdenTrabajo? ordenCapturada = null;
+        
+        _mockRepository
+            .Setup(r => r.UsuarioExistsAsync(1))
+            .ReturnsAsync(true);
+        
         _mockRepository
             .Setup(r => r.CreateAsync(It.IsAny<OrdenTrabajo>()))
             .Callback<OrdenTrabajo>(o => ordenCapturada = o)
@@ -350,12 +403,24 @@ public class OrdenTrabajoServiceTests
     {
         // Arrange
         var ordenId = 1;
+        var ordenExistente = new OrdenTrabajo
+        {
+            Id = ordenId,
+            Estado = EstadoOrden.CAPTURADA.ToDbValue(),
+            Notas = "Notas originales",
+            CreadoEn = DateTime.Now
+        };
+        
         var updateRequest = new OrdenTrabajoUpdateRequestDto
         {
             Estado = EstadoOrden.EN_CURSO.ToDbValue(),
             Notas = "Actualización de notas"
         };
 
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(ordenId))
+            .ReturnsAsync(ordenExistente);
+        
         _mockRepository
             .Setup(r => r.UpdateAsync(It.IsAny<OrdenTrabajo>()))
             .ReturnsAsync(true);
@@ -397,12 +462,22 @@ public class OrdenTrabajoServiceTests
     {
         // Arrange
         var ordenId = 1;
+        var ordenExistente = new OrdenTrabajo
+        {
+            Id = ordenId,
+            Estado = estadoInicial,
+            CreadoEn = DateTime.Now
+        };
+        
         var updateRequest = new OrdenTrabajoUpdateRequestDto
         {
             Estado = estadoFinal
         };
 
-        // Nota: estadoInicial define el estado previo esperado en cada caso de prueba
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(ordenId))
+            .ReturnsAsync(ordenExistente);
+        
         _mockRepository
             .Setup(r => r.UpdateAsync(It.Is<OrdenTrabajo>(o => o.Estado == estadoFinal)))
             .ReturnsAsync(true);
@@ -422,24 +497,24 @@ public class OrdenTrabajoServiceTests
     public async Task ObtenerEstadisticasAsync_ConOrdenes_DebeRetornarEstadisticas()
     {
         // Arrange
-        var ordenes = new List<OrdenTrabajo>
+        var estados = new List<string>
         {
-            new OrdenTrabajo { Id = 1, Estado = EstadoOrden.CAPTURADA.ToDbValue() },
-            new OrdenTrabajo { Id = 2, Estado = EstadoOrden.EN_CURSO.ToDbValue() },
-            new OrdenTrabajo { Id = 3, Estado = EstadoOrden.COMPLETADA.ToDbValue() },
-            new OrdenTrabajo { Id = 4, Estado = EstadoOrden.CAPTURADA.ToDbValue() }
+            EstadoOrden.CAPTURADA.ToString(),
+            EstadoOrden.EN_CURSO.ToString(),
+            EstadoOrden.COMPLETADA.ToString(),
+            EstadoOrden.CAPTURADA.ToString()
         };
 
         _mockRepository
-            .Setup(r => r.GetAllFilteredAsync(null, null, null))
-            .ReturnsAsync(ordenes);
+            .Setup(r => r.GetAllEstadosAsync())
+            .ReturnsAsync(estados);
 
         // Act
         var result = await _service.ObtenerEstadisticasAsync();
 
         // Assert
         result.Should().NotBeNull();
-        _mockRepository.Verify(r => r.GetAllFilteredAsync(null, null, null), Times.Once);
+        _mockRepository.Verify(r => r.GetAllEstadosAsync(), Times.Once);
     }
 
     [Fact]
@@ -553,11 +628,22 @@ public class OrdenTrabajoServiceTests
     {
         // Arrange
         var ordenId = 1;
+        var ordenExistente = new OrdenTrabajo
+        {
+            Id = ordenId,
+            Estado = EstadoOrden.CAPTURADA.ToDbValue(),
+            CreadoEn = DateTime.Now
+        };
+        
         var updateRequest = new OrdenTrabajoUpdateRequestDto
         {
             Estado = EstadoOrden.EN_CURSO.ToDbValue()
         };
 
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(ordenId))
+            .ReturnsAsync(ordenExistente);
+        
         _mockRepository
             .Setup(r => r.UpdateAsync(It.IsAny<OrdenTrabajo>()))
             .ThrowsAsync(new Exception("Error al actualizar"));
