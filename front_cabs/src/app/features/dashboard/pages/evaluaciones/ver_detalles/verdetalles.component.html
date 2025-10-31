@@ -1,0 +1,105 @@
+<div class="contenedor">
+  <!-- Estado de carga -->
+  <div *ngIf="cargando" class="estado-carga">
+    <div class="spinner"></div>
+    <p>Cargando evaluación...</p>
+  </div>
+
+  <!-- Estado de error -->
+  <div *ngIf="error && !cargando" class="estado-error">
+    <div class="icono-error">⚠️</div>
+    <h3>Error al cargar</h3>
+    <p>{{ error }}</p>
+    <button class="boton-reintentar" (click)="reintentar()">Reintentar</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <ng-container *ngIf="evaluacion && !cargando && !error">
+    <h1 class="titulo-principal">Detalles de la evaluación</h1>
+
+    <div class="tarjeta">
+      <h2 class="titulo-seccion">Información general</h2>
+
+      <div class="grid-info">
+        <div class="campo-info">
+          <span class="etiqueta-campo">Orden de trabajo:</span>
+          <span class="valor-campo">{{ evaluacion.ordenTrabajo }}</span>
+        </div>
+
+        <div class="campo-info">
+          <span class="etiqueta-campo">Ejecución:</span>
+          <span class="valor-campo">{{ evaluacion.ejecucion }}</span>
+        </div>
+
+        <div class="campo-info">
+          <span class="etiqueta-campo">Cliente:</span>
+          <span class="valor-campo">{{ evaluacion.cliente }}</span>
+        </div>
+
+        <div class="campo-info">
+          <span class="etiqueta-campo">Evaluador:</span>
+          <span class="valor-campo">{{ evaluacion.evaluador }}</span>
+        </div>
+      </div>
+
+      <div class="bloque-texto" *ngIf="evaluacion.objetivo">
+        <div class="campo-texto-completo">
+          <span class="etiqueta-campo">Objetivo de la evaluación:</span>
+          <span class="valor-campo">{{ evaluacion.objetivo }}</span>
+        </div>
+      </div>
+
+      <div class="bloque-texto" *ngIf="evaluacion.comentarios">
+        <div class="campo-texto-completo">
+          <span class="etiqueta-campo">Comentarios generales</span>
+          <p class="texto-completo">{{ evaluacion.comentarios }}</p>
+        </div>
+      </div>
+
+      <div class="bloque-texto">
+        <span class="etiqueta-campo">Score de calidad total</span>
+        <div class="contenedor-score">
+          <div class="score-numero">{{ evaluacion.scoreTotal }}</div>
+          <div class="barra-progreso-contenedor">
+            <div class="barra-progreso">
+              <div class="barra-progreso-relleno" [style.width.%]="porcentajeScore"></div>
+            </div>
+          </div>
+          <span class="texto-score">/100</span>
+        </div>
+      </div>
+
+      <div class="alerta-seguimiento" *ngIf="evaluacion.requiereSeguimiento && evaluacion.notasSeguimiento">
+        <div class="alerta-encabezado">
+         <svg *ngIf="evaluacion.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="icono-alerta">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          <span class="titulo-alerta">Requiere seguimiento</span>
+        </div>
+        <div class="contenido-alerta">
+          <strong>Notas:</strong> {{ evaluacion.notasSeguimiento }}
+        </div>
+      </div>
+
+      <div class="seccion-fases">
+        <h2 class="titulo-seccion">Fases de evaluación</h2>
+        <p class="descripcion-fases">Haga clic en cada fase para ver la evaluación correspondiente</p>
+
+        <div class="grid-fases">
+          <button
+  *ngFor="let fase of evaluacion.fases"
+  class="tarjeta-fase"
+  [class.completada]="fase.completada"
+  [class.deshabilitada]="!fase.completada"
+  (click)="verFase(fase.tipo)">
+  <div class="titulo-fase">{{ fase.titulo }}</div>
+  <div class="estatus-fase">{{ fase.completada ? 'Completada' : 'Sin completar' }}</div>
+</button>
+
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

@@ -83,5 +83,13 @@ namespace back_cabs.CRM.models.Shared
         [Required]
         [Column("creado_en", TypeName = "DATETIME2(0)")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+
+        [NotMapped]
+        public string? EvaluacionActualizada { get; set; }
+
+        [NotMapped]
+        public string? NuevaEvaluacion { get; set; }
+
+        
     }
 }
