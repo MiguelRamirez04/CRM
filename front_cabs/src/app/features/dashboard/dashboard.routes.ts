@@ -58,7 +58,7 @@ export const dashboardRoutes: Routes = [
       },
       // RUTAS DE COTIZACIONES
       {
-        path: 'managequote',
+        path: 'cotizaciones',
         loadComponent: () => import('./pages/cotizaciones/cotizacion.component').then(m => m.CotizacionComponent)
       },
       // RUTAS DE CENTROAYUDA
