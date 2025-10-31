@@ -13,6 +13,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using back_cabs.CRM.Middleware;
+using back_cabs.CRM.middleware;
 using StackExchange.Redis;
 using back_cabs.CRM.Interfaces;
 using back_cabs.CRM.services.shared;
@@ -50,6 +51,28 @@ builder.Services.AddMediatRConfiguration();
 builder.Services.AddSwaggerConfiguration();
 builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 
+// ✅ MEJORA 5: Configurar Anti-Forgery (CSRF Protection)
+builder.Services.AddAntiforgery(options =>
+{
+    // Nombre del header donde el cliente enviará el token
+    options.HeaderName = "X-XSRF-TOKEN";
+    
+    // Nombre de la cookie que almacenará el token
+    options.Cookie.Name = "XSRF-TOKEN";
+    
+    // CRÍTICO: HttpOnly=false para que JavaScript pueda leer el token
+    // Esto es seguro porque el token no es sensible por sí mismo
+    options.Cookie.HttpOnly = false;
+    
+    // Secure=true para solo transmitir por HTTPS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    
+    // SameSite=Strict para prevenir CSRF adicional
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    
+    // Path raíz para disponibilidad en toda la app
+    options.Cookie.Path = "/";
+});
 
 // Servicios básicos de ASP.NET Core
 builder.Services.AddControllers();
@@ -61,7 +84,17 @@ builder.Services.AddDbContext<ReadOnlyContext>(options =>
 builder.Services.AddDbContext<WriteContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Inyección de repositorios (Repository Pattern)
+// ═══════════════════════════════════════════════════════════════
+// UNIT OF WORK PATTERN
+// ═══════════════════════════════════════════════════════════════
+// Coordina transacciones entre múltiples repositorios
+// Garantiza atomicidad (todo o nada) en operaciones complejas
+builder.Services.AddScoped<back_cabs.CRM.Core.UnitOfWork.IUnitOfWork, back_cabs.CRM.Core.UnitOfWork.UnitOfWork>();
+
+// ═══════════════════════════════════════════════════════════════
+// REPOSITORIOS (REPOSITORY PATTERN)
+// ═══════════════════════════════════════════════════════════════
+// Nota: Los repositorios se mantienen para uso directo cuando no se requiere transacción
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IVehiculoRepository, back_cabs.CRM.repositories.Shared.VehiculoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IEjecucionOrdenRepository, back_cabs.CRM.repositories.Recepcion.EjecucionOrdenRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository, back_cabs.CRM.repositories.Auth.UsuarioAuthRepository>();
@@ -186,6 +219,9 @@ app.UseCors(corsPolicy);
 // Autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ✅ MEJORA 5: Activar validación CSRF (debe ir DESPUÉS de auth)
+app.UseCsrfValidation();
 
 // Swagger UI (solo en desarrollo y staging)
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())

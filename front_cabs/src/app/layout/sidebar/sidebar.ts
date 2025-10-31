@@ -56,7 +56,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Evaluaciones',
       icon: 'evaluaciones',
-      link: '/evaluaciones',
+      link: '/dashboard/evaluaciones',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       children: [
         {
