@@ -1,0 +1,428 @@
+:host {
+    display: block;
+}
+
+:host-context(:root) {
+  --radio-borde: 4px;
+  --btn-primario: #34428F;
+  --fondo-principal: #FFFFFF;
+  --texto-btn-primario: #FFFFFF;
+
+  --color-fondo-principal: #f5f5f5;
+  --color-blanco: white;
+  --color-texto-principal: #1a1a1a;
+  --color-texto-secundario: #4a4a4a;
+  --color-texto-gris: #6b7280;
+  --color-texto-gris-claro: #9ca3af;
+  --color-borde: #d1d5db;
+  --color-borde-hover: #e5e7eb;
+  --color-azul-enfoque: #3b82f6;
+  --color-verde: #10b981;
+  --color-verde-claro: #d1fae5;
+  --color-verde-oscuro: #065f46;
+  --color-gris-desactivado: #d1d5db;
+  --color-amarillo-claro: #fef3c7;
+  --color-amarillo-oscuro: #92400e;
+  
+  /* Variables para las etiquetas (igual que en la tabla) */
+  --tag-exito: #BBF7D0;
+  --tag-exito-texto: #166534;
+  --color-alerta: #FED7AA;
+  --color-alerta-texto: #9A3412;
+}
+
+.contenedor {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.contenedor-2 {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: var(--color-blanco);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.titulo-principal {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: var(--color-texto-principal);
+}
+
+.titulo-seccion {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--color-texto-principal);
+}
+
+.seccion {
+    margin-bottom: 30px;
+}
+
+.fila-formulario {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.grupo-formulario {
+    display: flex;
+    flex-direction: column;
+}
+
+.etiqueta {
+    font-size: 13px;
+    color: var(--color-texto-secundario);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.selector,
+.entrada-texto,
+.area-texto {
+    padding: 10px 12px;
+    border: 1px solid var(--color-borde);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--color-texto-principal);
+    background-color: var(--color-blanco);
+    transition: border-color 0.2s;
+}
+
+.selector {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 35px;
+}
+
+.selector:focus,
+.entrada-texto:focus,
+.area-texto:focus {
+    outline: none;
+    border-color: var(--color-azul-enfoque);
+}
+
+.selector:disabled,
+.entrada-texto:disabled,
+.area-texto:disabled {
+    background-color: #f9fafb;
+    color: var(--color-texto-gris-claro);
+    cursor: not-allowed;
+}
+
+.area-texto {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+.descripcion {
+    font-size: 12px;
+    color: var(--color-texto-gris);
+    margin-bottom: 8px;
+}
+
+.fila-puntuacion {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    align-items: end;
+}
+.grupo-puntuacion-centrado{
+    align-items: center;
+}
+
+.grupo-entrada-puntuacion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.entrada-puntuacion {
+    flex: 1;
+    max-width: 80px;
+    height: 36px;
+}
+
+.separador-puntuacion {
+    color: var(--color-texto-gris);
+    font-size: 14px;
+}
+.contenedor-interruptor{
+    height: 36px;
+    
+}
+.grupo-interruptor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.interruptor {
+    
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background-color: var(--color-gris-desactivado);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    
+}
+
+.interruptor.activo {
+    background-color: var(--color-verde);
+}
+
+.interruptor::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-blanco);
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+
+.interruptor.activo::after {
+    transform: translateX(24px);
+}
+
+.estatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  width: fit-content;
+  min-width: 200px;
+  height: 36px;
+  text-align: center;
+}
+
+.estatus-exito {
+  background: var(--tag-exito);
+  color: var(--tag-exito-texto);
+}
+
+.estatus-alerta {
+  background: var(--color-alerta);
+  color: var(--color-alerta-texto);
+}
+
+.icono-alerta {
+  height: 24px;
+  width: 24px;
+  padding: 0;
+}
+
+.seccion-fases {
+    border-top: 1px solid var(--color-borde-hover);
+    padding-top: 20px;
+}
+
+.descripcion-fases {
+    font-size: 13px;
+    color: var(--color-texto-gris);
+    margin-bottom: 20px;
+}
+
+.tarjetas-fase {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.tarjeta-fase {
+    border: 1px solid var(--color-borde-hover);
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.tarjeta-fase:hover {
+    border-color: var(--color-azul-enfoque);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.titulo-fase {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-texto-principal);
+    margin-bottom: 8px;
+}
+
+.estatus-fase {
+    font-size: 13px;
+    color: var(--color-texto-gris-claro);
+}
+
+.nota-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--color-amarillo-claro);
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.icono-info {
+    width: 16px;
+    height: 16px;
+    background-color: var(--color-amarillo-oscuro);
+    border-radius: 50%;
+    color: var(--color-amarillo-claro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.texto-nota {
+    font-size: 12px;
+    color: var(--color-amarillo-oscuro);
+    line-height: 1.5;
+}
+.recuadro-botones {
+  max-width: 1000px;
+  margin: 30px auto;
+  background-color: var(--color-blanco);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+.boton-fase {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: var(--radio-borde);
+  border: 1px solid var(--btn-primario);
+  background-color: var(--fondo-principal);
+  color: var(--btn-primario);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.boton-fase.activo {
+  background-color: var(--btn-primario);
+  color: var(--texto-btn-primario);
+  border-color: var(--btn-primario);
+}
+
+.boton-fase:hover {
+  background-color: var(--btn-primario);
+  color: var(--texto-btn-primario);
+}
+
+.fila-botones {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--espaciado-mediano);
+  gap: 8px;
+}
+
+.boton-fase,
+.boton-guardar {
+  flex: none;
+}
+
+.boton-fase,
+.boton-guardar {
+  padding: 10px 16px;
+}
+
+.recuadro-botones {
+  max-width: 1000px;
+  margin: 30px auto;
+  background-color: var(--color-blanco);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  gap: 15px;
+}
+
+
+.grupo-fases {
+  display: flex;
+  gap: 8px;
+}
+
+.grupo-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.grupo-fases.izquierda {
+  justify-content: flex-start;
+}
+
+.btn-guardar,
+.btn-cerrar {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.btn-guardar {
+  background-color: var(--color-verde);
+  color: white;
+}
+
+.btn-guardar:hover {
+  background-color: var(--color-verde-oscuro);
+  transform: scale(1.02);
+}
+
+.btn-cerrar {
+  background-color: var(--color-borde);
+  color: var(--color-texto-principal);
+}
+
+.btn-cerrar:hover {
+  background-color: var(--color-borde-hover);
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+    .fila-puntuacion {
+        grid-template-columns: 1fr;
+    }
+
+    .tarjetas-fase {
+        grid-template-columns: 1fr;
+    }
+}
