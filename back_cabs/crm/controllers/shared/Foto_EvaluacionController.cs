@@ -11,9 +11,7 @@ using Microsoft.Extensions.Logging;
 
 [ApiController]
 [Route("api/[Controller]")]
-
-// LO DESACTIVE POR QUE NO ME DETECTA EL ROL Y NO ME DEJA ACCEDER A LAS FASES DE EVALUACIÓN
-//[Authorize(Roles = "SOPORTE,ADMINISTRACION")]
+[Authorize(Roles = "SOPORTE,ADMINISTRACION")]
 public class FotosEvaluacionController : ControllerBase
 {
     private readonly FotosEvaluacionService _fotosService;

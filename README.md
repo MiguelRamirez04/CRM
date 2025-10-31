@@ -11,6 +11,8 @@ Elaborar un proyecto web para una empresa el cual cubrira y optimizar los proces
 
 
 
+
+
 Tu proyecto fullstack está completamente configurado con arquitectura de seguridad robusta y estructura familiar para quienes quienes vienen de Javascript
 
 ## 🛡️ Seguridad Implementada
