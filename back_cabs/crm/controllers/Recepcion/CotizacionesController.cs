@@ -111,16 +111,25 @@ public class CotizacionesController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("📥 Recibiendo petición POST /api/Cotizaciones");
+            _logger.LogInformation("📦 Datos recibidos: {@Request}", request);
+            
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("❌ Modelo inválido: {@Errors}", ModelState);
                 return BadRequest(ModelState);
+            }
 
+            _logger.LogInformation("✅ Modelo válido - Creando cotización...");
             var resultado = await _service.CrearAsync(request);
+            _logger.LogInformation("✅ Cotización creada exitosamente con ID: {Id}", resultado.Id);
+            
             return CreatedAtAction(nameof(GetById), new { id = resultado.Id }, resultado);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al crear cotización.");
-            return StatusCode(500, new { message = "Error interno del servidor." });
+            _logger.LogError(ex, "❌ Error al crear cotización.");
+            return StatusCode(500, new { message = "Error interno del servidor.", error = ex.Message });
         }
     }
 

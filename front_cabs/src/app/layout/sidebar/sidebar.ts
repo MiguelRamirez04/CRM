@@ -17,7 +17,8 @@ type IconType =
   | 'calendario' 
   | 'notificaciones' 
   | 'configuracion' 
-  | 'tutorial';
+  | 'tutorial'
+  | 'ayuda';
 
 interface NavItem {
   label: string;
@@ -59,12 +60,12 @@ export class Sidebar implements OnInit {
       link: '/evaluaciones',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       children: [
-        {
+       /* {
           label: 'Detalles de Evaluación',
           icon: 'evaluaciones',
           link: '/evaluaciones/detalles',
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
-        }
+        }*/
       ]
     },
     {
@@ -104,8 +105,22 @@ export class Sidebar implements OnInit {
     {
       label: 'Cotizaciones',
       icon: 'cotizaciones',
-      link: '/cotizaciones',
-      roles: ['ADMINISTRACION', 'RECEPCION']
+      link: '/dashboard/cotizaciones',
+      roles: ['ADMINISTRACION', 'RECEPCION'],
+      children: [
+        {
+          label: 'Nueva Cotización',
+          icon: 'cotizaciones',
+          link: '/dashboard/cotizaciones/nueva',
+          roles: ['ADMINISTRACION', 'RECEPCION']
+        },
+        {
+          label: 'Ver Cotizaciones',
+          icon: 'cotizaciones',
+          link: '/dashboard/cotizaciones/vista',
+          roles: ['ADMINISTRACION', 'RECEPCION']
+        }
+      ]
     },
     {
       label: 'Viáticos',
@@ -146,6 +161,12 @@ export class Sidebar implements OnInit {
       label: 'Tutorial',
       icon: 'tutorial',
       link: '/tutorial',
+      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
+    },
+    {
+      label: 'Ayuda',
+      icon: 'ayuda',
+      link: '/dashboard/centrodeayuda',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     }
   ];

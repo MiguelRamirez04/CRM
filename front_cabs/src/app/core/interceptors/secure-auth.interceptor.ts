@@ -13,11 +13,25 @@ export class SecureAuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Asegurar que todas las requests incluyan credentials para cookies HttpOnly
-    const secureReq = req.clone({
-      setHeaders: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest' // CSRF protection
-      },
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest' // CSRF protection
+    };
+
+    // Para métodos que modifican datos, incluir el token CSRF desde el servicio
+    if (this.requiresCsrfToken(req.method)) {
+      const csrfToken = this.authService.getCsrfToken();
+      if (csrfToken) {
+        headers['X-XSRF-TOKEN'] = csrfToken;
+        console.log(`🔒 CSRF Token incluido para ${req.method} ${req.url}`, csrfToken.substring(0, 20) + '...');
+      } else {
+        console.warn(`⚠️ CSRF Token NO encontrado en servicio para ${req.method} ${req.url}`);
+        console.warn('Asegúrate de llamar obtenerCsrfToken() después del login');
+      }
+    }
+
+    let secureReq = req.clone({
+      setHeaders: headers,
       withCredentials: true // CRÍTICO: para cookies HttpOnly
     });
 
@@ -30,12 +44,17 @@ export class SecureAuthInterceptor implements HttpInterceptor {
 
         // Si es error 403, verificar CSRF
         if (error.status === 403) {
-          console.warn('Posible ataque CSRF detectado o permisos insuficientes');
+          console.warn('⚠️ Error 403 - Posible problema con CSRF o permisos insuficientes');
+          console.warn('Verifica que el token CSRF esté configurado correctamente');
         }
 
         return throwError(() => error);
       })
     );
+  }
+
+  private requiresCsrfToken(method: string): boolean {
+    return ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase());
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {

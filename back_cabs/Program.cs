@@ -64,11 +64,11 @@ builder.Services.AddAntiforgery(options =>
     // Esto es seguro porque el token no es sensible por sí mismo
     options.Cookie.HttpOnly = false;
     
-    // Secure=true para solo transmitir por HTTPS
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    // Secure=None para desarrollo (permitir HTTP), cambiar a Always en producción
+    options.Cookie.SecurePolicy = CookieSecurePolicy.None;
     
-    // SameSite=Strict para prevenir CSRF adicional
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    // SameSite=Lax para desarrollo, cambiar a Strict en producción
+    options.Cookie.SameSite = SameSiteMode.Lax;
     
     // Path raíz para disponibilidad en toda la app
     options.Cookie.Path = "/";
@@ -126,6 +126,9 @@ builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
+
+// Registrar servicio en segundo plano para expiración de cotizaciones
+builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
 
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();

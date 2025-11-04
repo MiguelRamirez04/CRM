@@ -199,40 +199,46 @@ public class CotizacionServiceTests
     #region Cálculos de Total Tests
 
     /// <summary>
-    /// 🧮 Test de cálculos: Verifica la propiedad calculada Total
+    /// 🧮 Test de cálculos: Verifica Total y TotalFinal
+    /// IMPORTANTE: Total (BD) = Subtotal + Impuestos [columna PERSISTED]
+    ///             TotalFinal (C#) = Total - Descuento [propiedad calculada]
     /// </summary>
     [Theory]
-    [InlineData(1000.00, 160.00, 0.00, 1160.00)]           // Sin descuento
-    [InlineData(1000.00, 160.00, 100.00, 1060.00)]         // Con descuento
-    [InlineData(5000.00, 800.00, 200.00, 5600.00)]         // Descuento pequeño
-    [InlineData(10000.00, 1600.00, 2000.00, 9600.00)]      // Descuento significativo
-    [InlineData(1000.00, 0.00, 0.00, 1000.00)]             // Sin impuestos ni descuento
+    [InlineData(1000.00, 160.00, 0.00, 1160.00, 1160.00)]      // Sin descuento
+    [InlineData(1000.00, 160.00, 100.00, 1160.00, 1060.00)]    // Con descuento
+    [InlineData(5000.00, 800.00, 200.00, 5800.00, 5600.00)]    // Descuento pequeño
+    [InlineData(10000.00, 1600.00, 2000.00, 11600.00, 9600.00)] // Descuento significativo
+    [InlineData(1000.00, 0.00, 0.00, 1000.00, 1000.00)]        // Sin impuestos ni descuento
     public void CalcularTotal_ConDiferentesValores_DebeCalcularCorrectamente(
         double subtotalDouble,
         double impuestosDouble,
         double? descuentoDouble,
-        double totalEsperadoDouble)
+        double totalBDDouble,
+        double totalFinalDouble)
     {
         // Convertir de double a decimal (xUnit no soporta decimal en InlineData)
         var subtotal = (decimal)subtotalDouble;
         var impuestos = (decimal)impuestosDouble;
         var descuento = descuentoDouble.HasValue ? (decimal?)descuentoDouble.Value : null;
-        var totalEsperado = (decimal)totalEsperadoDouble;
+        var totalBD = (decimal)totalBDDouble;
+        var totalFinal = (decimal)totalFinalDouble;
         
         // Arrange
         var cotizacion = new Cotizacion
         {
             Subtotal = subtotal,
             ImpuestosTotal = impuestos,
+            Total = totalBD, // En BD se calcula automáticamente como PERSISTED
             Descuento = descuento
         };
 
-        // Act
-        var total = cotizacion.Total;
-
-        // Assert
-        total.Should().Be(totalEsperado, 
-            $"porque el cálculo debe ser {subtotal} + {impuestos} - {descuento ?? 0} = {totalEsperado}");
+        // Act & Assert - Verificar Total de BD
+        cotizacion.Total.Should().Be(totalBD, 
+            $"porque Total (BD) debe ser {subtotal} + {impuestos} = {totalBD}");
+            
+        // Act & Assert - Verificar TotalFinal calculado
+        cotizacion.TotalFinal.Should().Be(totalFinal,
+            $"porque TotalFinal debe ser {totalBD} - {descuento ?? 0} = {totalFinal}");
     }
 
     #endregion

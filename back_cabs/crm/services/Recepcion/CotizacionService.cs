@@ -83,8 +83,58 @@ public class CotizacionService
     }
 
     /// <summary>
+    /// Genera un folio automático con formato COT-YYYY-M-D-XXX (sin ceros a la izquierda en día/mes)
+    /// Se reinicia el contador diariamente
+    /// </summary>
+    private async Task<string> GenerarFolioAutomaticoAsync()
+    {
+        var fechaHoy = DateTime.UtcNow;
+        // Formato solicitado: COT-2025-11-3 (año-mes-día sin ceros a la izquierda)
+        var prefijo = $"COT-{fechaHoy:yyyy-M-d}"; // Ej: COT-2025-11-3
+        
+        // Buscar el último folio del día
+        var cotizacionesHoy = await _cotizacionRepository.GetByFechaCreadoAsync(fechaHoy.Date);
+        
+        // Filtrar folios que coincidan con el formato del día
+        var foliosHoy = cotizacionesHoy
+            .Where(c => c.Folio != null && c.Folio.StartsWith(prefijo))
+            .Select(c => c.Folio)
+            .ToList();
+        
+        int siguienteNumero = 1;
+        
+        if (foliosHoy.Any())
+        {
+            // Extraer el último número y sumar 1
+            var ultimosFolios = foliosHoy
+                .Select(f => {
+                    var partes = f.Split('-');
+                    if (partes.Length == 5 && int.TryParse(partes[4], out int numero))
+                        return numero;
+                    return 0;
+                })
+                .Where(n => n > 0)
+                .OrderByDescending(n => n)
+                .ToList();
+            
+            if (ultimosFolios.Any())
+            {
+                siguienteNumero = ultimosFolios.First() + 1;
+            }
+        }
+        
+        // Formatear número con 3 dígitos (001, 002, etc.)
+        var folioCompleto = $"{prefijo}-{siguienteNumero:D3}";
+        
+        _logger.LogInformation("📋 Folio generado: {Folio}", folioCompleto);
+        
+        return folioCompleto;
+    }
+
+    /// <summary>
     /// Crea una nueva cotización.
     /// ✅ Usa Repository Pattern para escritura transaccional
+    /// ✅ Genera folio automático con formato COT-YYYY-MM-DD-XXX
     /// </summary>
     public async Task<CotizacionResponseDto> CrearAsync(CotizacionCreateRequestDto request)
     {
@@ -92,10 +142,16 @@ public class CotizacionService
         {
             var cotizacion = MapFromCreateRequestDto(request);
             cotizacion.CreadoEn = DateTime.UtcNow;
+            
+            // ✅ Generar folio automático si no se proporciona
+            if (string.IsNullOrWhiteSpace(cotizacion.Folio))
+            {
+                cotizacion.Folio = await GenerarFolioAutomaticoAsync();
+            }
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
-            _logger.LogInformation("Cotización creada con ID {Id}", creada.Id);
+            _logger.LogInformation("✅ Cotización creada con ID {Id} y Folio {Folio}", creada.Id, creada.Folio);
 
             return MapToResponseDto(creada);
         }
@@ -126,14 +182,21 @@ public class CotizacionService
             existente.IntakeLegacyId = request.IntakeLegacyId;
             existente.Subtotal = request.Subtotal;
             existente.ImpuestosTotal = request.ImpuestosTotal;
-            existente.Descuento = request.Descuento;
+            // Total se recalcula automáticamente en BD (columna PERSISTED)
             existente.Estado = request.Estado;
             existente.Observaciones = request.Observaciones;
+            existente.ValidezDias = request.ValidezDias;
+            // Campos de capacitación
+            existente.HorasCapacitacion = request.HorasCapacitacion;
+            existente.PaquetesCapacitacion = request.PaquetesCapacitacion;
+            existente.CostoCapacitacion = request.CostoCapacitacion;
+            // Campos de información del cliente
             existente.Cliente = request.Cliente;
             existente.Rfc = request.Rfc;
             existente.Folio = request.Folio;
+            // Campos adicionales
+            existente.Descuento = request.Descuento;
             existente.DescripcionServicio = request.DescripcionServicio;
-            existente.ValidezDias = request.ValidezDias;
             existente.ActualizadoEn = DateTime.UtcNow;
 
             var actualizada = await _cotizacionRepository.UpdateAsync(existente);
@@ -188,17 +251,26 @@ public class CotizacionService
             IntakeLegacyId = cotizacion.IntakeLegacyId,
             Subtotal = cotizacion.Subtotal,
             ImpuestosTotal = cotizacion.ImpuestosTotal,
-            Descuento = cotizacion.Descuento,
-            Total = cotizacion.Total, // Calculado automáticamente en el modelo
+            Total = cotizacion.Total,
             Estado = cotizacion.Estado,
             Observaciones = cotizacion.Observaciones,
+            ActualizadoEn = cotizacion.ActualizadoEn,
+            CreadoEn = cotizacion.CreadoEn,
+            ValidezDias = cotizacion.ValidezDias,
+            // Campos de capacitación
+            HorasCapacitacion = cotizacion.HorasCapacitacion,
+            PaquetesCapacitacion = cotizacion.PaquetesCapacitacion,
+            CostoCapacitacion = cotizacion.CostoCapacitacion,
+            // Campos de información del cliente
             Cliente = cotizacion.Cliente,
             Rfc = cotizacion.Rfc,
             Folio = cotizacion.Folio,
+            // Campos adicionales
+            Descuento = cotizacion.Descuento,
             DescripcionServicio = cotizacion.DescripcionServicio,
-            ActualizadoEn = cotizacion.ActualizadoEn,
-            CreadoEn = cotizacion.CreadoEn,
-            ValidezDias = cotizacion.ValidezDias
+            // Campos de contacto
+            Telefono = cotizacion.Telefono,
+            Correo = cotizacion.Correo
         };
     }
 
@@ -210,14 +282,24 @@ public class CotizacionService
             IntakeLegacyId = request.IntakeLegacyId,
             Subtotal = request.Subtotal,
             ImpuestosTotal = request.ImpuestosTotal,
-            Descuento = request.Descuento,
+            // Total se calcula automáticamente en BD como columna PERSISTED
             Estado = request.Estado,
             Observaciones = request.Observaciones,
+            ValidezDias = request.ValidezDias,
+            // Campos de capacitación
+            HorasCapacitacion = request.HorasCapacitacion,
+            PaquetesCapacitacion = request.PaquetesCapacitacion,
+            CostoCapacitacion = request.CostoCapacitacion,
+            // Campos de información del cliente
             Cliente = request.Cliente,
             Rfc = request.Rfc,
             Folio = request.Folio,
+            // Campos adicionales
+            Descuento = request.Descuento,
             DescripcionServicio = request.DescripcionServicio,
-            ValidezDias = request.ValidezDias
+            // Campos de contacto
+            Telefono = request.Telefono,
+            Correo = request.Correo
         };
     }
 }

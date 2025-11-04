@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, timer, throwError, of } from 'rxjs';
-import { map, tap, catchError, switchMap, share } from 'rxjs/operators';
+import { map, tap, catchError, switchMap, share, take } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -78,9 +78,11 @@ export class SecureAuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private refreshTokenRequest: Observable<RefreshResponse> | null = null;
   private logoutPerformed = false; // Flag para controlar logout realizado
+  private csrfTokenSubject = new BehaviorSubject<string | null>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
   public isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
+  public csrfToken$ = this.csrfTokenSubject.asObservable();
 
   private router = inject(Router);
 
@@ -325,4 +327,51 @@ export class SecureAuthService {
     console.error('Auth error:', error);
     return throwError(() => new Error(errorMessage));
   };
+
+  /**
+   * Obtiene y almacena el token CSRF del servidor
+   * Se debe llamar después del login exitoso
+   */
+  obtenerCsrfToken(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/api/auth/csrf-token`, {
+      withCredentials: true // Necesario para cookies HttpOnly
+    }).pipe(
+      tap((response: any) => {
+        console.log('✅ Token CSRF obtenido:', response);
+        // Almacenar el token del response body (NO de la cookie)
+        if (response?.csrfToken) {
+          this.csrfTokenSubject.next(response.csrfToken);
+          console.log('✅ Token CSRF almacenado en servicio');
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error obteniendo token CSRF:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el token CSRF actual
+   */
+  getCsrfToken(): string | null {
+    return this.csrfTokenSubject.value;
+  }
+
+  /**
+   * Inicializa el token CSRF al iniciar la aplicación
+   * Se llama desde el app initializer
+   */
+  inicializarCsrfToken(): Observable<any> {
+    return this.isLoggedIn$.pipe(
+      take(1),
+      switchMap(isLoggedIn => {
+        if (isLoggedIn) {
+          console.log('🔄 Inicializando token CSRF...');
+          return this.obtenerCsrfToken();
+        }
+        return of(null);
+      })
+    );
+  }
 }

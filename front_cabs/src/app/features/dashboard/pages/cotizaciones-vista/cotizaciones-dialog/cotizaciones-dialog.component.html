@@ -1,0 +1,166 @@
+<div class="modal-overlay" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Loading State -->
+    <div *ngIf="cargando" class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando detalles...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !cargando" class="error-container">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      <p>{{ error }}</p>
+      <button type="button" (click)="cerrarModal()" class="btn-secondary">Cerrar</button>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="cotizacion && !cargando && !error">
+      <div class="modal-header">
+        <h3>Detalle de Cotización</h3>
+        <div class="header-actions">
+          <button type="button" (click)="exportarPDF()" class="btn-primary" title="Exportar a PDF">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Exportar PDF
+          </button>
+          <button type="button" (click)="cerrarModal()" class="btn-close" aria-label="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Contenido printable -->
+        <div id="cotizacion-pdf-content">
+        <!-- Información General -->
+        <div class="detail-section">
+          <h4>Información General</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">ID:</span>
+              <span class="detail-value">#{{ cotizacion.id }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Folio:</span>
+              <span class="detail-value">{{ cotizacion.folio }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Estado:</span>
+              <span class="badge" [ngClass]="obtenerClaseEstado(cotizacion.estado)">
+                {{ obtenerLabelEstado(cotizacion.estado) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Validez (días):</span>
+              <span class="detail-value">{{ cotizacion.validezDias || '-' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="detail-section">
+          <h4>Información del Cliente</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Cliente:</span>
+              <span class="detail-value">{{ cotizacion.cliente }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">RFC:</span>
+              <span class="detail-value">{{ cotizacion.rfc }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Teléfono:</span>
+              <span class="detail-value">{{ cotizacion.telefono || '-' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Correo:</span>
+              <span class="detail-value">{{ cotizacion.correo || '-' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción del Servicio -->
+        <div class="detail-section">
+          <h4>Descripción del Servicio</h4>
+          <div class="detail-full">
+            <p>{{ cotizacion.descripcionServicio }}</p>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="detail-section" *ngIf="cotizacion.observaciones">
+          <h4>Observaciones</h4>
+          <div class="detail-full">
+            <p>{{ cotizacion.observaciones }}</p>
+          </div>
+        </div>
+
+        <!-- Servicios de Capacitación -->
+        <div class="detail-section" *ngIf="cotizacion.horasCapacitacion || cotizacion.paquetesCapacitacion || cotizacion.costoCapacitacion">
+          <h4>Servicios de Capacitación</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Horas:</span>
+              <span class="detail-value">{{ cotizacion.horasCapacitacion || 0 }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Paquetes:</span>
+              <span class="detail-value">{{ cotizacion.paquetesCapacitacion || 0 }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Costo:</span>
+              <span class="detail-value">{{ formatearMoneda(cotizacion.costoCapacitacion || 0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Totales -->
+        <div class="detail-totals">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <strong>{{ formatearMoneda(cotizacion.subtotal) }}</strong>
+          </div>
+          <div class="total-row">
+            <span>IVA (16%):</span>
+            <strong>{{ formatearMoneda(cotizacion.impuestosTotal) }}</strong>
+          </div>
+          <div class="total-row" *ngIf="cotizacion.descuento && cotizacion.descuento > 0">
+            <span>Descuento:</span>
+            <strong class="text-red">-{{ formatearMoneda(cotizacion.descuento) }}</strong>
+          </div>
+          <hr>
+          <div class="total-row total-final">
+            <span>Total Final:</span>
+            <strong>{{ formatearMoneda(cotizacion.total) }}</strong>
+          </div>
+        </div>
+
+  </div>
+
+  <!-- Metadata -->
+  <div class="detail-footer">
+          <div class="detail-item">
+            <span class="detail-label">Creado:</span>
+            <span class="detail-value">{{ formatearFecha(cotizacion.creadoEn) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="cotizacion.actualizadoEn">
+            <span class="detail-label">Actualizado:</span>
+            <span class="detail-value">{{ formatearFecha(cotizacion.actualizadoEn) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" (click)="cerrarModal()" class="btn-secondary">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

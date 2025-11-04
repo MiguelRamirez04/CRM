@@ -1,0 +1,19 @@
+{
+  "ordenId": 3,
+  "intakeLegacyId": null,
+  "subtotal": 45000.00,
+  "impuestosTotal": 7200.00,
+  "descuento": 5000.00,
+  "estado": "NUEVA",
+  "observaciones": "Proyecto corporativo de gran escala. Requiere validación de gerencia antes de aprobación.",
+  "cliente": "Grupo Empresarial Marquez y Asociados S.A. de C.V.",
+  "rfc": "GEM010920A1B",
+  "folio": "COT-2025-003",
+  "descripcionServicio": "Implementación integral de sistema de gestión de flota para 50 unidades: instalación de hardware (GPS, sensores de combustible, cámaras), licencias de software por 12 meses, configuración de alertas personalizadas, integración con sistema ERP del cliente, y capacitación completa del personal administrativo y operativo",
+  "validezDias": 60,
+  "horasCapacitacion": 40,
+  "paquetesCapacitacion": 5,
+  "costoCapacitacion": 25000.00,
+  "telefono": 5548901234,
+  "correo": "compras@grupomyz.com.mx"
+}
