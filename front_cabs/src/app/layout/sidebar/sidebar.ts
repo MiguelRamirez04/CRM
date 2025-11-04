@@ -60,7 +60,7 @@ export class Sidebar implements OnInit {
       link: '/dashboard/evaluaciones',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       children: [
-       /* {
+      /* {
           label: 'Detalles de Evaluación',
           icon: 'evaluaciones',
           link: '/evaluaciones/detalles',
@@ -106,38 +106,24 @@ export class Sidebar implements OnInit {
       label: 'Cotizaciones',
       icon: 'cotizaciones',
       link: '/dashboard/cotizaciones',
-      roles: ['ADMINISTRACION', 'RECEPCION'],
-      children: [
-        {
-          label: 'Nueva Cotización',
-          icon: 'cotizaciones',
-          link: '/dashboard/cotizaciones/nueva',
-          roles: ['ADMINISTRACION', 'RECEPCION']
-        },
-        {
-          label: 'Ver Cotizaciones',
-          icon: 'cotizaciones',
-          link: '/dashboard/cotizaciones/vista',
-          roles: ['ADMINISTRACION', 'RECEPCION']
-        }
-      ]
+      roles: ['ADMINISTRACION', 'RECEPCION']
     },
     {
       label: 'Viáticos',
       icon: 'viaticos',
-      link: '/viaticos',
+      link: '/modulesShared/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
       label: 'Vehículos',
       icon: 'vehiculos',
-      link: '/vehiculos',
+      link: '/modulesShared/vehiculos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
       label: 'Calendario',
       icon: 'calendario',
-      link: '/calendario',
+      link: '/dashboard/calendario',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       notify: true
     }
