@@ -1,0 +1,23 @@
+import { Routes } from '@angular/router';
+
+
+export const modulesSharedRoutes: Routes = [
+  {
+    path: '',
+    loadComponent: () => import('../../layout/dashboard-layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/ejecuciones-orden/ejecuciones-orden.component').then(m => m.EjecucionesOrdenComponent)
+      },
+      {
+        path: 'vehiculos',
+        loadComponent: () => import('./pages/vehiculos/vehiculos.component').then(m => m.VehiculosComponent)
+      },
+      {
+        path: 'viaticos',
+        loadComponent: () => import('./pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
+      }
+    ]
+  }
+];
