@@ -8,12 +8,6 @@ public static class ValidationConfiguration
 {
     public static IServiceCollection AddValidationConfiguration(this IServiceCollection services)
     {
-        // Agregar FluentValidation a ASP.NET Core
-        services.AddFluentValidationAutoValidation(config =>
-        {
-            // Deshabilitar validación de DataAnnotations para evitar duplicados
-            config.DisableDataAnnotationsValidation = false;
-        });
 
         // Registrar todos los validadores automáticamente desde el assembly actual
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
