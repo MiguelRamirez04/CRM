@@ -39,6 +39,12 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class CotizacionService {
+  actualizarEstado(id: any, VENCIDA: EstadoCotizacion) {
+    throw new Error('Method not implemented.');
+  }
+  obtenerCotizacionesActivas() {
+    throw new Error('Method not implemented.');
+  }
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/Cotizaciones`;
   
@@ -102,11 +108,11 @@ export class CotizacionService {
   /**
    * Actualizar cotización existente
    * @param id - ID de la cotización a actualizar
-   * @param cotizacion - Datos actualizados
+   * @param cambios - Datos actualizados (puede ser parcial o completo)
    * @returns Observable con la cotización actualizada
    */
-  actualizar(id: number, cotizacion: CotizacionUpdateRequest): Observable<CotizacionResponse> {
-    return this.http.put<CotizacionResponse>(`${this.apiUrl}/${id}`, cotizacion);
+  actualizar(id: number, cambios: Partial<CotizacionUpdateRequest>): Observable<CotizacionResponse> {
+    return this.http.put<CotizacionResponse>(`${this.apiUrl}/${id}`, cambios);
   }
 
   /**

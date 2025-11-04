@@ -56,6 +56,8 @@ export interface CotizacionUpdateRequest extends CotizacionCreateRequest {}
  * Incluye campos calculados y de auditoría
  */
 export interface CotizacionResponse {
+actualizadoEn: any;
+creadoEn: string|Date;
   id: number;
   ordenId: number;
   subtotal: number;

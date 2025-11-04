@@ -11,8 +11,13 @@
     <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
     <div *ngIf="mensajeError" class="alert alert-error">{{ mensajeError }}</div>
 
-    <form [formGroup]="cotizacionForm" (ngSubmit)="onGuardar()">
+    <form [formGroup]="cotizacionForm" (ngSubmit)="onGuardar()" (keydown.enter)="$event.preventDefault()">
+      <div class="form-overlay" *ngIf="guardando">
+        <div class="spinner"></div>
+        <p>Creando cotización...</p>
+      </div>
       
+      <fieldset [disabled]="guardando">
       <div class="form-section">
         <h5 class="section-title">Información del Cliente</h5>
         
@@ -36,10 +41,6 @@
         </div>
 
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Folio *</label>
-            <input type="text" formControlName="folio" placeholder="COT-2024-001" class="form-input">
-          </div>
           <div class="form-group">
             <label class="form-label">Estado</label>
             <select class="form-input" formControlName="estado">
@@ -149,12 +150,13 @@
       <div class="footer">
         <div class="footer-buttons">
           <button type="button" (click)="onLimpiar()" class="btn-action btn-save" [disabled]="guardando">Limpiar</button>
-          <button type="submit" class="btn-action btn-send" [disabled]="guardando || cotizacionForm.invalid">
+          <button type="submit" class="btn-action btn-send" [disabled]="guardando || submitted || cotizacionForm.invalid">
             <span *ngIf="guardando">Creando...</span>
             <span *ngIf="!guardando">Crear Cotización</span>
           </button>
         </div>
       </div>
+      </fieldset>
     </form>
   </div>
 </div>

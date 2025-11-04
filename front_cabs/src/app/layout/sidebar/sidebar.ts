@@ -106,7 +106,21 @@ export class Sidebar implements OnInit {
       label: 'Cotizaciones',
       icon: 'cotizaciones',
       link: '/dashboard/cotizaciones',
-      roles: ['ADMINISTRACION', 'RECEPCION']
+      roles: ['ADMINISTRACION', 'RECEPCION'],
+      children: [
+        {
+          label: 'Nueva Cotización',
+          icon: 'cotizaciones',
+          link: '/dashboard/cotizaciones/nueva',
+          roles: ['ADMINISTRACION', 'RECEPCION']
+        },
+        {
+          label: 'Ver Cotizaciones',
+          icon: 'cotizaciones',
+          link: '/dashboard/cotizaciones/vista',
+          roles: ['ADMINISTRACION', 'RECEPCION']
+        }
+      ]
     },
     {
       label: 'Viáticos',

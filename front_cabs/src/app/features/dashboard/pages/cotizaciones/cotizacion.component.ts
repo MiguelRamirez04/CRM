@@ -29,6 +29,7 @@ export class CotizacionComponent implements OnInit {
   
   // Control de UI
   guardando = false;
+  submitted = false;
   mensajeExito = '';
   mensajeError = '';
   mostrarCapacitacion = false;
@@ -50,7 +51,7 @@ export class CotizacionComponent implements OnInit {
       correo: ['', [Validators.email, Validators.maxLength(150)]],
       
       // Datos de la Cotización
-      folio: ['', [Validators.required, Validators.maxLength(50)]],
+      folio: [''], // Opcional - Se genera automáticamente en el backend
       estado: [EstadoCotizacion.NUEVA, Validators.required],
       validezDias: [30, [Validators.required, Validators.min(1), Validators.max(365)]],
       
@@ -193,6 +194,12 @@ export class CotizacionComponent implements OnInit {
    * Método principal para crear cotización (POST)
    */
   async onGuardar(): Promise<void> {
+    // Prevenir múltiples submissions
+    if (this.guardando || this.submitted) {
+      console.log('⚠️ Formulario ya enviado o en proceso - Ignorando submit');
+      return;
+    }
+
     console.log('🔵 onGuardar() ejecutado - Iniciando validación...');
     console.log('📋 Valores del formulario:', this.cotizacionForm.value);
     console.log('✅ Formulario válido?', this.cotizacionForm.valid);
@@ -293,23 +300,17 @@ export class CotizacionComponent implements OnInit {
       
       console.log('✅ Cotización creada exitosamente:', resultado);
       
-      // Limpiar formulario después de 5 segundos
+      // Marcar como enviado exitosamente
+      this.submitted = true;
+      
+      // Redireccionar al listado después de mostrar el mensaje de éxito
       setTimeout(() => {
-        this.cotizacionForm.reset({
-          estado: EstadoCotizacion.NUEVA,
-          validezDias: 30,
-          subtotal: 0,
-          impuestosTotal: 0,
-          descuento: 0
-        });
-        this.mensajeExito = '';
-        this.mostrarCapacitacion = false;
-        this.calcularTotales();
-      }, 5000);
+        this.router.navigate(['/dashboard/cotizaciones/listado']);
+      }, 3000);
       
     } catch (error: any) {
       console.error('❌ ERROR al crear cotización:', error);
-      console.error('❌ Status:', error?.status);
+      console.log('❌ Status:', error?.status);
       console.error('❌ Error completo:', JSON.stringify(error, null, 2));
       
       const errorMsg = error?.error?.errors 
@@ -317,6 +318,9 @@ export class CotizacionComponent implements OnInit {
         : error?.error?.message || error?.message || 'No se pudo crear la cotización';
       this.mensajeError = `❌ Error: ${errorMsg}`;
       setTimeout(() => this.mensajeError = '', 7000);
+
+      // Reset submitted state on error
+      this.submitted = false;
     } finally {
       this.guardando = false;
       console.log('🔵 onGuardar() finalizado');
@@ -327,6 +331,9 @@ export class CotizacionComponent implements OnInit {
    * Limpia el formulario
    */
   onLimpiar(): void {
+    // No permitir limpiar si se está guardando
+    if (this.guardando) return;
+
     this.cotizacionForm.reset({
       estado: EstadoCotizacion.NUEVA,
       validezDias: 30,
@@ -339,5 +346,6 @@ export class CotizacionComponent implements OnInit {
     this.calcularTotales();
     this.mensajeExito = '';
     this.mensajeError = '';
+    this.submitted = false; // Reset el estado de submitted al limpiar
   }
 }

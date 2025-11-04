@@ -83,8 +83,58 @@ public class CotizacionService
     }
 
     /// <summary>
+    /// Genera un folio automático con formato COT-YYYY-M-D-XXX (sin ceros a la izquierda en día/mes)
+    /// Se reinicia el contador diariamente
+    /// </summary>
+    private async Task<string> GenerarFolioAutomaticoAsync()
+    {
+        var fechaHoy = DateTime.UtcNow;
+        // Formato solicitado: COT-2025-11-3 (año-mes-día sin ceros a la izquierda)
+        var prefijo = $"COT-{fechaHoy:yyyy-M-d}"; // Ej: COT-2025-11-3
+        
+        // Buscar el último folio del día
+        var cotizacionesHoy = await _cotizacionRepository.GetByFechaCreadoAsync(fechaHoy.Date);
+        
+        // Filtrar folios que coincidan con el formato del día
+        var foliosHoy = cotizacionesHoy
+            .Where(c => c.Folio != null && c.Folio.StartsWith(prefijo))
+            .Select(c => c.Folio)
+            .ToList();
+        
+        int siguienteNumero = 1;
+        
+        if (foliosHoy.Any())
+        {
+            // Extraer el último número y sumar 1
+            var ultimosFolios = foliosHoy
+                .Select(f => {
+                    var partes = f.Split('-');
+                    if (partes.Length == 5 && int.TryParse(partes[4], out int numero))
+                        return numero;
+                    return 0;
+                })
+                .Where(n => n > 0)
+                .OrderByDescending(n => n)
+                .ToList();
+            
+            if (ultimosFolios.Any())
+            {
+                siguienteNumero = ultimosFolios.First() + 1;
+            }
+        }
+        
+        // Formatear número con 3 dígitos (001, 002, etc.)
+        var folioCompleto = $"{prefijo}-{siguienteNumero:D3}";
+        
+        _logger.LogInformation("📋 Folio generado: {Folio}", folioCompleto);
+        
+        return folioCompleto;
+    }
+
+    /// <summary>
     /// Crea una nueva cotización.
     /// ✅ Usa Repository Pattern para escritura transaccional
+    /// ✅ Genera folio automático con formato COT-YYYY-MM-DD-XXX
     /// </summary>
     public async Task<CotizacionResponseDto> CrearAsync(CotizacionCreateRequestDto request)
     {
@@ -92,10 +142,16 @@ public class CotizacionService
         {
             var cotizacion = MapFromCreateRequestDto(request);
             cotizacion.CreadoEn = DateTime.UtcNow;
+            
+            // ✅ Generar folio automático si no se proporciona
+            if (string.IsNullOrWhiteSpace(cotizacion.Folio))
+            {
+                cotizacion.Folio = await GenerarFolioAutomaticoAsync();
+            }
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
-            _logger.LogInformation("Cotización creada con ID {Id}", creada.Id);
+            _logger.LogInformation("✅ Cotización creada con ID {Id} y Folio {Folio}", creada.Id, creada.Folio);
 
             return MapToResponseDto(creada);
         }
