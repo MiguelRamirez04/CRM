@@ -1,0 +1,23 @@
+### TEST: Crear Nueva Cotización (POST)
+POST http://localhost:5176/api/Cotizaciones
+Content-Type: application/json
+
+{
+  "cliente": "Empresa Test S.A. de C.V.",
+  "rfc": "ETT950101ABC",
+  "telefono": 5551234567,
+  "correo": "contacto@test.com",
+  "folio": "COT-2024-TEST-001",
+  "estado": "NUEVA",
+  "validezDias": 30,
+  "descripcionServicio": "Servicio de auditoría y consultoría fiscal",
+  "observaciones": "Cliente nuevo, requiere atención especial",
+  "horasCapacitacion": 10,
+  "paquetesCapacitacion": 2,
+  "costoCapacitacion": 5000.00,
+  "subtotal": 10000.00,
+  "impuestosTotal": 1600.00,
+  "descuento": 500.00
+}
+
+###

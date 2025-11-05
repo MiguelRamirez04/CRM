@@ -1,0 +1,162 @@
+﻿<div class="container">
+  <div class="form-wrapper">
+    
+    <div class="header">
+      <div>
+        <h2 class="header-title">Nueva Cotización</h2>
+        <small class="header-id">Estado: {{ obtenerLabelEstado(cotizacionForm.get('estado')?.value) }}</small>
+      </div>
+    </div>
+
+    <div *ngIf="mensajeExito" class="alert alert-success">{{ mensajeExito }}</div>
+    <div *ngIf="mensajeError" class="alert alert-error">{{ mensajeError }}</div>
+
+    <form [formGroup]="cotizacionForm" (ngSubmit)="onGuardar()" (keydown.enter)="$event.preventDefault()">
+      <div class="form-overlay" *ngIf="guardando">
+        <div class="spinner"></div>
+        <p>Creando cotización...</p>
+      </div>
+      
+      <fieldset [disabled]="guardando">
+      <div class="form-section">
+        <h5 class="section-title">Información del Cliente</h5>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nombre del Cliente *</label>
+            <input type="text" formControlName="cliente" placeholder="Ej: Transportes del Norte SA de CV" class="form-input" [ngClass]="{'error': cotizacionForm.get('cliente')?.invalid && cotizacionForm.get('cliente')?.touched}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">RFC *</label>
+            <input type="text" formControlName="rfc" placeholder="XAXX010101000" (blur)="validarRFC()" class="form-input" [ngClass]="{'error': cotizacionForm.get('rfc')?.invalid && cotizacionForm.get('rfc')?.touched}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="number" formControlName="telefono" placeholder="6141234567" (blur)="validarTelefono()" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Correo Electrónico</label>
+            <input type="email" formControlName="correo" placeholder="contacto@empresa.com" (blur)="validarCorreo()" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select class="form-input" formControlName="estado">
+              <option *ngFor="let estado of estadosDisponibles" [value]="estado">{{ obtenerLabelEstado(estado) }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Días de Validez *</label>
+            <input type="number" formControlName="validezDias" placeholder="30" min="1" max="365" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label class="form-label">Descripción del Servicio *</label>
+            <textarea formControlName="descripcionServicio" placeholder="Describa los servicios..." rows="3" maxlength="1000" class="form-textarea"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label class="form-label">Observaciones</label>
+            <textarea formControlName="observaciones" placeholder="Observaciones adicionales..." rows="2" maxlength="500" class="form-textarea"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="products-header">
+          <h5>Servicios de Capacitación (Opcional)</h5>
+          <button type="button" (click)="toggleCapacitacion()" class="btn-add-product">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            {{ mostrarCapacitacion ? 'Ocultar' : 'Agregar' }}
+          </button>
+        </div>
+
+        <div *ngIf="mostrarCapacitacion" class="capacitacion-panel">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Horas de Capacitación</label>
+              <input type="number" formControlName="horasCapacitacion" placeholder="0" min="0" max="999" class="form-input">
+              <small class="form-hint">Número de horas</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Paquetes de Capacitación</label>
+              <input type="number" formControlName="paquetesCapacitacion" placeholder="0" min="0" max="999" class="form-input">
+              <small class="form-hint">Cantidad de paquetes</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Costo de Capacitación</label>
+              <input type="number" formControlName="costoCapacitacion" placeholder="0.00" step="0.01" class="form-input">
+              <small class="form-hint">Costo total</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h5 class="section-title">Información Financiera</h5>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Subtotal *</label>
+            <input type="number" formControlName="subtotal" placeholder="0.00" step="0.01" (input)="calcularTotales()" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Impuestos (IVA 16%) *</label>
+            <div class="input-with-button">
+              <input type="number" formControlName="impuestosTotal" placeholder="0.00" step="0.01" class="form-input">
+              <button type="button" (click)="calcularImpuestos()" class="btn-calc" title="Calcular IVA 16%">Calc</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descuento</label>
+            <input type="number" formControlName="descuento" placeholder="0.00" step="0.01" (input)="calcularTotales()" class="form-input">
+          </div>
+        </div>
+
+        <div class="totals-box">
+          <div class="totals-row">
+            <span>Subtotal</span>
+            <strong>{{ cotizacionForm.get('subtotal')?.value | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="totals-row totals-tax">
+            <span>+ IVA (16%)</span>
+            <strong class="tax-amount">{{ cotizacionForm.get('impuestosTotal')?.value | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <hr class="totals-divider">
+          <div class="totals-row">
+            <span>Total</span>
+            <strong>{{ totalCalculado | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="totals-row totals-discount" *ngIf="cotizacionForm.get('descuento')?.value && cotizacionForm.get('descuento')?.value > 0">
+            <span>- Descuento</span>
+            <strong class="discount-amount">{{ cotizacionForm.get('descuento')?.value | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <hr class="totals-divider" *ngIf="cotizacionForm.get('descuento')?.value && cotizacionForm.get('descuento')?.value > 0">
+          <div class="totals-total">
+            <strong>Total Final</strong>
+            <strong class="total-final-amount">{{ totalFinal | currency:'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-buttons">
+          <button type="button" (click)="onLimpiar()" class="btn-action btn-save" [disabled]="guardando">Limpiar</button>
+          <button type="submit" class="btn-action btn-send" [disabled]="guardando || submitted || cotizacionForm.invalid">
+            <span *ngIf="guardando">Creando...</span>
+            <span *ngIf="!guardando">Crear Cotización</span>
+          </button>
+        </div>
+      </div>
+      </fieldset>
+    </form>
+  </div>
+</div>

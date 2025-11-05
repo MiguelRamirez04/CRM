@@ -1,0 +1,89 @@
+<!-- Contenedor general -->
+<div class="calendar-general">
+    <!-- Encabezado superior -->
+    <div class="header-prime">
+        <h3 class="font-medium text-2xl">Calendario</h3>
+        <button class="px-4 py-2 bg-[#34428F] text-black rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition duration-200">
+            <p class="font-medium text-sm text-white">Crear eventos</p>
+        </button>
+    </div>
+    <div class="contenedor-calendar">
+        <!-- Contenido principal -->
+        <div class="calendario-izquierda ">
+            <div class="heading-calendar">
+                <!--  Calendario izquierdo (secundario) -->
+                <div class="heading-title-botons ">
+                    <!-- Título dinámico generado desde el componente -->
+                    <h2 class="tiles-calendar">{{ calendarTitleSecundario }}</h2>
+                    <div class="calendar_controls">
+                        <!-- Botones para navegar en el calendario secundario-->
+                        <button class="nav-btn" (click)="goToPrevSecundario()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="calendarSeconday-icons-nav">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+                        <button class="nav-btn" (click)="goToNextSecundario()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="calendarSeconday-icons-nav">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <!-- Calendario secundario sin botones -->
+                <full-calendar #calendarSecundario [options]="calendarOptionsSecundario"></full-calendar>
+            </div>
+            <hr class="lineaSeparadora" />
+            <!-- Lista de calendarios -->
+            <div>
+                <!-- Calendario empresa -->
+                <div class="list-calendarEmpresa">
+                    <span class="calendar-subtitulo">Calendarios empresa</span>
+                </div>
+            <!-- Calendarios personales -->
+                <div class="list-misCalendar">
+                    <span class="calendar-subtitulo">Mis calendarios</span>
+                    <button class="btn-crearCalendario">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <span>Crear calendario</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!--  Calendario derecho (principal) -->
+        <div class="calendario_derecha">
+            <div class="heading-calendarPrincipal">
+                <!-- Título y navegación -->
+                <div class="heading_titleButton">
+                    <h2 class="calendar-title ">{{ calendarTitle }}</h2>
+                        <div class="calendar_controls">
+                            <button class="nav-btn" (click)="goToPrev()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="calendarPrimary-icons-nav">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                                </svg>
+                            </button>
+                            <button class="nav-btn" (click)="goToNext()">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="calendarPrimary-icons-nav">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                </svg>
+                            </button>
+                        </div>
+                </div>
+                <!-- Botón Hoy y tabs -->
+                <div class="heading_buttons">
+                    <button class="nav-btn-hoy" (click)="goToToday()">Hoy</button>
+                    <nav class="tab-nav">
+                        <button class="tab-btn" [class.active]="activeView === 'multiMonthYear'" (click)="setView('multiMonthYear')">Año</button>
+                        <button class="tab-btn" [class.active]="activeView === 'dayGridMonth'" (click)="setView('dayGridMonth')">Mes</button>
+                        <button class="tab-btn" [class.active]="activeView === 'timeGridWeek'" (click)="setView('timeGridWeek')">Semana</button>
+                        <button class="tab-btn" [class.active]="activeView === 'timeGridDay'" (click)="setView('timeGridDay')">Día</button>
+                    </nav>
+                </div>
+            </div>
+            <hr class="lineaSeparadora" />
+            <!-- Calendario principal -->
+            <full-calendar #calendarPrincipal [options]="calendarOptions"></full-calendar>
+        </div>
+    </div>
+</div>

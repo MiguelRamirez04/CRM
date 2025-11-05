@@ -14,7 +14,6 @@ Este es un CRM especializado para empresas de servicios técnicos que coordina 3
 
 
 
-
 ## Estructura de Archivos OBLIGATORIA  
 ## Reglas de Código ESTRICTAS
 
@@ -60,7 +59,6 @@ SQL
 - **Parámetros**: camelCase (`ordenId`)
 
 ## Base de Datos SQL Server
-- Esquemas: `auth`, `ops`, `catalog`
 - Columnas: snake_case (`creado_en`, `cliente_id`)
 - FKs: CONSTRAINT con nombres descriptivos
 - Indices: Para FK y campos de búsqueda
@@ -79,11 +77,13 @@ SQL
 - Reglas de negocio en servicios
 - Try-catch en controladores
 
+
 ## Logging
 - ILogger injection siempre
 - LogInformation para operaciones exitosas
 - LogError para excepciones
 - Incluir datos relevantes (IDs, nombres)
+
 
 ## Respuestas HTTP Estándar
 - GET: 200 Ok / 404 NotFound

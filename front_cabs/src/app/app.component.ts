@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { CotizacionVencimientoService } from './core/services/cotizacion-vencimiento.service';
 
 @Component({
   selector: 'app-root',
@@ -8,6 +9,12 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   title = 'front_cabs';
+  private vencimientoService = inject(CotizacionVencimientoService);
+
+  ngOnDestroy(): void {
+    // Limpiar el servicio de vencimientos al destruir el componente
+    this.vencimientoService.destruir();
+  }
 }

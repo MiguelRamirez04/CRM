@@ -13,7 +13,13 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     canActivate: [SecureAuthGuard],
-    loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.dashboardRoutes)
+    loadChildren: () => import('./modules/dashboard/dashboard.routes').then(m => m.dashboardRoutes)
+  },
+
+    {
+    path: 'modulesShared',
+    canActivate: [SecureAuthGuard],
+    loadChildren: () => import('./modules/modulesShared/modulesShared.routes').then(m => m.modulesSharedRoutes)
   },
   
   // Administración (solo admins)
