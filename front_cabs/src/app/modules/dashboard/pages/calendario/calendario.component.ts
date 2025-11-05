@@ -2,6 +2,7 @@ import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import { CalendarOptions } from '@fullcalendar/core';
+import esLocale from '@fullcalendar/core/locales/es';
 
 // Plugins
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -22,8 +23,10 @@ import adaptivePlugin from '@fullcalendar/adaptive';
 })
 export class CalendarioComponent implements AfterViewInit {
   @ViewChild('calendarPrincipal') calendarComponent!: FullCalendarComponent;
+  @ViewChild('calendarSecundario') calendarSecundarioComponent!: FullCalendarComponent;
 
   calendarTitle: string = '';
+  calendarTitleSecundario: string = '';
   activeView: string = 'multiMonthYear';
 
   calendarOptions: CalendarOptions = {
@@ -39,6 +42,7 @@ export class CalendarioComponent implements AfterViewInit {
     ],
     initialView: this.activeView,
     headerToolbar: false,
+    locale: esLocale,
     buttonText: {
       today: 'Hoy',
       year: 'Año',
@@ -65,7 +69,7 @@ export class CalendarioComponent implements AfterViewInit {
     selectable: true,
     nowIndicator: true,
     aspectRatio: 1.5,
-    datesSet: this.onDatesSet.bind(this) // ← actualiza el título al navegar
+    datesSet: this.onDatesSet.bind(this)
   };
 
   calendarOptionsSecundario: CalendarOptions = {
@@ -79,8 +83,13 @@ export class CalendarioComponent implements AfterViewInit {
       adaptivePlugin
     ],
     initialView: 'dayGridMonth',
-    headerToolbar: {
-      right: 'prev,next'
+    headerToolbar: false,
+    locale: esLocale,
+    buttonText: {
+      today: 'Hoy',
+      month: 'Mes',
+      week: 'Semana',
+      day: 'Día'
     },
     events: [
       { title: 'Reunión interna', date: '2025-10-25' },
@@ -89,23 +98,27 @@ export class CalendarioComponent implements AfterViewInit {
     editable: false,
     selectable: true,
     nowIndicator: true,
-    aspectRatio: 1.5
+    aspectRatio: 1.5,
+    datesSet: this.onDatesSetSecundario.bind(this)
   };
+
+  ngAfterViewInit(): void {
+    this.calendarTitle = this.calendarComponent.getApi().view.title;
+    this.calendarTitleSecundario = this.calendarSecundarioComponent.getApi().view.title;
+  }
+
+  onDatesSet() {
+    this.calendarTitle = this.calendarComponent.getApi().view.title;
+  }
+
+  onDatesSetSecundario() {
+    this.calendarTitleSecundario = this.calendarSecundarioComponent.getApi().view.title;
+  }
 
   setView(view: string) {
     this.activeView = view;
     const calendarApi = this.calendarComponent.getApi();
     calendarApi.changeView(view);
-    this.calendarTitle = calendarApi.view.title;
-  }
-
-  onDatesSet() {
-    const calendarApi = this.calendarComponent.getApi();
-    this.calendarTitle = calendarApi.view.title;
-  }
-
-  ngAfterViewInit(): void {
-    const calendarApi = this.calendarComponent.getApi();
     this.calendarTitle = calendarApi.view.title;
   }
 
@@ -123,21 +136,40 @@ export class CalendarioComponent implements AfterViewInit {
         return 'Calendario';
     }
   }
+
   goToPrev() {
     const calendarApi = this.calendarComponent.getApi();
     calendarApi.prev();
     this.calendarTitle = calendarApi.view.title;
-}
+  }
 
   goToNext() {
     const calendarApi = this.calendarComponent.getApi();
     calendarApi.next();
     this.calendarTitle = calendarApi.view.title;
   }
+
   goToToday() {
     const calendarApi = this.calendarComponent.getApi();
     calendarApi.today();
     this.calendarTitle = calendarApi.view.title;
   }
 
+  goToPrevSecundario() {
+    const calendarApi = this.calendarSecundarioComponent.getApi();
+    calendarApi.prev();
+    this.calendarTitleSecundario = calendarApi.view.title;
+  }
+
+  goToNextSecundario() {
+    const calendarApi = this.calendarSecundarioComponent.getApi();
+    calendarApi.next();
+    this.calendarTitleSecundario = calendarApi.view.title;
+  }
+
+  goToTodaySecundario() {
+    const calendarApi = this.calendarSecundarioComponent.getApi();
+    calendarApi.today();
+    this.calendarTitleSecundario = calendarApi.view.title;
+  }
 }

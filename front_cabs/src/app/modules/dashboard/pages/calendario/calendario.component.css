@@ -10,35 +10,115 @@
     transition: all 0.2s ease;
     border-radius: 0;
 }
-
 :host ::ng-deep .fc-button:hover {
     color: var(--color-text-enlace);
     border-bottom: 2px solid var(--color-text-enlace);
 }
-
 :host ::ng-deep .fc-button-active {
     color: var(--color-text-enlace);
     font-weight: var(--peso-text-bold);
     border-bottom: 2px solid var(--color-text-enlace);
 }
+/*
+* Encabezados 
+*/
+
+.header-prime{
+    display: flex;
+    justify-content: space-between ;
+    align-items: center;
+    height: auto;
+}
+
+.heading-title-botons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+    width: 100%;
+}
+.heading_titleButton{
+    display: flex;
+    align-items: center;
+    height: auto;
+    width: auto;
+    gap: 4px
+}
+.heading_buttons{
+    gap: 8px;
+    display: flex;
+}
+.heading-calendarPrincipal{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/*
+* Contenedores Calendarios 
+*/
+
+.calendar-general{
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.contenedor-calendar {
+    padding: 20px;
+    background-color: white;
+    border-radius: 20px;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+}
+
+.calendario-izquierda {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 25%; /* ← ocupa 1/3 del contenedor */
+}
+
+.calendario_derecha {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1; /* ← ocupa el resto del espacio disponible */
+}
+
+/*
+* Tamaño de iconos
+*/
+.calendarSeconday-icons-nav{
+    width: 19px;
+    height: 19px;
+}
+.calendarPrimary-icons-nav{
+    width: 22px;
+    height: 22px;
+}
+
+/*
+* Botones tab, botones y enlaces 
+*/
+
 .tab-nav {
     display: inline-flex;
     background-color: #F4F4F5; 
-    border-radius: 5px;
+    border-radius: 8px;
     padding: 5px;
     gap: 8px;
     width: fit-content;
-    border: 1px;
-    border: solid;
-    border-color: #D9D9D9;
+    border: 1px solid #D9D9D9 ;
 }
-
 .tab-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 5px;
-    font-size: 14px;
+    font-size: 10px;
     font-weight: var(--peso-text-medium);
     color: var(--color-text-tabnavegation);
     background-color: transparent;
@@ -48,16 +128,231 @@
     transition: background-color 0.2s ease, color 0.2s ease;
     width: fit-content;
     min-width: 50px;
-    
+    color: #71717B;
+}
+.nav-btn{
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
 
 }
+.nav-btn-hoy{
+    background-color: #F3F4F6;
+    border-radius: 8px;
+    border: 1px solid #D1D5DC;
+    padding: 5px;
 
-.tab-btn:hover {
+    font-weight: var(--peso-text-medium);
+    font-size: 10px;
+    color: #71717B;
+
+    width: 35px;
+    left: 50px;
+
+    display: block;
+
+}
+/*
+* Estilo para los botones en hover 
+*/
+.nav-btn-hoy:hover,
+.tab-btn:hover, 
+.nav-btn:hover{
     background-color: #e5e7eb;
+    cursor: pointer;
 }
-
 .tab-btn.active {
     background-color: #fff; /* azul activo */
     color: #34428F;
     font-weight: var(--peso-text-bold);
 }
+.btn-crearCalendario{
+
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    color: #1447E6;
+    font-size: var(--font-text-xs) ;
+    font-weight: var(--peso-text-medium);
+}
+
+
+/*
+*  Contenedores X
+*/
+
+.calendar_controls{
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+.heading-calendar{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/*
+* Linea separador
+*/
+
+.lineaSeparadora{
+    border: 1px solid #D9D9D9;
+}
+
+/*
+* Lista de calendarios 
+*/
+
+.list-calendarEmpresa,.list-misCalendar{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+
+/*
+* Estilos de textos 
+*/
+
+.tiles-calendar{
+    font-size: var(--font-text-xl);
+    font-weight:var(--peso-text-medium);
+    color: var(--color-text-black);
+
+}
+.calendar-title{
+    font-size: var(--font-text-2xl);
+    font-weight: var(--peso-text-normal);
+    color: var(--color-text-black);
+}
+.calendar-subtitulo{
+    font-size: var(--font-text-sm);
+    font-weight:var(--peso-text-normal) ;
+    color: var(--color-text-black);
+}
+
+/*
+* Estilo del calendario de los tab navegation 
+*/
+::ng-deep .fc {
+    font-size: 14px !important;
+    --fc-border-color: #E5E7EB;
+    --fc-page-bg-color: transparent;
+}
+
+/* ====== MONTH TITLE (Enero, Febrero, Marzo...) ====== */
+::ng-deep .fc-multimonth-title {
+    text-align: left !important;
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+    background-color: white !important;
+    padding: 10px 0 14px !important;
+    color: #111827 !important;
+    border-bottom: 1px solid #E5E7EB !important;
+}
+
+/* ====== WEEKDAY HEADERS (Lun, Mar, Mie...) ====== */
+::ng-deep .fc-multimonth-daygrid-table th {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    text-transform: capitalize !important;
+    color: #6B7280 !important;
+    padding-bottom: 8px !important;
+}
+
+/* ====== DAY CELLS (numbers) ====== */
+::ng-deep .fc-multimonth-daygrid-table td {
+    font-size: 0.9rem !important;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    color: #374151 !important;
+}
+
+/* Style for today */
+::ng-deep .fc-day-today {
+    background-color: #F3F4F6 !important;
+    border-radius: 6px !important;
+}
+
+/* Day number button style */
+::ng-deep .fc-daygrid-day-number {
+    padding: 4px 6px !important;
+    display: inline-block !important;
+    border-radius: 6px !important;
+}
+
+/* Hover effect */
+::ng-deep .fc-daygrid-day:hover .fc-daygrid-day-number {
+    background-color: #E5E7EB !important;
+}
+
+/* Spacing between months when showing multiple */
+::ng-deep .fc-multimonth-month {
+    padding: 0 12px !important;
+}
+
+/* Remove ugly scrollbars */
+::ng-deep .fc-scroller {
+    scrollbar-width: none !important;
+}
+::ng-deep .fc-scroller::-webkit-scrollbar {
+    display: none !important;
+}
+
+
+/*  FULLCALENDAR TIMEGRID CUSTOM STYLES  */
+
+/* Remove default thick borders */
+::ng-deep .fc-theme-standard td,
+::ng-deep .fc-theme-standard th {
+    border: 1px solid #E5E7EB !important; /* light gray border instead of blue */
+}
+
+/* Main hour lines */
+::ng-deep .fc-timegrid-slot {
+    border-bottom: 1px solid #E5E7EB !important; /* normal line */
+    height: 2.4rem !important; /* slot height */
+    background: white !important;
+}
+
+/* Minor (half-hour or quarter-hour) lines */
+::ng-deep .fc-timegrid-slot-minor {
+    border-top-style: dashed !important;
+    border-top-color: #E5E7EB !important;
+    opacity: 0.6 !important;
+}
+
+/* Hour labels (09:00, 10:00, etc.) */
+::ng-deep .fc-timegrid-slot-label {
+    font-size: 0.78rem !important;
+    color: #6B7280 !important; /* gray-600 */
+    font-weight: 500 !important;
+    padding-right: 6px !important;
+    vertical-align: middle !important;
+}
+
+/* Highlight current time line */
+::ng-deep .fc-timegrid-now-indicator-line {
+    border-top: 2px solid #ef4444 !important; /* red-500 */
+}
+::ng-deep .fc-timegrid-now-indicator-arrow {
+    border-color: transparent transparent #ef4444 transparent !important;
+}
+
+/* Optional: soften background of slots */
+::ng-deep .fc-timegrid-col:nth-child(even) .fc-timegrid-slot {
+    background: #fafafa !important;
+}
+
+/* Remove scrollbar ugly styles */
+::ng-deep .fc-timegrid-body {
+    scrollbar-width: none !important;
+}
+::ng-deep .fc-timegrid-body::-webkit-scrollbar {
+    display: none !important;
+}
+
