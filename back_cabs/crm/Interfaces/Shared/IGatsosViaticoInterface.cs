@@ -1,45 +1,39 @@
-using back_cabs.CRM.enums;
 using back_cabs.CRM.models.Shared;
 
 namespace back_cabs.CRM.Interfaces
 {
-    // Esta es la NUEVA interfaz para el Repositorio
+    /// <summary>
+    /// Interfaz para el repositorio de gastos de viáticos
+    /// </summary>
     public interface IGastoViaticoRepository
     {
         /// <summary>
-        /// Valida si un usuario existe en la base de datos.
-        /// </summary>
-        Task<bool> UsuarioExistsAsync(int usuarioId);
-
-        /// <summary>
-        /// Crea un nuevo viático y sus detalles en una transacción.
+        /// Crea un nuevo viático en la base de datos
         /// </summary>
         Task<GastoViatico> CreateViaticoAsync(GastoViatico viatico);
 
         /// <summary>
-        /// Obtiene un viático por ID, incluyendo sus detalles (para lectura).
+        /// Obtiene un viático por ID (solo lectura)
         /// </summary>
         Task<GastoViatico?> GetViaticoByIdReadOnlyAsync(int id);
 
         /// <summary>
-        /// Obtiene un viático por ID (para escritura/actualización).
+        /// Obtiene un viático por ID (para actualización)
         /// </summary>
         Task<GastoViatico?> GetViaticoByIdForUpdateAsync(int id);
 
         /// <summary>
-        /// Obtiene una lista paginada de viáticos según los filtros.
+        /// Obtiene una lista paginada de viáticos según los filtros
         /// </summary>
         Task<(List<GastoViatico> Items, int TotalCount)> GetViaticosFilteredAsync(
-            int? usuarioId,
-            TipoViatico? tipoViatico,
-            EstadoGasto? estadoGasto,
+            int? ordenId,
             DateTime? fechaDesde,
             DateTime? fechaHasta,
             int pageNumber,
             int pageSize);
-        
+
         /// <summary>
-        /// Guarda los cambios en el contexto de escritura.
+        /// Guarda los cambios en el contexto de escritura
         /// </summary>
         Task SaveChangesAsync();
     }

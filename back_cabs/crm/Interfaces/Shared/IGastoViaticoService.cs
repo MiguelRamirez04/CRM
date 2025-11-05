@@ -1,27 +1,24 @@
+using System;
+using System.Threading.Tasks;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
-using back_cabs.CRM.enums;
 using CRM.DTOs.Response;
 
 namespace back_cabs.CRM.Interfaces
 {
-    // Esta es tu interfaz original, CORREGIDA y renombrada
+    /// <summary>
+    /// Interfaz para el servicio de gastos de viáticos
+    /// </summary>
     public interface IGastoViaticoService
     {
         Task<GastoViaticoResponseDto> CreateViaticoAsync(GastoViaticoCreateRequestDto dto);
-
         Task<PaginatedResponseDto<GastoViaticoResponseDto>> GetViaticosAsync(
-            int? usuarioId = null,
-            TipoViatico? tipoViatico = null,
-            EstadoGasto? estadoGasto = null,
+            int? ordenId = null,
             DateTime? fechaDesde = null,
             DateTime? fechaHasta = null,
-            int? ordenId = null,
             int pageNumber = 1,
             int pageSize = 10);
-
         Task<GastoViaticoResponseDto?> GetViaticoByIdAsync(int id);
-
-        Task UpdateEstadoAsync(int id, EstadoGasto estado);
+        Task<GastoViaticoResponseDto?> UpdateViaticoAsync(int id, GastoViaticoUpdateRequestDto dto);
     }
 }

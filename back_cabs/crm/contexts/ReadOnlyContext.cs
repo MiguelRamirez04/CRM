@@ -102,9 +102,10 @@ public class ReadOnlyContext : DbContext
     /// </summary>
     public DbSet<VwClientesCompletos> ClientesCompletos { get; set; } = null!;
 
-    // public DbSet<Finance_Gastos_Viaticos> GastosViaticosNuevos { get; set; } = null!; // Comentado para evitar conflicto
-    public DbSet<GastoViatico> GastosViaticosNuevos { get; set; } = null!;
-    public DbSet<GastoViaticoDetalle> GastosViaticosDetalles { get; set; } = null!;
+    /// <summary>
+    /// Gastos de viáticos (solo lectura)
+    /// </summary>
+    public DbSet<GastoViatico> GastosViaticos { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -337,52 +338,26 @@ public class ReadOnlyContext : DbContext
 
 
 
-        // Agregar al final de OnModelCreating
-// Configuración para GastoViatico (finance_gastos_viaticos)
-modelBuilder.Entity<GastoViatico>(entity =>
-{
-    entity.ToTable("finance_gastos_viaticos");
-    entity.HasKey(e => e.Id);
-    entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-    entity.Property(e => e.TipoViatico).HasColumnName("tipo_viatico").HasConversion<string>();
-    entity.Property(e => e.OrdenId).HasColumnName("orden_id");
-    entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
-    entity.Property(e => e.TieneFactura).HasColumnName("tiene_factura");
-    entity.Property(e => e.Descripcion).HasColumnName("descripcion");
-    entity.Property(e => e.ProveedorNombre).HasColumnName("proveedor_nombre");
-    entity.Property(e => e.Fecha).HasColumnName("fecha");
-    entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro");
-    entity.Property(e => e.KmRecorridos).HasColumnName("km_recorridos");
-    entity.Property(e => e.LugarDestino).HasColumnName("lugar_destino");
-    entity.Property(e => e.EstadoGasto).HasColumnName("estado_gasto").HasConversion<string>();
-    entity.Property(e => e.DocumentoId).HasColumnName("documento_id");
-    entity.Property(e => e.Observaciones).HasColumnName("observaciones");
+        // Configuración para GastoViatico (finance_gastos_viaticos)
+        modelBuilder.Entity<GastoViatico>(entity =>
+        {
+            entity.ToTable("finance_gastos_viaticos");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(e => e.OrdenId).HasColumnName("orden_id");
+            entity.Property(e => e.TieneFactura).HasColumnName("tiene_factura");
+            entity.Property(e => e.Descripcion).HasColumnName("descripcion");
+            entity.Property(e => e.ProveedorNombre).HasColumnName("proveedor_nombre");
+            entity.Property(e => e.Fecha).HasColumnName("fecha");
+            entity.Property(e => e.KmRecorridos).HasColumnName("km_recorridos");
+            entity.Property(e => e.Gastos).HasColumnName("gastos");
+            entity.Property(e => e.MontoTotal).HasColumnName("monto_total").HasColumnType("decimal(12,2)");
+            entity.Property(e => e.LugarDestino).HasColumnName("lugar_destino");
 
-    // Índices
-    entity.HasIndex(e => new { e.TipoViatico, e.Fecha });
-    entity.HasIndex(e => e.UsuarioId);
-});
-
-// Configuración para GastoViaticoDetalle (viatico_gasto_detalle)
-modelBuilder.Entity<GastoViaticoDetalle>(entity =>
-{
-    entity.ToTable("viatico_gasto_detalle");
-    entity.HasKey(e => e.Id);
-    entity.Property(e => e.Id).HasColumnName("id").ValueGeneratedOnAdd();
-    entity.Property(e => e.ViaticoId).HasColumnName("viatico_id");
-    entity.Property(e => e.TipoGasto).HasColumnName("tipo_gasto");
-    entity.Property(e => e.Monto).HasColumnName("monto");
-    entity.Property(e => e.Descripcion).HasColumnName("descripcion");
-
-    // Relación
-    entity.HasOne<GastoViatico>()
-          .WithMany(v => v.Detalles)
-          .HasForeignKey(d => d.ViaticoId)
-          .OnDelete(DeleteBehavior.Cascade);
-
-    // Índice
-    entity.HasIndex(e => e.ViaticoId);
-});
+            // Índices
+            entity.HasIndex(e => e.OrdenId);
+            entity.HasIndex(e => e.Fecha);
+        });
 
     }
 }

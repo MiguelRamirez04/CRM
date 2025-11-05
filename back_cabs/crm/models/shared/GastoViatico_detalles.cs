@@ -22,7 +22,7 @@ namespace back_cabs.CRM.models.Shared
         [Required]
         [Column("tipo_gasto")]
         [StringLength(50)]
-        public string TipoGasto { get; set; } = string.Empty; // Ej: 'COMIDA', 'HOSPEDAJE', 'COMBUSTIBLE', etc.
+        public string TipoGasto { get; set; } = string.Empty; 
 
         [Required]
         [Column("monto")]

@@ -1,0 +1,186 @@
+### ========================================
+### PRUEBAS API - GASTOS VIATICOS
+### ========================================
+### Archivo de pruebas para la API de gastos de viáticos
+### Basado en la tabla: finance_gastos_viaticos
+### ========================================
+
+@baseUrl = http://localhost:5176
+@contentType = application/json
+
+### ========================================
+### 1. OBTENER TOKEN CSRF
+### ========================================
+### Primero obtener el token CSRF (requerido para operaciones POST/PUT/DELETE)
+GET {{baseUrl}}/api/auth/csrf-token HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 2. CREAR NUEVO GASTO DE VIATICO (POST)
+### ========================================
+### Crear un nuevo gasto de viático con todos los campos
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": null,
+  "tieneFactura": true,
+  "descripcion": "Gastos de viaje a cliente en Monterrey",
+  "proveedorNombre": "Hotel Fiesta Inn",
+  "fecha": "2025-11-04",
+  "kmRecorridos": 350,
+  "gastos": "HOSPEDAJE, COMBUSTIBLE, ALIMENTOS",
+  "montoTotal": 2850.50,
+  "lugarDestino": "Monterrey, NL"
+}
+
+### ========================================
+### 3. CREAR VIATICO SIN FACTURA
+### ========================================
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": null,
+  "tieneFactura": false,
+  "descripcion": "Viaticos para visita tecnica",
+  "proveedorNombre": null,
+  "fecha": "2025-11-03",
+  "kmRecorridos": 120,
+  "gastos": "COMBUSTIBLE, CASETAS",
+  "montoTotal": 650.00,
+  "lugarDestino": "Guadalajara, JAL"
+}
+
+### ========================================
+### 4. CREAR VIATICO ASOCIADO A ORDEN
+### ========================================
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": 1,
+  "tieneFactura": true,
+  "descripcion": "Gastos de ejecucion de orden de trabajo",
+  "proveedorNombre": "Gasolinera Shell",
+  "fecha": "2025-11-04",
+  "kmRecorridos": 85,
+  "gastos": "COMBUSTIBLE",
+  "montoTotal": 450.00,
+  "lugarDestino": "Queretaro, QRO"
+}
+
+### ========================================
+### 5. LISTAR TODOS LOS VIATICOS (GET)
+### ========================================
+GET {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 6. LISTAR VIATICOS CON PAGINACION
+### ========================================
+GET {{baseUrl}}/api/GastoViaticos?pageNumber=1&pageSize=5 HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 7. FILTRAR VIATICOS POR ORDEN
+### ========================================
+GET {{baseUrl}}/api/GastoViaticos?ordenId=1 HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 8. FILTRAR VIATICOS POR RANGO DE FECHAS
+### ========================================
+GET {{baseUrl}}/api/GastoViaticos?fechaDesde=2025-11-01&fechaHasta=2025-11-30 HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 9. OBTENER VIATICO POR ID (GET)
+### ========================================
+### Cambiar el ID según el creado anteriormente
+GET {{baseUrl}}/api/GastoViaticos/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+### ========================================
+### 10. ACTUALIZAR VIATICO (PUT)
+### ========================================
+### Actualizar un viático existente - cambiar el ID según necesites
+PUT {{baseUrl}}/api/GastoViaticos/1 HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": 1,
+  "tieneFactura": true,
+  "descripcion": "Gastos actualizados - viaje completo",
+  "proveedorNombre": "Hotel City Express",
+  "fecha": "2025-11-04",
+  "kmRecorridos": 400,
+  "gastos": "HOSPEDAJE, COMBUSTIBLE, ALIMENTOS, CASETAS",
+  "montoTotal": 3200.00,
+  "lugarDestino": "Monterrey, NL"
+}
+
+### ========================================
+### 11. PRUEBA DE VALIDACION - MONTO NEGATIVO (Debe fallar)
+### ========================================
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": null,
+  "tieneFactura": true,
+  "descripcion": "Test de validacion",
+  "proveedorNombre": "Proveedor Test",
+  "fecha": "2025-11-04",
+  "kmRecorridos": 100,
+  "gastos": "TEST",
+  "montoTotal": -100.00,
+  "lugarDestino": "Ciudad de Mexico"
+}
+
+### ========================================
+### 12. PRUEBA DE VALIDACION - CAMPO GASTOS VACIO (Debe fallar)
+### ========================================
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": null,
+  "tieneFactura": true,
+  "descripcion": "Test sin gastos",
+  "proveedorNombre": "Proveedor Test",
+  "fecha": "2025-11-04",
+  "kmRecorridos": 100,
+  "gastos": "",
+  "montoTotal": 500.00,
+  "lugarDestino": "Ciudad de Mexico"
+}
+
+### ========================================
+### 13. PRUEBA DE VALIDACION - FECHA REQUERIDA (Debe fallar)
+### ========================================
+POST {{baseUrl}}/api/GastoViaticos HTTP/1.1
+Content-Type: {{contentType}}
+
+{
+  "ordenId": null,
+  "tieneFactura": true,
+  "descripcion": "Test sin fecha",
+  "proveedorNombre": "Proveedor Test",
+  "kmRecorridos": 100,
+  "gastos": "COMBUSTIBLE",
+  "montoTotal": 500.00,
+  "lugarDestino": "Ciudad de Mexico"
+}
+
+### ========================================
+### NOTAS IMPORTANTES:
+### ========================================
+### 1. Asegúrate de que el backend esté corriendo en http://localhost:5176
+### 2. Obtén el token CSRF antes de ejecutar POST/PUT/DELETE
+### 3. Debes estar autenticado con un usuario de rol "Soporte"
+### 4. Los campos requeridos son: tieneFactura, fecha, gastos, montoTotal
+### 5. Los campos opcionales son: ordenId, descripcion, proveedorNombre, kmRecorridos, lugarDestino
+### 6. El campo gastos es un string de hasta 200 caracteres (ejemplo: "HOSPEDAJE, COMBUSTIBLE")
+### 7. El montoTotal es decimal con precisión (12,2)
+### ========================================

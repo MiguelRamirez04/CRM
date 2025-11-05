@@ -1,0 +1,34 @@
+/* Overlay semi-transparente */
+.panel-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Animación de entrada del panel */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.transform {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Animación de fade-in para el overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.panel-overlay {
+  animation: fadeIn 0.2s ease-out;
+}

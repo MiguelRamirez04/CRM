@@ -1,38 +1,34 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
-using back_cabs.CRM.enums;
-using back_cabs.CRM.services.shared;
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
-using back_cabs.CRM.Services.Shared;
-using back_cabs.CRM.services;
+using back_cabs.CRM.Interfaces;
 using CRM.DTOs.Response;
 
 namespace back_cabs.CRM.controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Soporte")]
+    [Authorize(Roles = "ADMINISTRACION,RECEPCION")]
     public class GastoViaticosController : ControllerBase
     {
-        private readonly GastoViaticoService _service;
+        private readonly IGastoViaticoService _service;
         private readonly ILogger<GastoViaticosController> _logger;
-        private readonly ICacheService _cache;
+        private readonly back_cabs.CRM.services.ICacheService _cache;
 
-        public GastoViaticosController(GastoViaticoService service, ILogger<GastoViaticosController> logger, ICacheService cache)
+        public GastoViaticosController(IGastoViaticoService service, ILogger<GastoViaticosController> logger, back_cabs.CRM.services.ICacheService cache)
         {
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cache = cache;
         }
 
-        /// <summary>
-        /// Crea un nuevo viático con sus detalles.
-        /// </summary>
-        /// <param name="dto">Datos del viático a crear.</param>
-        /// <returns>El viático creado.</returns>
         [HttpPost]
         [ProducesResponseType(typeof(GastoViaticoResponseDto), 201)]
         [ProducesResponseType(400)]
@@ -48,8 +44,7 @@ namespace back_cabs.CRM.controllers
             try
             {
                 var result = await _service.CreateViaticoAsync(dto);
-                // invalidar listas
-                await _cache.RemoveAsync("viaticos:list:all");
+                if (_cache != null) await _cache.RemoveAsync("viaticos:list:all");
                 _logger.LogInformation("Viático creado exitosamente con ID {Id}", result.Id);
                 return CreatedAtAction(nameof(GetViaticoById), new { id = result.Id }, result);
             }
@@ -61,15 +56,10 @@ namespace back_cabs.CRM.controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error interno en CreateViatico");
-                return StatusCode(500, "Error interno del servidor");
+                return StatusCode(500, $"Error interno: {ex.Message} - Inner: {ex.InnerException?.Message}");
             }
         }
 
-        /// <summary>
-        /// Obtiene un viático específico por ID.
-        /// </summary>
-        /// <param name="id">ID del viático.</param>
-        /// <returns>El viático solicitado.</returns>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(GastoViaticoResponseDto), 200)]
         [ProducesResponseType(404)]
@@ -77,95 +67,74 @@ namespace back_cabs.CRM.controllers
         public async Task<IActionResult> GetViaticoById(int id)
         {
             var key = $"viatico:id:{id}";
-            var cached = await _cache.GetAsync<GastoViaticoResponseDto>(key);
-            if (cached != null) return Ok(cached);
+            if (_cache != null)
+            {
+                var cached = await _cache.GetAsync<GastoViaticoResponseDto>(key);
+                if (cached != null) return Ok(cached);
+            }
 
             var result = await _service.GetViaticoByIdAsync(id);
             if (result == null) return NotFound();
-            await _cache.SetAsync(key, result, TimeSpan.FromMinutes(10));
+
+            if (_cache != null) await _cache.SetAsync(key, result, TimeSpan.FromMinutes(10));
             return Ok(result);
         }
 
-        /// <summary>
-        /// Lista viáticos con filtros opcionales y paginación.
-        /// </summary>
-        /// <param name="usuarioId">Filtrar por ID de usuario.</param>
-        /// <param name="tipoViatico">Filtrar por tipo de viático.</param>
-        /// <param name="estadoGasto">Filtrar por estado del gasto.</param>
-        /// <param name="fechaDesde">Filtrar desde fecha.</param>
-        /// <param name="fechaHasta">Filtrar hasta fecha.</param>
-        /// <param name="ordenId">Filtrar por ID de orden (solo para tipo ORDEN).</param>
-        /// <param name="pageNumber">Número de página (1-based).</param>
-        /// <param name="pageSize">Tamaño de página.</param>
-        /// <returns>Lista paginada de viáticos.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(PaginatedResponseDto<GastoViaticoResponseDto>), 200)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetViaticos(
-            [FromQuery] int? usuarioId = null,
-            [FromQuery] TipoViatico? tipoViatico = null,
-            [FromQuery] EstadoGasto? estadoGasto = null,
-            [FromQuery] DateTime? fechaDesde = null,
-            [FromQuery] DateTime? fechaHasta = null,
-            [FromQuery] int? ordenId = null,
-            [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1,
-            [FromQuery][Range(1, 100)] int pageSize = 10)
+        public async Task<IActionResult> GetViaticos([FromQuery] int? ordenId = null, [FromQuery] DateTime? fechaDesde = null, [FromQuery] DateTime? fechaHasta = null, [FromQuery][Range(1, int.MaxValue)] int pageNumber = 1, [FromQuery][Range(1, 100)] int pageSize = 10)
         {
-            var key = $"viaticos:list:{/*build from filters*/ "all"}";
-            var cached = await _cache.GetAsync<PaginatedResponseDto<GastoViaticoResponseDto>>(key);
-            if (cached != null) return Ok(cached);
+            var key = $"viaticos:list:all"; // simple key; could be extended with filters
+            if (_cache != null)
+            {
+                var cached = await _cache.GetAsync<PaginatedResponseDto<GastoViaticoResponseDto>>(key);
+                if (cached != null) return Ok(cached);
+            }
 
-            var result = await _service.GetViaticosAsync(
-                usuarioId, tipoViatico, estadoGasto, fechaDesde, fechaHasta, ordenId, pageNumber, pageSize);
-            await _cache.SetAsync(key, result, TimeSpan.FromMinutes(5));
+            var result = await _service.GetViaticosAsync(ordenId, fechaDesde, fechaHasta, pageNumber, pageSize);
+
+            if (_cache != null) await _cache.SetAsync(key, result, TimeSpan.FromMinutes(5));
             return Ok(result);
         }
 
-        /// <summary>
-        /// Actualiza el estado de un viático.
-        /// Solo usuarios autorizados pueden cambiar estados.
-        /// </summary>
-        /// <param name="id">ID del viático.</param>
-        /// <param name="dto">Datos de actualización del estado.</param>
-        /// <returns>No content si exitoso.</returns>
-        [HttpPatch("{id}/estado")]
+        [HttpPut("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateEstado(int id, [FromBody] GastoViaticoUpdateEstadoRequestDto dto)
+        public async Task<IActionResult> UpdateViatico(int id, [FromBody] GastoViaticoUpdateRequestDto dto)
         {
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Modelo inválido en UpdateEstado: {Errors}", ModelState.Values.SelectMany(v => v.Errors));
+                _logger.LogWarning("Modelo inválido en UpdateViatico: {Errors}", ModelState.Values.SelectMany(v => v.Errors));
                 return BadRequest(ModelState);
             }
 
-            var usuarioId = GetCurrentUserId();
-            if (!usuarioId.HasValue)
-                return Unauthorized("Usuario no autenticado");
-
             try
             {
-                await _service.UpdateEstadoAsync(id, dto.EstadoGasto);
-                _logger.LogInformation("Estado del viático {Id} actualizado a {Estado} por usuario {UsuarioId}",
-                    id, dto.EstadoGasto, usuarioId);
+                await _service.UpdateViaticoAsync(id, dto);
+                if (_cache != null)
+                {
+                    await _cache.RemoveAsync($"viatico:id:{id}");
+                    await _cache.RemoveAsync("viaticos:list:all");
+                }
+                _logger.LogInformation("Viático {Id} actualizado exitosamente", id);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Viático no encontrado en UpdateEstado");
+                _logger.LogWarning(ex, "Viático no encontrado en UpdateViatico");
                 return NotFound(ex.Message);
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "Error de validación en UpdateEstado");
+                _logger.LogWarning(ex, "Error de validación en UpdateViatico");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error interno en UpdateEstado");
+                _logger.LogError(ex, "Error interno en UpdateViatico");
                 return StatusCode(500, "Error interno del servidor");
             }
         }

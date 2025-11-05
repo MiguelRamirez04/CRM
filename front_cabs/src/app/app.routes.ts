@@ -40,6 +40,13 @@ export const routes: Routes = [
     loadChildren: () => import('./modules/soporte/soporte.routes').then(m => m.soporteRoutes)
   },
   
+  // Viáticos (usuarios autenticados)
+  {
+    path: 'viaticos',
+    canActivate: [SecureAuthGuard],
+    loadComponent: () => import('./modules/modulesShared/pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
+  },
+  
   // Páginas de error
   {
     path: 'unauthorized',
