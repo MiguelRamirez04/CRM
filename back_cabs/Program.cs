@@ -89,6 +89,7 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
 builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionFotoRepository, back_cabs.CRM.Repositories.Soporte.ReparacionFotoRepository>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
