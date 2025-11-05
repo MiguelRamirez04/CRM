@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BandejaPerfilComponent } from '../bandeja-perfil/bandeja-perfil.component';
 
 type IconType = 
   | 'resumen' 
@@ -33,7 +34,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,BandejaPerfilComponent],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })
@@ -52,7 +53,7 @@ export class Sidebar implements OnInit {
       label: 'Resumen',
       icon: 'resumen',
       link: '/dashboard',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
+      roles: ['ADMINISTRACION']
     },
     {
       label: 'Evaluaciones',
@@ -91,7 +92,7 @@ export class Sidebar implements OnInit {
         {
           label: 'Ejecuciones de Orden',
           icon: 'ordenes',
-              link: '/recepcion/ordenes-trabajo/ejecuciones',
+          link: '/recepcion/ordenes-trabajo/ejecuciones',
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
         }
       ]
@@ -114,17 +115,10 @@ export class Sidebar implements OnInit {
       link: '/modulesShared/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
-    
-    {
-      label: 'Asignaciones',
-      icon: 'ordenes',
-      link: '/soporte/asignaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE']
-    },
     {
       label: 'Vehículos',
       icon: 'vehiculos',
-      link: '/soporte/vehiculos', 
+      link: '/modulesShared/vehiculos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
@@ -225,8 +219,9 @@ export class Sidebar implements OnInit {
    */
   isActive(link?: string): boolean {
     if (!link) return false;
-    return this.router.url === link || this.router.url.startsWith(link + '/');
+    return this.router.url === link;
   }
+
 
   /**
    * Verifica si algún hijo está activo
