@@ -113,10 +113,17 @@ export class Sidebar implements OnInit {
       link: '/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
+    
+    {
+      label: 'Asignaciones',
+      icon: 'ordenes',
+      link: '/soporte/asignaciones',
+      roles: ['ADMINISTRACION', 'SOPORTE']
+    },
     {
       label: 'Vehículos',
       icon: 'vehiculos',
-      link: '/vehiculos',
+      link: '/soporte/vehiculos', 
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
