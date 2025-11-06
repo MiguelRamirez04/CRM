@@ -8,6 +8,7 @@ using back_cabs.CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.Interfaces.Recepcion;
 using back_cabs.CRM.models.Soporte;
+using back_cabs.CRM.services.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
@@ -23,17 +24,20 @@ namespace back_cabs.CRM.services.shared
         private readonly IEjecucionOrdenRepository _ejecucionRepository;
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
+        private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<EjecucionOrdenService> _logger;
 
         public EjecucionOrdenService(
             IEjecucionOrdenRepository ejecucionRepository,
             WriteContext writeContext,
             ReadOnlyContext readContext,
+            UsuarioAuthService usuarioAuthService,
             ILogger<EjecucionOrdenService> logger)
         {
             _ejecucionRepository = ejecucionRepository ?? throw new ArgumentNullException(nameof(ejecucionRepository));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
+            _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -225,29 +229,22 @@ namespace back_cabs.CRM.services.shared
 
         /// <summary>
         /// Delega una ejecución a otro técnico (cambia tecnico_id).
-        /// Solo usuarios con rol SOPORTE pueden delegar, y el nuevo técnico debe tener rol SOPORTE.
         /// Registra el cambio en comentarios.
         /// </summary>
         /// <param name="ejecucionId">ID de la ejecución.</param>
         /// <param name="nuevoTecnicoId">ID del nuevo técnico.</param>
         /// <param name="usuarioActualId">ID del usuario que delega.</param>
         /// <param name="motivo">Motivo de la delegación.</param>
-        /// <exception cref="UnauthorizedAccessException">Si el usuario no tiene rol SOPORTE.</exception>
         /// <exception cref="ArgumentException">Si el nuevo técnico no es válido.</exception>
         /// <exception cref="KeyNotFoundException">Si la ejecución no existe.</exception>
         public async Task DelegateEjecucionAsync(int ejecucionId, int nuevoTecnicoId, int usuarioActualId, string motivo)
         {
             _logger.LogInformation("Delegando ejecución {EjecucionId} de usuario {UsuarioActualId} a técnico {NuevoTecnicoId}", ejecucionId, usuarioActualId, nuevoTecnicoId);
 
-            // Validar usuario actual
-            var usuarioActual = await _readContext.UsuariosAuth.FindAsync(usuarioActualId);
-            if (usuarioActual == null || usuarioActual.Rol != RolUsuario.SOPORTE.ToString())
-                throw new UnauthorizedAccessException("Solo usuarios con rol SOPORTE pueden delegar ejecuciones.");
-
-            // Validar nuevo técnico
+            // Validar nuevo técnico existe
             var nuevoTecnico = await _readContext.UsuariosAuth.FindAsync(nuevoTecnicoId);
-            if (nuevoTecnico == null || nuevoTecnico.Rol != RolUsuario.SOPORTE.ToString())
-                throw new ArgumentException("El nuevo técnico debe existir y tener rol SOPORTE.", nameof(nuevoTecnicoId));
+            if (nuevoTecnico == null)
+                throw new ArgumentException("El nuevo técnico no existe.", nameof(nuevoTecnicoId));
 
             // Obtener ejecución
             var ejecucion = await _writeContext.EjecucionesOrden.FindAsync(ejecucionId);
@@ -266,13 +263,13 @@ namespace back_cabs.CRM.services.shared
 
         /// <summary>
         /// Actualiza campos de una ejecución (ej. finalizar con HrFin, KmFinal).
-        /// Solo el técnico asignado puede actualizar.
+        /// Solo el técnico asignado puede actualizar, o usuarios con rol SOPORTE/ADMINISTRACION.
         /// Valida que KmFinal > KmInicial si aplica.
         /// </summary>
         /// <param name="id">ID de la ejecución.</param>
         /// <param name="usuarioId">ID del usuario que actualiza.</param>
         /// <param name="updates">Campos a actualizar.</param>
-        /// <exception cref="UnauthorizedAccessException">Si no es el técnico asignado.</exception>
+        /// <exception cref="UnauthorizedAccessException">Si no tiene permisos para actualizar.</exception>
         /// <exception cref="KeyNotFoundException">Si la ejecución no existe.</exception>
         /// <exception cref="ArgumentException">Si las validaciones fallan.</exception>
         public async Task UpdateEjecucionAsync(int id, int usuarioId, EjecucionOrdenUpdateRequestDto updates)
@@ -287,12 +284,24 @@ namespace back_cabs.CRM.services.shared
                 throw new KeyNotFoundException($"Ejecución con ID {id} no encontrada.");
             }
 
-            // Validar que sea el técnico asignado
-            if (ejecucion.TecnicoId != usuarioId)
+            // Obtener el usuario que está actualizando para verificar su rol
+            var usuarioActual = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(usuarioId);
+            if (usuarioActual == null)
             {
-                _logger.LogWarning("Usuario {UsuarioId} intentó actualizar ejecución {EjecucionId} asignada a {TecnicoId}", 
-                    usuarioId, id, ejecucion.TecnicoId);
-                throw new UnauthorizedAccessException("Solo el técnico asignado puede actualizar la ejecución.");
+                _logger.LogWarning("Usuario {UsuarioId} no encontrado al actualizar ejecución {EjecucionId}", usuarioId, id);
+                throw new UnauthorizedAccessException("Usuario no encontrado.");
+            }
+
+            // Validar permisos: Solo el técnico asignado, o usuarios con rol SOPORTE/ADMINISTRACION pueden actualizar
+            bool puedeActualizar = ejecucion.TecnicoId == usuarioId || // Técnico asignado
+                                   usuarioActual.Rol == RolUsuario.SOPORTE.ToString() || // Rol SOPORTE
+                                   usuarioActual.Rol == RolUsuario.ADMINISTRACION.ToString(); // Rol ADMINISTRACION
+
+            if (!puedeActualizar)
+            {
+                _logger.LogWarning("Usuario {UsuarioId} (rol: {Rol}) intentó actualizar ejecución {EjecucionId} asignada a {TecnicoId}",
+                    usuarioId, usuarioActual.Rol, id, ejecucion.TecnicoId);
+                throw new UnauthorizedAccessException("Solo el técnico asignado o usuarios con rol SOPORTE/ADMINISTRACION pueden actualizar la ejecución.");
             }
 
             // Validación: Si ya está finalizada, no permitir cambios

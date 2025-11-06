@@ -1,205 +1,234 @@
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import autoTable from 'jspdf-autotable';
 import { CotizacionResponse } from '../models/cotizacion.interface';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class PdfExportService {
-  constructor() {}
 
-  // Helper to safely read lastAutoTable.finalY without TypeScript errors
-  private getLastAutoTableFinalY(doc: jsPDF): number {
-    const last = (doc as any).lastAutoTable;
-    return last && typeof last.finalY === 'number' ? last.finalY : 55;
-  }
+  constructor() { }
 
-  async exportCotizacion(cotizacion: CotizacionResponse): Promise<void> {
-    const doc = new jsPDF();
+  /**
+   * Exporta una cotización a PDF con formato profesional
+   */
+  exportarCotizacionPDF(cotizacion: CotizacionResponse): void {
+    // Crear documento PDF (A4)
+    const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = 20;
+
+    // ========== ENCABEZADO ==========
+    doc.setFontSize(22);
+    doc.setTextColor(52, 66, 143); // #34428F
+    doc.setFont('helvetica', 'bold');
+    doc.text('COTIZACIÓN', pageWidth / 2, yPos, { align: 'center' });
     
-    // Configuración de estilos
-    const primaryColor = '#34428F';
-    doc.setDrawColor(primaryColor);
-    doc.setFillColor(primaryColor);
-    
-    // Encabezado
-    doc.setFontSize(24);
-    doc.setTextColor(primaryColor);
-    doc.text('COTIZACIÓN', pageWidth / 2, 20, { align: 'center' });
-    
-    // Info de la cotización
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text(`Folio: ${cotizacion.folio}`, 20, 35);
-    doc.text(`Fecha: ${new Date(cotizacion.creadoEn).toLocaleDateString()}`, pageWidth - 20, 35, { align: 'right' });
-    
-    // Línea divisoria
+    yPos += 10;
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128); // #6b7280
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Folio: ${cotizacion.folio}`, pageWidth / 2, yPos, { align: 'center' });
+
+    // Línea separadora
+    yPos += 5;
+    doc.setDrawColor(229, 231, 235); // #e5e7eb
     doc.setLineWidth(0.5);
-    doc.line(20, 40, pageWidth - 20, 40);
-    
-    // Información del cliente
+    doc.line(15, yPos, pageWidth - 15, yPos);
+    yPos += 10;
+
+    // ========== INFORMACIÓN GENERAL ==========
     doc.setFontSize(14);
-    doc.setTextColor(primaryColor);
-    doc.text('Información del Cliente', 20, 50);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    const clienteInfo = [
-      ['Cliente:', cotizacion.cliente],
-      ['RFC:', cotizacion.rfc],
-      ['Teléfono:', cotizacion.telefono || 'N/A'],
-      ['Correo:', cotizacion.correo || 'N/A']
+    doc.setTextColor(52, 66, 143);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Información General', 15, yPos);
+    yPos += 7;
+
+    const infoGeneral = [
+      ['ID', `#${cotizacion.id}`],
+      ['Estado', this.obtenerLabelEstado(cotizacion.estado)],
+      ['Validez', cotizacion.validezDias ? `${cotizacion.validezDias} días` : '-'],
+      ['Fecha de Creación', new Date(cotizacion.creadoEn).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })]
     ];
-    
+
     autoTable(doc, {
-      startY: 55,
+      startY: yPos,
       head: [],
-      body: clienteInfo,
+      body: infoGeneral,
       theme: 'plain',
-      styles: { fontSize: 11, cellPadding: 2 },
-      columnStyles: { 
-        0: { fontStyle: 'bold', cellWidth: 30 },
-        1: { cellWidth: 100 }
-      }
-    });
-    
-    // Detalles del servicio
-    doc.setFontSize(14);
-    doc.setTextColor(primaryColor);
-    doc.text('Descripción del Servicio', 20, this.getLastAutoTableFinalY(doc) + 15);
-    
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    const splitDesc = doc.splitTextToSize(cotizacion.descripcionServicio, pageWidth - 40);
-    doc.text(splitDesc, 20, this.getLastAutoTableFinalY(doc) + 25);
-    
-    // Si hay capacitación
-    let yPos = this.getLastAutoTableFinalY(doc) + 25 + (splitDesc.length * 7);
-    if (cotizacion.horasCapacitacion || cotizacion.paquetesCapacitacion) {
-      doc.setFontSize(14);
-      doc.setTextColor(primaryColor);
-      doc.text('Servicios de Capacitación', 20, yPos + 10);
-      
-      const capacitacionInfo = [
-        ['Horas:', cotizacion.horasCapacitacion?.toString() || 'N/A'],
-        ['Paquetes:', cotizacion.paquetesCapacitacion?.toString() || 'N/A'],
-        ['Costo:', cotizacion.costoCapacitacion ? 
-          `$${cotizacion.costoCapacitacion.toLocaleString('es-MX', { minimumFractionDigits: 2 })}` : 
-          'N/A']
-      ];
-      
-      autoTable(doc, {
-        startY: yPos + 15,
-        head: [],
-        body: capacitacionInfo,
-        theme: 'plain',
-        styles: { fontSize: 11, cellPadding: 2 },
-        columnStyles: {
-          0: { fontStyle: 'bold', cellWidth: 30 },
-          1: { cellWidth: 100 }
-        }
-      });
-      
-      yPos = this.getLastAutoTableFinalY(doc);
-    }
-    
-    // Información financiera
-    doc.setFontSize(14);
-    doc.setTextColor(primaryColor);
-    doc.text('Resumen Financiero', 20, yPos + 15);
-    
-    const financieroInfo = [
-      ['Subtotal:', `$${cotizacion.subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`],
-      ['IVA (16%):', `$${cotizacion.impuestosTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`]
-    ];
-    
-    if (cotizacion.descuento && cotizacion.descuento > 0) {
-      financieroInfo.push(['Descuento:', `$${cotizacion.descuento.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`]);
-    }
-    
-    financieroInfo.push(['Total:', `$${cotizacion.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`]);
-    
-    autoTable(doc, {
-      startY: yPos + 20,
-      head: [],
-      body: financieroInfo,
-      theme: 'plain',
-      styles: { fontSize: 11, cellPadding: 3 },
+      styles: { fontSize: 10, cellPadding: 2 },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 30 },
-        1: { cellWidth: 100, halign: 'right' }
+        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
+        1: { textColor: [17, 24, 39] }
       }
     });
-    
-    // Validez y observaciones al final
-    yPos = this.getLastAutoTableFinalY(doc) + 15;
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`Validez: ${cotizacion.validezDias} días`, 20, yPos);
-    
+
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+
+    // ========== INFORMACIÓN DEL CLIENTE ==========
+    doc.setFontSize(14);
+    doc.setTextColor(52, 66, 143);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Información del Cliente', 15, yPos);
+    yPos += 7;
+
+    const infoCliente = [
+      ['Cliente', cotizacion.cliente],
+      ['RFC', cotizacion.rfc],
+      ['Teléfono', cotizacion.telefono || '-'],
+      ['Correo', cotizacion.correo || '-']
+    ];
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [],
+      body: infoCliente,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
+        1: { textColor: [17, 24, 39] }
+      }
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+
+    // ========== DESCRIPCIÓN DEL SERVICIO ==========
+    doc.setFontSize(14);
+    doc.setTextColor(52, 66, 143);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Descripción del Servicio', 15, yPos);
+    yPos += 7;
+
+    doc.setFontSize(10);
+    doc.setTextColor(17, 24, 39);
+    doc.setFont('helvetica', 'normal');
+    const descripcionLines = doc.splitTextToSize(cotizacion.descripcionServicio, pageWidth - 30);
+    doc.text(descripcionLines, 15, yPos);
+    yPos += descripcionLines.length * 5 + 5;
+
+    // ========== OBSERVACIONES (si existen) ==========
     if (cotizacion.observaciones) {
       doc.setFontSize(14);
-      doc.setTextColor(primaryColor);
-      doc.text('Observaciones', 20, yPos + 15);
-      
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      const splitObs = doc.splitTextToSize(cotizacion.observaciones, pageWidth - 40);
-      doc.text(splitObs, 20, yPos + 25);
+      doc.setTextColor(52, 66, 143);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Observaciones', 15, yPos);
+      yPos += 7;
+
+      doc.setFontSize(10);
+      doc.setTextColor(17, 24, 39);
+      doc.setFont('helvetica', 'normal');
+      const observacionesLines = doc.splitTextToSize(cotizacion.observaciones, pageWidth - 30);
+      doc.text(observacionesLines, 15, yPos);
+      yPos += observacionesLines.length * 5 + 5;
     }
-    
-    // Guardar el PDF
-    doc.save(`Cotizacion-${cotizacion.folio}.pdf`);
+
+    // ========== CAPACITACIÓN (si existe) ==========
+    if (cotizacion.horasCapacitacion || cotizacion.paquetesCapacitacion || cotizacion.costoCapacitacion) {
+      doc.setFontSize(14);
+      doc.setTextColor(52, 66, 143);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Servicios de Capacitación', 15, yPos);
+      yPos += 7;
+
+      const capacitacion = [
+        ['Horas', `${cotizacion.horasCapacitacion || 0}`],
+        ['Paquetes', `${cotizacion.paquetesCapacitacion || 0}`],
+        ['Costo', this.formatearMoneda(cotizacion.costoCapacitacion || 0)]
+      ];
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [],
+        body: capacitacion,
+        theme: 'plain',
+        styles: { fontSize: 10, cellPadding: 2 },
+        columnStyles: {
+          0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
+          1: { textColor: [17, 24, 39] }
+        }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 10;
+    }
+
+    // ========== TOTALES ==========
+    doc.setFontSize(14);
+    doc.setTextColor(52, 66, 143);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Totales', 15, yPos);
+    yPos += 7;
+
+    const totalesData = [
+      ['Subtotal', this.formatearMoneda(cotizacion.subtotal)],
+      ['IVA (16%)', this.formatearMoneda(cotizacion.impuestosTotal)]
+    ];
+
+    if (cotizacion.descuento && cotizacion.descuento > 0) {
+      totalesData.push(['Descuento', `-${this.formatearMoneda(cotizacion.descuento)}`]);
+    }
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [],
+      body: totalesData,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
+        1: { textColor: [17, 24, 39] }
+      }
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 3;
+
+    // Total Final destacado
+    doc.setDrawColor(229, 231, 235);
+    doc.line(15, yPos, pageWidth - 15, yPos);
+    yPos += 7;
+
+    doc.setFontSize(14);
+    doc.setTextColor(52, 66, 143);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Final', 15, yPos);
+    doc.text(this.formatearMoneda(cotizacion.total), pageWidth - 15, yPos, { align: 'right' });
+
+    // ========== PIE DE PÁGINA ==========
+    const footerY = doc.internal.pageSize.getHeight() - 20;
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.setFont('helvetica', 'italic');
+    doc.text(
+      `Documento generado el ${new Date().toLocaleString('es-MX')}`,
+      pageWidth / 2,
+      footerY,
+      { align: 'center' }
+    );
+
+    // Guardar PDF
+    const nombreArchivo = `Cotizacion_${cotizacion.folio}_${new Date().getTime()}.pdf`;
+    doc.save(nombreArchivo);
   }
 
-  async exportElementToPdf(element: HTMLElement, fileName: string): Promise<void> {
-    if (!element) throw new Error('Elemento no encontrado para exportar');
+  private formatearMoneda(valor: number): string {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN'
+    }).format(valor);
+  }
 
-    // Aumentar escala para mejorar resolución
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    // Ajustar imagen al ancho útil de la página con margen
-    const margin = 10;
-    const imgWidth = pageWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    let position = margin;
-
-    // Si la imagen es mayor que la página en alto, dividir en páginas
-    if (imgHeight <= pageHeight - margin * 2) {
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-    } else {
-      // Añadir porciones en páginas
-      let remainingHeight = canvas.height;
-      let renderedHeight = 0;
-      const pageCanvas = document.createElement('canvas');
-      const pageCtx = pageCanvas.getContext('2d') as CanvasRenderingContext2D;
-
-      // Ajuste de escala para que el corte coincida con la proporción
-      const scale = imgWidth / canvas.width;
-      const pagePixelHeight = Math.floor((pageHeight - margin * 2) / scale);
-
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = pagePixelHeight;
-
-      while (renderedHeight < canvas.height) {
-        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.drawImage(canvas, 0, renderedHeight, canvas.width, pagePixelHeight, 0, 0, pageCanvas.width, pageCanvas.height);
-
-        const pageData = pageCanvas.toDataURL('image/png');
-        if (renderedHeight > 0) pdf.addPage();
-        pdf.addImage(pageData, 'PNG', margin, margin, imgWidth, pagePixelHeight * scale);
-
-        renderedHeight += pagePixelHeight;
-      }
-    }
-
-    pdf.save(fileName);
+  private obtenerLabelEstado(estado: string): string {
+    const estados: { [key: string]: string } = {
+      'pendiente': 'Pendiente',
+      'aprobada': 'Aprobada',
+      'rechazada': 'Rechazada',
+      'expirada': 'Expirada'
+    };
+    return estados[estado.toLowerCase()] || estado;
   }
 }

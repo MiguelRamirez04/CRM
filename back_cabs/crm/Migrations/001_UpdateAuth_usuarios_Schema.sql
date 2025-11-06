@@ -40,7 +40,7 @@ CREATE TABLE Auth_usuarios (
     rol INT,                                         -- Rol del trabajador (valor numérico)
     activo BIT DEFAULT 1 NOT NULL,                   -- Activo (1 = sí, 0 = no)
     licencia_conducir VARCHAR(50),                   -- Número de licencia de conducir
-    transmicion_habilitada VARCHAR(50)               -- Transmisión habilitada
+    transmision_habilitada VARCHAR(50)               -- Transmisión habilitada
 );
 
 PRINT 'Tabla Auth_usuarios creada exitosamente';

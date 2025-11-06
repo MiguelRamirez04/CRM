@@ -650,6 +650,51 @@ namespace back_cabs.CRM.controllers.Auth
         }
 
         /// <summary>
+        /// Obtiene usuarios con rol SOPORTE (para delegación de ejecuciones)
+        /// </summary>
+        /// <returns>Lista de usuarios con rol SOPORTE activos</returns>
+        /// <response code="200">Lista obtenida exitosamente</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("usuarios/soporte")]
+        [AllowAnonymous] // Sin restricciones para evitar errores de permisos
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> GetUsuariosSoporte()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuarios con rol SOPORTE");
+
+                var usuarios = await _usuarioAuthService.ObtenerUsuariosPorRolAsync("SOPORTE", incluirInactivos: false);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = usuarios.Select(u => new
+                    {
+                        id = u.Id,
+                        nombre = u.Nombre,
+                        apellido = u.Apellido,
+                        nombreCompleto = $"{u.Nombre} {u.Apellido}",
+                        email = u.Email,
+                        activo = u.Activo
+                    }).ToList(),
+                    count = usuarios.Count()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios SOPORTE");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
+                    success = false,
+                    message = "Error al obtener usuarios SOPORTE",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
         /// Cambia la contraseña del usuario autenticado
         /// </summary>
         /// <param name="request">Contraseña actual y nueva contraseña</param>
@@ -869,7 +914,7 @@ namespace back_cabs.CRM.controllers.Auth
             {
                 RolUsuario.ADMINISTRACION => new[] { "administracion.read", "administracion.write", "recepcion.read", "recepcion.write", "soporte.read", "soporte.write" },
                 RolUsuario.RECEPCION => new[] { "recepcion.read", "recepcion.write", "soporte.read" },
-                RolUsuario.SOPORTE => new[] { "soporte.read", "soporte.write" },
+                RolUsuario.SOPORTE => new[] { "soporte.read", "soporte.write", "recepcion.read" },
                 _ => Array.Empty<string>()
             };
         }

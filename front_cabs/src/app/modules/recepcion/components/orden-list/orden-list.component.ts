@@ -4,6 +4,7 @@ import { OrdenTrabajo } from '../../../../core/models/orden-trabajo.interface';
 
 @Component({
   selector: 'app-orden-list',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './orden-list.component.html',
   styleUrl: './orden-list.component.css'

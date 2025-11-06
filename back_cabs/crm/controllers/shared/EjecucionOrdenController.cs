@@ -11,7 +11,7 @@ namespace back_cabs.CRM.controllers.shared
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "SOPORTE, ADMINISTRACION, RECEPCION")]
+    [Authorize] // Solo requiere autenticación, sin restricción de roles
     public class EjecucionOrdenController : ControllerBase
     {
         private readonly EjecucionOrdenService _service;
@@ -153,11 +153,6 @@ namespace back_cabs.CRM.controllers.shared
                 _logger.LogWarning(ex, "Ejecución no encontrada en UpdateEjecucion");
                 return NotFound(ex.Message);
             }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning(ex, "Acceso no autorizado en UpdateEjecucion");
-                return Unauthorized(ex.Message);
-            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error interno en UpdateEjecucion");
@@ -167,7 +162,6 @@ namespace back_cabs.CRM.controllers.shared
 
         /// <summary>
         /// Delega una ejecución a otro técnico.
-        /// Solo usuarios con rol SOPORTE pueden delegar.
         /// </summary>
         /// <param name="id">ID de la ejecución.</param>
         /// <param name="dto">Datos de la delegación.</param>
@@ -195,11 +189,6 @@ namespace back_cabs.CRM.controllers.shared
                 await _service.DelegateEjecucionAsync(id, dto.NuevoTecnicoId, usuarioId.Value, dto.Motivo);
                 _logger.LogInformation("Ejecución {Id} delegada por usuario {UsuarioId}", id, usuarioId);
                 return NoContent();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning(ex, "Acceso no autorizado en DelegateEjecucion");
-                return Unauthorized(ex.Message);
             }
             catch (ArgumentException ex)
             {

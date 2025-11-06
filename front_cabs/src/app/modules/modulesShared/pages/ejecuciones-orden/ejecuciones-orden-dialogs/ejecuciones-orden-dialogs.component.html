@@ -1,0 +1,197 @@
+<!-- Modal Crear Ejecuci�n -->
+<div *ngIf="mostrarModalCrear" class="modal-overlay" (click)="cerrar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2> Nueva Ejecuci�n de Orden</h2>
+      <button class="btn-close" (click)="cerrar()" [disabled]="cargando()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="error()" class="alert alert-error">
+        <span class="alert-icon"></span>
+        <span>{{ error() }}</span>
+      </div>
+      <div *ngIf="exito()" class="alert alert-success">
+        <span class="alert-icon"></span>
+        <span>{{ exito() }}</span>
+      </div>
+      <div *ngIf="cargando()" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Creando ejecuci�n...</p>
+      </div>
+      <form [class.disabled]="cargando()">
+        <div class="form-group">
+          <label>Orden de Trabajo *</label>
+          <select [(ngModel)]="formularioCrear().ordenId" name="ordenId" [disabled]="cargando() || ordenIdPrefill > 0">
+            <option [value]="0">Seleccione una orden</option>
+            <option *ngFor="let orden of ordenes" [value]="orden.id">
+              #{{ orden.id }} - {{ orden.clienteNombre }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>T�cnico Asignado *</label>
+          <select [(ngModel)]="formularioCrear().tecnicoId" name="tecnicoId" [disabled]="cargando()">
+            <option [value]="0">Seleccione un t�cnico</option>
+            <option *ngFor="let tecnico of tecnicos" [value]="tecnico.id">
+              {{ tecnico.nombreCompleto }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha y Hora de Inicio *</label>
+          <input type="datetime-local" [(ngModel)]="formularioCrear().hrInicio" name="hrInicio" [disabled]="cargando()" required>
+          <small>Seleccione la fecha y hora en que comenzar� la ejecuci�n</small>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Ejecuci�n *</label>
+          <div class="tipo-buttons">
+            <button type="button" class="btn-tipo" [class.active]="formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO" (click)="cambiarTipoEjecucion(TipoEjecucion.CAMPO)" [disabled]="cargando()"> Campo</button>
+            <button type="button" class="btn-tipo" [class.active]="formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO" (click)="cambiarTipoEjecucion(TipoEjecucion.REMOTO)" [disabled]="cargando()"> Remoto</button>
+          </div>
+        </div>
+        <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO" class="campo-section">
+          <div class="form-group">
+            <label>Veh�culo *</label>
+            <select [(ngModel)]="formularioCrear().vehiculoId" name="vehiculoId" [disabled]="cargando()">
+              <option [value]="undefined">Seleccione un veh�culo</option>
+              <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.id">
+                {{ vehiculo.placas }} - {{ vehiculo.modelo }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Kilometraje Inicial</label>
+            <input type="number" [(ngModel)]="formularioCrear().kmInicial" name="kmInicial" placeholder="Ej: 45000" [disabled]="cargando()">
+          </div>
+        </div>
+        <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO" class="remoto-section">
+          <div class="form-group">
+            <label>Herramientas/Software</label>
+            <input type="text" [(ngModel)]="formularioCrear().herramientas" name="herramientas" placeholder="Ej: TeamViewer" [disabled]="cargando()">
+          </div>
+          <div class="form-group">
+            <label>C�digo de Sesi�n</label>
+            <input type="text" [(ngModel)]="formularioCrear().codigoSesion" name="codigoSesion" placeholder="C�digo de acceso" [disabled]="cargando()">
+          </div>
+          <div class="form-group">
+            <label>Contrase�a de Sesi�n</label>
+            <input type="password" [(ngModel)]="formularioCrear().contrasenaSesion" name="contrasenaSesion" placeholder="Contrase�a" [disabled]="cargando()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Comentarios</label>
+          <textarea [(ngModel)]="formularioCrear().comentarios" name="comentarios" rows="3" placeholder="Observaciones..." [disabled]="cargando()"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrar()" [disabled]="cargando()">Cancelar</button>
+      <button class="btn btn-primary" (click)="crearEjecucion()" [disabled]="cargando()">
+        <span *ngIf="!cargando()"> Crear Ejecuci�n</span>
+        <span *ngIf="cargando()">Creando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Finalizar Ejecuci�n -->
+<div *ngIf="mostrarModalFinalizar" class="modal-overlay" (click)="cerrar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2> Finalizar Ejecuci�n</h2>
+      <button class="btn-close" (click)="cerrar()" [disabled]="cargando()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="error()" class="alert alert-error">
+        <span class="alert-icon"></span>
+        <span>{{ error() }}</span>
+      </div>
+      <div *ngIf="exito()" class="alert alert-success">
+        <span class="alert-icon"></span>
+        <span>{{ exito() }}</span>
+      </div>
+      <div *ngIf="cargando()" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Finalizando ejecuci�n...</p>
+      </div>
+      <div class="info-ejecucion">
+        <p><strong>Orden:</strong> #{{ ejecucionSeleccionada?.ordenId }}</p>
+        <p><strong>T�cnico:</strong> {{ ejecucionSeleccionada?.tecnicoNombre }}</p>
+        <p><strong>Tipo:</strong> {{ ejecucionSeleccionada?.tipoEjecucion }}</p>
+      </div>
+      <form [class.disabled]="cargando()">
+        <div class="form-group">
+          <label>Fecha/Hora Finalizaci�n *</label>
+          <input type="datetime-local" [(ngModel)]="formularioFinalizar().hrFin" name="hrFin" [disabled]="cargando()">
+        </div>
+        <div *ngIf="ejecucionSeleccionada?.tipoEjecucion === TipoEjecucion.CAMPO" class="form-group">
+          <label>Kilometraje Final *</label>
+          <input type="number" [(ngModel)]="formularioFinalizar().kmFinal" name="kmFinal" placeholder="Ej: 45150" [disabled]="cargando()">
+          <small>Kilometraje inicial: {{ ejecucionSeleccionada?.kmInicial }}</small>
+        </div>
+        <div class="form-group">
+          <label>Comentarios Finales</label>
+          <textarea [(ngModel)]="formularioFinalizar().comentarios" name="comentarios" rows="4" placeholder="Trabajos realizados..." [disabled]="cargando()"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrar()" [disabled]="cargando()">Cancelar</button>
+      <button class="btn btn-success" (click)="finalizarEjecucion()" [disabled]="cargando()">
+        <span *ngIf="!cargando()"> Finalizar Ejecuci�n</span>
+        <span *ngIf="cargando()">Finalizando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Delegar Ejecuci�n -->
+<div *ngIf="mostrarModalDelegar" class="modal-overlay" (click)="cerrar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2> Delegar Ejecuci�n</h2>
+      <button class="btn-close" (click)="cerrar()" [disabled]="cargando()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="error()" class="alert alert-error">
+        <span class="alert-icon"></span>
+        <span>{{ error() }}</span>
+      </div>
+      <div *ngIf="exito()" class="alert alert-success">
+        <span class="alert-icon"></span>
+        <span>{{ exito() }}</span>
+      </div>
+      <div *ngIf="cargando()" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Delegando ejecuci�n...</p>
+      </div>
+      <div class="info-ejecucion">
+        <p><strong>Orden:</strong> #{{ ejecucionSeleccionada?.ordenId }}</p>
+        <p><strong>T�cnico Actual:</strong> {{ ejecucionSeleccionada?.tecnicoNombre }}</p>
+      </div>
+      <form [class.disabled]="cargando()">
+        <div class="form-group">
+          <label>Nuevo T�cnico (Soporte) *</label>
+          <select [(ngModel)]="formularioDelegacion().nuevoTecnicoId" name="nuevoTecnicoId" [disabled]="cargando()">
+            <option [value]="0">Seleccione un t�cnico de soporte</option>
+            <option *ngFor="let usuario of usuariosSoporte()" [value]="usuario.id">
+              {{ usuario.nombreCompleto }} ({{ usuario.email }})
+            </option>
+          </select>
+          <small>{{ usuariosSoporte().length }} t�cnicos de soporte disponibles</small>
+        </div>
+        <div class="form-group">
+          <label>Motivo de la Delegaci�n *</label>
+          <textarea [(ngModel)]="formularioDelegacion().motivo" name="motivo" rows="4" placeholder="Explique el motivo..." [disabled]="cargando()"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrar()" [disabled]="cargando()">Cancelar</button>
+      <button class="btn btn-warning" (click)="delegarEjecucion()" [disabled]="cargando()">
+        <span *ngIf="!cargando()"> Delegar Ejecuci�n</span>
+        <span *ngIf="cargando()">Delegando...</span>
+      </button>
+    </div>
+  </div>
+</div>

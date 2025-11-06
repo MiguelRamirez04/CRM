@@ -1,13 +1,19 @@
 import { Routes } from '@angular/router';
+import { VehiculosComponent } from '../modulesShared/pages/vehiculos/vehiculos.component';
 
 export const soporteRoutes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.SoporteDashboardComponent)
   },
+
   {
-    path: 'tickets',
-    loadComponent: () => import('./pages/tickets/tickets.component').then(m => m.TicketsComponent)
+    path: 'vehiculos',
+    loadComponent: () => import('../modulesShared/pages/vehiculos/vehiculos.component').then(m => m.VehiculosComponent)
+  },
+  {
+    path: 'asignaciones',
+    loadComponent: () => import('./pages/asignaciones/asignaciones.component').then(m => m.MisAsignacionesComponent)
   },
   {
     path: 'chat',

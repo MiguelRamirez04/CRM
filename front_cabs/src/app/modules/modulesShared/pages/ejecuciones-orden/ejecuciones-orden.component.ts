@@ -2,7 +2,9 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EjecucionOrdenService } from '../../services/ejecucion-orden.service';
+import { EjecucionOrdenService } from '../../../../core/services/ejecucion-orden.service';
+import { SecureAuthService } from '../../../../core/services/secure-auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import {
   EjecucionOrdenResponse,
   EjecucionOrdenCreateDto,
@@ -13,17 +15,21 @@ import {
   OrdenTrabajoSimple,
   TecnicoSimple,
   VehiculoSimple
-} from '../../interfaces/ejecucion-orden.interface';
+} from '../../../../core/models/ejecucion-orden.interface';
+import { EjecucionesOrdenDialogsComponent } from './ejecuciones-orden-dialogs/ejecuciones-orden-dialogs.component';
+import { PanelDetallesComponent } from './panel-detalles/panel-detalles.component';
 
 @Component({
   selector: 'app-ejecuciones-orden',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EjecucionesOrdenDialogsComponent, PanelDetallesComponent],
   templateUrl: './ejecuciones-orden.component.html',
   styleUrl: './ejecuciones-orden.component.css'
 })
 export class EjecucionesOrdenComponent implements OnInit {
   private readonly ejecucionService = inject(EjecucionOrdenService);
+  private readonly authService = inject(SecureAuthService);
+  private readonly notificationService = inject(NotificationService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -42,37 +48,21 @@ export class EjecucionesOrdenComponent implements OnInit {
   // Info de navegación desde Orden de Trabajo
   vieneDeOrden = signal(false);
   ordenContexto = signal<{ id: number; clienteNombre: string } | null>(null);
+  ordenIdPrefill = signal(0);
 
   // Filtros
   filtros = signal<EjecucionOrdenFilters>({});
   filtroOrdenId = signal<number | undefined>(undefined);
   filtroTecnicoId = signal<number | undefined>(undefined);
   filtroTipo = signal<TipoEjecucion | undefined>(undefined);
+  filtroEstado = signal<'EN_CURSO' | 'FINALIZADA' | undefined>(undefined);
   filtroClienteNombre = signal<string>(''); // Nuevo filtro por nombre de cliente
 
   // Modal states
   mostrarModalCrear = signal(false);
   mostrarModalFinalizar = signal(false);
   mostrarModalDelegar = signal(false);
-
-  // Formularios
-  formularioCrear = signal<EjecucionOrdenCreateDto>({
-    ordenId: 0,
-    tecnicoId: 0,
-    tipoEjecucion: TipoEjecucion.CAMPO,
-    hrInicio: new Date().toISOString(),
-    comentarios: ''
-  });
-
-  formularioFinalizar = signal<EjecucionOrdenUpdateDto>({
-    hrFin: new Date().toISOString(),
-    comentarios: ''
-  });
-
-  formularioDelegacion = signal<DelegateEjecucionDto>({
-    nuevoTecnicoId: 0,
-    motivo: ''
-  });
+  mostrarPanelDetalles = signal(false);
 
   // Enums para template
   readonly TipoEjecucion = TipoEjecucion;
@@ -96,6 +86,15 @@ export class EjecucionesOrdenComponent implements OnInit {
       result = result.filter(e => e.tipoEjecucion === tipo);
     }
 
+    const estado = this.filtroEstado();
+    if (estado) {
+      if (estado === 'EN_CURSO') {
+        result = result.filter(e => !e.hrFin);
+      } else if (estado === 'FINALIZADA') {
+        result = result.filter(e => e.hrFin);
+      }
+    }
+
     return result;
   });
 
@@ -106,6 +105,39 @@ export class EjecucionesOrdenComponent implements OnInit {
   ejecucionesFinalizadas = computed(() => 
     this.ejecucionesFiltradas().filter(e => e.hrFin).length
   );
+
+  // Getters/Setters para compatibilidad con ngModel
+  get filtroOrdenIdValue(): number | undefined {
+    return this.filtroOrdenId();
+  }
+
+  set filtroOrdenIdValue(value: number | undefined) {
+    this.filtroOrdenId.set(value);
+  }
+
+  get filtroTecnicoIdValue(): number | undefined {
+    return this.filtroTecnicoId();
+  }
+
+  set filtroTecnicoIdValue(value: number | undefined) {
+    this.filtroTecnicoId.set(value);
+  }
+
+  get filtroTipoValue(): TipoEjecucion | undefined {
+    return this.filtroTipo();
+  }
+
+  set filtroTipoValue(value: TipoEjecucion | undefined) {
+    this.filtroTipo.set(value);
+  }
+
+  get filtroEstadoValue(): 'EN_CURSO' | 'FINALIZADA' | undefined {
+    return this.filtroEstado();
+  }
+
+  set filtroEstadoValue(value: 'EN_CURSO' | 'FINALIZADA' | undefined) {
+    this.filtroEstado.set(value);
+  }
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -132,12 +164,8 @@ export class EjecucionesOrdenComponent implements OnInit {
           clienteNombre: clienteNombre || `Orden #${ordenId}`
         });
 
-        // Pre-llenar el formulario
-        const formActual = this.formularioCrear();
-        console.log('📝 Formulario actual antes de actualizar:', formActual);
-        formActual.ordenId = parseInt(ordenId);
-        this.formularioCrear.set({ ...formActual });
-        console.log('📝 Formulario actualizado:', this.formularioCrear());
+        // Pre-llenar el ordenId
+        this.ordenIdPrefill.set(parseInt(ordenId));
 
         // Abrir modal automáticamente si viene con autoOpen
         if (autoOpen) {
@@ -219,65 +247,7 @@ export class EjecucionesOrdenComponent implements OnInit {
    * Abre el modal para crear una nueva ejecución
    */
   abrirModalCrear(): void {
-    // Preservar el ordenId si viene de query params
-    const ordenIdActual = this.formularioCrear().ordenId || 0;
-
-    this.formularioCrear.set({
-      ordenId: ordenIdActual, // Mantener el ordenId si ya está establecido
-      tecnicoId: 0,
-      tipoEjecucion: TipoEjecucion.CAMPO,
-      hrInicio: new Date().toISOString(),
-      comentarios: ''
-    });
     this.mostrarModalCrear.set(true);
-
-    console.log('📋 Modal abierto con formulario:', this.formularioCrear());
-  }
-
-  /**
-   * Crea una nueva ejecución
-   */
-  crearEjecucion(): void {
-    const dto = this.formularioCrear();
-
-    console.log('📤 Intentando crear ejecución con DTO:', dto);
-    console.log('📋 Contexto de orden:', this.ordenContexto());
-    console.log('📋 Viene de orden:', this.vieneDeOrden());
-
-    if (!this.validarFormularioCrear(dto)) {
-      console.warn('⚠️ Validación fallida:', this.error());
-      return;
-    }    this.cargando.set(true);
-    this.error.set(null);
-
-    this.ejecucionService.createEjecucion(dto).subscribe({
-      next: (response) => {
-        console.log('✅ Ejecución creada exitosamente:', response);
-        this.mostrarModalCrear.set(false);
-        this.cargarEjecuciones();
-        this.cargando.set(false);
-      },
-      error: (err) => {
-        console.error('❌ Error al crear ejecución:', err);
-        
-        // Mensajes de error más específicos
-        let mensajeError = 'Error al crear la ejecución';
-        if (err.status === 400) {
-          mensajeError = err.error?.message || 'Datos inválidos. Verifique los campos del formulario.';
-        } else if (err.status === 401) {
-          mensajeError = 'No autorizado. Por favor, inicie sesión nuevamente.';
-        } else if (err.status === 404) {
-          mensajeError = 'Recurso no encontrado. Verifique que la orden, técnico o vehículo existan.';
-        } else if (err.status === 500) {
-          mensajeError = 'Error interno del servidor. Por favor, contacte al administrador.';
-        } else if (err.error?.message) {
-          mensajeError = err.error.message;
-        }
-        
-        this.error.set(mensajeError);
-        this.cargando.set(false);
-      }
-    });
   }
 
   /**
@@ -285,36 +255,7 @@ export class EjecucionesOrdenComponent implements OnInit {
    */
   abrirModalFinalizar(ejecucion: EjecucionOrdenResponse): void {
     this.ejecucionSeleccionada.set(ejecucion);
-    this.formularioFinalizar.set({
-      hrFin: new Date().toISOString(),
-      kmFinal: ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? ejecucion.kmInicial : undefined,
-      comentarios: ''
-    });
     this.mostrarModalFinalizar.set(true);
-  }
-
-  /**
-   * Finaliza una ejecución
-   */
-  finalizarEjecucion(): void {
-    const ejecucion = this.ejecucionSeleccionada();
-    if (!ejecucion) return;
-
-    const dto = this.formularioFinalizar();
-    this.cargando.set(true);
-
-    this.ejecucionService.updateEjecucion(ejecucion.id, dto).subscribe({
-      next: () => {
-        console.log('✅ Ejecución finalizada exitosamente');
-        this.mostrarModalFinalizar.set(false);
-        this.cargarEjecuciones();
-      },
-      error: (err) => {
-        this.error.set('Error al finalizar la ejecución');
-        console.error(err);
-        this.cargando.set(false);
-      }
-    });
   }
 
   /**
@@ -322,92 +263,33 @@ export class EjecucionesOrdenComponent implements OnInit {
    */
   abrirModalDelegar(ejecucion: EjecucionOrdenResponse): void {
     this.ejecucionSeleccionada.set(ejecucion);
-    this.formularioDelegacion.set({
-      nuevoTecnicoId: 0,
-      motivo: ''
-    });
     this.mostrarModalDelegar.set(true);
   }
 
   /**
-   * Delega una ejecución a otro técnico
+   * Ver detalles de una ejecución (abre panel lateral)
    */
-  delegarEjecucion(): void {
-    const ejecucion = this.ejecucionSeleccionada();
-    if (!ejecucion) return;
-
-    const dto = this.formularioDelegacion();
-    if (!dto.nuevoTecnicoId || !dto.motivo) {
-      this.error.set('Complete todos los campos requeridos');
-      return;
-    }
-
-    this.cargando.set(true);
-
-    this.ejecucionService.delegateEjecucion(ejecucion.id, dto).subscribe({
-      next: () => {
-        console.log('✅ Ejecución delegada exitosamente');
-        this.mostrarModalDelegar.set(false);
-        this.cargarEjecuciones();
-      },
-      error: (err) => {
-        this.error.set('Error al delegar la ejecución');
-        console.error(err);
-        this.cargando.set(false);
-      }
-    });
+  verDetalles(ejecucion: EjecucionOrdenResponse): void {
+    this.ejecucionSeleccionada.set(ejecucion);
+    this.mostrarPanelDetalles.set(true);
   }
 
   /**
-   * Cambia el tipo de ejecución y resetea campos específicos
+   * Eliminar una ejecución
    */
-  cambiarTipoEjecucion(tipo: TipoEjecucion): void {
-    const form = this.formularioCrear();
-    
-    if (tipo === TipoEjecucion.CAMPO) {
-      // Resetear campos de REMOTO
-      form.herramientas = undefined;
-      form.codigoSesion = undefined;
-      form.contrasenaSesion = undefined;
-    } else {
-      // Resetear campos de CAMPO
-      form.vehiculoId = undefined;
-      form.kmInicial = undefined;
+  eliminarEjecucion(id: number): void {
+    if (confirm('¿Está seguro de que desea eliminar esta ejecución? Esta acción no se puede deshacer.')) {
+      this.ejecucionService.deleteEjecucion(id).subscribe({
+        next: () => {
+          this.notificationService.success('Ejecución eliminada exitosamente');
+          this.cargarEjecuciones();
+        },
+        error: (error: any) => {
+          console.error('❌ Error al eliminar ejecución:', error);
+          this.notificationService.error('Error al eliminar la ejecución');
+        }
+      });
     }
-
-    form.tipoEjecucion = tipo;
-    this.formularioCrear.set({ ...form });
-  }
-
-  /**
-   * Valida el formulario de creación según el tipo de ejecución
-   */
-  private validarFormularioCrear(dto: EjecucionOrdenCreateDto): boolean {
-    console.log('🔍 Validando formulario:', dto);
-
-    // El ordenId debe venir del contexto (parámetro de navegación)
-    if (!dto.ordenId) {
-      console.error('❌ Error: No se ha especificado una orden de trabajo. Por favor, cree la ejecución desde la página de órdenes.');
-      this.error.set('No se ha especificado una orden de trabajo. Por favor, cree la ejecución desde la página de órdenes.');
-      return false;
-    }
-
-    if (!dto.tecnicoId) {
-      console.error('❌ Error: Debe seleccionar un técnico');
-      this.error.set('Debe seleccionar un técnico');
-      return false;
-    }
-
-    // Validaciones más flexibles: vehículo y kilometraje son opcionales para ambos tipos
-    if (dto.vehiculoId && dto.kmInicial !== undefined && dto.kmInicial !== null && dto.kmInicial < 0) {
-      console.error('❌ Error: El kilometraje inicial debe ser mayor o igual a 0');
-      this.error.set('El kilometraje inicial debe ser mayor o igual a 0');
-      return false;
-    }
-
-    console.log('✅ Validación exitosa');
-    this.error.set('');
-    return true;
   }
 
   /**
@@ -425,6 +307,9 @@ export class EjecucionesOrdenComponent implements OnInit {
     const tipo = this.filtroTipo();
     if (tipo) filtros.tipoEjecucion = tipo;
 
+    const estado = this.filtroEstado();
+    if (estado) filtros.estado = estado;
+
     this.filtros.set(filtros);
     this.cargarEjecuciones();
   }
@@ -436,14 +321,15 @@ export class EjecucionesOrdenComponent implements OnInit {
     this.filtroOrdenId.set(undefined);
     this.filtroTecnicoId.set(undefined);
     this.filtroTipo.set(undefined);
+    this.filtroEstado.set(undefined);
     this.filtros.set({});
     this.cargarEjecuciones();
   }
 
   /**
-   * Cerrar modales
+   * Cierra modales
    */
-  cerrarModal(tipo: 'crear' | 'finalizar' | 'delegar'): void {
+  cerrarModal(tipo: string): void {
     this.error.set(null);
     
     switch(tipo) {
@@ -457,6 +343,35 @@ export class EjecucionesOrdenComponent implements OnInit {
         this.mostrarModalDelegar.set(false);
         break;
     }
+  }
+
+  /**
+   * Cierra el panel lateral de detalles
+   */
+  cerrarPanelDetalles(): void {
+    this.mostrarPanelDetalles.set(false);
+    this.ejecucionSeleccionada.set(null);
+  }
+
+  /**
+   * Handlers para eventos del componente dialogs
+   */
+  onEjecucionCreada(): void {
+    this.notificationService.success('Ejecución creada exitosamente');
+    this.cargarEjecuciones();
+    this.mostrarModalCrear.set(false);
+  }
+
+  onEjecucionFinalizada(): void {
+    this.notificationService.success('Ejecución finalizada exitosamente');
+    this.cargarEjecuciones();
+    this.mostrarModalFinalizar.set(false);
+  }
+
+  onEjecucionDelegada(): void {
+    this.notificationService.success('Ejecución delegada exitosamente');
+    this.cargarEjecuciones();
+    this.mostrarModalDelegar.set(false);
   }
 
   /**
@@ -517,17 +432,6 @@ export class EjecucionesOrdenComponent implements OnInit {
   }
 
   /**
-   * Actualiza la hora de inicio del formulario
-   */
-  actualizarHrInicio(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.formularioCrear.update(form => ({
-      ...form,
-      hrInicio: new Date(input.value).toISOString()
-    }));
-  }
-
-  /**
    * Filtra órdenes por nombre de cliente
    */
   get ordenesFiltradas(): OrdenTrabajoSimple[] {
@@ -538,6 +442,21 @@ export class EjecucionesOrdenComponent implements OnInit {
       orden.clienteNombre.toLowerCase().includes(nombreFiltro) ||
       orden.vehiculoPlacas?.toLowerCase().includes(nombreFiltro)
     );
+  }
+
+  /**
+   * Formatea minutos a formato legible (ej: "2h 15m")
+   */
+  formatearDuracion(minutos: number): string {
+    if (!minutos || minutos <= 0) return '0m';
+    
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+    
+    if (horas > 0) {
+      return mins > 0 ? `${horas}h ${mins}m` : `${horas}h`;
+    }
+    return `${mins}m`;
   }
 }
 

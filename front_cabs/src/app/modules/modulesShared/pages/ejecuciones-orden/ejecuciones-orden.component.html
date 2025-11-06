@@ -1,473 +1,248 @@
-<!-- Breadcrumb / Banner contextual -->
-<div *ngIf="vieneDeOrden()" class="context-banner">
-  <div class="context-content">
-    <button class="btn-back" (click)="volverAOrdenes()">
-      <span class="icon">←</span>
+﻿<div class="page-container">
+  <!-- Contexto de navegación -->
+  <div *ngIf="vieneDeOrden()" class="context-banner">
+    <button class="context-back" (click)="volverAOrdenes()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L6.414 9H16a1 1 0 110 2H6.414l3.293 3.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
       Volver a Órdenes
     </button>
     <div class="context-info">
-      <span class="context-icon">📋</span>
-      <div class="context-text">
-        <span class="context-label">Creando ejecución para:</span>
-        <span class="context-value">{{ ordenContexto()?.clienteNombre }} - Orden #{{ ordenContexto()?.id }}</span>
-      </div>
+      <span class="context-label">Creando ejecución para:</span>
+      <span class="context-value">{{ ordenContexto()?.clienteNombre }} · Orden #{{ ordenContexto()?.id }}</span>
     </div>
   </div>
-</div>
 
-<!-- Header con título y botón crear -->
-<div class="header-container">
-  <div class="header-content">
-    <h1 class="title">
-      <span class="icon">📋</span>
-      Ejecuciones de Órdenes
-    </h1>
+  <!-- Encabezado principal -->
+  <div class="header-section">
+    <div class="header-text">
+      <h1>Gestión de Ejecuciones</h1>
+      <p>Administra las ejecuciones de órdenes de trabajo, filtra por técnico o tipo y revisa los detalles en un clic.</p>
+    </div>
     <button class="btn-primary" (click)="abrirModalCrear()">
-      <span class="icon">➕</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+      </svg>
       Nueva Ejecución
     </button>
   </div>
-</div>
 
-<!-- Filtros y estadísticas -->
-<div class="filters-stats-container">
-  <!-- Filtros -->
-  <div class="filters-card">
-    <h3 class="filter-title">🔍 Filtros</h3>
-    <div class="filters-grid">
-      <div class="filter-group">
-        <label>Cliente / Orden</label>
-        <select 
-          [(ngModel)]="filtroOrdenId" 
-          class="input-field"
-        >
-          <option [ngValue]="undefined">-- Todas las órdenes --</option>
-          <option *ngFor="let orden of ordenes()" [ngValue]="orden.id">
-            {{ orden.clienteNombre }} - Orden #{{ orden.id }}
-            <span *ngIf="orden.vehiculoPlacas"> ({{ orden.vehiculoPlacas }})</span>
-          </option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label>Técnico</label>
-        <select 
-          [(ngModel)]="filtroTecnicoId" 
-          class="input-field"
-        >
-          <option [ngValue]="undefined">-- Todos los técnicos --</option>
-          <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
-            {{ tecnico.nombreCompleto }}
-          </option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label>Tipo de Ejecución</label>
-        <select [(ngModel)]="filtroTipo" class="input-field">
-          <option [ngValue]="undefined">-- Todos los tipos --</option>
-          <option [ngValue]="TipoEjecucion.CAMPO">🚗 Campo</option>
-          <option [ngValue]="TipoEjecucion.REMOTO">💻 Remoto</option>
-        </select>
+  <!-- Alertas -->
+  <div *ngIf="error()" class="alert alert-error">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+    </svg>
+    <span>{{ error() }}</span>
+    <button type="button" (click)="error.set(null)" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <!-- Panel de filtros y métricas -->
+  <div class="dashboard-overview">
+    <section class="filters-card">
+      <header>
+        <h2>Filtros</h2>
+        <p>Refina la búsqueda por orden, técnico o tipo de ejecución.</p>
+      </header>
+
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Orden</span>
+          <select [(ngModel)]="filtroOrdenIdValue" class="field-control">
+            <option [ngValue]="undefined">Todas las órdenes</option>
+            <option *ngFor="let orden of ordenes()" [ngValue]="orden.id">
+              #{{ orden.id }} · {{ orden.clienteNombre }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Técnico</span>
+          <select [(ngModel)]="filtroTecnicoIdValue" class="field-control">
+            <option [ngValue]="undefined">Todos los técnicos</option>
+            <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
+              {{ tecnico.nombreCompleto }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Tipo</span>
+          <select [(ngModel)]="filtroTipoValue" class="field-control">
+            <option [ngValue]="undefined">Todos los tipos</option>
+            <option [ngValue]="TipoEjecucion.CAMPO">Campo</option>
+            <option [ngValue]="TipoEjecucion.REMOTO">Remoto</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Estado</span>
+          <select [(ngModel)]="filtroEstadoValue" class="field-control">
+            <option [ngValue]="undefined">Todos los estados</option>
+            <option value="EN_CURSO">En curso</option>
+            <option value="FINALIZADA">Finalizadas</option>
+          </select>
+        </label>
       </div>
 
       <div class="filter-actions">
-        <button class="btn-filter" (click)="aplicarFiltros()">
-          Aplicar
-        </button>
-        <button class="btn-clear" (click)="limpiarFiltros()">
-          Limpiar
-        </button>
+        <button class="btn-secondary" (click)="limpiarFiltros()">Limpiar</button>
+        <button class="btn-primary" (click)="aplicarFiltros()">Aplicar filtros</button>
       </div>
-    </div>
+    </section>
+
+    <section class="stats-card">
+      <div class="stat-item">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ totalEjecuciones() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">En curso</span>
+        <span class="stat-value accent-blue">{{ ejecucionesEnCurso() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Finalizadas</span>
+        <span class="stat-value accent-green">{{ ejecucionesFinalizadas() }}</span>
+      </div>
+    </section>
   </div>
 
-  <!-- Estadísticas -->
-  <div class="stats-grid">
-    <div class="stat-card stat-total">
-      <div class="stat-icon">📊</div>
-      <div class="stat-info">
-        <div class="stat-value">{{ totalEjecuciones() }}</div>
-        <div class="stat-label">Total</div>
-      </div>
-    </div>
+  <!-- Estados generales -->
+  <section *ngIf="cargando()" class="loading-panel">
+    <div class="spinner"></div>
+    <p>Cargando ejecuciones...</p>
+  </section>
 
-    <div class="stat-card stat-progress">
-      <div class="stat-icon">⏳</div>
-      <div class="stat-info">
-        <div class="stat-value">{{ ejecucionesEnCurso() }}</div>
-        <div class="stat-label">En Curso</div>
-      </div>
-    </div>
+  <section *ngIf="!cargando() && ejecucionesFiltradas().length === 0" class="empty-panel">
+    <div class="empty-icon"></div>
+    <h3>No encontramos ejecuciones</h3>
+    <p>Ajusta los filtros o crea una nueva ejecución para comenzar.</p>
+    <button class="btn-primary" (click)="abrirModalCrear()">Nueva Ejecución</button>
+  </section>
 
-    <div class="stat-card stat-completed">
-      <div class="stat-icon">✅</div>
-      <div class="stat-info">
-        <div class="stat-value">{{ ejecucionesFinalizadas() }}</div>
-        <div class="stat-label">Finalizadas</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Loader -->
-<div *ngIf="cargando()" class="loader-container">
-  <div class="loader"></div>
-  <p>Cargando ejecuciones...</p>
-</div>
-
-<!-- Error -->
-<div *ngIf="error()" class="alert-error">
-  <span class="icon">⚠️</span>
-  {{ error() }}
-  <button class="btn-close" (click)="error.set(null)">✕</button>
-</div>
-
-<!-- Lista de ejecuciones -->
-<div *ngIf="!cargando()" class="ejecuciones-grid">
-  <div *ngFor="let ejecucion of ejecucionesFiltradas()" class="ejecucion-card">
-    <!-- Header de la card -->
-    <div class="card-header" [ngClass]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'header-campo' : 'header-remoto'">
-      <div class="card-title">
-        <span class="tipo-icon">{{ getIconoTipo(ejecucion.tipoEjecucion) }}</span>
-        <span class="tipo-text">{{ ejecucion.tipoEjecucion }}</span>
-      </div>
-      <div class="card-status">
-        <span class="status-badge" [ngClass]="ejecucion.hrFin ? 'status-finalizado' : 'status-activo'">
-          {{ ejecucion.hrFin ? '✓ Finalizado' : '⏳ En curso' }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Contenido principal -->
-    <div class="card-body">
-      <!-- Info principal -->
-      <div class="info-row">
-        <div class="info-item">
-          <span class="info-label">� Cliente:</span>
-          <span class="info-value">{{ getClienteNombre(ejecucion.ordenId) }}</span>
+  <!-- Tarjetas de ejecuciones -->
+  <section *ngIf="!cargando() && ejecucionesFiltradas().length > 0" class="cards-grid">
+    <article *ngFor="let ejecucion of ejecucionesFiltradas()" class="execution-card" [class.finalizada]="ejecucion.hrFin">
+      <header class="card-header">
+        <div class="status-chip" [class.in-progress]="!ejecucion.hrFin" [class.done]="ejecucion.hrFin">
+          {{ ejecucion.hrFin ? 'Finalizada' : 'En curso' }}
         </div>
-        <div class="info-item">
-          <span class="info-label">�📋 Orden:</span>
-          <span class="info-value">#{{ ejecucion.ordenId }}</span>
+        <div class="type-chip" [class.campo]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" [class.remoto]="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO">
+          {{ ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'Campo' : 'Remoto' }}
         </div>
-      </div>
+      </header>
 
-      <div class="info-row">
-        <div class="info-item">
-          <span class="info-label">� Técnico:</span>
-          <span class="info-value">{{ ejecucion.tecnicoNombre || getTecnicoNombre(ejecucion.tecnicoId) }}</span>
-        </div>
-      </div>
+      <div class="card-body">
+        <h3 class="card-title">Orden #{{ ejecucion.ordenId }}</h3>
+        <p class="card-subtitle">{{ getClienteNombre(ejecucion.ordenId) }}</p>
 
-      <!-- Detalles específicos por tipo -->
-      <div class="detalles-tipo">
-        <!-- CAMPO -->
-        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" class="campo-detalles">
-          <div class="detalle-item">
-            <span class="detalle-icon">🚗</span>
-            <span class="detalle-text">{{ ejecucion.vehiculoPlacas }}</span>
+        <div class="card-meta">
+          <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+            </svg>
+            <span>{{ ejecucion.tecnicoNombre }}</span>
           </div>
-          <div class="detalle-item">
-            <span class="detalle-icon">📏</span>
-            <span class="detalle-text">
-              {{ ejecucion.kmInicial }} km 
-              <span *ngIf="ejecucion.kmFinal"> → {{ ejecucion.kmFinal }} km</span>
-            </span>
+          <div class="meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H5.5a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ formatearFecha(ejecucion.hrInicio) }}</span>
+          </div>
+          <div class="meta-item" *ngIf="ejecucion.duracionMinutos">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ formatearDuracion(ejecucion.duracionMinutos) }}</span>
           </div>
         </div>
 
-        <!-- REMOTO -->
-        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO" class="remoto-detalles">
-          <div class="detalle-item" *ngIf="ejecucion.herramientas">
-            <span class="detalle-icon">🛠️</span>
-            <span class="detalle-text">{{ ejecucion.herramientas }}</span>
+        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" class="tags-row">
+          <span class="tag campo">Vehículo: {{ ejecucion.vehiculoPlacas || getVehiculoDescripcion(ejecucion.vehiculoId) }}</span>
+          <span class="tag campo" *ngIf="ejecucion.kmInicial !== null">KM Inicial: {{ ejecucion.kmInicial }}</span>
+          <span class="tag campo" *ngIf="ejecucion.kmFinal !== null">KM Final: {{ ejecucion.kmFinal }}</span>
+        </div>
+
+        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO" class="tags-row">
+          <span class="tag remoto">Sesión: {{ ejecucion.codigoSesion }}</span>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <span class="timeline-label">Inicio</span>
+            <span class="timeline-value">{{ formatearFecha(ejecucion.hrInicio) }}</span>
           </div>
-          <div class="detalle-item" *ngIf="ejecucion.codigoSesion">
-            <span class="detalle-icon">🔑</span>
-            <span class="detalle-text">Sesión: {{ ejecucion.codigoSesion }}</span>
+          <div class="timeline-item" *ngIf="ejecucion.hrFin">
+            <span class="timeline-label">Fin</span>
+            <span class="timeline-value">{{ formatearFecha(ejecucion.hrFin) }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="ejecucion.comentarios" class="notes-box">
+          <span>Comentarios</span>
+          <p>{{ ejecucion.comentarios }}</p>
+        </div>
+
+        <div *ngIf="ejecucion.historialDelegaciones && ejecucion.historialDelegaciones.length > 0" class="delegation-history">
+          <h4 class="delegation-title">Historial de delegaciones</h4>
+          <div class="delegation-list">
+            <div *ngFor="let delegacion of ejecucion.historialDelegaciones" class="delegation-item">
+              <div class="delegation-header">
+                <span class="delegation-date">{{ formatearFecha(delegacion.fechaDelegacion) }}</span>
+                <span class="delegation-arrow">→</span>
+              </div>
+              <div class="delegation-details">
+                <span class="delegation-from">{{ delegacion.tecnicoAnteriorNombre }}</span>
+                <span class="delegation-to">{{ delegacion.tecnicoNuevoNombre }}</span>
+              </div>
+              <div class="delegation-motive" *ngIf="delegacion.motivo">
+                <strong>Motivo:</strong> {{ delegacion.motivo }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Tiempos -->
-      <div class="tiempos-section">
-        <div class="tiempo-item">
-          <span class="tiempo-label">Inicio:</span>
-          <span class="tiempo-value">{{ formatearFecha(ejecucion.hrInicio) }}</span>
-        </div>
-        <div class="tiempo-item" *ngIf="ejecucion.hrFin">
-          <span class="tiempo-label">Fin:</span>
-          <span class="tiempo-value">{{ formatearFecha(ejecucion.hrFin) }}</span>
-        </div>
-        <div class="duracion">
-          <span class="duracion-icon">⏱️</span>
-          <span class="duracion-text">{{ calcularDuracion(ejecucion) }}</span>
-        </div>
-      </div>
-
-      <!-- Comentarios -->
-      <div *ngIf="ejecucion.comentarios" class="comentarios">
-        <span class="comentarios-icon">💬</span>
-        <p class="comentarios-text">{{ ejecucion.comentarios }}</p>
-      </div>
-    </div>
-
-    <!-- Acciones -->
-    <div class="card-actions">
-      <button 
-        *ngIf="!ejecucion.hrFin" 
-        class="btn-action btn-finalizar"
-        (click)="abrirModalFinalizar(ejecucion)"
-      >
-        <span class="icon">✓</span>
-        Finalizar
-      </button>
-      <button 
-        *ngIf="!ejecucion.hrFin" 
-        class="btn-action btn-delegar"
-        (click)="abrirModalDelegar(ejecucion)"
-      >
-        <span class="icon">🔄</span>
-        Delegar
-      </button>
-    </div>
-  </div>
-
-  <!-- Mensaje vacío -->
-  <div *ngIf="ejecucionesFiltradas().length === 0" class="empty-state">
-    <div class="empty-icon">📭</div>
-    <h3>No hay ejecuciones</h3>
-    <p>Crea una nueva ejecución para comenzar</p>
-  </div>
-</div>
-
-<!-- MODAL: Crear Ejecución -->
-<div *ngIf="mostrarModalCrear()" class="modal-overlay" (click)="cerrarModal('crear')">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>➕ Nueva Ejecución</h2>
-      <button class="btn-close" (click)="cerrarModal('crear')">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <!-- Banner informativo si viene de una orden -->
-      <div *ngIf="vieneDeOrden() && ordenContexto()" class="info-banner">
-        <div class="info-icon">ℹ️</div>
-        <div class="info-text">
-          <strong>Orden Pre-seleccionada:</strong> {{ ordenContexto()?.clienteNombre }} (Orden #{{ ordenContexto()?.id }})
-        </div>
-      </div>
-
-      <!-- Tipo de Ejecución -->
-      <div class="form-group">
-        <label class="required">Tipo de Ejecución</label>
-        <div class="tipo-selector">
-          <button 
-            class="tipo-btn"
-            [ngClass]="{'active': formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO}"
-            (click)="cambiarTipoEjecucion(TipoEjecucion.CAMPO)"
-          >
-            🚗 Campo
+      <footer class="card-footer">
+        <button class="btn-link" (click)="verDetalles(ejecucion)">Ver detalles</button>
+        <div class="footer-actions">
+          <button *ngIf="!ejecucion.hrFin" class="icon-button" (click)="abrirModalFinalizar(ejecucion)" title="Finalizar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+            </svg>
           </button>
-          <button 
-            class="tipo-btn"
-            [ngClass]="{'active': formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO}"
-            (click)="cambiarTipoEjecucion(TipoEjecucion.REMOTO)"
-          >
-            💻 Remoto
+          <button *ngIf="!ejecucion.hrFin" class="icon-button" (click)="abrirModalDelegar(ejecucion)" title="Delegar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+            </svg>
+          </button>
+          <button class="icon-button danger" (click)="eliminarEjecucion(ejecucion.id)" title="Eliminar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0013 4.194V3.75A2.75 2.75 0 0010.25 1H8.75zM10 6.5a.75.75 0 01.75.75v7.5a.75.75 0 01-1.5 0v-7.5A.75.75 0 0110 6.5zM7.25 6.25a.75.75 0 00-.75.75v7.5a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75zm5.5 0a.75.75 0 00-.75.75v7.5a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75z" clip-rule="evenodd" />
+            </svg>
           </button>
         </div>
-      </div>
-
-      <!-- Campos comunes -->
-      <div class="form-group">
-        <label class="required">Técnico Asignado</label>
-        <select 
-          [(ngModel)]="formularioCrear().tecnicoId" 
-          class="input-field"
-        >
-          <option [ngValue]="0">-- Seleccione un técnico --</option>
-          <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
-            {{ tecnico.nombreCompleto }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="required">Hora de Inicio</label>
-        <input 
-          type="datetime-local" 
-          [value]="getFormattedDateTime(formularioCrear().hrInicio)"
-          (change)="actualizarHrInicio($event)"
-          class="input-field"
-        />
-      </div>
-
-      <!-- Campos específicos CAMPO -->
-      <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.CAMPO">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="required">Vehículo</label>
-            <select 
-              [(ngModel)]="formularioCrear().vehiculoId" 
-              class="input-field"
-            >
-              <option [ngValue]="undefined">-- Seleccione un vehículo --</option>
-              <option *ngFor="let vehiculo of vehiculos()" [ngValue]="vehiculo.id">
-                {{ vehiculo.descripcion }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="required">Km Inicial</label>
-            <input 
-              type="number" 
-              [(ngModel)]="formularioCrear().kmInicial" 
-              class="input-field"
-              placeholder="ej: 45000"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Campos específicos REMOTO -->
-      <div *ngIf="formularioCrear().tipoEjecucion === TipoEjecucion.REMOTO">
-        <div class="form-group">
-          <label>Herramientas</label>
-          <input 
-            type="text" 
-            [(ngModel)]="formularioCrear().herramientas" 
-            class="input-field"
-            placeholder="TeamViewer, AnyDesk"
-          />
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Código Sesión</label>
-            <input 
-              type="text" 
-              [(ngModel)]="formularioCrear().codigoSesion" 
-              class="input-field"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Contraseña Sesión</label>
-            <input 
-              type="text" 
-              [(ngModel)]="formularioCrear().contrasenaSesion" 
-              class="input-field"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Comentarios -->
-      <div class="form-group">
-        <label>Comentarios</label>
-        <textarea 
-          [(ngModel)]="formularioCrear().comentarios" 
-          class="textarea-field"
-          rows="3"
-          placeholder="Notas adicionales sobre la ejecución..."
-        ></textarea>
-      </div>
-
-      <!-- Mensaje de error -->
-      <div *ngIf="error()" class="error-message">
-        <span class="error-icon">⚠️</span>
-        <span>{{ error() }}</span>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModal('crear')" [disabled]="cargando()">
-        Cancelar
-      </button>
-      <button class="btn-primary" (click)="crearEjecucion()" [disabled]="cargando()">
-        <span *ngIf="!cargando()">✓ Crear Ejecución</span>
-        <span *ngIf="cargando()">⏳ Creando...</span>
-      </button>
-    </div>
-  </div>
+      </footer>
+    </article>
+  </section>
 </div>
 
-<!-- MODAL: Finalizar Ejecución -->
-<div *ngIf="mostrarModalFinalizar()" class="modal-overlay" (click)="cerrarModal('finalizar')">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>✓ Finalizar Ejecución</h2>
-      <button class="btn-close" (click)="cerrarModal('finalizar')">✕</button>
-    </div>
+<app-ejecuciones-orden-dialogs
+  [mostrarModalCrear]="mostrarModalCrear()"
+  [mostrarModalFinalizar]="mostrarModalFinalizar()"
+  [mostrarModalDelegar]="mostrarModalDelegar()"
+  [ejecucionSeleccionada]="ejecucionSeleccionada()"
+  [ordenes]="ordenes()"
+  [tecnicos]="tecnicos()"
+  [vehiculos]="vehiculos()"
+  [ordenIdPrefill]="ordenIdPrefill()"
+  (cerrarModal)="cerrarModal($event)"
+  (ejecucionCreada)="onEjecucionCreada()"
+  (ejecucionFinalizada)="onEjecucionFinalizada()"
+  (ejecucionDelegada)="onEjecucionDelegada()">
+</app-ejecuciones-orden-dialogs>
 
-    <div class="modal-body">
-      <div *ngIf="ejecucionSeleccionada()?.tipoEjecucion === TipoEjecucion.CAMPO" class="form-group">
-        <label class="required">Km Final</label>
-        <input 
-          type="number" 
-          [(ngModel)]="formularioFinalizar().kmFinal" 
-          class="input-field"
-          placeholder="Kilometraje al finalizar"
-        />
-      </div>
-
-      <div class="form-group">
-        <label>Comentarios Finales</label>
-        <textarea 
-          [(ngModel)]="formularioFinalizar().comentarios" 
-          class="textarea-field"
-          rows="4"
-          placeholder="Describe el trabajo realizado..."
-        ></textarea>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModal('finalizar')">Cancelar</button>
-      <button class="btn-success" (click)="finalizarEjecucion()">Finalizar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: Delegar Ejecución -->
-<div *ngIf="mostrarModalDelegar()" class="modal-overlay" (click)="cerrarModal('delegar')">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>🔄 Delegar Ejecución</h2>
-      <button class="btn-close" (click)="cerrarModal('delegar')">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="required">Nuevo Técnico</label>
-        <select 
-          [(ngModel)]="formularioDelegacion().nuevoTecnicoId" 
-          class="input-field"
-        >
-          <option [ngValue]="0">-- Seleccione un técnico --</option>
-          <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
-            {{ tecnico.nombreCompleto }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="required">Motivo de Delegación</label>
-        <textarea 
-          [(ngModel)]="formularioDelegacion().motivo" 
-          class="textarea-field"
-          rows="4"
-          placeholder="Explica por qué se delega esta ejecución..."
-        ></textarea>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="cerrarModal('delegar')">Cancelar</button>
-      <button class="btn-warning" (click)="delegarEjecucion()">Delegar</button>
-    </div>
-  </div>
-</div>
+<app-panel-detalles
+  [ejecucion]="ejecucionSeleccionada()"
+  [visible]="mostrarPanelDetalles()"
+  (cerrar)="cerrarPanelDetalles()">
+</app-panel-detalles>

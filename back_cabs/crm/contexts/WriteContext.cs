@@ -222,7 +222,7 @@ public class WriteContext : DbContext
 
             entity.Property(e => e.TipoVehiculo).HasColumnName("tipo_vehiculo").HasMaxLength(50);
             entity.Property(e => e.EsDeEmpresa).HasColumnName("es_de_empresa").IsRequired(true);
-            entity.Property(e => e.Transmision).HasColumnName("transmicion").HasMaxLength(20);
+            entity.Property(e => e.Transmision).HasColumnName("transmision").HasMaxLength(20);
             entity.Property(e => e.Placas).HasColumnName("placas").HasMaxLength(20);
             entity.Property(e => e.Activo).HasColumnName("activo").IsRequired(true);
             entity.Property(e => e.Observaciones).HasColumnName("observaciones");
