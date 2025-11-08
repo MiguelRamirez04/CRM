@@ -1,0 +1,140 @@
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+}
+
+:host-context(:root) {
+  --color-primario: #34428F;
+  --elemento-seleccionado: #1D4ED8;
+  --fondo-principal: #FAFAFA;
+  --color-blanco: #ffffff;
+  --texto-body: #333333;
+  --texto-body-secundario: #666666;
+  --color-borde: #D9D9D9;
+  --fondo-tarjeta: #F3F4F6;
+}
+
+.contenedor-tabla {
+  width: 100%;
+}
+
+.estado-tabla {
+  text-align: center;
+  padding: 2rem;
+  color: var(--texto-body-secundario);
+  background: var(--color-blanco);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-listado {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.encabezado-tabla {
+  background: var(--fondo-principal);
+}
+
+.celda-encabezado {
+  padding: 16px;
+  font-size: 12px;
+  color: var(--texto-body-secundario);
+  text-transform: none;
+  font-weight: 500;
+  text-align: center;
+}
+
+.cuerpo-tabla {
+  background-color: var(--color-blanco);
+}
+
+.celda-dato {
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--color-borde);
+  font-size: 14px;
+  color: var(--texto-body);
+  font-weight: 500;
+}
+
+.celda-sin-datos {
+  text-align: center;
+  padding: 2rem;
+  color: var(--texto-body-secundario);
+  font-size: 14px;
+}
+
+.fila-datos {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fila-datos:hover {
+  background: var(--fondo-tarjeta);
+}
+
+.fila-datos:last-child .celda-dato {
+  border-bottom: none;
+}
+
+.contenedor-acciones {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.boton-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  background: var(--color-primario);
+  color: var(--color-blanco);
+}
+
+.boton-accion:hover {
+  background: var(--elemento-seleccionado);
+  transform: translateY(-1px);
+}
+
+.boton-accion:active {
+  transform: translateY(0);
+}
+
+/* Clases predefinidas para botones de acción */
+.boton-ver {
+  background: var(--color-primario);
+  color: var(--color-blanco);
+}
+
+.boton-editar {
+  background: var(--color-primario);
+  color: var(--color-blanco);
+}
+
+.boton-eliminar {
+  background: #DC2626;
+  color: var(--color-blanco);
+}
+
+.boton-eliminar:hover {
+  background: #B91C1C;
+}
+
+.icono-tabla {
+  width: 18px;
+  height: 18px;
+}
