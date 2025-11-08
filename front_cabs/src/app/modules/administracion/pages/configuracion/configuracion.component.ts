@@ -6,10 +6,10 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="container-fluid">
-      <h2>Configuración del Sistema</h2>
+    <div >
+      <h2>Configuración del Sistemaaaa</h2>
       <p>Configuración general del módulo de administración.</p>
-      <div class="alert alert-info">
+      <div >
         Configuración próximamente disponible.
       </div>
     </div>
