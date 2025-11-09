@@ -4,12 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SecureAuthService, User } from '../../../../core/services/secure-auth.service';
-import { BandejaPerfilComponent } from '../../../../layout/bandeja-perfil/bandeja-perfil.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, BandejaPerfilComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
@@ -20,8 +19,7 @@ export class ProfileComponent {
   currentUser = this.authService.getCurrentUser();
 
   user$: Observable<User | null>;
-  isCollapsed = false;
-  mostrarBandejaPerfil = false;
+
   showNewPassword: boolean | undefined;
   showConfirmPassword: boolean | undefined;
 
