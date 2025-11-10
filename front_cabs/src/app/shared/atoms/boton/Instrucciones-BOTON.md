@@ -6,7 +6,7 @@ Componente reutilizable de botón  con soporte para múltiples variantes, iconos
 
 ```typescript
 
-import { UiBotonComponent } from './ruta/ui/boton/boton.component';
+import { UiBotonComponent } from './ruta/atomic/boton/boton.component';
 
 @Component({
   selector: 'app-mi-componente',
@@ -16,10 +16,10 @@ import { UiBotonComponent } from './ruta/ui/boton/boton.component';
 })
 ```
 
----
+
 
 # Propiedades (Inputs)
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Propiedad           | Tipo      | Valores                                        |  POR Defecto | Descripción                                          |
 |---------------------|-----------|------------------------------------------------|--------------|------------------------------------------------------|
 | `variante`          | `string`  | `'primario'` \| `'secundario'` \| `'terciario'`| `'primario'` | sefine el estilo visual del botón                    |
