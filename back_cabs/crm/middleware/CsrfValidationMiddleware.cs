@@ -26,6 +26,7 @@
 // =====================================================================================
 
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.Extensions.Hosting;
 
 namespace back_cabs.CRM.middleware
 {
@@ -37,6 +38,7 @@ namespace back_cabs.CRM.middleware
         private readonly RequestDelegate _next;
         private readonly IAntiforgery _antiforgery;
         private readonly ILogger<CsrfValidationMiddleware> _logger;
+        private readonly IWebHostEnvironment _environment;
 
         // Rutas que NO requieren validación CSRF
         private readonly HashSet<string> _excludedPaths = new(StringComparer.OrdinalIgnoreCase)
@@ -45,17 +47,20 @@ namespace back_cabs.CRM.middleware
             "/api/auth/registro",        // Registro no requiere token
             "/api/auth/csrf-token",      // Endpoint para obtener token
             "/api/auth/refresh",         // Refresh token tampoco requiere validación
-            "/api/gastoviaticos"         // Viáticos (temporal durante desarrollo)
+            "/api/gastoviaticos",        // Viáticos (temporal durante desarrollo)
+            "/swagger"                   // Swagger UI (desarrollo)
         };
 
         public CsrfValidationMiddleware(
             RequestDelegate next,
             IAntiforgery antiforgery,
-            ILogger<CsrfValidationMiddleware> logger)
+            ILogger<CsrfValidationMiddleware> logger,
+            IWebHostEnvironment environment)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _antiforgery = antiforgery ?? throw new ArgumentNullException(nameof(antiforgery));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -64,7 +69,8 @@ namespace back_cabs.CRM.middleware
             if (RequiresCsrfValidation(context.Request))
             {
                 // Verificar si la ruta está excluida
-                if (!IsExcludedPath(context.Request.Path))
+                if (!IsExcludedPath(context.Request.Path) && 
+                    !(_environment.IsDevelopment() && context.Request.Path.StartsWithSegments("/api")))
                 {
                     try
                     {

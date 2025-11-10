@@ -1,0 +1,120 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+  <!-- Contexto de navegación -->
+  <div class="bg-white rounded-lg p-6 mb-6 shadow-md flex justify-between items-center">
+    <div class="flex flex-col gap-1">
+      <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Vehículo</div>
+      <div class="text-lg font-semibold text-gray-900" *ngIf="vehiculo()">{{ vehiculo()?.nombreVehiculo }} - {{ vehiculo()?.placas }}</div>
+    </div>
+    <button class="flex items-center gap-2 px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors cursor-pointer" (click)="volver()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+      Volver
+    </button>
+  </div>
+
+  <!-- Encabezado -->
+  <div class="bg-white rounded-lg p-8 mb-6 shadow-md">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Historial de Cambios</h1>
+      <p class="text-gray-600">Registro de todas las modificaciones realizadas al vehículo</p>
+    </div>
+  </div>
+
+  <!-- Información del vehículo -->
+  <div *ngIf="vehiculo()" class="bg-white rounded-lg p-8 mb-6 shadow-md">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-gray-500 uppercase tracking-wide">Nombre:</label>
+        <span class="text-base font-semibold text-gray-900">{{ vehiculo()?.nombreVehiculo }}</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-gray-500 uppercase tracking-wide">Placas:</label>
+        <span class="text-base font-semibold text-gray-900">{{ vehiculo()?.placas }}</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-gray-500 uppercase tracking-wide">Kilometraje Actual:</label>
+        <span class="text-base font-semibold text-gray-900">{{ vehiculo()?.kilometraje?.toLocaleString() + ' km' || 'N/A' }}</span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-gray-500 uppercase tracking-wide">Estado:</label>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium uppercase tracking-wide"
+              [class]="vehiculo()?.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+          {{ vehiculo()?.activo ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial de cambios -->
+  <div class="bg-white rounded-lg p-8 shadow-md">
+    <div class="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-900">Registro de Cambios</h2>
+      <p class="text-sm text-gray-600">{{ historial().length }} cambios registrados</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="cargando()" class="flex flex-col items-center justify-center py-12 gap-4">
+      <div class="w-8 h-8 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <p class="text-gray-600 text-sm">Cargando historial...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error() && !cargando()" class="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5 flex-shrink-0">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+      </svg>
+      <div>{{ error() }}</div>
+    </div>
+
+    <!-- Lista de cambios -->
+    <div *ngIf="!cargando() && !error() && historial().length > 0" class="flex flex-col gap-4">
+      <div
+        *ngFor="let cambio of historial()"
+        class="border-l-4 bg-gray-50 rounded-lg p-6 transition-all hover:bg-gray-100 hover:-translate-y-1 hover:shadow-md"
+        [style.border-left-color]="getColorCambio(cambio.tipoCambio)"
+      >
+        <div class="flex items-center gap-4 mb-4">
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl font-semibold shadow-sm"
+               [style.color]="getColorCambio(cambio.tipoCambio)">
+            {{ getIconoCambio(cambio.tipoCambio) }}
+          </div>
+          <div class="flex-1">
+            <div class="text-base font-semibold text-gray-900 mb-1">{{ cambio.tipoCambio }}</div>
+            <div class="text-sm text-gray-600">{{ formatearFecha(cambio.fechaCambio) }}</div>
+          </div>
+          <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-700 bg-gray-200 px-3 py-1 rounded-full">{{ cambio.usuarioNombre }}</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-md p-4 border border-gray-200">
+          <div class="mb-3">
+            <strong class="text-gray-900 text-sm uppercase tracking-wide">{{ cambio.campoModificado }}</strong>
+          </div>
+          <div class="flex gap-4">
+            <div class="flex-1" *ngIf="cambio.valorAnterior">
+              <span class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Antes:</span>
+              <span class="text-sm text-red-600 font-medium line-through">{{ cambio.valorAnterior }}</span>
+            </div>
+            <div class="flex-1">
+              <span class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Después:</span>
+              <span class="text-sm text-gray-900 font-medium">{{ cambio.valorNuevo }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!cargando() && !error() && historial().length === 0" class="flex flex-col items-center justify-center py-16 px-8 text-center">
+      <div class="w-16 h-16 text-gray-300 mb-4">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-full h-full">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No hay cambios registrados</h3>
+      <p class="text-gray-600">Este vehículo aún no tiene modificaciones registradas en el sistema.</p>
+    </div>
+  </div>
+</div>

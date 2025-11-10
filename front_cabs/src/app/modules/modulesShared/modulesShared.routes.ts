@@ -15,6 +15,10 @@ export const modulesSharedRoutes: Routes = [
         loadComponent: () => import('./pages/vehiculos/vehiculos.component').then(m => m.VehiculosComponent)
       },
       {
+        path: 'vehiculos/historial/:id',
+        loadComponent: () => import('./pages/vehiculos/vehiculo-historial/vehiculo-historial.component').then(m => m.VehiculoHistorialComponent)
+      },
+      {
         path: 'viaticos',
         loadComponent: () => import('./pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
       }

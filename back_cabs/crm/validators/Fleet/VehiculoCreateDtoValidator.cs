@@ -48,6 +48,24 @@ public class VehiculoRequestDtoValidator : AbstractValidator<VehiculoRequestDto>
             .When(x => !string.IsNullOrEmpty(x.Transmision));
 
         // ============================================================
+        // VALIDACIONES DE KILOMETRAJE
+        // ============================================================
+        
+        RuleFor(x => x.Kilometraje)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("El kilometraje debe ser mayor o igual a 0");
+
+        // ============================================================
+        // VALIDACIONES DE NOMBRE DE VEHÍCULO
+        // ============================================================
+        
+        RuleFor(x => x.NombreVehiculo)
+            .NotEmpty()
+            .WithMessage("El nombre del vehículo es requerido")
+            .MaximumLength(100)
+            .WithMessage("El nombre del vehículo no puede exceder 100 caracteres");
+
+        // ============================================================
         // VALIDACIONES DE PLACAS
         // ============================================================
         

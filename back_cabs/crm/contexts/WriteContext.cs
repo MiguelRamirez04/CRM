@@ -216,6 +216,9 @@ public class WriteContext : DbContext
             entity.Property(e => e.Activo).HasColumnName("activo").IsRequired().HasDefaultValue(true);
             entity.Property(e => e.Observaciones).HasColumnName("observaciones").HasColumnType("NVARCHAR(MAX)");
 
+            entity.Property(e => e.NombreVehiculo).HasColumnName("nombre_vehiculo").HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Kilometraje).HasColumnName("kilometraje");
+
             entity.HasIndex(e => e.Placas).IsUnique().HasFilter("[placas] IS NOT NULL");
 
             entity.HasKey(e => e.Id);
@@ -226,6 +229,10 @@ public class WriteContext : DbContext
             entity.Property(e => e.Placas).HasColumnName("placas").HasMaxLength(20);
             entity.Property(e => e.Activo).HasColumnName("activo").IsRequired(true);
             entity.Property(e => e.Observaciones).HasColumnName("observaciones");
+
+            // ✅ IMPORTANTE: Deshabilitar OUTPUT clause porque la tabla tiene triggers
+            // Esto es necesario para que EF Core funcione con triggers de auditoría
+            entity.ToTable(tb => tb.UseSqlOutputClause(false));
         });
 
         // Configuración de la entidad Catalog_Clientes (catalog_clientes)

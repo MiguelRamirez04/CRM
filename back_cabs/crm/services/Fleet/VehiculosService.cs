@@ -5,14 +5,37 @@ using CRM.DTOs.Response;
 using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
 using back_cabs.CRM.services;
+using System.Text.Json;
 
 namespace back_cabs.CRM.services.Fleet;
+
+/// <summary>
+/// Clases auxiliares para deserializar el historial JSON de cambios
+/// </summary>
+public class HistorialCambioJson
+{
+    public DateTime fecha { get; set; }
+    public int? usuario_id { get; set; }
+    public CambiosJson cambios { get; set; } = new CambiosJson();
+}
+
+public class CambiosJson
+{
+    public CambioDetalleJson? kilometraje { get; set; }
+    public CambioDetalleJson? observaciones { get; set; }
+}
+
+public class CambioDetalleJson
+{
+    public string? anterior { get; set; }
+    public string? nuevo { get; set; }
+}
 
 /// <summary>
 /// Servicio que maneja la lógica de negocio para vehículos.
 /// Usa Repository Pattern para acceso a datos con separación de responsabilidades.
 /// ✅ REDIS: Implementa caché para mejorar rendimiento en consultas frecuentes
-/// </summary> 
+/// </summary>
 public class VehiculosService
 {
     // ✅ Inyección de dependencias: Repository Pattern para acceso a datos
@@ -20,6 +43,7 @@ public class VehiculosService
     private readonly IVehiculoRepository _vehiculoRepository;
     private readonly ILogger<VehiculosService> _logger;
     private readonly ICacheService _cacheService; // ✅ REDIS: Servicio de caché
+    private readonly ReadOnlyContext _readContext; // Para consultar auditoría
 
     // ✅ REDIS: Constantes para claves de caché (consistencia y mantenibilidad)
     private const string CACHE_KEY_ALL_VEHICULOS = "vehiculos:active"; // Solo activos
@@ -29,11 +53,13 @@ public class VehiculosService
     public VehiculosService(
         IVehiculoRepository vehiculoRepository,
         ILogger<VehiculosService> logger,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        ReadOnlyContext readContext)
     {
         _vehiculoRepository = vehiculoRepository;
         _logger = logger;
         _cacheService = cacheService;
+        _readContext = readContext;
     }
 
     /// <summary>
@@ -65,7 +91,9 @@ public class VehiculosService
             EsDeEmpresa = v.EsDeEmpresa,
             Observaciones = v.Observaciones,
             Transmision = v.Transmision,
-            Activo = v.Activo
+            Activo = v.Activo,
+            NombreVehiculo = v.NombreVehiculo,
+            Kilometraje = v.Kilometraje
         }).ToList();
 
         // ✅ REDIS: Paso 3 - Guardar en caché para futuras consultas
@@ -134,7 +162,9 @@ public class VehiculosService
             EsDeEmpresa = request.EsDeEmpresa,      // ✅ HasDefaultValue(true) si no se especifica
             Placas = request.Placas,                // ✅ HasMaxLength(20) + UNIQUE constraint
             Activo = request.Activo,                // ✅ HasDefaultValue(true) si no se especifica
-            Observaciones = request.Observaciones   // ✅ NVARCHAR(MAX) aplicado automáticamente
+            Observaciones = request.Observaciones,   // ✅ NVARCHAR(MAX) aplicado automáticamente
+            NombreVehiculo = request.NombreVehiculo, // ✅ Nuevo campo requerido
+            Kilometraje = request.Kilometraje        // ✅ Nuevo campo opcional
         };
 
         // ✅ Repository Pattern: creación con validaciones automáticas
@@ -169,15 +199,18 @@ public class VehiculosService
             await ValidarPlacaUnica(request.Placas);
         }
 
-        // ✅ Asignación de propiedades - EF valida automáticamente:
-        // - Longitudes máximas (HasMaxLength)
-        // - Tipos de datos (HasColumnType)
-        vehiculo.TipoVehiculo = request.TipoVehiculo;    // ✅ VARCHAR(50)
-        vehiculo.Transmision = request.Transmision;      // ✅ VARCHAR(20)
-        vehiculo.EsDeEmpresa = request.EsDeEmpresa;      // ✅ BIT DEFAULT 1
-        vehiculo.Placas = request.Placas;                // ✅ VARCHAR(20) UNIQUE
-        vehiculo.Activo = request.Activo;                // ✅ BIT DEFAULT 1
-        vehiculo.Observaciones = request.Observaciones;  // ✅ NVARCHAR(MAX)
+        // ✅ Actualizar todos los campos editables
+        // - Validación de unicidad para placas si cambiaron
+        // - Kilometraje y observaciones se actualizan siempre (son los campos principales para auditoría)
+        // - Activo es requerido
+        vehiculo.Placas = request.Placas;                    // ✅ VARCHAR(20) UNIQUE
+        vehiculo.Activo = request.Activo;                    // ✅ BIT DEFAULT 1
+        vehiculo.Kilometraje = request.Kilometraje;          // ✅ INT NULL - Auditado
+        vehiculo.Observaciones = request.Observaciones;      // ✅ NVARCHAR(MAX) - Auditado
+        vehiculo.TipoVehiculo = request.TipoVehiculo;        // ✅ VARCHAR(50)
+        vehiculo.Transmision = request.Transmision;          // ✅ VARCHAR(20)
+        vehiculo.EsDeEmpresa = request.EsDeEmpresa;          // ✅ BIT
+        vehiculo.NombreVehiculo = request.NombreVehiculo;    // ✅ VARCHAR(100) REQUIRED
 
         // ✅ Repository Pattern: actualización con validaciones automáticas
         var vehiculoActualizado = await _vehiculoRepository.UpdateAsync(vehiculo);
@@ -207,6 +240,74 @@ public class VehiculosService
         }
 
         return eliminado;
+    }
+
+    /// <summary>
+    /// Obtiene el historial de cambios de un vehículo desde el campo JSON HistorialCambios.
+    /// </summary>
+    public async Task<IEnumerable<VehiculoHistorialResponseDto>> ObtenerHistorialAsync(int vehiculoId)
+    {
+        try
+        {
+            var vehiculo = await _vehiculoRepository.GetByIdAsync(vehiculoId);
+            if (vehiculo == null || string.IsNullOrEmpty(vehiculo.HistorialCambios))
+            {
+                return new List<VehiculoHistorialResponseDto>();
+            }
+
+            // Parsear el JSON del historial y convertirlo al formato esperado
+            var historial = JsonSerializer.Deserialize<List<HistorialCambioJson>>(vehiculo.HistorialCambios);
+            if (historial == null)
+            {
+                return new List<VehiculoHistorialResponseDto>();
+            }
+
+            var resultado = new List<VehiculoHistorialResponseDto>();
+            int idCounter = 1;
+
+            foreach (var cambio in historial.OrderByDescending(h => h.fecha))
+            {
+                // Para cada cambio, crear entradas separadas por campo modificado
+                if (cambio.cambios.kilometraje != null)
+                {
+                    resultado.Add(new VehiculoHistorialResponseDto
+                    {
+                        Id = idCounter++,
+                        VehiculoId = vehiculoId,
+                        CampoModificado = "kilometraje",
+                        ValorAnterior = cambio.cambios.kilometraje.anterior,
+                        ValorNuevo = cambio.cambios.kilometraje.nuevo,
+                        UsuarioId = cambio.usuario_id ?? 0,
+                        UsuarioNombre = $"Usuario {cambio.usuario_id ?? 0}", // TODO: Obtener nombre real del usuario
+                        FechaCambio = cambio.fecha,
+                        TipoCambio = "Actualización"
+                    });
+                }
+
+                if (cambio.cambios.observaciones != null)
+                {
+                    resultado.Add(new VehiculoHistorialResponseDto
+                    {
+                        Id = idCounter++,
+                        VehiculoId = vehiculoId,
+                        CampoModificado = "observaciones",
+                        ValorAnterior = cambio.cambios.observaciones.anterior,
+                        ValorNuevo = cambio.cambios.observaciones.nuevo,
+                        UsuarioId = cambio.usuario_id ?? 0,
+                        UsuarioNombre = $"Usuario {cambio.usuario_id ?? 0}", // TODO: Obtener nombre real del usuario
+                        FechaCambio = cambio.fecha,
+                        TipoCambio = "Actualización"
+                    });
+                }
+            }
+
+            return resultado;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener historial para vehículo {VehiculoId}", vehiculoId);
+            return new List<VehiculoHistorialResponseDto>();
+        }
     }
 
     #region Métodos Auxiliares
@@ -262,7 +363,14 @@ public class VehiculosService
             EsDeEmpresa = vehiculo.EsDeEmpresa,        // ✅ Mapeado correctamente
             Placas = vehiculo.Placas,                  // ✅ Mapeado correctamente
             Activo = vehiculo.Activo,                  // ✅ Mapeado correctamente
-            Observaciones = vehiculo.Observaciones     // ✅ Mapeado correctamente
+            Observaciones = vehiculo.Observaciones,     // ✅ Mapeado correctamente
+            NombreVehiculo = vehiculo.NombreVehiculo,  // ✅ Nuevo campo requerido
+            Kilometraje = vehiculo.Kilometraje,         // ✅ Nuevo campo requerido
+            CreadoEn = vehiculo.CreadoEn,
+            CreadoPorUsuarioId = vehiculo.CreadoPorUsuarioId,
+            ActualizadoEn = vehiculo.ActualizadoEn,
+            ActualizadoPorUsuarioId = vehiculo.ActualizadoPorUsuarioId,
+            HistorialCambios = vehiculo.HistorialCambios
         };
     }
 

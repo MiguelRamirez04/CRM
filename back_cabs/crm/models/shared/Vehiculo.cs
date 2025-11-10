@@ -57,5 +57,50 @@ namespace back_cabs.CRM.models.Shared
         /// </summary>
         [Column("observaciones")]
         public string? Observaciones { get; set; }
+
+        /// <summary>
+        /// Nombre del vehículo
+        /// </summary>
+        [Required]
+        [Column("nombre_vehiculo")]
+        [StringLength(100)]
+        public string NombreVehiculo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Kilometraje actual del vehículo
+        /// </summary>
+        [Required]
+        [Column("kilometraje")]
+        public int Kilometraje { get; set; }
+
+        /// <summary>
+        /// Fecha de creación del registro
+        /// </summary>
+        [Column("creado_en")]
+        public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// ID del usuario que creó el registro
+        /// </summary>
+        [Column("creado_por_usuario_id")]
+        public int? CreadoPorUsuarioId { get; set; }
+
+        /// <summary>
+        /// Fecha de última actualización del registro
+        /// </summary>
+        [Column("actualizado_en")]
+        public DateTime? ActualizadoEn { get; set; }
+
+        /// <summary>
+        /// ID del usuario que realizó la última actualización
+        /// </summary>
+        [Column("actualizado_por_usuario_id")]
+        public int? ActualizadoPorUsuarioId { get; set; }
+
+        /// <summary>
+        /// Historial de cambios en formato JSON (array de objetos con fecha, usuario_id y cambios)
+        /// </summary>
+        [Column("historial_cambios")]
+        public string? HistorialCambios { get; set; }
     }
 }

@@ -3,6 +3,18 @@ using back_cabs.CRM.Interfaces.Shared;
 using back_cabs.CRM.models.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using System.Data;
+using System.Text.Json;
+
+// Clases auxiliares para serialización del historial
+public class HistorialCambio
+{
+    public DateTime fecha { get; set; }
+    public int? usuario_id { get; set; }
+    public Dictionary<string, object> cambios { get; set; } = new Dictionary<string, object>();
+}
 
 namespace back_cabs.CRM.repositories.Shared
 {
@@ -15,17 +27,45 @@ namespace back_cabs.CRM.repositories.Shared
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
         private readonly ILogger<VehiculoRepository> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public VehiculoRepository(
             WriteContext writeContext,
             ReadOnlyContext readContext,
-            ILogger<VehiculoRepository> logger)
+            ILogger<VehiculoRepository> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
             _writeContext = writeContext;
             _readContext = readContext;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
+        /// <summary>
+        /// Obtiene el ID del usuario actual desde los claims HTTP
+        /// </summary>
+        private int GetCurrentUserId()
+        {
+            try
+            {
+                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return userId;
+                }
+                
+                _logger.LogWarning("No se pudo obtener el ID del usuario desde los claims. Usando usuario por defecto.");
+                return 1; // Usuario por defecto (Sistema)
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error al obtener el ID del usuario. Usando usuario por defecto.");
+                return 1;
+            }
+        }
+
+        /// <summary>
+        /// Registra un evento de auditoría en la tabla de auditoría
         // 📖 IMPLEMENTACIÓN DE LECTURAS
 
         public async Task<IEnumerable<Vehiculo>> GetAllAsync()
@@ -173,11 +213,18 @@ namespace back_cabs.CRM.repositories.Shared
         {
             try
             {
+                // Establecer campos de auditoría de creación
+                vehiculo.CreadoEn = DateTime.UtcNow;
+                vehiculo.CreadoPorUsuarioId = GetCurrentUserId();
+
                 _writeContext.Vehiculos.Add(vehiculo);
                 await _writeContext.SaveChangesAsync();
 
                 _logger.LogInformation("Vehículo creado con ID {Id} y placas {Placas}",
                     vehiculo.Id, vehiculo.Placas);
+
+                // La auditoría de creación se maneja automáticamente por triggers en la BD
+
                 return vehiculo;
             }
             catch (Exception ex)
@@ -191,10 +238,62 @@ namespace back_cabs.CRM.repositories.Shared
         {
             try
             {
+                // Obtener el vehículo anterior para comparar cambios
+                var vehiculoAnterior = await _readContext.Vehiculos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(v => v.Id == vehiculo.Id);
+
+                if (vehiculoAnterior == null)
+                {
+                    throw new KeyNotFoundException($"Vehículo con ID {vehiculo.Id} no encontrado");
+                }
+
+                // Comparar cambios en campos auditables
+                var cambios = new Dictionary<string, object>();
+                if (vehiculoAnterior.Kilometraje != vehiculo.Kilometraje)
+                {
+                    cambios["kilometraje"] = new { anterior = vehiculoAnterior.Kilometraje.ToString(), nuevo = vehiculo.Kilometraje.ToString() };
+                }
+                if (vehiculoAnterior.Observaciones != vehiculo.Observaciones)
+                {
+                    cambios["observaciones"] = new { anterior = vehiculoAnterior.Observaciones, nuevo = vehiculo.Observaciones };
+                }
+
+                // Si hay cambios auditables, actualizar el historial
+                if (cambios.Any())
+                {
+                    var entradaHistorial = new HistorialCambio
+                    {
+                        fecha = DateTime.UtcNow,
+                        usuario_id = GetCurrentUserId(),
+                        cambios = cambios
+                    };
+
+                    // Obtener historial existente o crear uno nuevo
+                    var historialExistente = string.IsNullOrEmpty(vehiculoAnterior.HistorialCambios)
+                        ? new List<HistorialCambio>()
+                        : JsonSerializer.Deserialize<List<HistorialCambio>>(vehiculoAnterior.HistorialCambios) ?? new List<HistorialCambio>();
+
+                    historialExistente.Add(entradaHistorial);
+
+                    // Serializar de vuelta a JSON
+                    vehiculo.HistorialCambios = JsonSerializer.Serialize(historialExistente);
+                }
+                else
+                {
+                    // Mantener el historial existente si no hay cambios
+                    vehiculo.HistorialCambios = vehiculoAnterior.HistorialCambios;
+                }
+
+                // Actualizar campos de auditoría
+                vehiculo.ActualizadoEn = DateTime.UtcNow;
+                vehiculo.ActualizadoPorUsuarioId = GetCurrentUserId();
+
                 _writeContext.Vehiculos.Update(vehiculo);
                 await _writeContext.SaveChangesAsync();
 
                 _logger.LogInformation("Vehículo actualizado con ID {Id}", vehiculo.Id);
+
                 return vehiculo;
             }
             catch (Exception ex)
@@ -219,6 +318,9 @@ namespace back_cabs.CRM.repositories.Shared
                 await _writeContext.SaveChangesAsync();
 
                 _logger.LogInformation("Vehículo eliminado con ID {Id}", id);
+
+                // La auditoría de eliminación se maneja automáticamente por triggers en la BD
+
                 return true;
             }
             catch (Exception ex)

@@ -10,6 +10,8 @@ export interface Vehiculo {
   placas: string | null;
   activo: boolean;
   observaciones: string | null;
+  nombreVehiculo: string;
+  kilometraje: number | null;
 }
 
 /**
@@ -23,9 +25,31 @@ export interface VehiculoCreateDto {
   placas: string | null;
   activo: boolean;
   observaciones: string | null;
+  nombreVehiculo: string;
+  kilometraje: number | null;
 }
 
 /**
  * DTO para ACTUALIZAR un vehículo.
+ * Solo permite modificar: kilometraje, placas y activo
  */
-export interface VehiculoUpdateDto extends Partial<VehiculoCreateDto> {}
+export interface VehiculoUpdateDto {
+  kilometraje?: number | null;
+  placas?: string | null;
+  activo?: boolean;
+}
+
+/**
+ * DTO para el historial de cambios del vehículo
+ */
+export interface VehiculoHistorial {
+  id: number;
+  vehiculoId: number;
+  campoModificado: string;
+  valorAnterior: string | null;
+  valorNuevo: string | null;
+  usuarioId: number;
+  usuarioNombre: string;
+  fechaCambio: Date;
+  tipoCambio: string;
+}

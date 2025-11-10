@@ -28,7 +28,7 @@ public class VehiculosController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<VehiculoResponseDto>), 200)]
     public async Task<IActionResult> GetAll()
     {
-        var key = "vehiculos:all";
+        var key = "vehiculos:active";
         var cached = await _cache.GetAsync<IEnumerable<VehiculoResponseDto>>(key);
         if (cached != null) return Ok(cached);
 
@@ -117,6 +117,22 @@ public class VehiculosController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al actualizar el vehículo con ID {VehiculoId}", id);
+            return StatusCode(500, new { message = "Error interno del servidor." });
+        }
+    }
+
+    [HttpGet("{id}/historial")]
+    [ProducesResponseType(typeof(IEnumerable<VehiculoHistorialResponseDto>), 200)]
+    public async Task<IActionResult> GetHistorial(int id)
+    {
+        try
+        {
+            var historial = await _service.ObtenerHistorialAsync(id);
+            return Ok(historial);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener historial del vehículo {VehiculoId}", id);
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }

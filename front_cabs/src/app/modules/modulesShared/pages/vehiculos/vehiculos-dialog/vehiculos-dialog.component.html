@@ -1,0 +1,143 @@
+<!-- Modal Crear Vehículo -->
+<div *ngIf="mostrarModalCrear" class="modal-overlay" (click)="cerrar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nuevo Vehículo</h2>
+      <button class="btn-close" (click)="cerrar()" [disabled]="cargando()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="error()" class="alert alert-error">
+        <span class="alert-icon"></span>
+        <span>{{ error() }}</span>
+      </div>
+      <div *ngIf="exito()" class="alert alert-success">
+        <span class="alert-icon"></span>
+        <span>{{ exito() }}</span>
+      </div>
+      <div *ngIf="cargando()" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Creando vehículo...</p>
+      </div>
+      <form [class.disabled]="cargando()">
+        <div class="form-group">
+          <label>Nombre del Vehículo *</label>
+          <input type="text" [(ngModel)]="formularioCrear().nombreVehiculo" name="nombreVehiculo" placeholder="Ej: Toyota Corolla 2020" [disabled]="cargando()" required>
+        </div>
+        <div class="form-group">
+          <label>Placas *</label>
+          <input type="text" [(ngModel)]="formularioCrear().placas" name="placas" placeholder="Ej: ABC-123" [disabled]="cargando()" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Vehículo</label>
+            <select [(ngModel)]="formularioCrear().tipoVehiculo" name="tipoVehiculo" [disabled]="cargando()">
+              <option [value]="null">Seleccione tipo</option>
+              <option value="Sedán">Sedán</option>
+              <option value="SUV">SUV</option>
+              <option value="Pickup">Pickup</option>
+              <option value="Hatchback">Hatchback</option>
+              <option value="Van">Van</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Transmisión</label>
+            <select [(ngModel)]="formularioCrear().transmision" name="transmision" [disabled]="cargando()">
+              <option [value]="null">Seleccione transmisión</option>
+              <option value="Manual">Manual</option>
+              <option value="Automática">Automática</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kilometraje</label>
+            <input type="number" [(ngModel)]="formularioCrear().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0">
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="formularioCrear().activo" name="activo" [disabled]="cargando()">
+              Activo
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>¿Es de la empresa?</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" [(ngModel)]="formularioCrear().esDeEmpresa" name="esDeEmpresa" [value]="true" [disabled]="cargando()">
+              Sí
+            </label>
+            <label class="radio-label">
+              <input type="radio" [(ngModel)]="formularioCrear().esDeEmpresa" name="esDeEmpresa" [value]="false" [disabled]="cargando()">
+              No
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observaciones</label>
+          <textarea [(ngModel)]="formularioCrear().observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." [disabled]="cargando()"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrar()" [disabled]="cargando()">Cancelar</button>
+      <button class="btn btn-primary" (click)="crearVehiculo()" [disabled]="cargando()">
+        <span *ngIf="!cargando()">Crear Vehículo</span>
+        <span *ngIf="cargando()">Creando...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Vehículo -->
+<div *ngIf="mostrarModalEditar" class="modal-overlay" (click)="cerrar()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Vehículo</h2>
+      <button class="btn-close" (click)="cerrar()" [disabled]="cargando()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="error()" class="alert alert-error">
+        <span class="alert-icon"></span>
+        <span>{{ error() }}</span>
+      </div>
+      <div *ngIf="exito()" class="alert alert-success">
+        <span class="alert-icon"></span>
+        <span>{{ exito() }}</span>
+      </div>
+      <div *ngIf="cargando()" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Actualizando vehículo...</p>
+      </div>
+      <div class="info-banner">
+        <strong>Nota:</strong> Solo se pueden modificar el kilometraje y el estado activo del vehículo. Las placas están pre-rellenadas.
+      </div>
+      <form [class.disabled]="cargando()">
+        <div class="form-group">
+          <label>Placas *</label>
+          <input type="text" [(ngModel)]="formularioEditar().placas" name="placas" placeholder="Ej: ABC-123" [disabled]="true" readonly class="readonly-input" required>
+          <small class="text-muted">Las placas no se pueden modificar desde aquí</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Kilometraje</label>
+            <input type="number" [(ngModel)]="formularioEditar().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0" autofocus>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="formularioEditar().activo" name="activo" [disabled]="cargando()">
+              Activo
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cerrar()" [disabled]="cargando()">Cancelar</button>
+      <button class="btn btn-primary" (click)="actualizarVehiculo()" [disabled]="cargando()">
+        <span *ngIf="!cargando()">Actualizar Vehículo</span>
+        <span *ngIf="cargando()">Actualizando...</span>
+      </button>
+    </div>
+  </div>
+</div>

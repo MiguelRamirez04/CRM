@@ -18,4 +18,10 @@ public class VehiculoRequestDto
     public bool Activo { get; set; } = true;
 
     public string? Observaciones { get; set; }
+
+    [MaxLength(100)]
+    public string NombreVehiculo { get; set; } = string.Empty;
+
+    [Required]
+    public int Kilometraje { get; set; }
 }

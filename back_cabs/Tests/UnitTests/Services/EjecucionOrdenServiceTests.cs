@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using back_cabs.CRM.services.Auth;
 
 namespace back_cabs.Tests.UnitTests.Services
 {
@@ -31,12 +32,14 @@ namespace back_cabs.Tests.UnitTests.Services
         private readonly WriteContext _writeContext;              // ✅ Contexto REAL
         private readonly ReadOnlyContext _readContext;            // ✅ Contexto REAL
         private readonly Mock<ILogger<EjecucionOrdenService>> _mockLogger;
+        private readonly Mock<UsuarioAuthService> _mockUsuarioAuthService;
         private readonly EjecucionOrdenService _service;
 
         public EjecucionOrdenServiceTests()
         {
             _mockRepository = new Mock<IEjecucionOrdenRepository>();
             _mockLogger = new Mock<ILogger<EjecucionOrdenService>>();
+            _mockUsuarioAuthService = new Mock<UsuarioAuthService>();
 
             // ✅ Crear contextos REALES con InMemory database - USAR LA MISMA DATABASE
             var databaseName = Guid.NewGuid().ToString();
@@ -59,6 +62,7 @@ namespace back_cabs.Tests.UnitTests.Services
                 _mockRepository.Object,
                 _writeContext,              // ✅ Contexto real
                 _readContext,               // ✅ Contexto real
+                _mockUsuarioAuthService.Object, // ✅ Mock del servicio de usuarios
                 _mockLogger.Object
             );
         }

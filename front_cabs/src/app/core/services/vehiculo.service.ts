@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 // Ajusta la ruta para subir a 'core/models'
-import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto } from '../../../core/models/vehiculo.interface'; 
-import { environment } from '../../../../environments/environment';
+import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto, VehiculoHistorial } from '../models/vehiculo.interface'; 
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -41,6 +41,22 @@ export class VehiculoService {
   updateVehiculo(id: number, dto: VehiculoUpdateDto): Observable<Vehiculo> {
     // PUT -> /api/Vehiculos/1
     return this.http.put<Vehiculo>(`${this.baseUrl}/${id}`, dto);
+  }
+
+  /**
+   * Obtiene un vehículo específico por ID.
+   */
+  getVehiculoById(id: number): Observable<Vehiculo> {
+    // GET -> /api/Vehiculos/1
+    return this.http.get<Vehiculo>(`${this.baseUrl}/${id}`);
+  }
+
+  /**
+   * Obtiene el historial de cambios de un vehículo.
+   */
+  getVehiculoHistorial(id: number): Observable<VehiculoHistorial[]> {
+    // GET -> /api/Vehiculos/1/historial
+    return this.http.get<VehiculoHistorial[]>(`${this.baseUrl}/${id}/historial`);
   }
 
   /**

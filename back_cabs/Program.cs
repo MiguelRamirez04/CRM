@@ -19,6 +19,7 @@ using back_cabs.CRM.Interfaces;
 using back_cabs.CRM.services.shared;
 using back_cabs.CRM.Repositories;
 using back_cabs.CRM.Services.Shared;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,9 @@ builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Configurar Serilog temprano para capturar logs de startup
 builder.Host.UseSerilog();
+
+// ✅ Registrar IHttpContextAccessor para acceder al usuario autenticado en repositorios
+builder.Services.AddHttpContextAccessor();
 
 // Agregar configuraciones centralizadas
 builder.Services.AddLoggingConfiguration(builder.Configuration);
@@ -210,6 +214,8 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 
 var app = builder.Build();
 
+
+
 // Middleware pipeline con seguridad mejorada
 app.UseGlobalErrorHandling();
 app.UseSecurityHeaders();
@@ -218,6 +224,9 @@ app.UseRequestResponseLogging();
 // CORS (usar política apropiada según el entorno)
 var corsPolicy = app.Environment.IsProduction() ? "Production" : "SecureFrontend";
 app.UseCors(corsPolicy);
+
+// Servir archivos estáticos (para Swagger UI custom scripts)
+app.UseStaticFiles();
 
 // Autenticación y autorización
 app.UseAuthentication();
@@ -234,6 +243,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API v1");
         c.RoutePrefix = "swagger";
+        // Inyectar script para manejar CSRF token automáticamente
+        c.InjectJavascript("/swagger-ui/csrf-interceptor.js");
     });
 }
 

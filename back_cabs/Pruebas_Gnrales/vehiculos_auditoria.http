@@ -1,0 +1,218 @@
+### ===========================================
+### PRUEBAS API VEHÍCULOS - AUDITORÍA
+### ===========================================
+### Archivo para probar los endpoints con VS Code REST Client
+### Extensión requerida: humao.rest-client
+
+@baseUrl = https://localhost:7000
+@contentType = application/json
+
+### Variables globales (actualizar después de login)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIzIiwiZW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsInVuaXF1ZV9uYW1lIjoic3RyaW5nIHN0cmluZyIsInJvbGUiOiJBRE1JTklTVFJBQ0lPTiIsIm5iZiI6MTc2MjYyNzM1OSwiZXhwIjoxNzYyNjI5MTU5LCJpYXQiOjE3NjI2MjczNTksImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.1rR7IhCtdSRRdSqdCp6Jygh-TiyWbrJ95jpBDY1XsIU
+@vehiculoId = 2
+
+### ===========================================
+### 1. AUTENTICACIÓN
+### ===========================================
+
+### 1.1 Login - Obtener Token JWT
+POST {{baseUrl}}/api/Auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@example.com",
+  "password": "AdminPass123!"
+}
+
+
+### Después de ejecutar el login, copia el token y actualízalo en @token
+
+### ===========================================
+### 2. CREAR VEHÍCULO (PRUEBA TRIGGER INSERT)
+### ===========================================
+
+### 2.1 Crear Vehículo de Prueba
+POST {{baseUrl}}/api/Vehiculos
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "tipoVehiculo": "Camioneta",
+  "transmision": "Manual",
+  "esDeEmpresa": true,
+  "placas": "TEST-AUDIT-001",
+  "activo": true,
+  "observaciones": "Vehículo creado para prueba de auditoría",
+  "nombreVehiculo": "Camioneta Nissan NP300 Prueba",
+  "kilometraje": 50000
+}
+
+### Después de crear, copia el ID y actualízalo en @vehiculoId
+
+### ===========================================
+### 3. CONSULTAR HISTORIAL (VERIFICAR CREACIÓN)
+### ===========================================
+
+### 3.1 Obtener Historial del Vehículo
+GET {{baseUrl}}/api/Vehiculos/{{vehiculoId}}/historial
+Authorization: Bearer {{token}}
+
+### Deberías ver un registro tipo "CREADO" con campo_modificado = "vehiculo_creado"
+
+### ===========================================
+### 4. ACTUALIZAR KILOMETRAJE (PRUEBA TRIGGER UPDATE)
+### ===========================================
+
+### 4.1 Actualizar Solo Kilometraje
+PUT {{baseUrl}}/api/Vehiculos/{{vehiculoId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "tipoVehiculo": "Camioneta",
+  "transmision": "Manual",
+  "esDeEmpresa": true,
+  "placas": "TEST-AUDIT-001",
+  "activo": true,
+  "observaciones": "Vehículo creado para prueba de auditoría",
+  "nombreVehiculo": "Camioneta Nissan NP300 Prueba",
+  "kilometraje": 55000
+}
+
+### 4.2 Verificar Auditoría de Kilometraje
+GET {{baseUrl}}/api/Vehiculos/{{vehiculoId}}/historial
+Authorization: Bearer {{token}}
+
+### Deberías ver un nuevo registro con:
+### - campo_modificado = "kilometraje"
+### - valor_anterior = "50000"
+### - valor_nuevo = "55000"
+
+### ===========================================
+### 5. ACTUALIZAR OBSERVACIONES
+### ===========================================
+
+### 5.1 Actualizar Solo Observaciones
+PUT {{baseUrl}}/api/Vehiculos/{{vehiculoId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "tipoVehiculo": "Camioneta",
+  "transmision": "Manual",
+  "esDeEmpresa": true,
+  "placas": "TEST-AUDIT-001",
+  "activo": true,
+  "observaciones": "Requiere mantenimiento preventivo urgente. Cambio de aceite vencido.",
+  "nombreVehiculo": "Camioneta Nissan NP300 Prueba",
+  "kilometraje": 55000
+}
+
+### 5.2 Verificar Auditoría de Observaciones
+GET {{baseUrl}}/api/Vehiculos/{{vehiculoId}}/historial
+Authorization: Bearer {{token}}
+
+### Deberías ver un nuevo registro con:
+### - campo_modificado = "observaciones"
+### - valor_anterior = "Vehículo creado para prueba de auditoría"
+### - valor_nuevo = "Requiere mantenimiento preventivo urgente..."
+
+### ===========================================
+### 6. ACTUALIZACIÓN MÚLTIPLE
+### ===========================================
+
+### 6.1 Actualizar Varios Campos a la Vez
+PUT {{baseUrl}}/api/Vehiculos/{{vehiculoId}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "tipoVehiculo": "Camioneta",
+  "transmision": "Manual",
+  "esDeEmpresa": true,
+  "placas": "TEST-AUDIT-NEW",
+  "activo": true,
+  "observaciones": "Placas actualizadas. Vehículo en óptimas condiciones tras mantenimiento.",
+  "nombreVehiculo": "Camioneta Nissan NP300 Prueba",
+  "kilometraje": 60000
+}
+
+### 6.2 Verificar Auditoría Múltiple
+GET {{baseUrl}}/api/Vehiculos/{{vehiculoId}}/historial
+Authorization: Bearer {{token}}
+
+### Deberías ver 3 nuevos registros:
+### 1. campo_modificado = "kilometraje" (55000 → 60000)
+### 2. campo_modificado = "observaciones"
+### 3. campo_modificado = "placas" (TEST-AUDIT-001 → TEST-AUDIT-NEW)
+
+### ===========================================
+### 7. CONSULTAS ADICIONALES
+### ===========================================
+
+### 7.1 Obtener Todos los Vehículos
+GET {{baseUrl}}/api/Vehiculos
+Authorization: Bearer {{token}}
+
+### 7.2 Obtener Vehículo por ID
+GET {{baseUrl}}/api/Vehiculos/{{vehiculoId}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### 8. LIMPIEZA (OPCIONAL)
+### ===========================================
+
+### 8.1 Eliminar Vehículo de Prueba
+DELETE {{baseUrl}}/api/Vehiculos/{{vehiculoId}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### 9. PRUEBAS DE ERROR (VALIDACIONES)
+### ===========================================
+
+### 9.1 Error: Placas Duplicadas
+POST {{baseUrl}}/api/Vehiculos
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "tipoVehiculo": "Sedan",
+  "transmision": "Automática",
+  "esDeEmpresa": true,
+  "placas": "TEST-AUDIT-001",
+  "activo": true,
+  "observaciones": "Intento de duplicar placas",
+  "nombreVehiculo": "Vehículo Duplicado",
+  "kilometraje": 10000
+}
+
+### Debería retornar 400 Bad Request: "Las placas ya están registradas"
+
+### 9.2 Error: Sin Autenticación
+GET {{baseUrl}}/api/Vehiculos
+
+### Debería retornar 401 Unauthorized
+
+### 9.3 Error: Vehículo No Existe
+GET {{baseUrl}}/api/Vehiculos/99999/historial
+Authorization: Bearer {{token}}
+
+### Debería retornar [] (array vacío) o 404
+
+### ===========================================
+### NOTAS DE USO
+### ===========================================
+### 
+### 1. Instalar extensión "REST Client" en VS Code
+### 2. Ejecutar "1.1 Login" y copiar el token
+### 3. Pegar el token en la variable @token (línea 10)
+### 4. Ejecutar "2.1 Crear Vehículo" y copiar el ID
+### 5. Pegar el ID en la variable @vehiculoId (línea 11)
+### 6. Ejecutar el resto de requests en orden
+### 
+### ✅ VERIFICACIÓN EXITOSA:
+### - Cada actualización genera registro(s) en auditoría
+### - usuarioId corresponde al usuario autenticado
+### - Valores anterior/nuevo son correctos
+### - Fechas ordenadas cronológicamente
+###

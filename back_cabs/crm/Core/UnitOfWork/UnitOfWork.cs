@@ -26,6 +26,7 @@ using back_cabs.CRM.repositories.Recepcion;
 using back_cabs.CRM.repositories.Shared;
 using back_cabs.CRM.repositories.Soporte;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.AspNetCore.Http;
 
 namespace back_cabs.CRM.Core.UnitOfWork
 {
@@ -37,6 +38,7 @@ namespace back_cabs.CRM.Core.UnitOfWork
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private IDbContextTransaction? _transaction;
         
         // Repositorios lazy-loaded (se crean solo cuando se accede a ellos)
@@ -53,14 +55,17 @@ namespace back_cabs.CRM.Core.UnitOfWork
         /// <param name="writeContext">Contexto de base de datos para operaciones de escritura</param>
         /// <param name="readContext">Contexto de base de datos para operaciones de lectura</param>
         /// <param name="loggerFactory">Fábrica para crear loggers para repositorios</param>
+        /// <param name="httpContextAccessor">Accessor para obtener información del usuario autenticado</param>
         public UnitOfWork(
             WriteContext writeContext, 
             ReadOnlyContext readContext,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IHttpContextAccessor httpContextAccessor)
         {
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -122,7 +127,8 @@ namespace back_cabs.CRM.Core.UnitOfWork
                 _vehiculoRepository ??= new VehiculoRepository(
                     _writeContext, 
                     _readContext, 
-                    _loggerFactory.CreateLogger<VehiculoRepository>());
+                    _loggerFactory.CreateLogger<VehiculoRepository>(),
+                    _httpContextAccessor);
                 return _vehiculoRepository;
             }
         }

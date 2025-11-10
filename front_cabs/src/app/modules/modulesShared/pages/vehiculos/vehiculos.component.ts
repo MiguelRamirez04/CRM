@@ -1,18 +1,22 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Importa ReactiveFormsModule
-import { VehiculoService } from '../../../soporte/services/vehiculo.service';
+import { Router, ActivatedRoute } from '@angular/router';
+import { VehiculoService } from '../../../../core/services/vehiculo.service';
 import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto } from '../../../../core/models/vehiculo.interface';
+import { VehiculosDialogComponent } from './vehiculos-dialog/vehiculos-dialog.component';
 
 @Component({
   selector: 'app-vehiculos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule], // Usa ReactiveFormsModule
+  imports: [CommonModule, ReactiveFormsModule, VehiculosDialogComponent], // Usa ReactiveFormsModule
   templateUrl: './vehiculos.component.html',
   styleUrls: ['./vehiculos.component.css'] // Apunta al CSS
 })
 export class VehiculosComponent implements OnInit {
   private readonly vehiculoService = inject(VehiculoService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private fb = inject(FormBuilder); // Inyecta FormBuilder
 
   // Signals para estado reactivo
@@ -24,21 +28,27 @@ export class VehiculosComponent implements OnInit {
   // Filtros
   filtroTermino = signal<string>('');
 
+  // Computed values para estadísticas
+  vehiculosActivos = computed(() => this.vehiculos().filter(v => v.activo).length);
+
   // Modal states
   mostrarModal = signal(false);
   modoModal = signal<'crear' | 'editar'>('crear');
+  mostrarPanelDetalles = signal(false);
 
   // Formulario Reactivo
   formularioVehiculo: FormGroup;
 
   constructor() {
-    // Inicializa el formulario (coincide con tu modal y BD)
+    // Inicializa el formulario con los nuevos campos
     this.formularioVehiculo = this.fb.group({
+      nombreVehiculo: ['', [Validators.required, Validators.maxLength(100)]],
       placas: ['', [Validators.required, Validators.maxLength(20)]],
       tipoVehiculo: ['Automóvil', [Validators.required, Validators.maxLength(50)]],
       transmision: ['Manual', [Validators.required]],
       esDeEmpresa: [true, Validators.required],
       activo: [true, Validators.required],
+      kilometraje: [null],
       observaciones: ['']
     });
   }
@@ -66,11 +76,13 @@ export class VehiculosComponent implements OnInit {
 
   abrirModalCrear(): void {
     this.formularioVehiculo.reset({
+      nombreVehiculo: '',
       placas: '',
       tipoVehiculo: 'Automóvil',
       transmision: 'Manual',
       esDeEmpresa: true,
       activo: true,
+      kilometraje: null,
       observaciones: ''
     });
     this.modoModal.set('crear');
@@ -87,8 +99,10 @@ export class VehiculosComponent implements OnInit {
     this.error.set(null); // Limpia error al abrir
   }
 
-  cerrarModal(): void {
+  cerrarModal(event?: string): void {
     this.mostrarModal.set(false);
+    this.vehiculoSeleccionado.set(null);
+    this.modoModal.set('crear');
     this.error.set(null); // Limpia error al cerrar
   }
 
@@ -101,21 +115,36 @@ export class VehiculosComponent implements OnInit {
 
     this.cargando.set(true);
     this.error.set(null);
-    const dto = this.formularioVehiculo.value as VehiculoCreateDto;
 
-    const obs = this.modoModal() === 'crear'
-      ? this.vehiculoService.createVehiculo(dto)
-      : this.vehiculoService.updateVehiculo(this.vehiculoSeleccionado()!.id, dto as VehiculoUpdateDto);
+    if (this.modoModal() === 'crear') {
+      // Para crear, envía todos los campos
+      const dto = this.formularioVehiculo.value as VehiculoCreateDto;
+      this.vehiculoService.createVehiculo(dto).subscribe({
+        next: () => {
+          this.cargando.set(false);
+          this.cerrarModal();
+          this.cargarVehiculos(); // Recarga la lista
+        },
+        error: (err) => this.handleError('Error al guardar el vehículo.', err, false),
+      });
+    } else {
+      // Para editar, solo envía los campos permitidos: kilometraje, placas y activo
+      const formValue = this.formularioVehiculo.value;
+      const dto: VehiculoUpdateDto = {
+        placas: formValue.placas,
+        activo: formValue.activo,
+        kilometraje: formValue.kilometraje
+      };
 
-    obs.subscribe({
-      next: () => {
-        this.cargando.set(false);
-        this.cerrarModal();
-        this.cargarVehiculos(); // Recarga la lista
-      },
-      // Muestra el error en el modal (setGlobalError = false)
-      error: (err) => this.handleError('Error al guardar el vehículo.', err, false),
-    });
+      this.vehiculoService.updateVehiculo(this.vehiculoSeleccionado()!.id, dto).subscribe({
+        next: () => {
+          this.cargando.set(false);
+          this.cerrarModal();
+          this.cargarVehiculos(); // Recarga la lista
+        },
+        error: (err) => this.handleError('Error al guardar el vehículo.', err, false),
+      });
+    }
   }
 
   onEliminar(vehiculo: Vehiculo): void {
@@ -132,6 +161,53 @@ export class VehiculosComponent implements OnInit {
         error: (err) => this.handleError('Error al eliminar el vehículo.', err),
       });
     }
+  }
+
+  /**
+   * Handlers para eventos del componente dialogs
+   */
+  onVehiculoCreado(): void {
+    this.cargarVehiculos();
+    this.mostrarModal.set(false);
+    this.vehiculoSeleccionado.set(null);
+    this.modoModal.set('crear');
+  }
+
+  onVehiculoActualizado(): void {
+    this.cargarVehiculos();
+    this.mostrarModal.set(false);
+    this.vehiculoSeleccionado.set(null);
+    this.modoModal.set('crear');
+  }
+
+  /**
+   * Métodos para el panel lateral de detalles
+   */
+  seleccionarVehiculo(vehiculo: Vehiculo): void {
+    this.vehiculoSeleccionado.set(vehiculo);
+  }
+
+  verDetalles(vehiculo: Vehiculo): void {
+    // Obtener detalles completos del vehículo desde la API
+    this.vehiculoService.getVehiculoById(vehiculo.id).subscribe({
+      next: (vehiculoCompleto) => {
+        this.vehiculoSeleccionado.set(vehiculoCompleto);
+        this.mostrarPanelDetalles.set(true);
+      },
+      error: (err) => {
+        console.error('Error al obtener detalles del vehículo:', err);
+        this.error.set('Error al cargar los detalles del vehículo');
+      }
+    });
+  }
+
+  cerrarPanelDetalles(): void {
+    this.mostrarPanelDetalles.set(false);
+    this.vehiculoSeleccionado.set(null);
+  }
+
+  verHistorial(vehiculo: Vehiculo): void {
+    this.router.navigate(['historial', vehiculo.id], { relativeTo: this.route });
   }
 
   // Helper para mostrar errores en el formulario

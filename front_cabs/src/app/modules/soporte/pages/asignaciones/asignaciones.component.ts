@@ -1,8 +1,8 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Importa ReactiveFormsModule
-import { SoporteService } from '../../services/soporte.service'; // (Necesitarás crear este servicio)
-import { VehiculoService } from '../../services/vehiculo.service'; // (Usamos el que ya creamos)
+import { SoporteService } from '../../../../core/services/soporte.service'; // (Necesitarás crear este servicio)
+import { VehiculoService } from '../../../../core/services/vehiculo.service'; // (Usamos el que ya creamos)
 import { Vehiculo } from '../../../../core/models/vehiculo.interface'; // (Usamos la que ya creamos)
 
 // --- Define las interfaces aquí mismo o impórtalas desde 'core/models' ---

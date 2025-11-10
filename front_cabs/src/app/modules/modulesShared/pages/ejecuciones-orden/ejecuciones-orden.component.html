@@ -119,92 +119,54 @@
     <button class="btn-primary" (click)="abrirModalCrear()">Nueva Ejecución</button>
   </section>
 
-  <!-- Tarjetas de ejecuciones -->
-  <section *ngIf="!cargando() && ejecucionesFiltradas().length > 0" class="cards-grid">
-    <article *ngFor="let ejecucion of ejecucionesFiltradas()" class="execution-card" [class.finalizada]="ejecucion.hrFin">
-      <header class="card-header">
-        <div class="status-chip" [class.in-progress]="!ejecucion.hrFin" [class.done]="ejecucion.hrFin">
-          {{ ejecucion.hrFin ? 'Finalizada' : 'En curso' }}
-        </div>
-        <div class="type-chip" [class.campo]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" [class.remoto]="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO">
-          {{ ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'Campo' : 'Remoto' }}
-        </div>
-      </header>
+  <!-- Lista de ejecuciones -->
+  <section *ngIf="!cargando() && ejecucionesFiltradas().length > 0" class="executions-list">
+    <div class="list-header">
+      <span class="header-cell">Orden</span>
+      <span class="header-cell">Técnico</span>
+      <span class="header-cell">Tipo</span>
+      <span class="header-cell">Estado</span>
+      <span class="header-cell">Inicio</span>
+      <span class="header-cell">Duración</span>
+      <span class="header-cell">Acciones</span>
+    </div>
 
-      <div class="card-body">
-        <h3 class="card-title">Orden #{{ ejecucion.ordenId }}</h3>
-        <p class="card-subtitle">{{ getClienteNombre(ejecucion.ordenId) }}</p>
-
-        <div class="card-meta">
-          <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
-            </svg>
-            <span>{{ ejecucion.tecnicoNombre }}</span>
-          </div>
-          <div class="meta-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H5.5a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
-            </svg>
-            <span>{{ formatearFecha(ejecucion.hrInicio) }}</span>
-          </div>
-          <div class="meta-item" *ngIf="ejecucion.duracionMinutos">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
-            </svg>
-            <span>{{ formatearDuracion(ejecucion.duracionMinutos) }}</span>
-          </div>
-        </div>
-
-        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" class="tags-row">
-          <span class="tag campo">Vehículo: {{ ejecucion.vehiculoPlacas || getVehiculoDescripcion(ejecucion.vehiculoId) }}</span>
-          <span class="tag campo" *ngIf="ejecucion.kmInicial !== null">KM Inicial: {{ ejecucion.kmInicial }}</span>
-          <span class="tag campo" *ngIf="ejecucion.kmFinal !== null">KM Final: {{ ejecucion.kmFinal }}</span>
-        </div>
-
-        <div *ngIf="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO" class="tags-row">
-          <span class="tag remoto">Sesión: {{ ejecucion.codigoSesion }}</span>
-        </div>
-
-        <div class="timeline">
-          <div class="timeline-item">
-            <span class="timeline-label">Inicio</span>
-            <span class="timeline-value">{{ formatearFecha(ejecucion.hrInicio) }}</span>
-          </div>
-          <div class="timeline-item" *ngIf="ejecucion.hrFin">
-            <span class="timeline-label">Fin</span>
-            <span class="timeline-value">{{ formatearFecha(ejecucion.hrFin) }}</span>
-          </div>
-        </div>
-
-        <div *ngIf="ejecucion.comentarios" class="notes-box">
-          <span>Comentarios</span>
-          <p>{{ ejecucion.comentarios }}</p>
-        </div>
-
-        <div *ngIf="ejecucion.historialDelegaciones && ejecucion.historialDelegaciones.length > 0" class="delegation-history">
-          <h4 class="delegation-title">Historial de delegaciones</h4>
-          <div class="delegation-list">
-            <div *ngFor="let delegacion of ejecucion.historialDelegaciones" class="delegation-item">
-              <div class="delegation-header">
-                <span class="delegation-date">{{ formatearFecha(delegacion.fechaDelegacion) }}</span>
-                <span class="delegation-arrow">→</span>
-              </div>
-              <div class="delegation-details">
-                <span class="delegation-from">{{ delegacion.tecnicoAnteriorNombre }}</span>
-                <span class="delegation-to">{{ delegacion.tecnicoNuevoNombre }}</span>
-              </div>
-              <div class="delegation-motive" *ngIf="delegacion.motivo">
-                <strong>Motivo:</strong> {{ delegacion.motivo }}
-              </div>
-            </div>
-          </div>
+    <div *ngFor="let ejecucion of ejecucionesFiltradas()" class="execution-item" [class.finalizada]="ejecucion.hrFin">
+      <div class="item-cell order-cell">
+        <div class="order-info">
+          <span class="order-number">#{{ ejecucion.ordenId }}</span>
+          <span class="client-name">{{ getClienteNombre(ejecucion.ordenId) }}</span>
         </div>
       </div>
 
-      <footer class="card-footer">
+      <div class="item-cell">
+        <span class="technician-name">{{ ejecucion.tecnicoNombre }}</span>
+      </div>
+
+      <div class="item-cell">
+        <span class="type-badge" [class.campo]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" [class.remoto]="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO">
+          {{ ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'Campo' : 'Remoto' }}
+        </span>
+      </div>
+
+      <div class="item-cell">
+        <span class="status-badge" [class.in-progress]="!ejecucion.hrFin" [class.done]="ejecucion.hrFin">
+          {{ ejecucion.hrFin ? 'Finalizada' : 'En curso' }}
+        </span>
+      </div>
+
+      <div class="item-cell">
+        <span class="date-time">{{ formatearFecha(ejecucion.hrInicio) }}</span>
+      </div>
+
+      <div class="item-cell">
+        <span class="duration" *ngIf="ejecucion.duracionMinutos">{{ formatearDuracion(ejecucion.duracionMinutos) }}</span>
+        <span class="duration" *ngIf="!ejecucion.duracionMinutos">-</span>
+      </div>
+
+      <div class="item-cell actions-cell">
         <button class="btn-link" (click)="verDetalles(ejecucion)">Ver detalles</button>
-        <div class="footer-actions">
+        <div class="action-buttons">
           <button *ngIf="!ejecucion.hrFin" class="icon-button" (click)="abrirModalFinalizar(ejecucion)" title="Finalizar ejecución">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
@@ -221,8 +183,8 @@
             </svg>
           </button>
         </div>
-      </footer>
-    </article>
+      </div>
+    </div>
   </section>
 </div>
 
