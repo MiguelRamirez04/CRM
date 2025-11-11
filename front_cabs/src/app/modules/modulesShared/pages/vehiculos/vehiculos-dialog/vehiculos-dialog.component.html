@@ -29,9 +29,9 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Tipo de Vehículo</label>
-            <select [(ngModel)]="formularioCrear().tipoVehiculo" name="tipoVehiculo" [disabled]="cargando()">
-              <option [value]="null">Seleccione tipo</option>
+            <label>Tipo de Vehículo *</label>
+            <select [(ngModel)]="formularioCrear().tipoVehiculo" name="tipoVehiculo" [disabled]="cargando()" required>
+              <option value="">Seleccione tipo</option>
               <option value="Sedán">Sedán</option>
               <option value="SUV">SUV</option>
               <option value="Pickup">Pickup</option>
@@ -40,9 +40,9 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Transmisión</label>
-            <select [(ngModel)]="formularioCrear().transmision" name="transmision" [disabled]="cargando()">
-              <option [value]="null">Seleccione transmisión</option>
+            <label>Transmisión *</label>
+            <select [(ngModel)]="formularioCrear().transmision" name="transmision" [disabled]="cargando()" required>
+              <option value="">Seleccione transmisión</option>
               <option value="Manual">Manual</option>
               <option value="Automática">Automática</option>
             </select>
@@ -50,8 +50,8 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Kilometraje</label>
-            <input type="number" [(ngModel)]="formularioCrear().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0">
+            <label>Kilometraje *</label>
+            <input type="number" [(ngModel)]="formularioCrear().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0" required>
           </div>
           <div class="form-group">
             <label class="checkbox-label">
@@ -110,25 +110,21 @@
         <p>Actualizando vehículo...</p>
       </div>
       <div class="info-banner">
-        <strong>Nota:</strong> Solo se pueden modificar el kilometraje y el estado activo del vehículo. Las placas están pre-rellenadas.
+        <strong>Nota:</strong> El kilometraje es obligatorio. Las placas pueden modificarse opcionalmente. Los cambios se registrarán automáticamente en el historial.
       </div>
       <form [class.disabled]="cargando()">
         <div class="form-group">
-          <label>Placas *</label>
-          <input type="text" [(ngModel)]="formularioEditar().placas" name="placas" placeholder="Ej: ABC-123" [disabled]="true" readonly class="readonly-input" required>
-          <small class="text-muted">Las placas no se pueden modificar desde aquí</small>
+          <label>Placas</label>
+          <input type="text" [(ngModel)]="formularioEditar().placas" name="placas" placeholder="Ej: ABC-123" [disabled]="cargando()">
+          <small class="text-muted">Opcional - dejar vacío para mantener las placas actuales</small>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Kilometraje</label>
-            <input type="number" [(ngModel)]="formularioEditar().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0" autofocus>
-          </div>
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" [(ngModel)]="formularioEditar().activo" name="activo" [disabled]="cargando()">
-              Activo
-            </label>
-          </div>
+        <div class="form-group">
+          <label>Kilometraje *</label>
+          <input type="number" [(ngModel)]="formularioEditar().kilometraje" name="kilometraje" placeholder="Ej: 45000" [disabled]="cargando()" min="0" required autofocus>
+        </div>
+        <div class="form-group">
+          <label>Observaciones</label>
+          <textarea [(ngModel)]="formularioEditar().observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." [disabled]="cargando()"></textarea>
         </div>
       </form>
     </div>

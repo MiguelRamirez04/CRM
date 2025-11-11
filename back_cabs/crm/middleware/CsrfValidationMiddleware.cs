@@ -48,7 +48,8 @@ namespace back_cabs.CRM.middleware
             "/api/auth/csrf-token",      // Endpoint para obtener token
             "/api/auth/refresh",         // Refresh token tampoco requiere validación
             "/api/gastoviaticos",        // Viáticos (temporal durante desarrollo)
-            "/swagger"                   // Swagger UI (desarrollo)
+            "/swagger",                   // Swagger UI (desarrollo)
+            "/hubs/"                     // SignalR hubs (WebSocket connections)
         };
 
         public CsrfValidationMiddleware(
@@ -135,8 +136,15 @@ namespace back_cabs.CRM.middleware
         /// </summary>
         private bool IsExcludedPath(PathString path)
         {
-            return _excludedPaths.Any(excluded =>
-                path.StartsWithSegments(excluded, StringComparison.OrdinalIgnoreCase));
+            // Verificar rutas que comienzan con el patrón excluido
+            foreach (var excluded in _excludedPaths)
+            {
+                if (path.Value?.StartsWith(excluded, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

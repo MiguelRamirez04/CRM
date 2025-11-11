@@ -107,6 +107,11 @@ public class ReadOnlyContext : DbContext
     /// </summary>
     public DbSet<GastoViatico> GastosViaticos { get; set; } = null!;
 
+    /// <summary>
+    /// Notificaciones del sistema (solo lectura)
+    /// </summary>
+    public DbSet<Notificacion> Notificaciones { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

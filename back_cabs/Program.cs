@@ -18,7 +18,7 @@ using StackExchange.Redis;
 using back_cabs.CRM.Interfaces;
 using back_cabs.CRM.services.shared;
 using back_cabs.CRM.Repositories;
-using back_cabs.CRM.Services.Shared;
+using back_cabs.CRM.hubs;
 using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,6 +81,13 @@ builder.Services.AddAntiforgery(options =>
 // Servicios básicos de ASP.NET Core
 builder.Services.AddControllers();
 
+// Configurar SignalR para notificaciones en tiempo real con autenticación
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true; // Para desarrollo
+    options.MaximumReceiveMessageSize = 102400; // 100KB
+});
+
 // Inyección de contextos de base de datos
 builder.Services.AddDbContext<ReadOnlyContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -125,14 +132,14 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 // Registra el repositorio para que el servicio pueda usarlo
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
-builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
+builder.Services.AddScoped<IGastoViaticoService, back_cabs.CRM.Services.Shared.GastoViaticoService>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
 // Registrar servicio en segundo plano para expiración de cotizaciones
-builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
+// builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
 
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
@@ -140,6 +147,9 @@ builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>
 
 // Servicio genérico de almacenamiento de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, back_cabs.CRM.services.Files.FileStorageService>();
+
+// Servicio de notificaciones con SignalR
+builder.Services.AddScoped<back_cabs.CRM.services.INotificacionService, back_cabs.CRM.services.NotificacionService>();
 
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 
@@ -172,7 +182,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("SecureFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:5176", "https://localhost:5176") // Angular
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:4201", "https://localhost:4201", "http://localhost:5176", "https://localhost:5176") // Angular
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
@@ -253,6 +263,9 @@ app.UseHealthChecksConfiguration();
 
 // Controladores
 app.MapControllers();
+
+// Configurar SignalR Hub para notificaciones
+app.MapHub<NotificacionesHub>("/hubs/notificaciones");
 
 // Logging de inicio
 app.Logger.LogInformation("🚀 CRM API iniciada correctamente");

@@ -26,18 +26,21 @@ namespace back_cabs.CRM.services.shared
         private readonly ReadOnlyContext _readContext;
         private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<EjecucionOrdenService> _logger;
+        private readonly INotificacionService _notificacionService;
 
         public EjecucionOrdenService(
             IEjecucionOrdenRepository ejecucionRepository,
             WriteContext writeContext,
             ReadOnlyContext readContext,
             UsuarioAuthService usuarioAuthService,
+            INotificacionService notificacionService,
             ILogger<EjecucionOrdenService> logger)
         {
             _ejecucionRepository = ejecucionRepository ?? throw new ArgumentNullException(nameof(ejecucionRepository));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
+            _notificacionService = notificacionService ?? throw new ArgumentNullException(nameof(notificacionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -213,14 +216,59 @@ namespace back_cabs.CRM.services.shared
             _logger.LogInformation("Consultando ejecuciones con filtros: OrdenId={OrdenId}, TecnicoId={TecnicoId}, Tipo={Tipo}, Desde={Desde}, Hasta={Hasta}",
                 ordenId, tecnicoId, tipoEjecucion, fechaDesde, fechaHasta);
 
-            // ✅ Repository Pattern: obtener ejecuciones con filtros
-            var ejecuciones = await _ejecucionRepository.GetAllAsync(
-                ordenId, tecnicoId, tipoEjecucion, fechaDesde, fechaHasta);
+            // ✅ Repository Pattern: obtener ejecuciones con filtros e incluir relaciones
+            var ejecuciones = await _readContext.EjecucionesOrden
+                .Include(e => e.Tecnico)
+                .Include(e => e.Vehiculo)
+                .Include(e => e.Orden)
+                    .ThenInclude(o => o!.CreadoPor) // Nueva navegación para obtener datos de la orden
+                .Where(e => !ordenId.HasValue || e.OrdenId == ordenId)
+                .Where(e => !tecnicoId.HasValue || e.TecnicoId == tecnicoId)
+                .Where(e => !tipoEjecucion.HasValue || e.TipoEjecucion == tipoEjecucion)
+                .Where(e => !fechaDesde.HasValue || (e.HrInicio.HasValue && e.HrInicio >= fechaDesde))
+                .Where(e => !fechaHasta.HasValue || (e.HrInicio.HasValue && e.HrInicio <= fechaHasta))
+                .OrderByDescending(e => e.HrInicio)
+                .ToListAsync();
 
             var result = new List<EjecucionOrdenResponseDto>();
             foreach (var ejecucion in ejecuciones)
             {
-                result.Add(MapToResponseDto(ejecucion));
+                var dto = MapToResponseDto(ejecucion);
+
+                // Poblar campos adicionales de la orden
+                if (ejecucion.Orden != null)
+                {
+                    dto.ClienteNombre = ejecucion.Orden.NombreClienteCompleto;
+                    dto.OrdenDescripcion = ejecucion.Orden.Notas;
+                    dto.OrdenPrioridad = ejecucion.Orden.Prioridad?.ToString();
+                    dto.AsignadaPor = ejecucion.Orden.CreadoPor != null
+                        ? $"{ejecucion.Orden.CreadoPor.Nombre} {ejecucion.Orden.CreadoPor.Apellido}"
+                        : null;
+                    dto.FechaAsignacion = ejecucion.Orden.CreadoEn;
+                }
+
+                // Calcular tiempo transcurrido si está en curso
+                if (ejecucion.HrInicio.HasValue && !ejecucion.HrFin.HasValue)
+                {
+                    var tiempoTranscurrido = DateTime.UtcNow - ejecucion.HrInicio.Value;
+                    if (tiempoTranscurrido.TotalHours < 1)
+                    {
+                        dto.TiempoTranscurrido = $"{(int)tiempoTranscurrido.TotalMinutes}m";
+                    }
+                    else if (tiempoTranscurrido.TotalDays < 1)
+                    {
+                        dto.TiempoTranscurrido = $"{(int)tiempoTranscurrido.TotalHours}h {(int)tiempoTranscurrido.Minutes}m";
+                    }
+                    else
+                    {
+                        dto.TiempoTranscurrido = $"{(int)tiempoTranscurrido.TotalDays}d {(int)tiempoTranscurrido.Hours}h";
+                    }
+                }
+
+                // TODO: Calcular notificaciones pendientes
+                dto.NotificacionesPendientes = 0;
+
+                result.Add(dto);
             }
 
             _logger.LogInformation("Se encontraron {Count} ejecuciones", result.Count);
@@ -257,6 +305,9 @@ namespace back_cabs.CRM.services.shared
 
             // ✅ Repository Pattern: delegar ejecución con validaciones y auditoría
             await _ejecucionRepository.DelegateAsync(ejecucionId, nuevoTecnicoId, usuarioActualId);
+
+            // Notificar al nuevo técnico sobre la delegación
+            await _notificacionService.NotificarDelegacionAsync(ejecucionId, nuevoTecnicoId, motivo);
 
             _logger.LogInformation("Ejecución {EjecucionId} delegada exitosamente a técnico {NuevoTecnicoId}", ejecucionId, nuevoTecnicoId);
         }
@@ -295,13 +346,14 @@ namespace back_cabs.CRM.services.shared
             // Validar permisos: Solo el técnico asignado, o usuarios con rol SOPORTE/ADMINISTRACION pueden actualizar
             bool puedeActualizar = ejecucion.TecnicoId == usuarioId || // Técnico asignado
                                    usuarioActual.Rol == RolUsuario.SOPORTE.ToString() || // Rol SOPORTE
-                                   usuarioActual.Rol == RolUsuario.ADMINISTRACION.ToString(); // Rol ADMINISTRACION
+                                   usuarioActual.Rol == RolUsuario.ADMINISTRACION.ToString() || // Rol ADMINISTRACION
+                                   usuarioActual.Rol == "ADMINISTRADOR"; // Rol ADMINISTRADOR (compatibilidad)
 
             if (!puedeActualizar)
             {
                 _logger.LogWarning("Usuario {UsuarioId} (rol: {Rol}) intentó actualizar ejecución {EjecucionId} asignada a {TecnicoId}",
                     usuarioId, usuarioActual.Rol, id, ejecucion.TecnicoId);
-                throw new UnauthorizedAccessException("Solo el técnico asignado o usuarios con rol SOPORTE/ADMINISTRACION pueden actualizar la ejecución.");
+                throw new UnauthorizedAccessException("Solo el técnico asignado o usuarios con rol SOPORTE/ADMINISTRACION/ADMINISTRADOR pueden actualizar la ejecución.");
             }
 
             // Validación: Si ya está finalizada, no permitir cambios
@@ -355,7 +407,191 @@ namespace back_cabs.CRM.services.shared
             // ✅ Repository Pattern: actualizar ejecución con validaciones
             await _ejecucionRepository.UpdateAsync(ejecucion);
 
+            // Notificar finalización si se completó la ejecución
+            if (updates.HrFin.HasValue && !ejecucion.HrFin.HasValue)
+            {
+                await _notificacionService.NotificarEjecucionFinalizadaAsync(id);
+            }
+
             _logger.LogInformation("Ejecución {EjecucionId} actualizada exitosamente", id);
+        }
+
+        // =====================================================================================
+        // MÉTODOS PARA EL NUEVO FLUJO DE EJECUCIONES
+        // =====================================================================================
+
+        /// <summary>
+        /// Obtiene las tareas pendientes (órdenes sin ejecución activa).
+        /// Solo accesible para usuarios con rol SOPORTE.
+        /// </summary>
+        /// <returns>Lista de tareas pendientes disponibles para tomar.</returns>
+        public async Task<List<TareaPendienteDto>> ObtenerTareasPendientesAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo tareas pendientes para técnicos SOPORTE");
+
+                // Obtener órdenes que están en estado CAPTURADA o ASIGNADA pero sin ejecución activa
+                var ordenesPendientes = await _readContext.OrdenesTrabajo
+                    .Where(o => o.Estado == "CAPTURADA" || o.Estado == "ASIGNADA")
+                    .Where(o => !_readContext.EjecucionesOrden.Any(e => e.OrdenId == o.Id && !e.HrFin.HasValue))
+                    .Include(o => o.CreadoPor)
+                    .Include(o => o.AsignadaA)
+                    .OrderByDescending(o => o.Prioridad)
+                    .ThenBy(o => o.CreadoEn)
+                    .ToListAsync();
+
+                var tareas = new List<TareaPendienteDto>();
+
+                foreach (var orden in ordenesPendientes)
+                {
+                    // Calcular tiempo de espera
+                    var tiempoEspera = DateTime.UtcNow - (orden.CreadoEn ?? DateTime.UtcNow);
+                    string tiempoEsperaFormateado;
+
+                    if (tiempoEspera.TotalHours < 1)
+                    {
+                        tiempoEsperaFormateado = $"{(int)tiempoEspera.TotalMinutes}m";
+                    }
+                    else if (tiempoEspera.TotalDays < 1)
+                    {
+                        tiempoEsperaFormateado = $"{(int)tiempoEspera.TotalHours}h {(int)tiempoEspera.Minutes}m";
+                    }
+                    else
+                    {
+                        tiempoEsperaFormateado = $"{(int)tiempoEspera.TotalDays}d {(int)tiempoEspera.Hours}h";
+                    }
+
+                    // Determinar prioridad
+                    string prioridad;
+                    switch (orden.Prioridad)
+                    {
+                        case 1: prioridad = "BAJA"; break;
+                        case 2: prioridad = "MEDIA"; break;
+                        case 3: prioridad = "ALTA"; break;
+                        case 4: prioridad = "URGENTE"; break;
+                        case 5: prioridad = "URGENTE"; break;
+                        default: prioridad = "MEDIA"; break;
+                    }
+
+                    var tarea = new TareaPendienteDto
+                    {
+                        OrdenId = orden.Id,
+                        ClienteNombre = orden.NombreClienteCompleto,
+                        VehiculoPlacas = null, // TODO: Obtener de cotización si existe
+                        Descripcion = orden.Notas ?? $"Orden #{orden.Id} - {orden.TipoOrden ?? "Sin tipo"}",
+                        Prioridad = prioridad,
+                        FechaCreacion = orden.CreadoEn ?? DateTime.UtcNow,
+                        TiempoEspera = tiempoEsperaFormateado,
+                        AsignadaPor = orden.CreadoPor != null ? $"{orden.CreadoPor.Nombre} {orden.CreadoPor.Apellido}" : null,
+                        TipoOrden = orden.TipoOrden,
+                        Modalidad = orden.Modalidad,
+                        Ubicacion = orden.UbicacionText
+                    };
+
+                    tareas.Add(tarea);
+                }
+
+                _logger.LogInformation("Se encontraron {Count} tareas pendientes", tareas.Count);
+                return tareas;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener tareas pendientes");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Permite a un técnico SOPORTE tomar una tarea pendiente.
+        /// Crea automáticamente una ejecución para la orden.
+        /// </summary>
+        /// <param name="request">Datos para tomar la tarea.</param>
+        /// <param name="usuarioId">ID del técnico que toma la tarea.</param>
+        /// <returns>Ejecución creada para la tarea tomada.</returns>
+        public async Task<EjecucionOrdenResponseDto> TomarTareaAsync(TomarTareaRequestDto request, int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("Usuario {UsuarioId} intentando tomar tarea de orden {OrdenId}", usuarioId, request.OrdenId);
+
+                // Verificar que el usuario tenga rol SOPORTE
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(usuarioId);
+                if (usuario == null || (usuario.Rol != RolUsuario.SOPORTE.ToString() && usuario.Rol != "ADMINISTRADOR"))
+                {
+                    throw new UnauthorizedAccessException("Solo usuarios con rol SOPORTE pueden tomar tareas.");
+                }
+
+                // Verificar que la orden existe y está disponible
+                var orden = await _readContext.OrdenesTrabajo
+                    .Where(o => o.Id == request.OrdenId)
+                    .Where(o => o.Estado == "CAPTURADA" || o.Estado == "ASIGNADA")
+                    .FirstOrDefaultAsync();
+
+                if (orden == null)
+                {
+                    throw new ArgumentException("La orden no existe o no está disponible para tomar.", nameof(request.OrdenId));
+                }
+
+                // Verificar que no tenga ejecución activa
+                var tieneEjecucionActiva = await _readContext.EjecucionesOrden
+                    .AnyAsync(e => e.OrdenId == request.OrdenId && !e.HrFin.HasValue);
+
+                if (tieneEjecucionActiva)
+                {
+                    throw new InvalidOperationException("La orden ya tiene una ejecución activa.");
+                }
+
+                // Validar campos según tipo de ejecución
+                if (request.TipoEjecucion == TipoEjecucion.CAMPO.ToString())
+                {
+                    if (!request.VehiculoId.HasValue || !request.KmInicial.HasValue)
+                    {
+                        throw new ArgumentException("Para ejecuciones CAMPO se requiere vehículo y kilometraje inicial.");
+                    }
+                }
+
+                // Crear DTO para la ejecución
+                var createDto = new EjecucionOrdenCreateRequestDto
+                {
+                    OrdenId = request.OrdenId,
+                    TecnicoId = usuarioId,
+                    TipoEjecucion = Enum.Parse<TipoEjecucion>(request.TipoEjecucion),
+                    HrInicio = DateTime.UtcNow,
+                    VehiculoId = request.VehiculoId,
+                    KmInicial = request.KmInicial,
+                    Herramientas = request.Herramientas,
+                    CodigoSesion = request.CodigoSesion,
+                    ContrasenaSesion = request.ContrasenaSesion,
+                    Comentarios = request.Comentarios
+                };
+
+                // Crear la ejecución
+                var ejecucion = await CreateEjecucionAsync(createDto);
+
+                // Actualizar estado de la orden a EN_CURSO
+                var ordenEntity = await _writeContext.OrdenesTrabajo.FindAsync(request.OrdenId);
+                if (ordenEntity != null)
+                {
+                    ordenEntity.Estado = "EN_CURSO";
+                    ordenEntity.AsignadaAUserId = usuarioId;
+                    ordenEntity.ActualizadoEn = DateTime.UtcNow;
+                    await _writeContext.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("Usuario {UsuarioId} tomó exitosamente la tarea de orden {OrdenId}, ejecución {EjecucionId} creada",
+                    usuarioId, request.OrdenId, ejecucion.Id);
+
+                // Notificar a otros técnicos que la tarea ya no está disponible
+                await _notificacionService.NotificarTareaTomadaAsync(request.OrdenId, usuarioId);
+
+                return ejecucion;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al tomar tarea {OrdenId} por usuario {UsuarioId}", request.OrdenId, usuarioId);
+                throw;
+            }
         }
 
         /// <summary>
@@ -416,6 +652,39 @@ namespace back_cabs.CRM.services.shared
     {
         public DateTime? HrFin { get; set; }
         public int? KmFinal { get; set; }
+        public string? Comentarios { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para una tarea pendiente.
+    /// </summary>
+    public class TareaPendienteDto
+    {
+        public int OrdenId { get; set; }
+        public string? ClienteNombre { get; set; }
+        public string? VehiculoPlacas { get; set; }
+        public string Descripcion { get; set; } = null!;
+        public string Prioridad { get; set; } = null!;
+        public DateTime FechaCreacion { get; set; }
+        public string TiempoEspera { get; set; } = null!;
+        public string? AsignadaPor { get; set; }
+        public string? TipoOrden { get; set; }
+        public string? Modalidad { get; set; }
+        public string? Ubicacion { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para tomar una tarea pendiente.
+    /// </summary>
+    public class TomarTareaRequestDto
+    {
+        public int OrdenId { get; set; }
+        public string TipoEjecucion { get; set; } = null!;
+        public int? VehiculoId { get; set; }
+        public int? KmInicial { get; set; }
+        public string? Herramientas { get; set; }
+        public string? CodigoSesion { get; set; }
+        public string? ContrasenaSesion { get; set; }
         public string? Comentarios { get; set; }
     }
 }

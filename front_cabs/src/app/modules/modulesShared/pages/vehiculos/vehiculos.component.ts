@@ -4,12 +4,11 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { VehiculoService } from '../../../../core/services/vehiculo.service';
 import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto } from '../../../../core/models/vehiculo.interface';
-import { VehiculosDialogComponent } from './vehiculos-dialog/vehiculos-dialog.component';
 
 @Component({
   selector: 'app-vehiculos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, VehiculosDialogComponent], // Usa ReactiveFormsModule
+  imports: [CommonModule, ReactiveFormsModule], // Usa ReactiveFormsModule
   templateUrl: './vehiculos.component.html',
   styleUrls: ['./vehiculos.component.css'] // Apunta al CSS
 })
@@ -44,11 +43,11 @@ export class VehiculosComponent implements OnInit {
     this.formularioVehiculo = this.fb.group({
       nombreVehiculo: ['', [Validators.required, Validators.maxLength(100)]],
       placas: ['', [Validators.required, Validators.maxLength(20)]],
-      tipoVehiculo: ['Automóvil', [Validators.required, Validators.maxLength(50)]],
-      transmision: ['Manual', [Validators.required]],
+      tipoVehiculo: ['', [Validators.required, Validators.maxLength(50)]],
+      transmision: ['', Validators.required],
       esDeEmpresa: [true, Validators.required],
       activo: [true, Validators.required],
-      kilometraje: [null],
+      kilometraje: [null, [Validators.required, Validators.min(0)]],
       observaciones: ['']
     });
   }
@@ -75,6 +74,20 @@ export class VehiculosComponent implements OnInit {
   }
 
   abrirModalCrear(): void {
+    // Configurar validaciones para crear (todos los campos requeridos)
+    this.formularioVehiculo.get('nombreVehiculo')?.setValidators([Validators.required, Validators.maxLength(100)]);
+    this.formularioVehiculo.get('placas')?.setValidators([Validators.required, Validators.maxLength(20)]);
+    this.formularioVehiculo.get('tipoVehiculo')?.setValidators([Validators.required, Validators.maxLength(50)]);
+    this.formularioVehiculo.get('transmision')?.setValidators([Validators.required]);
+    this.formularioVehiculo.get('esDeEmpresa')?.setValidators([Validators.required]);
+    this.formularioVehiculo.get('activo')?.setValidators([Validators.required]);
+    this.formularioVehiculo.get('kilometraje')?.setValidators([Validators.required, Validators.min(0)]);
+
+    // Actualizar validaciones
+    Object.keys(this.formularioVehiculo.controls).forEach(key => {
+      this.formularioVehiculo.get(key)?.updateValueAndValidity();
+    });
+
     this.formularioVehiculo.reset({
       nombreVehiculo: '',
       placas: '',
@@ -92,6 +105,20 @@ export class VehiculosComponent implements OnInit {
   }
 
   abrirModalEditar(vehiculo: Vehiculo): void {
+    // Configurar validaciones para editar (kilometraje requerido, activo opcional)
+    this.formularioVehiculo.get('nombreVehiculo')?.clearValidators();
+    this.formularioVehiculo.get('placas')?.clearValidators();
+    this.formularioVehiculo.get('tipoVehiculo')?.clearValidators();
+    this.formularioVehiculo.get('transmision')?.clearValidators();
+    this.formularioVehiculo.get('esDeEmpresa')?.clearValidators();
+    // El campo 'activo' se mantiene opcional para edición
+    this.formularioVehiculo.get('kilometraje')?.setValidators([Validators.required, Validators.min(0)]);
+
+    // Actualizar validaciones
+    Object.keys(this.formularioVehiculo.controls).forEach(key => {
+      this.formularioVehiculo.get(key)?.updateValueAndValidity();
+    });
+
     this.formularioVehiculo.patchValue(vehiculo); // Carga los datos en el form
     this.modoModal.set('editar');
     this.vehiculoSeleccionado.set(vehiculo);
@@ -128,12 +155,13 @@ export class VehiculosComponent implements OnInit {
         error: (err) => this.handleError('Error al guardar el vehículo.', err, false),
       });
     } else {
-      // Para editar, solo envía los campos permitidos: kilometraje, placas y activo
+      // Para editar, solo envía los campos permitidos: kilometraje (obligatorio), placas, observaciones y activo (opcionales)
       const formValue = this.formularioVehiculo.value;
       const dto: VehiculoUpdateDto = {
+        kilometraje: formValue.kilometraje,
         placas: formValue.placas,
-        activo: formValue.activo,
-        kilometraje: formValue.kilometraje
+        observaciones: formValue.observaciones,
+        activo: formValue.activo
       };
 
       this.vehiculoService.updateVehiculo(this.vehiculoSeleccionado()!.id, dto).subscribe({

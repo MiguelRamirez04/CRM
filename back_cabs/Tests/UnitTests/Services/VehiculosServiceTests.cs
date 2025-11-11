@@ -3,6 +3,7 @@ using Moq;
 using FluentAssertions;
 using back_cabs.CRM.services.Fleet;
 using back_cabs.CRM.Interfaces.Shared;
+using back_cabs.CRM.Interfaces.Auth;
 using back_cabs.CRM.models.Shared;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
@@ -27,6 +28,7 @@ namespace back_cabs.Tests.UnitTests.Services;
 public class VehiculosServiceTests
 {
     private readonly Mock<IVehiculoRepository> _mockRepository;
+    private readonly Mock<IUsuarioAuthRepository> _mockUsuarioAuthRepository;
     private readonly Mock<ILogger<VehiculosService>> _mockLogger;
     private readonly Mock<ICacheService> _mockCache;
     private readonly ReadOnlyContext _readContext;
@@ -38,6 +40,7 @@ public class VehiculosServiceTests
     public VehiculosServiceTests()
     {
         _mockRepository = new Mock<IVehiculoRepository>();
+        _mockUsuarioAuthRepository = new Mock<IUsuarioAuthRepository>();
         _mockLogger = new Mock<ILogger<VehiculosService>>();
         _mockCache = new Mock<ICacheService>();
         
@@ -49,6 +52,7 @@ public class VehiculosServiceTests
         
         _service = new VehiculosService(
             _mockRepository.Object,
+            _mockUsuarioAuthRepository.Object,
             _mockLogger.Object,
             _mockCache.Object,
             _readContext
@@ -393,17 +397,16 @@ public class VehiculosServiceTests
             Activo = true,
             EsDeEmpresa = true,
             NombreVehiculo = "Toyota Corolla",
-            Kilometraje = 10000
+            Kilometraje = 10000,
+            Observaciones = "Observaciones originales"
         };
 
-        var dto = new VehiculoRequestDto
+        var dto = new VehiculoUpdateDto
         {
-            Placas = "NEW456", // Cambio de placas
-            Activo = false,    // Cambio de estado
-            Kilometraje = 15000, // Cambio de kilometraje
-            // Los demás campos se ignoran en la actualización
-            TipoVehiculo = "SUV",
-            NombreVehiculo = "Honda Civic"
+            Kilometraje = 15000, // Obligatorio
+            Placas = "NEW456",    // Opcional - cambio de placas
+            Observaciones = "Nuevas observaciones" // Opcional
+            // Activo no se proporciona, por lo que NO debe cambiar
         };
 
         var vehiculoActualizado = new Vehiculo
@@ -411,10 +414,11 @@ public class VehiculosServiceTests
             Id = 1,
             Placas = dto.Placas,
             TipoVehiculo = vehiculoExistente.TipoVehiculo, // NO cambia
-            Activo = dto.Activo,
+            Activo = vehiculoExistente.Activo,             // NO cambia (no se proporcionó)
             EsDeEmpresa = vehiculoExistente.EsDeEmpresa,   // NO cambia
             NombreVehiculo = vehiculoExistente.NombreVehiculo, // NO cambia
-            Kilometraje = dto.Kilometraje
+            Kilometraje = dto.Kilometraje,
+            Observaciones = dto.Observaciones
         };
 
         _mockRepository
@@ -437,11 +441,13 @@ public class VehiculosServiceTests
         resultado.Should().NotBeNull();
         resultado!.Id.Should().Be(1);
         resultado.Placas.Should().Be("NEW456", "porque se actualizaron las placas");
-        resultado.Activo.Should().Be(false, "porque se cambió el estado activo");
+        resultado.Kilometraje.Should().Be(15000, "porque se actualizó el kilometraje");
+        resultado.Observaciones.Should().Be("Nuevas observaciones", "porque se actualizaron las observaciones");
         resultado.Kilometraje.Should().Be(15000, "porque se actualizó el kilometraje");
         // Los campos no permitidos NO deben cambiar
         resultado.TipoVehiculo.Should().Be("Sedan", "porque tipo_vehiculo no se actualiza");
         resultado.NombreVehiculo.Should().Be("Toyota Corolla", "porque nombre_vehiculo no se actualiza");
+        resultado.Activo.Should().BeTrue("porque activo no se actualiza cuando no se proporciona");
         
         // ✅ Debe validar unicidad porque las placas cambiaron
         _mockRepository.Verify(r => r.PlacasExistAsync("NEW456"), Times.Once);
@@ -464,24 +470,24 @@ public class VehiculosServiceTests
             Placas = "OLD123",
             TipoVehiculo = "Sedan",
             Activo = true,
-            EsDeEmpresa = true
+            EsDeEmpresa = true,
+            Kilometraje = 10000
         };
 
-        var dto = new VehiculoRequestDto
+        var dto = new VehiculoUpdateDto
         {
-            Placas = "NEW456", // ⚠️ PLACAS NUEVAS
-            TipoVehiculo = "SUV",
-            Activo = true,
-            EsDeEmpresa = true
+            Kilometraje = 15000, // Obligatorio
+            Placas = "NEW456"     // Opcional - cambio de placas
         };
 
         var vehiculoActualizado = new Vehiculo
         {
             Id = 1,
             Placas = "NEW456",
-            TipoVehiculo = "SUV",
-            Activo = true,
-            EsDeEmpresa = true
+            TipoVehiculo = "Sedan", // NO cambia
+            Activo = true,          // NO cambia
+            EsDeEmpresa = true,     // NO cambia
+            Kilometraje = 15000
         };
 
         _mockRepository
@@ -503,20 +509,88 @@ public class VehiculosServiceTests
         // Assert
         resultado.Should().NotBeNull();
         resultado!.Placas.Should().Be("NEW456");
-        
+        resultado.Kilometraje.Should().Be(15000);
+
         // ✅ SÍ debe validar unicidad porque las placas cambiaron
         _mockRepository.Verify(r => r.PlacasExistAsync("NEW456"), Times.Once,
             "porque las placas cambiaron y debe validar que no existan");
     }
 
     [Fact]
+    public async Task ActualizarAsync_CambiandoEstadoActivo_DebeActualizarCorrectamente()
+    {
+        // Arrange
+        var vehiculoExistente = new Vehiculo
+        {
+            Id = 1,
+            Placas = "ABC123",
+            TipoVehiculo = "Sedan",
+            Activo = true, // Estado actual: activo
+            EsDeEmpresa = true,
+            NombreVehiculo = "Toyota Corolla",
+            Kilometraje = 10000,
+            Observaciones = "Observaciones originales"
+        };
+
+        var dto = new VehiculoUpdateDto
+        {
+            Kilometraje = 15000, // Obligatorio
+            Activo = false        // Opcional - cambiar estado a inactivo
+        };
+
+        var vehiculoActualizado = new Vehiculo
+        {
+            Id = 1,
+            Placas = vehiculoExistente.Placas,           // NO cambia
+            TipoVehiculo = vehiculoExistente.TipoVehiculo, // NO cambia
+            Activo = dto.Activo.Value,                   // SÍ cambia
+            EsDeEmpresa = vehiculoExistente.EsDeEmpresa, // NO cambia
+            NombreVehiculo = vehiculoExistente.NombreVehiculo, // NO cambia
+            Kilometraje = dto.Kilometraje,
+            Observaciones = vehiculoExistente.Observaciones // NO cambia
+        };
+
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(1))
+            .ReturnsAsync(vehiculoExistente);
+
+        _mockRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<Vehiculo>()))
+            .ReturnsAsync(vehiculoActualizado);
+
+        // Act
+        var resultado = await _service.ActualizarAsync(1, dto);
+
+        // Assert
+        resultado.Should().NotBeNull();
+        resultado!.Id.Should().Be(1);
+        resultado.Activo.Should().BeFalse("porque se cambió el estado a inactivo");
+        resultado.Kilometraje.Should().Be(15000, "porque se actualizó el kilometraje");
+        // Los campos no permitidos NO deben cambiar
+        resultado.Placas.Should().Be("ABC123", "porque placas no se actualiza");
+        resultado.TipoVehiculo.Should().Be("Sedan", "porque tipo_vehiculo no se actualiza");
+        resultado.NombreVehiculo.Should().Be("Toyota Corolla", "porque nombre_vehiculo no se actualiza");
+        resultado.Observaciones.Should().Be("Observaciones originales", "porque observaciones no se actualiza");
+
+        // ✅ NO debe validar unicidad porque las placas no cambiaron
+        _mockRepository.Verify(r => r.PlacasExistAsync(It.IsAny<string>()), Times.Never);
+
+        // ✅ Verificar que UpdateAsync se llamó
+        _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Vehiculo>()), Times.Once);
+
+        // ✅ Debe invalidar AMBOS cachés (listado + detalle)
+        _mockCache.Verify(c => c.RemoveAsync("vehiculos:id:1"), Times.Once);
+        _mockCache.Verify(c => c.RemoveAsync("vehiculos:active"), Times.Once);
+    }
+
+    [Fact]
     public async Task ActualizarAsync_ConIdInexistente_DebeRetornarNull()
     {
         // Arrange
-        var dto = new VehiculoRequestDto
+        var dto = new VehiculoUpdateDto
         {
-            Placas = "TEST",
-            TipoVehiculo = "Sedan"
+            Kilometraje = 10000,
+            Placas = "TEST"
         };
 
         _mockRepository
@@ -528,7 +602,7 @@ public class VehiculosServiceTests
 
         // Assert
         resultado.Should().BeNull("porque el vehículo no existe");
-        
+
         // No debe intentar actualizar
         _mockRepository.Verify(r => r.UpdateAsync(It.IsAny<Vehiculo>()), Times.Never);
         

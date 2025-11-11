@@ -97,7 +97,7 @@ public class VehiculosController : ControllerBase
     [ProducesResponseType(typeof(VehiculoResponseDto), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Update(int id, [FromBody] VehiculoRequestDto request)
+    public async Task<IActionResult> Update(int id, [FromBody] VehiculoUpdateDto request)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);

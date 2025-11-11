@@ -207,6 +207,95 @@ namespace back_cabs.CRM.controllers.shared
             }
         }
 
+        // =====================================================================================
+        // ENDPOINTS PARA EL NUEVO FLUJO DE EJECUCIONES
+        // =====================================================================================
+
+        /// <summary>
+        /// Obtiene las tareas pendientes disponibles para técnicos SOPORTE.
+        /// Solo accesible para usuarios con rol SOPORTE.
+        /// </summary>
+        /// <returns>Lista de tareas pendientes.</returns>
+        [HttpGet("tareas-pendientes")]
+        [Authorize(Roles = "SOPORTE,ADMINISTRADOR")] // Solo técnicos pueden ver tareas pendientes
+        [ProducesResponseType(typeof(List<TareaPendienteDto>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetTareasPendientes()
+        {
+            try
+            {
+                var tareas = await _service.ObtenerTareasPendientesAsync();
+                _logger.LogInformation("Se obtuvieron {Count} tareas pendientes", tareas.Count);
+                return Ok(tareas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener tareas pendientes");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Permite a un técnico SOPORTE tomar una tarea pendiente.
+        /// Crea automáticamente una ejecución para la orden.
+        /// </summary>
+        /// <param name="request">Datos para tomar la tarea.</param>
+        /// <returns>Ejecución creada para la tarea tomada.</returns>
+        [HttpPost("tomar-tarea")]
+        [Authorize(Roles = "SOPORTE,ADMINISTRADOR")] // Solo técnicos pueden tomar tareas
+        [ProducesResponseType(typeof(EjecucionOrdenResponseDto), 201)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> TomarTarea([FromBody] back_cabs.CRM.services.shared.TomarTareaRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Modelo inválido en TomarTarea: {Errors}", ModelState.Values.SelectMany(v => v.Errors));
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Obtener el ID del usuario actual desde el token JWT
+                var userIdClaim = User.FindFirst("id") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var usuarioId))
+                {
+                    _logger.LogWarning("No se pudo obtener el ID del usuario del token JWT");
+                    return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+                }
+
+                var ejecucion = await _service.TomarTareaAsync(request, usuarioId);
+                _logger.LogInformation("Usuario {UsuarioId} tomó la tarea de orden {OrdenId}, ejecución {EjecucionId} creada",
+                    usuarioId, request.OrdenId, ejecucion.Id);
+
+                return CreatedAtAction(nameof(GetEjecucionById), new { id = ejecucion.Id }, ejecucion);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Acceso no autorizado para tomar tarea");
+                return Forbid();
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Datos inválidos en TomarTarea: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Operación inválida en TomarTarea: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al tomar tarea");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
         /// <summary>
         /// Obtiene el ID del usuario actual desde el token JWT.
         /// </summary>
@@ -228,5 +317,29 @@ namespace back_cabs.CRM.controllers.shared
         [Required(ErrorMessage = "El motivo de la delegación es obligatorio.")]
         [MaxLength(500, ErrorMessage = "El motivo no puede exceder 500 caracteres.")]
         public string Motivo { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO para solicitar tomar una tarea pendiente.
+    /// </summary>
+    public class TomarTareaRequestDto
+    {
+        [Required(ErrorMessage = "El ID de la orden es obligatorio.")]
+        public int OrdenId { get; set; }
+
+        [Required(ErrorMessage = "El ID de la ejecución es obligatorio.")]
+        public int EjecucionId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO para representar una tarea pendiente.
+    /// </summary>
+    public class TareaPendienteDto
+    {
+        public int OrdenId { get; set; }
+        public int EjecucionId { get; set; }
+        public string Descripcion { get; set; } = string.Empty;
+        public DateTime FechaCreacion { get; set; }
+        public string TecnicoAsignado { get; set; } = string.Empty;
     }
 }

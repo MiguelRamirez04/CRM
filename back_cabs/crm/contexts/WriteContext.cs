@@ -5,6 +5,7 @@ using back_cabs.CRM.models.Sales;
 using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
+using back_cabs.CRM.models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -102,6 +103,11 @@ public class WriteContext : DbContext
     /// Gastos de viáticos
     /// </summary>
     public DbSet<GastoViatico> GastosViaticos { get; set; } = null!;
+
+    /// <summary>
+    /// Notificaciones del sistema
+    /// </summary>
+    public DbSet<Notificacion> Notificaciones { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

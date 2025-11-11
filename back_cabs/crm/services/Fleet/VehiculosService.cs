@@ -1,5 +1,6 @@
 using back_cabs.CRM.contexts;
 using back_cabs.CRM.Interfaces.Shared;
+using back_cabs.CRM.Interfaces.Auth;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Shared;
@@ -23,6 +24,7 @@ public class CambiosJson
 {
     public CambioDetalleJson? kilometraje { get; set; }
     public CambioDetalleJson? observaciones { get; set; }
+    public CambioDetalleJson? activo { get; set; }
 }
 
 public class CambioDetalleJson
@@ -41,6 +43,7 @@ public class VehiculosService
     // ✅ Inyección de dependencias: Repository Pattern para acceso a datos
     // desacoplado y testeable
     private readonly IVehiculoRepository _vehiculoRepository;
+    private readonly IUsuarioAuthRepository _usuarioAuthRepository;
     private readonly ILogger<VehiculosService> _logger;
     private readonly ICacheService _cacheService; // ✅ REDIS: Servicio de caché
     private readonly ReadOnlyContext _readContext; // Para consultar auditoría
@@ -52,11 +55,13 @@ public class VehiculosService
 
     public VehiculosService(
         IVehiculoRepository vehiculoRepository,
+        IUsuarioAuthRepository usuarioAuthRepository,
         ILogger<VehiculosService> logger,
         ICacheService cacheService,
         ReadOnlyContext readContext)
     {
         _vehiculoRepository = vehiculoRepository;
+        _usuarioAuthRepository = usuarioAuthRepository;
         _logger = logger;
         _cacheService = cacheService;
         _readContext = readContext;
@@ -184,7 +189,7 @@ public class VehiculosService
     /// ✅ Verifica unicidad de placas usando el índice configurado
     /// ✅ REDIS: Invalida caché para mantener consistencia
     /// </summary>
-    public async Task<VehiculoResponseDto?> ActualizarAsync(int id, VehiculoRequestDto request)
+    public async Task<VehiculoResponseDto?> ActualizarAsync(int id, VehiculoUpdateDto request)
     {
         // ✅ Repository Pattern: obtener vehículo existente
         var vehiculo = await _vehiculoRepository.GetByIdAsync(id);
@@ -194,23 +199,26 @@ public class VehiculosService
         }
 
         // ✅ Validación de unicidad usando Repository Pattern
-        if (vehiculo.Placas != request.Placas)
+        if (request.Placas != null && vehiculo.Placas != request.Placas)
         {
             await ValidarPlacaUnica(request.Placas);
         }
 
-        // ✅ Actualizar todos los campos editables
-        // - Validación de unicidad para placas si cambiaron
-        // - Kilometraje y observaciones se actualizan siempre (son los campos principales para auditoría)
-        // - Activo es requerido
-        vehiculo.Placas = request.Placas;                    // ✅ VARCHAR(20) UNIQUE
-        vehiculo.Activo = request.Activo;                    // ✅ BIT DEFAULT 1
-        vehiculo.Kilometraje = request.Kilometraje;          // ✅ INT NULL - Auditado
-        vehiculo.Observaciones = request.Observaciones;      // ✅ NVARCHAR(MAX) - Auditado
-        vehiculo.TipoVehiculo = request.TipoVehiculo;        // ✅ VARCHAR(50)
-        vehiculo.Transmision = request.Transmision;          // ✅ VARCHAR(20)
-        vehiculo.EsDeEmpresa = request.EsDeEmpresa;          // ✅ BIT
-        vehiculo.NombreVehiculo = request.NombreVehiculo;    // ✅ VARCHAR(100) REQUIRED
+        // ✅ Actualizar solo los campos permitidos para edición
+        // - Kilometraje es obligatorio y se audita
+        // - Placas es opcional y requiere validación de unicidad si cambia
+        // - Observaciones es opcional y se audita
+        // - Activo es opcional y se audita
+        vehiculo.Kilometraje = request.Kilometraje;          // ✅ INT - Auditado (obligatorio)
+        if (request.Placas != null)
+        {
+            vehiculo.Placas = request.Placas;                // ✅ VARCHAR(20) UNIQUE (opcional)
+        }
+        vehiculo.Observaciones = request.Observaciones;      // ✅ NVARCHAR(MAX) - Auditado (opcional)
+        if (request.Activo.HasValue)
+        {
+            vehiculo.Activo = request.Activo.Value;          // ✅ BIT - Auditado (opcional)
+        }
 
         // ✅ Repository Pattern: actualización con validaciones automáticas
         var vehiculoActualizado = await _vehiculoRepository.UpdateAsync(vehiculo);
@@ -267,6 +275,25 @@ public class VehiculosService
 
             foreach (var cambio in historial.OrderByDescending(h => h.fecha))
             {
+                // Obtener el nombre real del usuario
+                string usuarioNombre = $"Usuario {cambio.usuario_id ?? 0}"; // Valor por defecto
+                if (cambio.usuario_id.HasValue)
+                {
+                    try
+                    {
+                        var usuario = await _usuarioAuthRepository.GetByIdAsync(cambio.usuario_id.Value);
+                        if (usuario != null)
+                        {
+                            usuarioNombre = $"{usuario.Nombre} {usuario.Apellido}";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error al obtener nombre del usuario {UsuarioId} para historial", cambio.usuario_id);
+                        // Mantener el valor por defecto
+                    }
+                }
+
                 // Para cada cambio, crear entradas separadas por campo modificado
                 if (cambio.cambios.kilometraje != null)
                 {
@@ -278,7 +305,7 @@ public class VehiculosService
                         ValorAnterior = cambio.cambios.kilometraje.anterior,
                         ValorNuevo = cambio.cambios.kilometraje.nuevo,
                         UsuarioId = cambio.usuario_id ?? 0,
-                        UsuarioNombre = $"Usuario {cambio.usuario_id ?? 0}", // TODO: Obtener nombre real del usuario
+                        UsuarioNombre = usuarioNombre,
                         FechaCambio = cambio.fecha,
                         TipoCambio = "Actualización"
                     });
@@ -294,7 +321,23 @@ public class VehiculosService
                         ValorAnterior = cambio.cambios.observaciones.anterior,
                         ValorNuevo = cambio.cambios.observaciones.nuevo,
                         UsuarioId = cambio.usuario_id ?? 0,
-                        UsuarioNombre = $"Usuario {cambio.usuario_id ?? 0}", // TODO: Obtener nombre real del usuario
+                        UsuarioNombre = usuarioNombre,
+                        FechaCambio = cambio.fecha,
+                        TipoCambio = "Actualización"
+                    });
+                }
+
+                if (cambio.cambios.activo != null)
+                {
+                    resultado.Add(new VehiculoHistorialResponseDto
+                    {
+                        Id = idCounter++,
+                        VehiculoId = vehiculoId,
+                        CampoModificado = "activo",
+                        ValorAnterior = cambio.cambios.activo.anterior,
+                        ValorNuevo = cambio.cambios.activo.nuevo,
+                        UsuarioId = cambio.usuario_id ?? 0,
+                        UsuarioNombre = usuarioNombre,
                         FechaCambio = cambio.fecha,
                         TipoCambio = "Actualización"
                     });

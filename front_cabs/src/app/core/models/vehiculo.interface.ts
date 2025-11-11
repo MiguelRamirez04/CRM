@@ -11,7 +11,12 @@ export interface Vehiculo {
   activo: boolean;
   observaciones: string | null;
   nombreVehiculo: string;
-  kilometraje: number | null;
+  kilometraje: number;
+  creadoEn?: string;
+  creadoPorUsuarioId?: number;
+  actualizadoEn?: string;
+  actualizadoPorUsuarioId?: number;
+  historialCambios?: string;
 }
 
 /**
@@ -19,23 +24,24 @@ export interface Vehiculo {
  * ¡Esto AHORA SÍ coincide con tu API!
  */
 export interface VehiculoCreateDto {
-  tipoVehiculo: string | null;
-  transmision: string | null;
+  tipoVehiculo: string;
+  transmision: string;
   esDeEmpresa: boolean;
-  placas: string | null;
+  placas: string;
   activo: boolean;
-  observaciones: string | null;
+  observaciones: string;
   nombreVehiculo: string;
-  kilometraje: number | null;
+  kilometraje: number;
 }
 
 /**
  * DTO para ACTUALIZAR un vehículo.
- * Solo permite modificar: kilometraje, placas y activo
+ * Solo permite modificar: kilometraje (obligatorio), placas (opcional), observaciones (opcional) y activo (opcional)
  */
 export interface VehiculoUpdateDto {
-  kilometraje?: number | null;
-  placas?: string | null;
+  kilometraje: number;
+  placas?: string;
+  observaciones?: string;
   activo?: boolean;
 }
 

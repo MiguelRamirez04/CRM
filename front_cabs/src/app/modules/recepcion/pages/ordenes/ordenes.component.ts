@@ -11,7 +11,7 @@ import {
 import { RecepcionService } from '../../services/recepcion.service';
 import { DialogService } from '../../services/dialog.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
-import { HeaderComponent } from '../../../../shared/components/header/header';
+import { HeaderComponent } from '../../../../layout/header/header.component';
 import { OrdenDetalleDialogComponent } from '../../components/orden-detalle-dialog/orden-detalle-dialog.component';
 // import { SecureAuthService } from '../../../../core/services/secure-auth.service'; // Ya no es necesario
 

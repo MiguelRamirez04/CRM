@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
-import { HeaderComponent } from '../../../../shared/components/header/header';
+import { HeaderComponent } from '../../../../layout/header/header.component';
 
 @Component({
   selector: 'app-dashboard',

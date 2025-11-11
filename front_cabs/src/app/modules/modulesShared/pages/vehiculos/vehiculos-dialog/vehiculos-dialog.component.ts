@@ -42,28 +42,28 @@ export class VehiculosDialogComponent implements OnInit {
   // Formularios como signals
   formularioCrear = signal<Partial<VehiculoCreateDto>>({
     nombreVehiculo: '',
-    tipoVehiculo: null,
-    transmision: null,
+    tipoVehiculo: '',
+    transmision: '',
     esDeEmpresa: true,
     placas: '',
-    kilometraje: null,
+    kilometraje: 0,
     activo: true,
-    observaciones: null
+    observaciones: ''
   });
 
   formularioEditar = signal<Partial<VehiculoUpdateDto>>({
-    kilometraje: undefined,
+    kilometraje: 0,
     placas: '',
-    activo: true
+    observaciones: ''
   });
 
   ngOnInit(): void {
     // Si hay vehiculo seleccionado, pre-llenar formulario de edición
     if (this.vehiculoSeleccionado) {
       this.formularioEditar.set({
-        kilometraje: this.vehiculoSeleccionado.kilometraje || undefined,
-        placas: this.vehiculoSeleccionado.placas,
-        activo: this.vehiculoSeleccionado.activo
+        kilometraje: this.vehiculoSeleccionado.kilometraje,
+        placas: this.vehiculoSeleccionado.placas || '',
+        observaciones: this.vehiculoSeleccionado.observaciones || ''
       });
     }
   }
@@ -82,18 +82,18 @@ export class VehiculosDialogComponent implements OnInit {
   private resetFormularios(): void {
     this.formularioCrear.set({
       nombreVehiculo: '',
-      tipoVehiculo: null,
-      transmision: null,
+      tipoVehiculo: '',
+      transmision: '',
       esDeEmpresa: true,
       placas: '',
-      kilometraje: null,
+      kilometraje: 0,
       activo: true,
-      observaciones: null
+      observaciones: ''
     });
     this.formularioEditar.set({
-      kilometraje: null,
+      kilometraje: 0,
       placas: '',
-      activo: true
+      observaciones: ''
     });
     this.error.set(null);
     this.exito.set(null);
@@ -127,13 +127,13 @@ export class VehiculosDialogComponent implements OnInit {
       // Construir DTO
       const dto: VehiculoCreateDto = {
         nombreVehiculo: formData.nombreVehiculo.trim(),
-        tipoVehiculo: formData.tipoVehiculo || null,
-        transmision: formData.transmision || null,
+        tipoVehiculo: formData.tipoVehiculo?.trim() || '',
+        transmision: formData.transmision?.trim() || '',
         esDeEmpresa: formData.esDeEmpresa ?? true,
         placas: formData.placas.trim(),
-        kilometraje: formData.kilometraje ?? null,
+        kilometraje: formData.kilometraje ?? 0,
         activo: formData.activo ?? true,
-        observaciones: formData.observaciones || null
+        observaciones: formData.observaciones?.trim() || ''
       };
 
       // Hacer POST
@@ -157,17 +157,16 @@ export class VehiculosDialogComponent implements OnInit {
   }
 
   /**
-   * Actualiza un vehiculo existente (solo campos permitidos)
+   * Actualiza un vehiculo existente (kilometraje obligatorio, placas y observaciones opcionales)
    */
   async actualizarVehiculo(): Promise<void> {
     if (!this.vehiculoSeleccionado) return;
 
     const formData = this.formularioEditar();
 
-    // Validación - solo permitir actualizar kilometraje y activo
-    // Las placas están deshabilitadas y se mantienen igual
-    if (formData.kilometraje !== null && formData.kilometraje !== undefined && formData.kilometraje < 0) {
-      this.error.set('El kilometraje no puede ser negativo');
+    // Validación - kilometraje es obligatorio y debe ser >= 0
+    if (formData.kilometraje === null || formData.kilometraje === undefined || formData.kilometraje < 0) {
+      this.error.set('El kilometraje es obligatorio y no puede ser negativo');
       return;
     }
 
@@ -179,15 +178,14 @@ export class VehiculosDialogComponent implements OnInit {
       // Obtener token CSRF
       await this.authService.obtenerCsrfToken().toPromise();
 
-      // Construir DTO con solo campos permitidos (kilometraje y activo)
-      // Las placas se mantienen igual ya que están deshabilitadas
+      // Construir DTO con campos permitidos
       const dto: VehiculoUpdateDto = {
         kilometraje: formData.kilometraje,
-        placas: this.vehiculoSeleccionado.placas, // Mantener placas originales
-        activo: formData.activo ?? true
+        placas: formData.placas?.trim() || undefined,
+        observaciones: formData.observaciones?.trim() || undefined
       };
 
-      // Hacer PUT/PATCH
+      // Hacer PUT
       await this.vehiculoService.updateVehiculo(this.vehiculoSeleccionado.id, dto).toPromise();
 
       this.exito.set('✅ Vehículo actualizado exitosamente');

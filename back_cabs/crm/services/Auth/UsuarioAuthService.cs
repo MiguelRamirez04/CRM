@@ -108,7 +108,7 @@ namespace back_cabs.CRM.services.Auth
                     Telefono = request.Telefono,
                     Email = request.Email.ToLower().Trim(),
                     Password = contrasenaHash, // Guardar el hash en password_hash
-                    Rol = request.Rol, // Ahora es string
+                    Rol = NormalizarRol(request.Rol), // Normalizar rol antes de guardar
                     TransmisionHabilitada = request.TransmisionHabilitada,
                     Activo = request.Activo ?? false, // Si no se envía, por defecto false
                     CreadoEn = DateTime.UtcNow,
@@ -126,7 +126,7 @@ namespace back_cabs.CRM.services.Auth
                 {
                     new("sub", nuevoUsuario.Id.ToString()),
                     new("email", nuevoUsuario.Email),
-                    new("rol", nuevoUsuario.Rol?.ToString() ?? "0"),
+                    new("rol", NormalizarRol(nuevoUsuario.Rol)),
                     new("nombre", nuevoUsuario.NombreCompleto)
                 };
 
@@ -398,7 +398,7 @@ namespace back_cabs.CRM.services.Auth
                     new System.Security.Claims.Claim("email", usuario.Email),
                     new System.Security.Claims.Claim("nombre", usuario.Nombre),
                     new System.Security.Claims.Claim("apellido", usuario.Apellido),
-                    new System.Security.Claims.Claim("rol", usuario.Rol),
+                    new System.Security.Claims.Claim("rol", NormalizarRol(usuario.Rol)),
                     new System.Security.Claims.Claim("telefono", usuario.Telefono.ToString())
                 };
 
@@ -514,6 +514,27 @@ namespace back_cabs.CRM.services.Auth
                 _logger.LogError(ex, "Error al obtener usuarios por rol: {Rol}", rol);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Normaliza el rol del usuario para asegurar consistencia
+        /// Convierte "ADMINISTRADOR" a "ADMINISTRACION" para compatibilidad
+        /// </summary>
+        /// <param name="rol">Rol original del usuario</param>
+        /// <returns>Rol normalizado</returns>
+        private string NormalizarRol(string rol)
+        {
+            if (string.IsNullOrWhiteSpace(rol))
+                return rol;
+
+            // Normalizar variaciones de ADMINISTRADOR a ADMINISTRACION
+            if (rol.ToUpper().Trim() == "ADMINISTRADOR")
+            {
+                _logger.LogWarning("Normalizando rol 'ADMINISTRADOR' a 'ADMINISTRACION' para usuario");
+                return "ADMINISTRACION";
+            }
+
+            return rol.ToUpper().Trim();
         }
     }
 }

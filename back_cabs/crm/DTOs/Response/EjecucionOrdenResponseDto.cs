@@ -100,6 +100,45 @@ namespace back_cabs.CRM.DTOs.Response
         /// Contraseña de sesión remota.
         /// </summary>
         public string? ContrasenaSesion { get; set; }
-        
+
+        // ==========================================
+        // CAMPOS ADICIONALES PARA EL NUEVO FLUJO
+        // ==========================================
+
+        /// <summary>
+        /// Información del cliente de la orden
+        /// </summary>
+        public string? ClienteNombre { get; set; }
+
+        /// <summary>
+        /// Descripción de la orden de trabajo
+        /// </summary>
+        public string? OrdenDescripcion { get; set; }
+
+        /// <summary>
+        /// Prioridad de la orden
+        /// </summary>
+        public string? OrdenPrioridad { get; set; }
+
+        /// <summary>
+        /// Usuario que asignó la tarea
+        /// </summary>
+        public string? AsignadaPor { get; set; }
+
+        /// <summary>
+        /// Fecha de asignación de la tarea
+        /// </summary>
+        public DateTime? FechaAsignacion { get; set; }
+
+        /// <summary>
+        /// Número de notificaciones pendientes para esta ejecución
+        /// </summary>
+        public int NotificacionesPendientes { get; set; }
+
+        /// <summary>
+        /// Tiempo transcurrido desde el inicio (formateado)
+        /// </summary>
+        public string? TiempoTranscurrido { get; set; }
+
     }
 }

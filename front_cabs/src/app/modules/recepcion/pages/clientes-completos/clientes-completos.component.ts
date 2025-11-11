@@ -14,7 +14,7 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesCompletosService } from '../../services/clientes-completos.service';
-import { HeaderComponent } from '../../../../shared/components/header/header';
+import { HeaderComponent } from '../../../../layout/header/header.component';
 import { ClienteCompleto, PagedResponse } from '../../../../core/models/cliente-completo.interface';
 
 @Component({
