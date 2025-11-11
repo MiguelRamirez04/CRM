@@ -1,0 +1,12 @@
+<div class="perfil-campo checkbox-wrapper" [class.disabled]="disabled">
+  <label class="checkbox-label">
+    <input
+      type="checkbox"
+      [checked]="checked"
+      [disabled]="disabled"
+      (change)="onToggle()"
+    />
+    <span class="custom-checkbox"></span>
+    {{ label }}
+  </label>
+</div>

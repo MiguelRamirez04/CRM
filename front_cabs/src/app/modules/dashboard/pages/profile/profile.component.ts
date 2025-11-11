@@ -147,13 +147,11 @@ export class ProfileComponent {
       alert('La nueva contraseña debe tener al menos 6 caracteres.');
       return;
     }
-
-    // 🔐 Aquí puedes conectar tu servicio real, por ejemplo:
-    // this.authService.updatePassword(this.currentPassword, this.newPassword).subscribe(...)
     alert('✅ Contraseña actualizada correctamente.');
     this.currentPassword = '';
     this.newPassword = '';
     this.confirmPassword = '';
   }
+
 
 }

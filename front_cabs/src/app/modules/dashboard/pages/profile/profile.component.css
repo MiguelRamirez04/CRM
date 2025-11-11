@@ -187,3 +187,62 @@
   }
 
 }
+
+
+/* === Checkbox con estilo similar a los inputs de perfil === */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.checkbox-label {
+  font-size: 17px;
+  font-weight: 500;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox-label input {
+  display: none;
+}
+
+.custom-checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #4a90e2;
+  border-radius: 6px;
+  background: #fff;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 4px rgba(13, 77, 172, 0.233);
+}
+
+.checkbox-label input:checked + .custom-checkbox {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.4);
+}
+
+.checkbox-label input:checked + .custom-checkbox::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-wrapper.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
