@@ -10,6 +10,9 @@ public class CotizacionCreateRequestDto
     public int? IntakeLegacyId { get; set; }
 
     [Required]
+    public int? CreadaPor { get; set; }
+
+    [Required]
     [Range(0, 999999999.99)]
     public decimal Subtotal { get; set; }
 

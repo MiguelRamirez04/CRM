@@ -5,6 +5,7 @@ public class CotizacionResponseDto
     public int Id { get; set; }
     public int? OrdenId { get; set; }
     public int? IntakeLegacyId { get; set; }
+    public int? CreadaPor { get; set; }
     public decimal Subtotal { get; set; }
     public decimal ImpuestosTotal { get; set; }
     public decimal? Descuento { get; set; }

@@ -187,6 +187,7 @@ public class CotizacionService
             OrdenId = cotizacion.OrdenId,
             IntakeLegacyId = cotizacion.IntakeLegacyId,
             Subtotal = cotizacion.Subtotal,
+            CreadaPor = cotizacion.CreadaPor,
             ImpuestosTotal = cotizacion.ImpuestosTotal,
             Descuento = cotizacion.Descuento,
             Total = cotizacion.Total, // Calculado automáticamente en el modelo
@@ -208,6 +209,7 @@ public class CotizacionService
         {
             OrdenId = request.OrdenId,
             IntakeLegacyId = request.IntakeLegacyId,
+            CreadaPor = request.CreadaPor,
             Subtotal = request.Subtotal,
             ImpuestosTotal = request.ImpuestosTotal,
             Descuento = request.Descuento,
