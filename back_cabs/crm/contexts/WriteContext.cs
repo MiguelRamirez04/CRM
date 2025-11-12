@@ -150,6 +150,16 @@ public class WriteContext : DbContext
     /// </summary>
     public DbSet<ProductosRef> ProductosRef { get; set; } = null!;
 
+    /// <summary>
+    /// Catálogo de documentos modelo del sistema
+    /// </summary>
+    public DbSet<DocumentoModelo> DocumentosModelo { get; set; } = null!;
+
+    /// <summary>
+    /// Referencias a documentos modelo del sistema legacy
+    /// </summary>
+    public DbSet<DocumentosModeloRef> DocumentosModeloRef { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
