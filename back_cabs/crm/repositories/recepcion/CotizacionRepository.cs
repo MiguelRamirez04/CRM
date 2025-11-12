@@ -97,62 +97,67 @@ namespace back_cabs.CRM.repositories.Recepcion
         // }
 
         /// <summary>
-        /// Obtiene cotizaciones filtrando por un estado basado en las nuevas banderas.
-        /// "CANCELADO": c.Cancelado == 1
-        /// "AFECTADO": c.Afectado == 1
-        /// "NUEVA" (o cualquier otro): c.Cancelado == 0 y c.Afectado == 0
+        /// Obtiene cotizaciones filtrando por el campo especificado.
+        /// Campo: "cancelado", "afectado", "impreso", "usaCliente"
+        /// Valor: 0 o 1
         /// </summary>
-        public async Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string estado)
+        public async Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string campo, int valor)
         {
             try
             {
                 IQueryable<Cotizacion> query = _readContext.Cotizaciones.AsNoTracking();
 
-                // Adaptación de la lógica de estado a las nuevas banderas
-                switch (estado.ToUpper())
+                // Filtrar según el campo y valor especificados
+                switch (campo.ToLower())
                 {
-                    case "CANCELADO":
-                        query = query.Where(c => c.Cancelado == 1);
+                    case "cancelado":
+                        query = query.Where(c => c.Cancelado == valor);
                         break;
-                    case "AFECTADO":
-                        query = query.Where(c => c.Afectado == 1);
+                    case "afectado":
+                        query = query.Where(c => c.Afectado == valor);
                         break;
-                    default: // Asumimos que cualquier otro estado (como "NUEVA") significa no cancelado y no afectado.
-                        query = query.Where(c => c.Cancelado == 0 && c.Afectado == 0);
+                    case "impreso":
+                        query = query.Where(c => c.Impreso == valor);
+                        break;
+                    case "usacliente":
+                        query = query.Where(c => c.UsaCliente == valor);
+                        break;
+                    default:
+                        _logger.LogWarning("Campo de estado no reconocido: {Campo}", campo);
                         break;
                 }
 
                 var cotizaciones = await query.OrderByDescending(c => c.Fecha).ToListAsync();
 
-                _logger.LogDebug("Obtenidas {Count} cotizaciones con estado {Estado}", cotizaciones.Count, estado);
+                _logger.LogDebug("Obtenidas {Count} cotizaciones con {Campo} = {Valor}", cotizaciones.Count, campo, valor);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por estado adaptado {Estado}", estado);
+                _logger.LogError(ex, "Error al obtener cotizaciones por estado {Campo} = {Valor}", campo, valor);
                 throw;
             }
         }
 
         /// <summary>
-        /// Obtiene cotizaciones buscando en la Razón Social del cliente.
+        /// Obtiene cotizaciones por ID de cliente (ClienteProveedorId).
         /// </summary>
-        public async Task<IEnumerable<Cotizacion>> GetByClienteAsync(string cliente)
+        public async Task<IEnumerable<Cotizacion>> GetByClienteIdAsync(int clienteId)
         {
             try
             {
                 var cotizaciones = await _readContext.Cotizaciones
                     .AsNoTracking()
-                    .Where(c => c.RazonSocial != null && c.RazonSocial.Contains(cliente)) // Adaptado para usar RazonSocial
+                    .Where(c => c.ClienteProveedorId == clienteId)
                     .OrderByDescending(c => c.Fecha)
                     .ToListAsync();
 
-                _logger.LogDebug("Obtenidas {Count} cotizaciones para cliente (Razón Social) {Cliente}", cotizaciones.Count, cliente);
+                _logger.LogDebug("Obtenidas {Count} cotizaciones para ClienteProveedorId {ClienteId}", cotizaciones.Count, clienteId);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por cliente (Razón Social) {Cliente}", cliente);
+                _logger.LogError(ex, "Error al obtener cotizaciones por ClienteProveedorId {ClienteId}", clienteId);
                 throw;
             }
         }
@@ -170,6 +175,64 @@ namespace back_cabs.CRM.repositories.Recepcion
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al verificar existencia de cotización {Id}", id);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Valida que todas las llaves foráneas existan en sus respectivas tablas.
+        /// Retorna un diccionario con el resultado de cada validación.
+        /// NOTA: Los IDs de DocumentoDe, ConceptoDocumento, ClienteProveedor y Agente 
+        /// provienen de tablas del sistema Contpaqi que no están en este contexto.
+        /// Esta validación debe hacerse llamando a un SP o API externa.
+        /// Por ahora, retornamos true para permitir la operación.
+        /// </summary>
+        public async Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(
+            int documentoDeId, 
+            int conceptoDocumentoId, 
+            int clienteProveedorId, 
+            int agenteId)
+        {
+            var resultados = new Dictionary<string, bool>();
+
+            try
+            {
+                // TODO: Validar contra tablas de Contpaqi o API externa
+                // Por ahora, asumimos que si el ID > 0, es válido
+                resultados["DocumentoDeId"] = documentoDeId > 0;
+                resultados["ConceptoDocumentoId"] = conceptoDocumentoId > 0;
+                
+                // Validar ClienteProveedorId contra la tabla de clientes si existe en el contexto
+                if (clienteProveedorId > 0)
+                {
+                    // Buscar por Id o LegacyClientId
+                    var clienteExiste = await _readContext.CatalogClientes
+                        .AnyAsync(c => c.Id == clienteProveedorId || c.LegacyClientId == clienteProveedorId);
+                    resultados["ClienteProveedorId"] = clienteExiste;
+                }
+                else
+                {
+                    resultados["ClienteProveedorId"] = false;
+                }
+                
+                // Validar AgenteId (usuario)
+                if (agenteId > 0)
+                {
+                    var agenteExiste = await _readContext.UsuariosAuth
+                        .AnyAsync(u => u.Id == agenteId);
+                    resultados["AgenteId"] = agenteExiste;
+                }
+                else
+                {
+                    resultados["AgenteId"] = false;
+                }
+
+                _logger.LogDebug("Validación de FKs completada: {@Resultados}", resultados);
+                return resultados;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al validar llaves foráneas");
                 throw;
             }
         }

@@ -3,6 +3,7 @@ using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Sales;
 using Microsoft.Extensions.Logging;
+using back_cabs.CRM.Core.Exceptions;
 
 namespace back_cabs.CRM.services.Recepcion;
 
@@ -61,36 +62,64 @@ public class CotizacionService
     // }
 
     /// <summary>
-    /// Obtiene cotizaciones por estado.
-    /// ✅ Usa Repository Pattern para consultas filtradas
+    /// Obtiene cotizaciones por estado (campo y valor específicos).
     /// </summary>
-    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorEstadoAsync(string estado)
+    /// <param name="campo">Campo a filtrar: "cancelado", "afectado", "impreso", "usaCliente"</param>
+    /// <param name="valor">Valor del campo: 0 o 1</param>
+    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorEstadoAsync(string campo, int valor)
     {
-        var cotizaciones = await _cotizacionRepository.GetByEstadoAsync(estado);
+        var cotizaciones = await _cotizacionRepository.GetByEstadoAsync(campo, valor);
 
         return cotizaciones.Select(MapToResponseDto);
     }
 
     /// <summary>
-    /// Obtiene cotizaciones por cliente.
-    /// ✅ Usa Repository Pattern para consultas filtradas
+    /// Obtiene cotizaciones por ID de cliente.
     /// </summary>
-    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorClienteAsync(string cliente)
+    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorClienteIdAsync(int clienteId)
     {
-        var cotizaciones = await _cotizacionRepository.GetByClienteAsync(cliente);
+        var cotizaciones = await _cotizacionRepository.GetByClienteIdAsync(clienteId);
 
         return cotizaciones.Select(MapToResponseDto);
     }
 
     /// <summary>
     /// Crea una nueva cotización.
-    /// ✅ Usa Repository Pattern para escritura transaccional
+    /// ✅ Valida llaves foráneas antes de crear
     /// </summary>
     public async Task<CotizacionResponseDto> CrearAsync(CotizacionRequestDto request)
     {
         try
         {
-            // Mapear desde el DTO de solicitud a la entidad del dominio
+            // 1. Validar llaves foráneas
+            var validacionFKs = await _cotizacionRepository.ValidarLlavesForaneasAsync(
+                request.DocumentoDeId,
+                request.ConceptoDocumentoId,
+                request.ClienteProveedorId,
+                request.AgenteId
+            );
+
+            // 2. Lanzar excepciones específicas si alguna FK no existe
+            foreach (var (campo, existe) in validacionFKs)
+            {
+                if (!existe)
+                {
+                    var valorId = campo switch
+                    {
+                        "DocumentoDeId" => request.DocumentoDeId,
+                        "ConceptoDocumentoId" => request.ConceptoDocumentoId,
+                        "ClienteProveedorId" => request.ClienteProveedorId,
+                        "AgenteId" => request.AgenteId,
+                        _ => 0
+                    };
+                    throw new ForeignKeyNotFoundException(campo, valorId);
+                }
+            }
+
+            // 3. Validar duplicados si es necesario (por ejemplo, mismo Folio)
+            // TODO: Agregar validación de duplicados si se requiere
+
+            // 4. Mapear y crear la entidad
             var cotizacion = MapFromRequestDto(request);
             cotizacion.Fecha = DateTime.UtcNow; // El servidor establece la fecha de creación
 
@@ -99,6 +128,15 @@ public class CotizacionService
             _logger.LogInformation("Cotización creada con ID {Id}", creada.Id);
 
             return MapToResponseDto(creada);
+        }
+        catch (ForeignKeyNotFoundException)
+        {
+            // Re-lanzar las excepciones personalizadas sin envolverlas
+            throw;
+        }
+        catch (DuplicateRecordException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -124,7 +162,7 @@ public class CotizacionService
 
             // Mapear cambios
             //Datos Principales
-            existente.Folio = (double)request.Folio;
+            existente.Folio = request.Folio ?? existente.Folio;
             existente.FechaVencimiento = request.FechaVencimiento;
             existente.FechaEntregaRecepcion = request.FechaEntregaRecepcion;
             
