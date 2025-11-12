@@ -52,7 +52,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Resumen',
       icon: 'resumen',
-      link: '/dashboard',
+      link: '/administracion',
       roles: ['ADMINISTRACION']
     },
     {
