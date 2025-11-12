@@ -6,6 +6,7 @@ using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
 using back_cabs.CRM.models;
+using back_cabs.CRM.models.legacy;
 using Microsoft.EntityFrameworkCore;
 
 namespace back_cabs.CRM.contexts;
@@ -111,6 +112,26 @@ public class ReadOnlyContext : DbContext
     /// Notificaciones del sistema (solo lectura)
     /// </summary>
     public DbSet<Notificacion> Notificaciones { get; set; } = null!;
+
+    /// <summary>
+    /// Catálogo de monedas del sistema
+    /// </summary>
+    public DbSet<Moneda> Monedas { get; set; } = null!;
+
+    /// <summary>
+    /// Referencias a monedas del sistema legacy
+    /// </summary>
+    public DbSet<MonedasRef> MonedasRef { get; set; } = null!;
+
+    /// <summary>
+    /// Catálogo de agentes del sistema
+    /// </summary>
+    public DbSet<Agente> Agentes { get; set; } = null!;
+
+    /// <summary>
+    /// Referencias a agentes del sistema legacy
+    /// </summary>
+    public DbSet<AgentesRef> AgentesRef { get; set; } = null!;
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
