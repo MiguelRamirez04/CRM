@@ -32,6 +32,7 @@
     "@fullcalendar/timegrid": "^6.1.19",
     "@heroicons/react": "^2.2.0",
     "@popperjs/core": "^2.11.8",
+    "chart.js": "^4.5.1",
     "gitmoji-cli": "^9.7.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
