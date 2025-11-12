@@ -1,45 +1,54 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace CRM.DTOs.Request;
-
-public class CotizacionCreateRequestDto
+namespace CRM.DTOs.Request
 {
-    [Required]
-    public int? OrdenId { get; set; }
+    /// <summary>
+    /// DTO para la creación y actualización de una Cotización.
+    /// Contiene los datos que el cliente debe proporcionar.
+    /// </summary>
+    public class CotizacionRequestDto
+    {
+        // --- Llaves Foráneas (IDs) ---
+        [Required]
+        public int DocumentoDeId { get; set; }
+        [Required]
+        public int ConceptoDocumentoId { get; set; }
+        [Required]
+        public int ClienteProveedorId { get; set; }
+        [Required]
+        public int AgenteId { get; set; }
+        public int? DocumentoOrigenId { get; set; }
 
-    public int? IntakeLegacyId { get; set; }
+        // --- Datos del Documento ---
+        [StringLength(11)]
+        public string? SerieDocumento { get; set; }
+        public double? Folio { get; set; }
+        public DateTime Fecha { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public DateTime? FechaEntregaRecepcion { get; set; }
 
-    [Required]
-    public int? CreadaPor { get; set; }
+        // --- Datos Descriptivos ---
+        [StringLength(60)]
+        public string? RazonSocial { get; set; }
+        [StringLength(20)]
+        public string? Rfc { get; set; }
+        [StringLength(20)]
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
 
-    [Required]
-    [Range(0, 999999999.99)]
-    public decimal Subtotal { get; set; }
+        // --- Banderas y Estados ---
+        public int Naturaleza { get; set; }
+        public int UsaCliente { get; set; }
+        public int Afectado { get; set; }
+        public int Impreso { get; set; }
+        public int Cancelado { get; set; }
 
-    [Range(0, 999999999.99)]
-    public decimal ImpuestosTotal { get; set; } = 0;
-
-    [Range(0, 999999999.99)]
-    public decimal? Descuento { get; set; }
-
-    [Required]
-    [StringLength(20)]
-    public string Estado { get; set; } = "NUEVA";
-
-    [StringLength(500)]
-    public string? Observaciones { get; set; }
-
-    [StringLength(255)]
-    public string? Cliente { get; set; }
-
-    [StringLength(13)]
-    public string? Rfc { get; set; }
-
-    [StringLength(50)]
-    public string? Folio { get; set; }
-
-    [StringLength(1000)]
-    public string? DescripcionServicio { get; set; }
-
-    public int? ValidezDias { get; set; }
+        // --- Importes ---
+        public double Neto { get; set; }
+        public double Impuesto1 { get; set; }
+        public double DescuentoMovimiento { get; set; }
+        public double Total { get; set; }
+        public double TotalUnidades { get; set; }
+    }
 }

@@ -49,16 +49,16 @@ public class CotizacionService
         return cotizacion != null ? MapToResponseDto(cotizacion) : null;
     }
 
-    /// <summary>
-    /// Obtiene cotizaciones por OrdenId.
-    /// ✅ Usa Repository Pattern para consultas filtradas
-    /// </summary>
-    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorOrdenIdAsync(int ordenId)
-    {
-        var cotizaciones = await _cotizacionRepository.GetByOrdenIdAsync(ordenId);
+    // /// <summary>
+    // /// Obtiene cotizaciones por OrdenId.
+    // /// ✅ Usa Repository Pattern para consultas filtradas
+    // /// </summary>
+    // public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorOrdenIdAsync(int ordenId)
+    // {
+    //     var cotizaciones = await _cotizacionRepository.GetByOrdenIdAsync(ordenId);
 
-        return cotizaciones.Select(MapToResponseDto);
-    }
+    //     return cotizaciones.Select(MapToResponseDto);
+    // }
 
     /// <summary>
     /// Obtiene cotizaciones por estado.
@@ -86,12 +86,13 @@ public class CotizacionService
     /// Crea una nueva cotización.
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// </summary>
-    public async Task<CotizacionResponseDto> CrearAsync(CotizacionCreateRequestDto request)
+    public async Task<CotizacionResponseDto> CrearAsync(CotizacionRequestDto request)
     {
         try
         {
-            var cotizacion = MapFromCreateRequestDto(request);
-            cotizacion.CreadoEn = DateTime.UtcNow;
+            // Mapear desde el DTO de solicitud a la entidad del dominio
+            var cotizacion = MapFromRequestDto(request);
+            cotizacion.Fecha = DateTime.UtcNow; // El servidor establece la fecha de creación
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
@@ -110,7 +111,7 @@ public class CotizacionService
     /// Actualiza una cotización existente.
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// </summary>
-    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionCreateRequestDto request)
+    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionRequestDto request)
     {
         try
         {
@@ -122,19 +123,19 @@ public class CotizacionService
             }
 
             // Mapear cambios
-            existente.OrdenId = request.OrdenId;
-            existente.IntakeLegacyId = request.IntakeLegacyId;
-            existente.Subtotal = request.Subtotal;
-            existente.ImpuestosTotal = request.ImpuestosTotal;
-            existente.Descuento = request.Descuento;
-            existente.Estado = request.Estado;
+            //Datos Principales
+            existente.Folio = (double)request.Folio;
+            existente.FechaVencimiento = request.FechaVencimiento;
+            existente.FechaEntregaRecepcion = request.FechaEntregaRecepcion;
+            
+            //Datos Descriptivos
+            existente.Referencia = request.Referencia;
             existente.Observaciones = request.Observaciones;
-            existente.Cliente = request.Cliente;
-            existente.Rfc = request.Rfc;
-            existente.Folio = request.Folio;
-            existente.DescripcionServicio = request.DescripcionServicio;
-            existente.ValidezDias = request.ValidezDias;
-            existente.ActualizadoEn = DateTime.UtcNow;
+            
+            //Totales en cantidad y dinero
+            existente.Neto = request.Neto;
+            existente.Total = request.Total;
+            existente.TotalUnidades = request.TotalUnidades;
 
             var actualizada = await _cotizacionRepository.UpdateAsync(existente);
 
@@ -184,42 +185,53 @@ public class CotizacionService
         return new CotizacionResponseDto
         {
             Id = cotizacion.Id,
-            OrdenId = cotizacion.OrdenId,
-            IntakeLegacyId = cotizacion.IntakeLegacyId,
-            Subtotal = cotizacion.Subtotal,
-            CreadaPor = cotizacion.CreadaPor,
-            ImpuestosTotal = cotizacion.ImpuestosTotal,
-            Descuento = cotizacion.Descuento,
-            Total = cotizacion.Total, // Calculado automáticamente en el modelo
-            Estado = cotizacion.Estado,
-            Observaciones = cotizacion.Observaciones,
-            Cliente = cotizacion.Cliente,
-            Rfc = cotizacion.Rfc,
+
+            // DocumentoDeId = cotizacion.DocumentoDeId,
+            // ConceptoDocumentoId = cotizacion.ConceptoDocumentoId,
+            // ClienteProveedorId = cotizacion.ClienteProveedorId,
+            // AgenteId = cotizacion.AgenteId,
+            // DocumentoOrigenId = cotizacion.DocumentoOrigenId,
+
+            SerieDocumento = cotizacion.SerieDocumento,
             Folio = cotizacion.Folio,
-            DescripcionServicio = cotizacion.DescripcionServicio,
-            ActualizadoEn = cotizacion.ActualizadoEn,
-            CreadoEn = cotizacion.CreadoEn,
-            ValidezDias = cotizacion.ValidezDias
+            Fecha = cotizacion.Fecha,
+            FechaVencimiento = cotizacion.FechaVencimiento,
+            FechaEntregaRecepcion = cotizacion.FechaEntregaRecepcion,
+            RazonSocial = cotizacion.RazonSocial,
+            Rfc = cotizacion.Rfc,
+            Referencia = cotizacion.Referencia,
+            Observaciones = cotizacion.Observaciones,
+            Naturaleza = cotizacion.Naturaleza,
+            UsaCliente = cotizacion.UsaCliente,
+            Afectado = cotizacion.Afectado,
+            Impreso = cotizacion.Impreso,
+            Cancelado = cotizacion.Cancelado,
+            Neto = cotizacion.Neto,
+            Impuesto1 = cotizacion.Impuesto1,
+            DescuentoMovimiento = cotizacion.DescuentoMovimiento,
+            Total = cotizacion.Total,
+            Pendiente = cotizacion.Pendiente,
+            TotalUnidades = cotizacion.TotalUnidades
         };
     }
 
-    private static Cotizacion MapFromCreateRequestDto(CotizacionCreateRequestDto request)
+    private static Cotizacion MapFromRequestDto(CotizacionRequestDto request)
     {
         return new Cotizacion
         {
-            OrdenId = request.OrdenId,
-            IntakeLegacyId = request.IntakeLegacyId,
-            CreadaPor = request.CreadaPor,
-            Subtotal = request.Subtotal,
-            ImpuestosTotal = request.ImpuestosTotal,
-            Descuento = request.Descuento,
-            Estado = request.Estado,
-            Observaciones = request.Observaciones,
-            Cliente = request.Cliente,
+            DocumentoDeId = request.DocumentoDeId,
+            ConceptoDocumentoId = request.ConceptoDocumentoId,
+            ClienteProveedorId = request.ClienteProveedorId,
+            AgenteId = request.AgenteId,
+            DocumentoOrigenId = request.DocumentoOrigenId,
+            SerieDocumento = request.SerieDocumento,
+            FechaVencimiento = request.FechaVencimiento,
+            FechaEntregaRecepcion = request.FechaEntregaRecepcion,
+            RazonSocial = request.RazonSocial,
             Rfc = request.Rfc,
-            Folio = request.Folio,
-            DescripcionServicio = request.DescripcionServicio,
-            ValidezDias = request.ValidezDias
+            Referencia = request.Referencia,
+            Observaciones = request.Observaciones,
+            TotalUnidades = request.TotalUnidades
         };
     }
 }

@@ -19,10 +19,10 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// </summary>
         Task<Cotizacion?> GetByIdAsync(int id);
 
-        /// <summary>
-        /// Obtiene cotizaciones por OrdenId
-        /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByOrdenIdAsync(int ordenId);
+        // /// <summary>
+        // /// Obtiene cotizaciones por OrdenId
+        // /// </summary>
+        // Task<IEnumerable<Cotizacion>> GetOrdenServicioAsync (int ordenId);
 
         /// <summary>
         /// Obtiene cotizaciones por estado

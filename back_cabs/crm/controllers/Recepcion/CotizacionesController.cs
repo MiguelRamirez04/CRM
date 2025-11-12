@@ -107,7 +107,7 @@ public class CotizacionesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CotizacionResponseDto), 201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Create([FromBody] CotizacionCreateRequestDto request)
+    public async Task<IActionResult> Create([FromBody] CotizacionRequestDto request)
     {
         try
         {
@@ -128,7 +128,7 @@ public class CotizacionesController : ControllerBase
     [ProducesResponseType(typeof(CotizacionResponseDto), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Update(int id, [FromBody] CotizacionCreateRequestDto request)
+    public async Task<IActionResult> Update(int id, [FromBody] CotizacionRequestDto request)
     {
         try
         {
