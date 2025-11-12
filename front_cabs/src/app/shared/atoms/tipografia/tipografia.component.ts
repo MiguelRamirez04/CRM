@@ -22,7 +22,7 @@ export class UitipografiaComponent {
             h5: 'text-lg font-medium',
             h6: 'text-base font-medium',
             p: 'text-base',
-            caption: 'text-sm text-gray-500',
+            caption: 'text-sm text-gray-500 font-medium',
         }[this.variante];
         return `${base} ${this.color}`;
     }

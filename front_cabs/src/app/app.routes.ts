@@ -25,8 +25,8 @@ export const routes: Routes = [
   // Administración (solo admins)
   {
     path: 'administracion',
-    canActivate: [SecureAuthGuard, AdminGuard],
-    data: { role: 'admin' },
+    canActivate: [SecureAuthGuard,],
+    data: { permission: 'administracion.read' },
     loadChildren: () => import('./modules/administracion/administracion.routes').then(m => m.administracionRoutes)
   },
   
