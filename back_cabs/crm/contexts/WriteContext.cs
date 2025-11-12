@@ -130,6 +130,26 @@ public class WriteContext : DbContext
     /// </summary>
     public DbSet<AgentesRef> AgentesRef { get; set; } = null!;
 
+    /// <summary>
+    /// Catálogo de almacenes del sistema
+    /// </summary>
+    public DbSet<Almacen> Almacenes { get; set; } = null!;
+
+    /// <summary>
+    /// Referencias a almacenes del sistema legacy
+    /// </summary>
+    public DbSet<AlmacenesRef> AlmacenesRef { get; set; } = null!;
+
+    /// <summary>
+    /// Catálogo de productos del sistema
+    /// </summary>
+    public DbSet<Producto> Productos { get; set; } = null!;
+
+    /// <summary>
+    /// Referencias a productos del sistema legacy
+    /// </summary>
+    public DbSet<ProductosRef> ProductosRef { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

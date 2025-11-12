@@ -1,0 +1,40 @@
+### =====================================================================================
+### PRUEBAS API ALMACENES - almacenes_pruebas.http
+### =====================================================================================
+###
+### Endpoints a probar:
+### - GET /api/Almacen → Obtener todos los almacenes activos
+### - GET /api/Almacen/{id} → Obtener almacen por ID
+### - GET /api/Almacen/{id}/exists → Validar existencia de almacen
+###
+### =====================================================================================
+
+### 1. Obtener todos los almacenes activos
+GET https://localhost:5001/api/Almacen
+Authorization: Bearer {{token}}
+
+###
+
+### 2. Obtener almacen específico por ID (ejemplo: ID=1)
+GET https://localhost:5001/api/Almacen/1
+Authorization: Bearer {{token}}
+
+###
+
+### 3. Validar existencia de almacen (ejemplo: ID=1)
+GET https://localhost:5001/api/Almacen/1/exists
+Authorization: Bearer {{token}}
+
+###
+
+### 4. Probar con ID inexistente (debería retornar 404)
+GET https://localhost:5001/api/Almacen/99999
+Authorization: Bearer {{token}}
+
+###
+
+### 5. Validar existencia de almacen inexistente (debería retornar false)
+GET https://localhost:5001/api/Almacen/99999/exists
+Authorization: Bearer {{token}}
+
+###

@@ -115,6 +115,8 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRep
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionRepository, back_cabs.CRM.repositories.Soporte.ReparacionRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IMonedaRepository, back_cabs.CRM.repositories.Legacy.MonedaRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAgenteRepository, back_cabs.CRM.repositories.Legacy.AgenteRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAlmacenRepository, back_cabs.CRM.repositories.Legacy.AlmacenRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IProductoRepository, back_cabs.CRM.repositories.Legacy.ProductoRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interfaz para mejor testabilidad
@@ -133,6 +135,8 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 // Registro de servicios Legacy
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IMonedaService, back_cabs.CRM.services.Legacy.MonedaService>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAgenteService, back_cabs.CRM.services.Legacy.AgenteService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAlmacenService, back_cabs.CRM.services.Legacy.AlmacenService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IProductoService, back_cabs.CRM.services.Legacy.ProductoService>();
 
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo
