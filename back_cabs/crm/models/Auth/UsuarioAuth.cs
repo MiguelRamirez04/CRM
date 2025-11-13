@@ -128,8 +128,7 @@ namespace back_cabs.CRM.models.Auth
         /// Valida si el usuario puede usar vehículos de empresa
         /// </summary>
         [NotMapped]
-        public bool PuedeUsarVehiculo => !string.IsNullOrWhiteSpace(TransmisionHabilitada) && 
-                                          TransmisionHabilitada != "Ninguna";
+        public bool PuedeUsarVehiculo => !string.IsNullOrWhiteSpace(TransmisionHabilitada) && TransmisionHabilitada != "Ninguna";
 
         /// <summary>
         /// Actualiza la fecha de modificación

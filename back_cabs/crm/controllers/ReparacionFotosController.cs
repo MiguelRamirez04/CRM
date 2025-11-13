@@ -4,12 +4,13 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using back_cabs.CRM.DTOs.Request;
 using back_cabs.CRM.DTOs.Response;
-using back_cabs.CRM.services;
-using back_cabs.CRM.services.Soporte;
+using back_cabs.CRM.services; // Para ICacheService
+using back_cabs.CRM.services.Soporte; // Para ReparacionFotoService
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.IO; // Necesario para KeyNotFoundException
 
 namespace back_cabs.CRM.controllers
 {
@@ -27,7 +28,7 @@ namespace back_cabs.CRM.controllers
         private readonly ICacheService _cache;
 
         public ReparacionFotosController(
-            ReparacionFotoService service, 
+            ReparacionFotoService service,
             ILogger<ReparacionFotosController> logger,
             ICacheService cache)
         {
@@ -36,28 +37,15 @@ namespace back_cabs.CRM.controllers
             _cache = cache;
         }
 
+        // ... (POST UploadFoto se mantiene igual, ya era correcto) ...
+        
         /// <summary>
         /// Subir una foto a una reparación (convierte automáticamente a WebP).
         /// </summary>
-        /// <param name="reparacionId">ID de la reparación.</param>
-        /// <param name="dto">DTO con el archivo y metadatos.</param>
-        /// <returns>Información de la foto creada.</returns>
-        /// <remarks>
-        /// Formato aceptado: multipart/form-data
-        /// 
-        /// Tipos de imagen permitidos: JPEG, PNG, WebP, GIF
-        /// 
-        /// Tamaño máximo: 10MB (configurable)
-        /// 
-        /// La imagen se convertirá automáticamente a formato WebP para optimizar tamaño y rendimiento.
-        /// </remarks>
         [HttpPost]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ReparacionFotoResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        // ... (otros ProduceResponseType)
         public async Task<IActionResult> UploadFoto(
             int reparacionId,
             [FromForm] ReparacionFotoUploadRequestDto dto)
@@ -71,16 +59,17 @@ namespace back_cabs.CRM.controllers
             try
             {
                 var usuarioId = GetCurrentUserId();
-                _logger.LogInformation("Usuario {UsuarioId} subiendo foto a reparación {ReparacionId}", 
+                _logger.LogInformation("Usuario {UsuarioId} subiendo foto a reparación {ReparacionId}",
                     usuarioId, reparacionId);
 
                 var created = await _service.UploadFotoAsync(reparacionId, dto, usuarioId);
+                
                 // invalidar lista de fotos de la reparación
                 await _cache.RemoveAsync($"rep:{reparacionId}:fotos:list");
 
                 return CreatedAtAction(
-                    nameof(DownloadFoto), 
-                    new { reparacionId, id = created.Id }, 
+                    nameof(DownloadFoto), // Apunta al método de descarga corregido
+                    new { reparacionId, id = created.Id },
                     created);
             }
             catch (KeyNotFoundException ex)
@@ -100,23 +89,22 @@ namespace back_cabs.CRM.controllers
             }
         }
 
+
         /// <summary>
         /// Obtener todas las fotos de una reparación.
         /// </summary>
-        /// <param name="reparacionId">ID de la reparación.</param>
-        /// <returns>Lista de fotos con sus metadatos.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(List<ReparacionFotoResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        // ... (otros ProduceResponseType)
         public async Task<IActionResult> GetFotos(int reparacionId)
         {
             var key = $"rep:{reparacionId}:fotos:list";
             var cached = await _cache.GetAsync<List<ReparacionFotoResponseDto>>(key);
             if (cached != null) return Ok(cached);
 
-            var fotos = await _service.GetFotosByReparacionAsync(reparacionId);
-            // cachear solo metadatos/DTOs, no bytes
+            // ✅ CORRECCIÓN 1: Llamar al método correcto (GetFotosByReparacionIdAsync)
+            var fotos = await _service.GetFotosByReparacionIdAsync(reparacionId);
+            
             await _cache.SetAsync(key, fotos, TimeSpan.FromMinutes(10));
             return Ok(fotos);
         }
@@ -124,47 +112,46 @@ namespace back_cabs.CRM.controllers
         /// <summary>
         /// Descargar una foto específica.
         /// </summary>
-        /// <param name="reparacionId">ID de la reparación.</param>
-        /// <param name="id">ID de la foto.</param>
-        /// <returns>Archivo de imagen en formato WebP.</returns>
         [HttpGet("{id}/download")]
         [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        // ... (otros ProduceResponseType)
         public async Task<IActionResult> DownloadFoto(int reparacionId, int id)
         {
-            // No cachear bytes por seguridad; si quisieras mejorar performance, cache metadata o usar CDN/local FS
-            var result = await _service.GetFotoFileAsync(id);
+            // ✅ CORRECCIÓN 2: Llamar al método correcto (DownloadFotoAsync)
+            var result = await _service.DownloadFotoAsync(id); 
+            
             if (result == null) return NotFound();
-            return File(result.Value.FileBytes, result.Value.MimeType, result.Value.FileName);
+
+            // ✅ CORRECCIÓN 2.1: Usar los nombres de tupla correctos (fileStream, contentType, fileName)
+            return File(result.Value.fileStream, result.Value.contentType, result.Value.fileName);
         }
 
         /// <summary>
         /// Eliminar una foto.
         /// </summary>
-        /// <param name="reparacionId">ID de la reparación.</param>
-        /// <param name="id">ID de la foto a eliminar.</param>
-        /// <returns>NoContent si exitoso.</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        // ... (otros ProduceResponseType)
         public async Task<IActionResult> DeleteFoto(int reparacionId, int id)
         {
             try
             {
                 var usuarioId = GetCurrentUserId();
-                _logger.LogInformation("Usuario {UsuarioId} eliminando foto {FotoId} de reparación {ReparacionId}", 
+                _logger.LogInformation("Usuario {UsuarioId} eliminando foto {FotoId} de reparación {ReparacionId}",
                     usuarioId, id, reparacionId);
 
-                var deleted = await _service.DeleteFotoAsync(id, usuarioId);
-                if (!deleted)
-                {
-                    return NotFound(new { Error = "Foto no encontrada." });
-                }
+                // ✅ CORRECCIÓN 3: Llamar a DeleteFotoAsync solo con el 'id' de la foto
+                await _service.DeleteFotoAsync(id);
+                
+                // Invalidar caché tras eliminación exitosa
+                await _cache.RemoveAsync($"rep:{reparacionId}:fotos:list");
+
                 return NoContent();
+            }
+            catch (KeyNotFoundException ex) // Capturar la excepción si el servicio no encuentra la foto
+            {
+                _logger.LogWarning(ex, "Foto no encontrada para eliminar: {FotoId}", id);
+                return NotFound(new { Error = ex.Message });
             }
             catch (Exception ex)
             {
