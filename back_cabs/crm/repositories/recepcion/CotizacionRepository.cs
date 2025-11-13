@@ -34,7 +34,7 @@ namespace back_cabs.CRM.repositories.Recepcion
             {
                 var cotizaciones = await _readContext.Cotizaciones
                     .AsNoTracking()
-                    .OrderByDescending(c => c.CreadoEn)
+                    .OrderByDescending(c => c.Fecha) // Ordenado por la nueva fecha del documento
                     .ToListAsync();
 
                 _logger.LogDebug("Obtenidas {Count} cotizaciones", cotizaciones.Count);
@@ -73,62 +73,91 @@ namespace back_cabs.CRM.repositories.Recepcion
             }
         }
 
-        public async Task<IEnumerable<Cotizacion>> GetByOrdenIdAsync(int ordenId)
+        // /// <summary>
+        // /// Obtiene cotizaciones por el ID del documento de origen (ej. Orden de Trabajo).
+        // /// </summary>
+        // public async Task<IEnumerable<Cotizacion>> GetOrdenServicio(int IDConcepto)
+        // {
+        //     try
+        //     {
+        //         var resultado = await _readContext.Cotizaciones
+        //             .AsNoTracking()
+        //             .Where(c => c.ConceptoDocumentoId == IDConcepto) // Adaptado para usar DocumentoOrigenId
+        //             .OrderByDescending(c => c.Fecha)
+        //             .ToListAsync();
+
+        //         _logger.LogDebug("Se obtuvo la Orden de Servicio con ID {resultado.id}", resultado.Count, IDConcepto);
+        //         return resultado;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Error al obtener cotizaciones por DocumentoOrigenId {OrdenId}", ordenId);
+        //         throw;
+        //     }
+        // }
+
+        /// <summary>
+        /// Obtiene cotizaciones filtrando por el campo especificado.
+        /// Campo: "cancelado", "afectado", "impreso", "usaCliente"
+        /// Valor: 0 o 1
+        /// </summary>
+        public async Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string campo, int valor)
         {
             try
             {
-                var cotizaciones = await _readContext.Cotizaciones
-                    .AsNoTracking()
-                    .Where(c => c.OrdenId == ordenId)
-                    .OrderByDescending(c => c.CreadoEn)
-                    .ToListAsync();
+                IQueryable<Cotizacion> query = _readContext.Cotizaciones.AsNoTracking();
 
-                _logger.LogDebug("Obtenidas {Count} cotizaciones para OrdenId {OrdenId}", cotizaciones.Count, ordenId);
+                // Filtrar según el campo y valor especificados
+                switch (campo.ToLower())
+                {
+                    case "cancelado":
+                        query = query.Where(c => c.Cancelado == valor);
+                        break;
+                    case "afectado":
+                        query = query.Where(c => c.Afectado == valor);
+                        break;
+                    case "impreso":
+                        query = query.Where(c => c.Impreso == valor);
+                        break;
+                    case "usacliente":
+                        query = query.Where(c => c.UsaCliente == valor);
+                        break;
+                    default:
+                        _logger.LogWarning("Campo de estado no reconocido: {Campo}", campo);
+                        break;
+                }
+
+                var cotizaciones = await query.OrderByDescending(c => c.Fecha).ToListAsync();
+
+                _logger.LogDebug("Obtenidas {Count} cotizaciones con {Campo} = {Valor}", cotizaciones.Count, campo, valor);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}", ordenId);
+                _logger.LogError(ex, "Error al obtener cotizaciones por estado {Campo} = {Valor}", campo, valor);
                 throw;
             }
         }
 
-        public async Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string estado)
+        /// <summary>
+        /// Obtiene cotizaciones por ID de cliente (ClienteProveedorId).
+        /// </summary>
+        public async Task<IEnumerable<Cotizacion>> GetByClienteIdAsync(int clienteId)
         {
             try
             {
                 var cotizaciones = await _readContext.Cotizaciones
                     .AsNoTracking()
-                    .Where(c => c.Estado == estado)
-                    .OrderByDescending(c => c.CreadoEn)
+                    .Where(c => c.ClienteProveedorId == clienteId)
+                    .OrderByDescending(c => c.Fecha)
                     .ToListAsync();
 
-                _logger.LogDebug("Obtenidas {Count} cotizaciones con estado {Estado}", cotizaciones.Count, estado);
+                _logger.LogDebug("Obtenidas {Count} cotizaciones para ClienteProveedorId {ClienteId}", cotizaciones.Count, clienteId);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por estado {Estado}", estado);
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<Cotizacion>> GetByClienteAsync(string cliente)
-        {
-            try
-            {
-                var cotizaciones = await _readContext.Cotizaciones
-                    .AsNoTracking()
-                    .Where(c => c.Cliente != null && c.Cliente.Contains(cliente))
-                    .OrderByDescending(c => c.CreadoEn)
-                    .ToListAsync();
-
-                _logger.LogDebug("Obtenidas {Count} cotizaciones para cliente {Cliente}", cotizaciones.Count, cliente);
-                return cotizaciones;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener cotizaciones por cliente {Cliente}", cliente);
+                _logger.LogError(ex, "Error al obtener cotizaciones por ClienteProveedorId {ClienteId}", clienteId);
                 throw;
             }
         }
@@ -146,6 +175,64 @@ namespace back_cabs.CRM.repositories.Recepcion
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al verificar existencia de cotización {Id}", id);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Valida que todas las llaves foráneas existan en sus respectivas tablas.
+        /// Retorna un diccionario con el resultado de cada validación.
+        /// NOTA: Los IDs de DocumentoDe, ConceptoDocumento, ClienteProveedor y Agente 
+        /// provienen de tablas del sistema Contpaqi que no están en este contexto.
+        /// Esta validación debe hacerse llamando a un SP o API externa.
+        /// Por ahora, retornamos true para permitir la operación.
+        /// </summary>
+        public async Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(
+            int documentoDeId, 
+            int conceptoDocumentoId, 
+            int clienteProveedorId, 
+            int agenteId)
+        {
+            var resultados = new Dictionary<string, bool>();
+
+            try
+            {
+                // TODO: Validar contra tablas de Contpaqi o API externa
+                // Por ahora, asumimos que si el ID > 0, es válido
+                resultados["DocumentoDeId"] = documentoDeId > 0;
+                resultados["ConceptoDocumentoId"] = conceptoDocumentoId > 0;
+                
+                // Validar ClienteProveedorId contra la tabla de clientes si existe en el contexto
+                if (clienteProveedorId > 0)
+                {
+                    // Buscar por Id o LegacyClientId
+                    var clienteExiste = await _readContext.CatalogClientes
+                        .AnyAsync(c => c.Id == clienteProveedorId || c.LegacyClientId == clienteProveedorId);
+                    resultados["ClienteProveedorId"] = clienteExiste;
+                }
+                else
+                {
+                    resultados["ClienteProveedorId"] = false;
+                }
+                
+                // Validar AgenteId (usuario)
+                if (agenteId > 0)
+                {
+                    var agenteExiste = await _readContext.UsuariosAuth
+                        .AnyAsync(u => u.Id == agenteId);
+                    resultados["AgenteId"] = agenteExiste;
+                }
+                else
+                {
+                    resultados["AgenteId"] = false;
+                }
+
+                _logger.LogDebug("Validación de FKs completada: {@Resultados}", resultados);
+                return resultados;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al validar llaves foráneas");
                 throw;
             }
         }
