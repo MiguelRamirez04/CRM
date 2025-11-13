@@ -25,6 +25,7 @@ using CRM.DTOs.Response;
 using back_cabs.CRM.enums;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.models.Auth;
+using back_cabs.CRM.models;
 using back_cabs.CRM.Middleware;
 using back_cabs.CRM.utils.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -51,18 +52,32 @@ namespace back_cabs.CRM.controllers.Auth
         private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<AuthController> _logger;
         private readonly IConfiguration _configuration;
+<<<<<<< .merge_file_JH5MOT
         private readonly IAntiforgery _antiforgery;
+=======
+        private readonly EmailService _emailService;
+        
+>>>>>>> .merge_file_HcdV9r
 
         public AuthController(
             UsuarioAuthService usuarioAuthService,
             ILogger<AuthController> logger,
             IConfiguration configuration,
+<<<<<<< .merge_file_JH5MOT
             IAntiforgery antiforgery)
+=======
+            EmailService emailService)
+>>>>>>> .merge_file_HcdV9r
         {
             _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+<<<<<<< .merge_file_JH5MOT
             _antiforgery = antiforgery ?? throw new ArgumentNullException(nameof(antiforgery));
+=======
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // <-- Y aquí
+
+>>>>>>> .merge_file_HcdV9r
         }
 
         /// <summary>
@@ -449,7 +464,7 @@ namespace back_cabs.CRM.controllers.Auth
             {
                 // Usar la información del usuario ya autenticado por el middleware
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
+
                 if (string.IsNullOrEmpty(userIdClaim))
                 {
                     _logger.LogWarning("Usuario autenticado pero sin claim NameIdentifier");
@@ -703,7 +718,76 @@ namespace back_cabs.CRM.controllers.Auth
         /// <response code="400">Contraseña actual incorrecta</response>
         /// <response code="401">Token inválido</response>
         /// <response code="500">Error interno del servidor</response>
-        [HttpPost("change-password")]
+        
+        [HttpPost("recuperar-cuenta")]
+        public async Task<IActionResult> RecuperarCuenta([FromBody] SolicitudRecuperacionDto request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email))
+                    return BadRequest(new { message = "El email es requerido" });
+
+                // Buscar usuario por email
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorEmailAsync(request.Email);
+                if (usuario == null)
+                    return BadRequest(new { message = "No existe usuario con ese email" });
+
+                // Generar token de 6 dígitos
+                var token = new Random().Next(100000, 999999).ToString();
+
+                // Guardar token en BD con expiración
+                var tokenRecuperacion = new RecuperacionPasswordToken
+                {
+                    Email = request.Email,
+                    Token = token,
+                    Expiracion = DateTime.UtcNow.AddMinutes(10),
+                    Usado = false
+                };
+                await _usuarioAuthService.GuardarTokenRecuperacionAsync(tokenRecuperacion);
+
+                // Enviar correo
+                await _emailService.EnviarTokenRecuperacionAsync(request.Email, token);
+
+                return Ok(new { message = "Correo de recuperación enviado" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al procesar solicitud de recuperación de cuenta para email: {Email}. Detalles: {Message}", request.Email, ex.Message);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost("cambiar-contraseña-recuperacion")]
+        public async Task<IActionResult> CambiarContrasenaRecuperacion([FromBody] CambioContrasenaRecuperacionDto request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.NuevoPassword) || string.IsNullOrWhiteSpace(request.Token))
+                    return BadRequest(new { message = "Email, nueva contraseña y token son requeridos" });
+
+                // Validar token en BD
+                var tokenRecuperacion = await _usuarioAuthService.ObtenerTokenRecuperacionAsync(request.Email, request.Token);
+                if (tokenRecuperacion == null || tokenRecuperacion.Usado || tokenRecuperacion.Expiracion < DateTime.UtcNow)
+                    return BadRequest(new { message = "Token inválido o expirado" });
+
+                // Cambiar contraseña del usuario
+                var actualizado = await _usuarioAuthService.ActualizarContrasenaPorEmailAsync(request.Email, request.NuevoPassword);
+                if (!actualizado)
+                    return StatusCode(500, new { message = "Error al actualizar la contraseña" });
+
+                // Marcar token como usado
+                await _usuarioAuthService.MarcarTokenRecuperacionUsadoAsync(tokenRecuperacion.Id);
+
+                // Retornar URL de confirmación
+                return Ok(new { url = "https://frontend-app/confirmacion-cambio" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar contraseña de recuperación para email: {Email}. Detalles: {Message}", request.Email, ex.Message);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+                [HttpPost("change-password")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.BadRequest)]

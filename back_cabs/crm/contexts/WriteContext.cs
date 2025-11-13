@@ -6,7 +6,10 @@ using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
 using back_cabs.CRM.models;
+<<<<<<< .merge_file_Jq0WSv
 using back_cabs.CRM.models.legacy;
+=======
+>>>>>>> .merge_file_lizUYh
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -29,6 +32,11 @@ public class WriteContext : DbContext
     /// Usuarios del sistema de autenticación
     /// </summary>
     public DbSet<UsuarioAuth> UsuariosAuth { get; set; } = null!;
+
+    /// <summary>
+    /// Tokens de recuperación de contraseña
+    /// </summary>
+    public DbSet<RecuperacionPasswordToken> RecuperacionPasswordTokens { get; set; } = null!;
 
     /// <summary>
     /// Órdenes de trabajo del módulo de Recepción
