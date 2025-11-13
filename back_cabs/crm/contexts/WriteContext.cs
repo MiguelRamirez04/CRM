@@ -160,6 +160,11 @@ public class WriteContext : DbContext
     /// </summary>
     public DbSet<DocumentosModeloRef> DocumentosModeloRef { get; set; } = null!;
 
+    /// <summary>
+    /// Vista de conceptos completos con datos locales y legacy
+    /// </summary>
+    public DbSet<VwConceptosCompletos> VwConceptosCompletos { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

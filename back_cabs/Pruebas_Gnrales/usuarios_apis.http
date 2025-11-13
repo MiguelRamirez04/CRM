@@ -4,7 +4,7 @@
 ### ==================================================
 
 ### VARIABLES GLOBALES
-@baseUrl = https://localhost:7165
+@baseUrl = http://localhost:5176
 @token = @token
 
 ### ==================================================
@@ -18,6 +18,17 @@ Content-Type: application/json
 {
   "email": "admin@cabs.com",
   "password": "Admin123!"
+}
+
+###
+
+# @name login-admin-new
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "administrador@gmail.com",
+  "password": "AdminPass123!"
 }
 
 ### ==================================================

@@ -163,6 +163,16 @@ public class ReadOnlyContext : DbContext
     /// </summary>
     public DbSet<DocumentosModeloRef> DocumentosModeloRef { get; set; } = null!;
 
+    /// <summary>
+    /// Vista de conceptos completos con datos locales y legacy
+    /// </summary>
+    public DbSet<VwConceptosCompletos> VwConceptosCompletos { get; set; } = null!;
+
+    /// <summary>
+    /// Vista de números de serie completos con datos locales y legacy
+    /// </summary>
+    public DbSet<VwNumerosSerieCompletos> VwNumerosSerieCompletos { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -413,6 +423,33 @@ public class ReadOnlyContext : DbContext
             // Índices
             entity.HasIndex(e => e.OrdenId);
             entity.HasIndex(e => e.Fecha);
+        });
+
+        // Configuración para VwNumerosSerieCompletos (vista)
+        modelBuilder.Entity<VwNumerosSerieCompletos>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("VwNumerosSerieCompletos");
+            
+            // Configuración explícita de tipos para evitar ambigüedades
+            entity.Property(e => e.NumeroSerieId).HasColumnType("int");
+            entity.Property(e => e.NumeroSerie).HasColumnType("nvarchar(60)");
+            entity.Property(e => e.Estado).HasColumnType("int");
+            entity.Property(e => e.EstadoAnterior).HasColumnType("int");
+            entity.Property(e => e.Costo).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.FechaTimestamp).HasColumnType("datetime2");
+            entity.Property(e => e.Activo).HasColumnType("bit");
+            
+            entity.Property(e => e.LegacySerieId).HasColumnType("int");
+            entity.Property(e => e.LegacyProductoId).HasColumnType("int");
+            entity.Property(e => e.LegacyAlmacenId).HasColumnType("int");
+            entity.Property(e => e.ProductoLegacy).HasColumnType("int");
+            entity.Property(e => e.NumeroSerieLegacy).HasColumnType("varchar(30)");
+            entity.Property(e => e.AlmacenLegacy).HasColumnType("int");
+            entity.Property(e => e.EstadoLegacy).HasColumnType("int");
+            entity.Property(e => e.EstadoAnteriorLegacy).HasColumnType("int");
+            entity.Property(e => e.CostoLegacy).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.TimestampLegacy).HasColumnType("varchar(23)");
         });
 
     }

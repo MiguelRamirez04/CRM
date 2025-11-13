@@ -1,0 +1,168 @@
+### =====================================================================================
+### PRUEBAS API CONCEPTOS CON REDIS CACHE - conceptos_pruebas.http
+### =====================================================================================
+###
+### ENDPOINTS A PROBAR:
+### - GET /api/Concepto → Obtener todos los conceptos activos (Cache 30min)
+### - GET /api/Concepto/search?q={term} → Buscar por código o nombre (Cache 60min)
+###
+### VALIDACIONES DE CACHE:
+### - Primera llamada: CACHE MISS → Query BD → Set Cache
+### - Segunda llamada: CACHE HIT → Datos desde Redis (fast path)
+### - Verificar logs para confirmar HIT/MISS
+### - Validar tiempos de respuesta (HIT: ~10-50ms, MISS: ~300-500ms)
+###
+### =====================================================================================
+
+@baseUrl = http://localhost:5176
+@token = YOUR_JWT_TOKEN_HERE
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 1️⃣ OBTENER TODOS LOS CONCEPTOS - Primera Llamada (CACHE MISS esperado)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto
+### - Log: "⚠️ CACHE MISS para conceptos:all - Consultando base de datos"
+### - Log: "💾 Cache SET para conceptos:all con X conceptos. TTL: 30 minutos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 2️⃣ OBTENER TODOS LOS CONCEPTOS - Segunda Llamada (CACHE HIT esperado)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto (mismos datos que llamada anterior)
+### - Log: "✅ CACHE HIT para conceptos:all - Retornando X conceptos desde Redis"
+### - Tiempo: ~10-50ms (95% mejora vs primera llamada)
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 3️⃣ BÚSQUEDA POR CÓDIGO DE CONCEPTO - Primera Llamada (CACHE MISS)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search?q=VENTA
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto filtrados por "VENTA"
+### - Log: "⚠️ CACHE MISS para búsqueda 'VENTA' - Consultando base de datos"
+### - Log: "💾 Cache SET para búsqueda 'VENTA' con X conceptos. TTL: 60 minutos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 4️⃣ BÚSQUEDA POR CÓDIGO DE CONCEPTO - Segunda Llamada (CACHE HIT)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search?q=VENTA
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto (mismos datos que llamada anterior)
+### - Log: "✅ CACHE HIT para búsqueda 'VENTA' - Retornando X conceptos desde Redis"
+### - Tiempo: ~10-50ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 5️⃣ BÚSQUEDA POR NOMBRE DE CONCEPTO - CACHE MISS
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search?q=compra
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto filtrados por "compra"
+### - Log: "⚠️ CACHE MISS para búsqueda 'compra' - Consultando base de datos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 6️⃣ BÚSQUEDA CON TÉRMINO DIFERENTE - CACHE MISS
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search?q=traspaso
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de ConceptoResponseDto filtrados por "traspaso"
+### - Log: "⚠️ CACHE MISS para búsqueda 'traspaso' - Consultando base de datos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 7️⃣ BÚSQUEDA CON TÉRMINO VACÍO - ERROR 400
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search?q=
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 400 Bad Request
+### - Body: Error message sobre parámetro requerido
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 8️⃣ BÚSQUEDA SIN PARÁMETRO Q - ERROR 400
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto/search
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 400 Bad Request
+### - Body: Error message sobre parámetro requerido
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 9️⃣ ACCESO SIN AUTENTICACIÓN - ERROR 401
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/Concepto
+
+### Resultado esperado:
+### - Status: 401 Unauthorized
+### - Body: Error de autenticación
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 🔍 PRUEBAS DE PERFORMANCE Y CACHE
+### ─────────────────────────────────────────────────────────────────────────────────
+###
+### Para validar el funcionamiento del cache Redis:
+###
+### 1. Ejecutar primera llamada a /api/Concepto
+###    - Debe ser CACHE MISS (~300-500ms)
+###    - Verificar log: "CACHE MISS... Consultando base de datos"
+###
+### 2. Ejecutar segunda llamada inmediata a /api/Concepto
+###    - Debe ser CACHE HIT (~10-50ms)
+###    - Verificar log: "CACHE HIT... desde Redis"
+###
+### 3. Esperar 30+ minutos y repetir
+###    - Debe ser CACHE MISS nuevamente (TTL expirado)
+###
+### 4. Para búsquedas, probar términos diferentes
+###    - Cada término nuevo: CACHE MISS
+###    - Mismo término: CACHE HIT hasta 60min
+###
+### 5. Validar datos de respuesta incluyen:
+###    - ConceptoId, CodigoConcepto, NombreConcepto
+###    - Naturaleza, TipoFolio, CreaCliente, Activo
+###    - LegacyConceptoId, LegacyDocumentoModeloId
+###    - DocumentoModeloLegacy, CodigoLegacy, NombreLegacy
+###
+### =====================================================================================
