@@ -82,6 +82,7 @@ builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
+builder.Services.AddScoped<EmailService>();
 
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo

@@ -28,6 +28,11 @@ public class ReadOnlyContext : DbContext
     public DbSet<UsuarioAuth> UsuariosAuth { get; set; } = null!;
 
     /// <summary>
+    /// Tokens de recuperación de contraseña
+    /// </summary>
+    public DbSet<RecuperacionPasswordToken> RecuperacionPasswordTokens { get; set; } = null!;
+
+    /// <summary>
     /// Órdenes de trabajo del módulo de Recepción
     /// </summary>
     public DbSet<OrdenTrabajo> OrdenesTrabajo { get; set; } = null!;

@@ -1,4 +1,4 @@
-public class RecuperacionCunetaRequestDto
+public class RecuperacionCuentaRequestDto
 {
     public required string Email { get; set; }
 }
