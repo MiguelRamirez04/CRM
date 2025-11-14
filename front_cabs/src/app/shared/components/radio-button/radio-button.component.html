@@ -1,0 +1,13 @@
+<div class="perfil-campo radio-wrapper" [class.disabled]="disabled">
+  <label class="radio-label">
+    <input
+      type="radio"
+      [name]="name"
+      [checked]="checked"
+      [disabled]="disabled"
+      (change)="onSelect()"
+    />
+    <span class="custom-radio"></span>
+    {{ label }}
+  </label>
+</div>

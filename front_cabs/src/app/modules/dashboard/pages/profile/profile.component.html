@@ -14,6 +14,7 @@ rol:
                       {{ permission }}
 esto es lo del perfil
 -->
+
 <div class="perfil">
 
   <!-- ENCABEZADO -->
@@ -72,7 +73,7 @@ esto es lo del perfil
           'margin': '0',
           'line-height': '1.2'
         }">
-          {{ (user$ | async)?.nombreCompleto || (user$ | async)?.name ||
+          {{(user$ | async)?.nombreCompleto || (user$ | async)?.name ||
              ((user$ | async)?.nombre + ' ' + (user$ | async)?.apellido) }}
         </h2>
 
@@ -250,19 +251,7 @@ esto es lo del perfil
       </div>
     </div>
 
-    <!-- Tipo de rol -->
-    <div style="display: flex; flex-direction: column;">
-      <label style="font-size: 17px; font-weight: 390; color: #202020; margin-bottom: 8px; display: block;">Tipo de rol</label>
-      <div style="position: relative; display: flex; align-items: center;">
-        <!-- Ícono (izquierda) -->
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="position: absolute; left: 12px; width: 20px; height: 20px; color: #4a90e2; pointer-events: none; z-index: 1;">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
-        </svg>
-        <input type="text" [value]="currentUser?.role" readonly style="font-weight: 590; width: 100%; padding: 12px 16px; padding-left: 40px; font-size: 19px; color: #1a1a1a; outline: none; box-shadow: 0 1px 4px rgba(13, 77, 172, 0.233); background: #f3f0f09f; border-radius: 10px; transition: all 0.25s ease; border: none; box-sizing: border-box;">
-      </div>
-    </div>
+
 
     <!-- Estado de licencia -->
     <div style="display: flex; flex-direction: column;">
@@ -273,228 +262,4 @@ esto es lo del perfil
         </span>
       </div>
     </div>
-
-<!-- CAMBIAR CONTRASEÑA -->
-<div class="perfil-personal">
-  <h3 class="perfil-personal-titulo">Cambiar contraseña</h3>
-     <!-- CONTRASEÑA ACTUAL -->
-  <div class="perfil-campo">
-    <label>Contraseña actual</label>
-    <div class="input-wrapper">
-      <input
-        [type]="showCurrentPassword ? 'text' : 'password'"
-        placeholder="Ingresa tu contraseña actual"
-        [(ngModel)]="currentPassword"
-      />
-      <svg
-        *ngIf="!showCurrentPassword"
-        (click)="toggleCurrentPasswordVisibility()"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="icono-ojo"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M2.036 12.322a1.012 1.012 0 0 1
-            0-.639C3.423 7.51 7.36 4.5
-            12 4.5c4.638 0 8.573 3.007
-            9.963 7.178.07.207.07.431
-            0 .639C20.577 16.49 16.64
-            19.5 12 19.5c-4.638 0-8.573-3.007
-            -9.963-7.178Z"
-        />
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M15 12a3 3 0 1 1-6 0
-            3 3 0 0 1 6 0Z"
-        />
-      </svg>
-
-      <svg
-        *ngIf="showCurrentPassword"
-        (click)="toggleCurrentPasswordVisibility()"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="icono-ojo"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M3.98 8.223A10.477 10.477 0 0
-            0 1.934 12C3.226 16.338 7.244
-            19.5 12 19.5c.993 0 1.953-.138
-            2.863-.395M6.228 6.228A10.451 10.451
-            0 0 1 12 4.5c4.756 0 8.773
-            3.162 10.065 7.498a10.522 10.522
-            0 0 1-4.293 5.774M6.228 6.228
-            3 3m3.228 3.228 3.65 3.65m7.894
-            7.894L21 21m-3.228-3.228-3.65-3.65
-            m0 0a3 3 0 1 0-4.243-4.243
-            m4.242 4.242L9.88 9.88"
-        />
-      </svg>
-    </div>
-  </div>
-
-  <!-- NUEVA Y CONFIRMAR CONTRASEÑA -->
-  <div class="perfil-doble">
-    <div class="perfil-campo">
-      <label>Nueva contraseña</label>
-      <div class="input-wrapper">
-        <input
-          [type]="showNewPassword ? 'text' : 'password'"
-          placeholder="Nueva contraseña"
-          [(ngModel)]="newPassword"
-        />
-        <svg
-          *ngIf="!showNewPassword"
-          (click)="toggleNewPasswordVisibility()"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="icono-ojo"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M2.036 12.322a1.012 1.012 0 0 1
-              0-.639C3.423 7.51 7.36 4.5
-              12 4.5c4.638 0 8.573 3.007
-              9.963 7.178.07.207.07.431
-              0 .639C20.577 16.49 16.64
-              19.5 12 19.5c-4.638 0-8.573-3.007
-              -9.963-7.178Z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 12a3 3 0 1 1-6 0
-              3 3 0 0 1 6 0Z"
-          />
-        </svg>
-
-        <svg
-          *ngIf="showNewPassword"
-          (click)="toggleNewPasswordVisibility()"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="icono-ojo"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.98 8.223A10.477 10.477 0 0
-              0 1.934 12C3.226 16.338 7.244
-              19.5 12 19.5c.993 0 1.953-.138
-              2.863-.395M6.228 6.228A10.451 10.451
-              0 0 1 12 4.5c4.756 0 8.773
-              3.162 10.065 7.498a10.522 10.522
-              0 0 1-4.293 5.774M6.228 6.228
-              3 3m3.228 3.228 3.65 3.65m7.894
-              7.894L21 21m-3.228-3.228-3.65-3.65
-              m0 0a3 3 0 1 0-4.243-4.243
-              m4.242 4.242L9.88 9.88"
-          />
-        </svg>
-      </div>
-    </div>
-
-    <div class="perfil-campo">
-      <label>Confirmar contraseña</label>
-      <div class="input-wrapper">
-        <input
-          [type]="showConfirmPassword ? 'text' : 'password'"
-          placeholder="Confirmar contraseña"
-          [(ngModel)]="confirmPassword"
-        />
-        <svg
-          *ngIf="!showConfirmPassword"
-          (click)="toggleConfirmPasswordVisibility()"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="icono-ojo"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M2.036 12.322a1.012 1.012 0 0 1
-              0-.639C3.423 7.51 7.36 4.5
-              12 4.5c4.638 0 8.573 3.007
-              9.963 7.178.07.207.07.431
-              0 .639C20.577 16.49 16.64
-              19.5 12 19.5c-4.638 0-8.573-3.007
-              -9.963-7.178Z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 12a3 3 0 1 1-6 0
-              3 3 0 0 1 6 0Z"
-          />
-        </svg>
-
-        <svg
-          *ngIf="showConfirmPassword"
-          (click)="toggleConfirmPasswordVisibility()"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="icono-ojo"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.98 8.223A10.477 10.477 0 0
-              0 1.934 12C3.226 16.338 7.244
-              19.5 12 19.5c.993 0 1.953-.138
-              2.863-.395M6.228 6.228A10.451 10.451
-              0 0 1 12 4.5c4.756 0 8.773
-              3.162 10.065 7.498a10.522 10.522
-              0 0 1-4.293 5.774M6.228 6.228
-              3 3m3.228 3.228 3.65 3.65m7.894
-              7.894L21 21m-3.228-3.228-3.65-3.65
-              m0 0a3 3 0 1 0-4.243-4.243
-              m4.242 4.242L9.88 9.88"
-          />
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <!-- BOTÓN CENTRADO -->
-  <div class="perfil-boton">
-    <button (click)="updatePassword()">Actualizar contraseña</button>
-  </div>
-  </div>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
 
