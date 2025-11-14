@@ -153,6 +153,8 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmProductoRepositor
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoModeloRepository, back_cabs.CRM.repositories.Legacy.AdmDocumentoModeloRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmConceptoRepository, back_cabs.CRM.repositories.Legacy.AdmConceptoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmNumeroSerieRepository, back_cabs.CRM.repositories.Legacy.AdmNumeroSerieRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoRepository, back_cabs.CRM.repositories.Legacy.AdmDocumentoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmClienteRepository, back_cabs.CRM.repositories.Legacy.AdmClienteRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interfaz para mejor testabilidad
@@ -176,6 +178,12 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmProductoService, 
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoModeloService, back_cabs.CRM.services.Legacy.AdmDocumentoModeloService>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmConceptoService, back_cabs.CRM.services.Legacy.AdmConceptoService>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmNumeroSerieService, back_cabs.CRM.services.Legacy.AdmNumeroSerieService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoService, back_cabs.CRM.services.Legacy.AdmDocumentoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmClienteService, back_cabs.CRM.services.Legacy.AdmClienteService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmUnidadMedidaPesoRepository, back_cabs.CRM.repositories.Legacy.AdmUnidadMedidaPesoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmUnidadMedidaPesoService, back_cabs.CRM.services.Legacy.AdmUnidadMedidaPesoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMovimientoSerieRepository, back_cabs.CRM.repositories.Legacy.AdmMovimientoSerieRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMovimientoSerieService, back_cabs.CRM.services.Legacy.AdmMovimientoSerieService>();
 
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo

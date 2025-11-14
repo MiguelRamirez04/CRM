@@ -105,6 +105,18 @@ namespace back_cabs.CRM.contexts
         /// </summary>
         public DbSet<AdmMovimientoSerie> AdmMovimientosSerie { get; set; }
 
+        /// <summary>
+        /// Tabla admClientes del sistema legacy
+        /// Catálogo de clientes
+        /// </summary>
+        public DbSet<AdmCliente> AdmClientes { get; set; }
+
+        /// <summary>
+        /// Tabla admDomicilios del sistema legacy
+        /// Domicilios de clientes y proveedores
+        /// </summary>
+        public DbSet<AdmDomicilio> AdmDomicilios { get; set; }
+
         // ═══════════════════════════════════════════════════════════════
         // CONFIGURACIÓN DEL CONTEXTO
         // ═══════════════════════════════════════════════════════════════
