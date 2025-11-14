@@ -19,6 +19,9 @@ export class UiCardComponent {
     @Input() valor?: number | number[] = 0
     @Input() viewLabel: boolean = false
     @Input() viewSimbolo: boolean = false
+    @Input() porcentaje: string = '';
+    @Input() estadoEtiqueta: VarianteEtiqueta= "neutro"
+    @Output() seleccionar = new EventEmitter<void>();
+    @Input() selected: boolean = false;
 
-    @Input() estadoEtiqueta: VarianteEtiqueta= "negativo"
 }

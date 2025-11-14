@@ -1,39 +1,44 @@
-<div class=" flex-1 p-2 rounded-md border border-zinc-300  items-center flex-col justify-start bg-white max-w-[400px]" >
-                <!-- Encabezado de la tarjeta-->
-                <div class="flex  justify-between items-center">
-                    <!-- Icono y texto -->
-                    <div class=" flex gap-1 items-center ">
-                        <app-ui-icono
-                            name={{nameIcono}}
-                            size="size-5"
-                        >
-                        </app-ui-icono>
-                        <!-- Texto -->
-                        <app-ui-tipografia
-                            variante="h6"
-                            texto={{title}}
-                        >                    
-                        </app-ui-tipografia>
-                    </div>
-                    <!-- Etiqueta de estado -->
-                    <!-- Icono y valor -->
-                    @if (viewLabel) {
-                        <app-ui-etiqueta
-                        texto={{valor}}
-                        [variante]="estadoEtiqueta"
-                        />
-                    }
-                </div>
-                <div class=" flex ">
-                    @if (viewSimbolo){
-                        <app-ui-tipografia
-                            variante="h1"
-                            texto="$"
-                        ></app-ui-tipografia>
-                    }
-                    <app-ui-tipografia
-                        variante="h1"
-                        texto={{valor}}
-                    ></app-ui-tipografia>                    
-                </div>
-            </div>
+<div class="flex flex-1 p-2 rounded-md border w-full h-auto flex-col gap-8 bg-white cursor-pointer transition-all duration-200"
+    [ngClass]="{
+        'border-blue-500': selected,
+        'border-zinc-300': !selected
+    }"
+    (click)="seleccionar.emit()"
+>    <!-- Encabezado de la tarjeta-->
+    <div class="flex justify-between items-center w-full">
+    <!-- Icono y texto -->
+        <div class=" flex gap-1 items-center ">
+            <app-ui-icono
+                name={{nameIcono}}
+                size="size-5"
+            >
+            </app-ui-icono>
+            <!-- Texto -->
+            <app-ui-tipografia
+                variante="h6"
+                texto={{title}}
+            >                    
+            </app-ui-tipografia>
+        </div>
+        <!-- Etiqueta de estado -->
+        <!-- Icono y valor -->
+        @if (viewLabel) {
+            <app-ui-etiqueta
+            [texto]="porcentaje"
+            [variante]="estadoEtiqueta"
+            />
+        }
+    </div>
+    <div class=" flex items-baseline w-full ">
+        @if (viewSimbolo){
+            <app-ui-tipografia class=""
+                variante="h1"
+                texto="$"
+            ></app-ui-tipografia>
+        }
+        <app-ui-tipografia class=""
+            variante="h1"
+            texto={{valor}}
+        ></app-ui-tipografia>                    
+    </div>
+</div>

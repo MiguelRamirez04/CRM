@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { UitipografiaComponent } from '../../atoms/tipografia/tipografia.component';
 import { UiIconComponent } from '../../atoms/icono/icono.component';
 
-type VarianteEtiqueta = 'positivo' | 'negativo' | 'neutro';
+export type VarianteEtiqueta = 'positivo' | 'negativo' | 'neutro';
 
 @Component({
     selector: 'app-ui-etiqueta',
