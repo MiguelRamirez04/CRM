@@ -52,7 +52,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Resumen',
       icon: 'resumen',
-      link: '/dashboard',
+      link: '/administracion',
       roles: ['ADMINISTRACION']
     },
     {
@@ -72,15 +72,8 @@ export class Sidebar implements OnInit {
     {
       label: 'Reparaciones',
       icon: 'reparaciones',
-      link: '/reparaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE'],
+      link: '/modulesShared/reparaciones', 
       children: [
-        {
-          label: 'Detalles de Reparación',
-          icon: 'reparaciones',
-          link: '/reparaciones/detalles',
-          roles: ['ADMINISTRACION', 'SOPORTE']
-        }
       ]
     },
     {

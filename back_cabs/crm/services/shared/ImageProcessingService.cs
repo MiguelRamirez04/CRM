@@ -32,7 +32,7 @@ namespace back_cabs.CRM.services.shared
         /// <param name="maxHeight">Alto máximo (opcional, para redimensionar).</param>
         /// <returns>Tupla con información del archivo procesado (tamaño, ancho, alto).</returns>
         /// <exception cref="InvalidOperationException">Si hay error en el procesamiento.</exception>
-        public async Task<(long tamanoBytes, int ancho, int alto)> ConvertToWebPAsync(
+        public virtual async Task<(long tamanoBytes, int ancho, int alto)> ConvertToWebPAsync(
             Stream inputStream, 
             string outputPath, 
             int quality = 80,
@@ -113,7 +113,7 @@ namespace back_cabs.CRM.services.shared
         /// </summary>
         /// <param name="file">Archivo a validar.</param>
         /// <returns>True si es válido, False en caso contrario.</returns>
-        public bool IsValidImage(IFormFile file)
+        public virtual bool IsValidImage(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return false;
@@ -142,7 +142,7 @@ namespace back_cabs.CRM.services.shared
         /// </summary>
         /// <param name="stream">Stream del archivo.</param>
         /// <returns>True si es una imagen válida.</returns>
-        public async Task<bool> IsValidImageContentAsync(Stream stream)
+        public virtual async Task<bool> IsValidImageContentAsync(Stream stream)
         {
             try
             {

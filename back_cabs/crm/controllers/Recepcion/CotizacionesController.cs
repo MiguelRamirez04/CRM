@@ -56,21 +56,21 @@ public class CotizacionesController : ControllerBase
         }
     }
 
-    [HttpGet("orden/{ordenId}")]
-    [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
-    public async Task<IActionResult> GetByOrdenId(int ordenId)
-    {
-        try
-        {
-            var resultado = await _service.ObtenerPorOrdenIdAsync(ordenId);
-            return Ok(resultado);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}.", ordenId);
-            return StatusCode(500, new { message = "Error interno del servidor." });
-        }
-    }
+    // [HttpGet("orden/{ordenId}")]
+    // [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
+    // public async Task<IActionResult> GetByOrdenId(int ordenId)
+    // {
+    //     try
+    //     {
+    //         var resultado = await _service.ObtenerPorOrdenIdAsync(ordenId);
+    //         return Ok(resultado);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}.", ordenId);
+    //         return StatusCode(500, new { message = "Error interno del servidor." });
+    //     }
+    // }
 
     [HttpGet("estado/{estado}")]
     [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
@@ -107,29 +107,20 @@ public class CotizacionesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CotizacionResponseDto), 201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Create([FromBody] CotizacionCreateRequestDto request)
+    public async Task<IActionResult> Create([FromBody] CotizacionRequestDto request)
     {
         try
         {
-            _logger.LogInformation("📥 Recibiendo petición POST /api/Cotizaciones");
-            _logger.LogInformation("📦 Datos recibidos: {@Request}", request);
-            
             if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("❌ Modelo inválido: {@Errors}", ModelState);
                 return BadRequest(ModelState);
-            }
 
-            _logger.LogInformation("✅ Modelo válido - Creando cotización...");
             var resultado = await _service.CrearAsync(request);
-            _logger.LogInformation("✅ Cotización creada exitosamente con ID: {Id}", resultado.Id);
-            
             return CreatedAtAction(nameof(GetById), new { id = resultado.Id }, resultado);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error al crear cotización.");
-            return StatusCode(500, new { message = "Error interno del servidor.", error = ex.Message });
+            _logger.LogError(ex, "Error al crear cotización.");
+            return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }
 
@@ -137,7 +128,7 @@ public class CotizacionesController : ControllerBase
     [ProducesResponseType(typeof(CotizacionResponseDto), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Update(int id, [FromBody] CotizacionCreateRequestDto request)
+    public async Task<IActionResult> Update(int id, [FromBody] CotizacionRequestDto request)
     {
         try
         {

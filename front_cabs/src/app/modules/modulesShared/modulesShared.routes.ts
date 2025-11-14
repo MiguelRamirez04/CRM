@@ -17,6 +17,14 @@ export const modulesSharedRoutes: Routes = [
       {
         path: 'viaticos',
         loadComponent: () => import('./pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
+      },
+      {
+        path: 'reparaciones',
+        loadComponent: () => import('./pages/reparaciones/reparaciones.component').then(m => m.ReparacionesComponent)
+      },
+       {
+        path: 'reparaciones/:id/componentes', 
+        loadComponent: () => import('./pages/reparaciones/componentes/reparacion-componentes.component').then(m => m.ReparacionComponentesComponent)
       }
     ]
   }

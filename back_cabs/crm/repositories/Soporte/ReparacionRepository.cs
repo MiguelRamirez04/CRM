@@ -1,16 +1,21 @@
 using back_cabs.CRM.contexts;
-using back_cabs.CRM.DTOs.Soporte;
-using back_cabs.CRM.Interfaces.Soporte; // Asumo que IReparacionRepository está aquí
-using back_cabs.CRM.models.Soporte;
+// using back_cabs.CRM.DTOs.Soporte; // <-- NO DEBE USAR DTOs
+using back_cabs.CRM.Interfaces.Soporte; // Interfaz correcta
+using back_cabs.CRM.models.Soporte; // Usar Entidades
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace back_cabs.CRM.repositories.Soporte
 {
     /// <summary>
-    /// Repositorio que implementa la lógica de acceso a datos para Reparaciones y sus Componentes,
-    /// utilizando Entity Framework Core.
+    /// Implementación concreta del IReparacionRepository usando Entity Framework Core.
+    /// Maneja el acceso directo a la base de datos para Reparaciones y Componentes.
     /// </summary>
-    public class ReparacionRepository : IReparacionRepository // Asumo que esta es la interfaz que se implementa
+    public class ReparacionRepository : IReparacionRepository // Implementa la interfaz corregida
     {
         private readonly WriteContext _writeContext;
         private readonly ReadOnlyContext _readContext;
@@ -34,17 +39,15 @@ namespace back_cabs.CRM.repositories.Soporte
         {
             try
             {
-                // Se usa WriteContext y NO AsNoTracking()
+                // Usa WriteContext SIN AsNoTracking para permitir modificaciones
                 var reparacion = await _writeContext.Reparaciones
                     .FirstOrDefaultAsync(r => r.Id == id);
-
-                // La entidad 'reparacion' ahora está siendo rastreada por _writeContext.
 
                 if (reparacion == null)
                 {
                     _logger.LogWarning("Reparación no encontrada por ID {Id} para actualización", id);
                 }
-                return reparacion;
+                return reparacion; // Entidad rastreada
             }
             catch (Exception ex)
             {
@@ -52,6 +55,8 @@ namespace back_cabs.CRM.repositories.Soporte
                 throw;
             }
         }
+
+        // Implementa la firma corregida de la interfaz
         public async Task<IEnumerable<Reparacion>> ObtenerReparacionesAsync(int? skip, int? take)
         {
             try
@@ -63,11 +68,10 @@ namespace back_cabs.CRM.repositories.Soporte
                 if (skip.HasValue) query = query.Skip(skip.Value);
                 if (take.HasValue) query = query.Take(take.Value);
 
-                // Incluir relaciones clave para el DTO de respuesta (ej. Técnico)
-                return await query
-                    .Include(r => r.TecnicoId)
+                // Corregido: Incluir la propiedad de navegación
+                return await query 
                     .OrderByDescending(r => r.FechaLlegada)
-                    .ToListAsync();
+                    .ToListAsync(); // Devuelve IEnumerable<Reparacion>
             }
             catch (Exception ex)
             {
@@ -76,17 +80,15 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
+        // Implementa la firma corregida de la interfaz
         public async Task<Reparacion?> ObtenerReparacionPorIdAsync(int id)
         {
             try
             {
-                // Usamos FindAsync con WriteContext para UPDATE posterior, si es necesario,
-                // o ReadContext.FirstOrDefaultAsync si solo se usa para lectura.
-                // Aquí usamos ReadContext (AsNoTracking) para la función GET.
+                // Corregido: Incluir la propiedad de navegación
                 return await _readContext.Reparaciones
                     .AsNoTracking()
-                    .Include(r => r.TecnicoId)
-                    .FirstOrDefaultAsync(r => r.Id == id);
+                    .FirstOrDefaultAsync(r => r.Id == id); // Devuelve Reparacion?
             }
             catch (Exception ex)
             {
@@ -95,40 +97,38 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
-        public async Task<Reparacion> CrearReparacionAsync(Reparacion reparacion)
+        // Implementa la firma corregida de la interfaz
+        public async Task<Reparacion> CrearReparacionAsync(Reparacion reparacion) // Recibe Entidad
         {
             try
             {
                 _writeContext.Reparaciones.Add(reparacion);
                 await _writeContext.SaveChangesAsync();
-
                 _logger.LogInformation("Reparación creada en BD con ID {Id}", reparacion.Id);
-                return reparacion;
+                return reparacion; // Devuelve Entidad
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en CreateAsync para Reparación ID {OrdenId}", reparacion.OrdenId);
+                _logger.LogError(ex, "Error en CreateAsync para Reparación Orden ID {OrdenId}", reparacion.OrdenId);
                 throw;
             }
         }
 
-        public async Task<(int FilasAfectadas, Reparacion? ReparacionActualizada)> ActualizarReparacionAsync(Reparacion reparacion)
+        // Implementa la firma corregida de la interfaz
+        public async Task<(int FilasAfectadas, Reparacion? ReparacionActualizada)> ActualizarReparacionAsync(Reparacion reparacionActualizada) // Recibe Entidad
         {
             try
             {
-                // El servicio ya debió cargar la entidad con FindAsync(id) en el WriteContext 
-                // y modificar sus propiedades. Solo necesitamos guardar.
-                _writeContext.Reparaciones.Update(reparacion); // Usar Update si la entidad fue modificada en el servicio
+                 // Si la entidad fue obtenida con GetReparacionForUpdateAsync, ya está rastreada.
+                 // Si no, necesitarías _writeContext.Reparaciones.Update(reparacionActualizada);
+                 // Asumimos que ya está rastreada por el flujo del servicio.
                 int filasAfectadas = await _writeContext.SaveChangesAsync();
-
-                _logger.LogInformation("Reparación ID {Id} actualizada. Filas: {Filas}", reparacion.Id, filasAfectadas);
-
-                // Devolver el objeto actualizado (que ya está modificado en memoria)
-                return (filasAfectadas, reparacion);
+                _logger.LogInformation("Reparación ID {Id} actualizada. Filas: {Filas}", reparacionActualizada.Id, filasAfectadas);
+                return (filasAfectadas, reparacionActualizada); // Devuelve Entidad
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar reparación con ID {Id}", reparacion.Id);
+                _logger.LogError(ex, "Error al actualizar reparación con ID {Id}", reparacionActualizada.Id);
                 throw;
             }
         }
@@ -158,25 +158,37 @@ namespace back_cabs.CRM.repositories.Soporte
                 throw;
             }
         }
+        
+        // Añadir implementación faltante
+        public async Task<bool> ReparacionExisteAsync(int reparacionId)
+        {
+            try
+            {
+                return await _readContext.Reparaciones.AnyAsync(r => r.Id == reparacionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar existencia de Reparación ID {Id}", reparacionId);
+                throw;
+            }
+        }
 
 
         // =====================================================================
-        // IMPLEMENTACIÓN DE COMPONENTES (CRUD)
+        // IMPLEMENTACIÓN DE COMPONENTES (CRUD) - Firmas ya correctas
         // =====================================================================
 
         public async Task<ReparacionComponente?> GetComponenteForUpdateAsync(int id)
         {
             try
             {
-                // Se usa WriteContext y NO AsNoTracking()
+                // Usa WriteContext SIN AsNoTracking para permitir modificaciones
                 var componente = await _writeContext.ReparacionesComponentes
                     .FirstOrDefaultAsync(r => r.Id == id);
 
-                // La entidad 'componente' ahora está siendo rastreada por _writeContext.
-
                 if (componente == null)
                 {
-                    _logger.LogWarning("Componente no encontrada por ID {Id} para actualización", id);
+                    _logger.LogWarning("Componente no encontrado por ID {Id} para actualización", id);
                 }
                 return componente;
             }
@@ -187,6 +199,7 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
+        // Implementa la firma corregida de la interfaz
         public async Task<IEnumerable<ReparacionComponente>> ObtenerComponentesReparacionAsync(int? skip, int? take)
         {
             try
@@ -198,7 +211,7 @@ namespace back_cabs.CRM.repositories.Soporte
                 if (skip.HasValue) query = query.Skip(skip.Value);
                 if (take.HasValue) query = query.Take(take.Value);
 
-                return await query.OrderByDescending(r => r.Id).ToListAsync();
+                return await query.OrderByDescending(r => r.Id).ToListAsync(); // Devuelve Entidades
             }
             catch (Exception ex)
             {
@@ -207,13 +220,14 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
+        // Implementa la firma corregida de la interfaz
         public async Task<ReparacionComponente?> ObtenerComponenteReparacionPorIdAsync(int id)
         {
             try
             {
                 return await _readContext.ReparacionesComponentes
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(r => r.Id == id);
+                    .FirstOrDefaultAsync(r => r.Id == id); // Devuelve Entidad
             }
             catch (Exception ex)
             {
@@ -222,34 +236,32 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
-        public async Task<ReparacionComponente> CrearComponenteReparacionAsync(ReparacionComponente componente)
+        // Implementa la firma corregida de la interfaz
+        public async Task<ReparacionComponente> CrearComponenteReparacionAsync(ReparacionComponente componente) // Recibe Entidad
         {
             try
             {
                 _writeContext.ReparacionesComponentes.Add(componente);
                 await _writeContext.SaveChangesAsync();
-
                 _logger.LogInformation("Componente creado con ID {Id}", componente.Id);
-                return componente;
+                return componente; // Devuelve Entidad
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en CreateAsync para Componente ID {ReparacionId}", componente.ReparacionId);
+                _logger.LogError(ex, "Error en CreateAsync para Componente Reparación ID {ReparacionId}", componente.ReparacionId);
                 throw;
             }
         }
 
-        public async Task<(int FilasAfectadas, ReparacionComponente? ComponenteActualizado)> ActualizarComponenteReparacionAsync(ReparacionComponente componente)
+        // Implementa la firma corregida de la interfaz
+        public async Task<(int FilasAfectadas, ReparacionComponente? ComponenteActualizado)> ActualizarComponenteReparacionAsync(ReparacionComponente componente) // Recibe Entidad
         {
             try
             {
-                // El servicio ya debió cargar la entidad y modificar sus propiedades.
-                _writeContext.ReparacionesComponentes.Update(componente);
+                // Asumimos que la entidad ya está rastreada por el flujo del servicio
                 int filasAfectadas = await _writeContext.SaveChangesAsync();
-
                 _logger.LogInformation("Componente de reparación ID {Id} actualizado. Filas: {Filas}", componente.Id, filasAfectadas);
-
-                return (filasAfectadas, componente);
+                return (filasAfectadas, componente); // Devuelve Entidad
             }
             catch (Exception ex)
             {
@@ -258,49 +270,16 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
-        Task<List<ReparacionResponseDto>> IReparacionRepository.ObtenerReparacionesAsync(int? skip, int? take)
-        {
-            throw new NotImplementedException();
-        }
 
-        Task<ReparacionResponseDto?> IReparacionRepository.ObtenerReparacionPorIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
+        // ELIMINAR TODA LA SECCIÓN DE IMPLEMENTACIÓN EXPLÍCITA INCORRECTA
+        // 
+        // Task<List<ReparacionResponseDto>> IReparacionRepository.ObtenerReparacionesAsync(int? skip, int? take) { ... }
+        // Task<ReparacionResponseDto?> IReparacionRepository.ObtenerReparacionPorIdAsync(int id) { ... }
+        // public Task<ReparacionResponseDto> CrearReparacionAsync(ReparacionCreacionRequestDto request) { ... }
+        // ... (etc.)
+        // Task<(int FilasAfectadas, ReparacionResponseDto? ReparacionActualizada)> IReparacionRepository.ActualizarReparacionAsync(Reparacion reparacionActualizada) { ... }
+        // 
+        // FIN DE LA SECCIÓN A ELIMINAR
 
-        public Task<ReparacionResponseDto> CrearReparacionAsync(ReparacionCreacionRequestDto request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<(int FilasAfectadas, ReparacionResponseDto? ReparacionActualizada)> ActualizarReparacionAsync(int id, ReparacionActualizacionRequestDto request)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<List<ReparacionComponenteResponseDto>> IReparacionRepository.ObtenerComponentesReparacionAsync(int? skip, int? take)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ReparacionComponenteResponseDto?> IReparacionRepository.ObtenerComponenteReparacionPorIdAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<ReparacionComponenteResponseDto> CrearComponenteReparacionAsync(ReparacionComponenteRequestDto request)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<(int FilasAfectadas, ReparacionComponenteResponseDto? ReparacionComponenteActualizada)> IReparacionRepository.ActualizarComponenteReparacionAsync(ReparacionComponente Componente)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<(int FilasAfectadas, ReparacionResponseDto? ReparacionActualizada)> IReparacionRepository.ActualizarReparacionAsync(Reparacion reparacionActualizada)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -79,7 +79,6 @@ builder.Services.AddScoped<IFotosEvaluacion, FotosEvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.CotizacionService>();
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
-builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
@@ -89,13 +88,11 @@ builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesServi
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
 builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionFotoRepository, back_cabs.CRM.Repositories.Soporte.ReparacionFotoRepository>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
-
-// Registrar servicio en segundo plano para expiración de cotizaciones
-builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
 
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
@@ -215,4 +212,4 @@ app.Run();
 
 Console.WriteLine("jajaja quien dejo un console writeline aqui");
 
-
+Console.WriteLine("⣈⣽⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢘⣿⣿ \n⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿ \n⣯⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡻ \n⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐\n⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n ⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⢰⢧⠀⠀⢸⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠸⠀⠀⠀⠀⠀⠀⠀⠀⡇⢸⡘⡄⠀⢨⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⢧⢸⣷⡡⠀⡀⣯⢆⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠂⠀⣀⠀⢸⡿⠿⠀⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠷⠘⠦⢀⡑⠇⢻⣯⣂⡀⠀⣶⠀⢠⡗⠇⠀⠀⠀⠰⠟⢀⣵⠾⠗⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⣤⣄⠄⠀⠉⠲⢠⣍⣓⠉⠀⢹⠀⣸⡻⢡⠀⠀⢠⣶⢋⠊⠋⠀⠀⠀⠀⢠⠆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⢠⠀⠲⣄⡸⣿⣧⠀⠀⠀⠀⠙⢻⣿⣵⡙⣇⢿⣿⣦⣴⣷⣿⢟⣥⣶⣇⠀⠀⠀⠀⢈⡴⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n}⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠻⣿⣦⣯⣇⣴⣴⣶⣾⣶⣿⣿⣿⡼⣿⣿⣿⣿⣿⣷⣿⣯⣯⣇⣤⣠⣤⣶⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠘⠀⠈⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⡡⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⡎⠀⠀⣀⠐⠀⠀⠀⠈⠀⠀⠀⠘⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⣴⣶⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠈⢳⣽⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣛⠛⠁⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠘⢿\n⣿⣿⣿⠇⠠⣀⠀⣠⡾⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀⣦⡠⣀⠀⠀⠀⠀⠀⠀\n⣿⣿⣟⣴⣿⡟⣼⣿⡿⠀⠀⠀⠀⠀⠀⢀⠈⠙⠿⣿⣿⣿⣿⣿⣭⣟⣿⣿⣿⣿⣿⡿⠟⠉⣠⡀⠀⣴⣦⡀⠀⣿⣿⣮⣻⣿⣶⣶⣾⣿\n⣿⣿⣿⣿⣿⣿⣿⣛⣥⣴⣶⢏⣠⣴⣾⢇⣤⣾⣷⣦⠉⠛⢿⣿⣿⣿⣿⣿⣿⠟⠋⠀⠀⢠⣿⣿⣄⢸⣿⣷⣦⡘⣿⣿⣾⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⠆⢀⠀⠈⠉⠉⠉⠁⠀⠀⠀⠀⠀⣼⣿⣿⣿⣧⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣅⢕⠔⢄⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢟⣿⣮⢷⣕⣄⠢⡀⡀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠟⠁⢀⣿⣿⣿⣷⣿⣮⢳⣝⢦⡂⡐⠀⠀⠏⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⢋⠉⠁⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣽⣷⣇⠀⢰⠀⠀⠋⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");

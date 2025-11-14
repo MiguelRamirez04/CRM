@@ -1,14 +1,12 @@
-using back_cabs.CRM.DTOs.Soporte;
+using back_cabs.CRM.models.Soporte; // Usar Entidades
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System;
-using back_cabs.CRM.models.Soporte;
 
 namespace back_cabs.CRM.Interfaces.Soporte
 {
     /// <summary>
-    /// Contrato de la capa de servicio para todas las operaciones de negocio
-    /// relacionadas con Reparaciones y sus Componentes.
+    /// Contrato para las operaciones de ACCESO A DATOS para Reparaciones y Componentes.
+    /// Abstrae la tecnología de persistencia (EF Core).
     /// </summary>
     public interface IReparacionRepository
     {
@@ -17,49 +15,46 @@ namespace back_cabs.CRM.Interfaces.Soporte
         // =====================================================================
 
         /// <summary>
-        /// Obtiene una reparación por ID para su MODIFICACIÓN.
-        /// La entidad DEVUELTA DEBE ser rastreada por el WriteContext.
+        /// Obtiene una reparación por ID CON TRACKING para su modificación.
         /// </summary>
         Task<Reparacion?> GetReparacionForUpdateAsync(int id);
 
         /// <summary>
-        /// Obtiene todas las reparaciones, con soporte para paginación.
+        /// Obtiene todas las reparaciones SIN TRACKING, con paginación.
         /// </summary>
-        Task<List<ReparacionResponseDto>> ObtenerReparacionesAsync(int? skip = null, int? take = null);
+        Task<IEnumerable<Reparacion>> ObtenerReparacionesAsync(int? skip = null, int? take = null);
 
         /// <summary>
-        /// Obtiene una reparación específica por ID.
+        /// Obtiene una reparación específica por ID SIN TRACKING (solo lectura).
         /// </summary>
-        Task<ReparacionResponseDto?> ObtenerReparacionPorIdAsync(int id);
+        Task<Reparacion?> ObtenerReparacionPorIdAsync(int id);
 
         /// <summary>
-        /// Crea una nueva reparación en el sistema.
+        /// Persiste una nueva entidad Reparacion.
         /// </summary>
-        /// <exception cref="KeyNotFoundException">Si la Orden o el Técnico no existen.</exception>
-        Task<ReparacionResponseDto> CrearReparacionAsync(ReparacionCreacionRequestDto request);
+        /// <returns>La entidad Reparacion creada (con su ID).</returns>
+        Task<Reparacion> CrearReparacionAsync(Reparacion reparacion); // <-- Recibe y devuelve ENTIDAD
 
         /// <summary>
-        /// Actualiza los campos modificables de una reparación y aplica las reglas de negocio.
+        /// Persiste los cambios de una entidad Reparacion existente.
         /// </summary>
-        /// <returns>Tupla con las filas afectadas y el DTO actualizado.</returns>
-        /// <exception cref="KeyNotFoundException">Si la reparación no existe.</exception>
-        /// <exception cref="ArgumentException">Si el Resultado o TipoEntrega son inválidos.</exception>
-        Task<(int FilasAfectadas, ReparacionResponseDto? ReparacionActualizada)> ActualizarReparacionAsync(Reparacion reparacionActualizada);
+        /// <returns>Tupla con filas afectadas y la entidad actualizada (opcional).</returns>
+        Task<(int FilasAfectadas, Reparacion? ReparacionActualizada)> ActualizarReparacionAsync(Reparacion reparacionActualizada); // <-- Recibe y devuelve ENTIDAD
 
         /// <summary>
-        /// Verifica si una orden de trabajo existe por su ID.
+        /// Verifica si una orden de trabajo existe.
         /// </summary>
-        /// <param name="ordenId"></param>
-        /// <returns></returns>
         Task<bool> OrdenExisteAsync(int ordenId);
+
+        /// <summary>
+        /// Verifica si un técnico existe.
+        /// </summary>
+        Task<bool> TecnicoExisteAsync(int tecnicoId);
         
         /// <summary>
-        /// Verifica si un técnico existe por su ID.
+        /// Verifica si una reparación existe.
         /// </summary>
-        /// <param name="tecnicoId"></param>
-        /// <returns></returns>
-        Task<bool> TecnicoExisteAsync(int tecnicoId);
-
+        Task<bool> ReparacionExisteAsync(int reparacionId);
 
 
         // =====================================================================
@@ -67,33 +62,30 @@ namespace back_cabs.CRM.Interfaces.Soporte
         // =====================================================================
 
         /// <summary>
-        /// Obtiene una lista paginada de todos los componentes de reparación registrados.
+        /// Obtiene una lista paginada de componentes SIN TRACKING.
         /// </summary>
-        Task<List<ReparacionComponenteResponseDto>> ObtenerComponentesReparacionAsync(int? skip = null, int? take = null);
+        Task<IEnumerable<ReparacionComponente>> ObtenerComponentesReparacionAsync(int? skip = null, int? take = null); // <-- Devuelve ENTIDADES
 
         /// <summary>
-        /// Obtiene un componente de reparación por su ID.
+        /// Obtiene un componente por ID SIN TRACKING (solo lectura).
         /// </summary>
-        Task<ReparacionComponenteResponseDto?> ObtenerComponenteReparacionPorIdAsync(int id);
+        Task<ReparacionComponente?> ObtenerComponenteReparacionPorIdAsync(int id); // <-- Devuelve ENTIDAD
 
         /// <summary>
-        /// Obtiene un componente de reparación por ID para su MODIFICACIÓN.
-        /// La entidad DEVUELTA DEBE ser rastreada por el WriteContext.
+        /// Obtiene un componente por ID CON TRACKING para su modificación.
         /// </summary>
-        Task<ReparacionComponente?> GetComponenteForUpdateAsync(int id);
+        Task<ReparacionComponente?> GetComponenteForUpdateAsync(int id); // <-- Devuelve ENTIDAD
 
         /// <summary>
-        /// Crea un nuevo componente asociado a una reparación existente.
+        /// Persiste un nuevo componente de reparación.
         /// </summary>
-        /// <exception cref="KeyNotFoundException">Si la Reparación no existe.</exception>
-        /// <exception cref="ArgumentException">Si el componente es nulo o vacío.</exception>
-        Task<ReparacionComponenteResponseDto> CrearComponenteReparacionAsync(ReparacionComponenteRequestDto request);
+        /// <returns>La entidad Componente creada (con su ID).</returns>
+        Task<ReparacionComponente> CrearComponenteReparacionAsync(ReparacionComponente componente); // <-- Recibe y devuelve ENTIDAD
 
         /// <summary>
-        /// Actualiza los detalles de un componente de reparación.
+        /// Persiste los cambios de un componente existente.
         /// </summary>
-        /// <returns>Tupla con las filas afectadas y el DTO actualizado.</returns>
-        /// <exception cref="KeyNotFoundException">Si el componente no existe.</exception>
-        Task<(int FilasAfectadas, ReparacionComponenteResponseDto? ReparacionComponenteActualizada)> ActualizarComponenteReparacionAsync( ReparacionComponente Componente);
+        /// <returns>Tupla con filas afectadas y la entidad actualizada.</returns>
+        Task<(int FilasAfectadas, ReparacionComponente? ComponenteActualizado)> ActualizarComponenteReparacionAsync(ReparacionComponente componente); // <-- Recibe y devuelve ENTIDAD
     }
 }
