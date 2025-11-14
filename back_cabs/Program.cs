@@ -94,9 +94,6 @@ builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationServic
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
 
-// Registrar servicio en segundo plano para expiración de cotizaciones
-builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
-
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>();

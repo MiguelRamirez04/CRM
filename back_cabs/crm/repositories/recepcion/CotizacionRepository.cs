@@ -174,29 +174,6 @@ namespace back_cabs.CRM.repositories.Recepcion
             }
         }
 
-        public async Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha)
-        {
-            try
-            {
-                var fechaInicio = fecha.Date; // 00:00:00
-                var fechaFin = fechaInicio.AddDays(1); // 23:59:59
-
-                var cotizaciones = await _readContext.Cotizaciones
-                    .AsNoTracking()
-                    .Where(c => c.CreadoEn >= fechaInicio && c.CreadoEn < fechaFin)
-                    .OrderBy(c => c.CreadoEn)
-                    .ToListAsync();
-
-                _logger.LogDebug("Obtenidas {Count} cotizaciones para fecha {Fecha}", cotizaciones.Count, fecha.ToShortDateString());
-                return cotizaciones;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener cotizaciones por fecha {Fecha}", fecha);
-                throw;
-            }
-        }
-
         // ✏️ IMPLEMENTACIÓN DE ESCRITURAS
 
         public async Task<Cotizacion> CreateAsync(Cotizacion cotizacion)

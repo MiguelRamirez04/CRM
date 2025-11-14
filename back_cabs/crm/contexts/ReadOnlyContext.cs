@@ -189,23 +189,6 @@ public class ReadOnlyContext : DbContext
             entity.HasIndex(e => e.CitaProgramadaInicio);
         });
 
-        // Configuración de la entidad Cotizacion (sales_cotizaciones) - SOLO LECTURA
-        modelBuilder.Entity<Cotizacion>(entity =>
-        {
-            entity.ToTable("sales_cotizaciones");
-            entity.HasKey(e => e.Id);
-            
-            // Configurar columna calculada PERSISTED en BD
-            entity.Property(e => e.Total)
-                .HasComputedColumnSql("[subtotal]+[impuestos_total]", stored: true);
-            
-            // Índices para optimización de consultas
-            entity.HasIndex(e => e.OrdenId).HasDatabaseName("IX_cotizaciones_orden");
-            entity.HasIndex(e => e.Estado).HasDatabaseName("IX_cotizaciones_estado");
-            entity.HasIndex(e => e.CreadoEn).HasDatabaseName("IX_cotizaciones_fecha");
-            entity.HasIndex(e => e.Cliente).HasDatabaseName("IX_cotizaciones_cliente");
-        });
-
         // Configuración de la entidad Vehiculo (fleet_vehiculos)
         modelBuilder.Entity<Vehiculo>(entity =>
         {

@@ -1,18 +1,21 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ReparacionService } from '../../../../core/services/reparacion.service'; // Ajusta la ruta
+import { Router } from '@angular/router'; // 👈 1. IMPORTAR ROUTER
+import { ReparacionService } from '../../../../core/services/reparacion.service';
 import { Reparacion, ReparacionDto } from '../../../../core/models/reparacion.interface';
+
 @Component({
   selector: 'app-reparaciones',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './reparaciones.component.html',
-  styleUrls: ['./reparaciones.component.css'] // Apunta al CSS
+  styleUrls: ['./reparaciones.component.css']
 })
 export class ReparacionesComponent implements OnInit {
   private readonly reparacionService = inject(ReparacionService);
   private fb = inject(FormBuilder);
+  private router = inject(Router); // 👈 2. INYECTAR ROUTER
 
   // Signals para estado reactivo
   reparaciones = signal<Reparacion[]>([]);
@@ -31,10 +34,10 @@ export class ReparacionesComponent implements OnInit {
   formularioReparacion: FormGroup;
 
   constructor() {
-    // Inicializa el formulario basándonos en el JSON Schema que mostraste
+    // Inicializa el formulario
     this.formularioReparacion = this.fb.group({
-      ordenId: [0, [Validators.required]], // Asumiendo que se requiere un ID de orden
-      tecnicoId: [0], 
+      ordenId: [8, [Validators.required]], 
+      tecnicoId: [4], 
       dispositivoTipo: ['', [Validators.required]],
       marca: ['', [Validators.required]],
       modelo: ['', [Validators.required]],
@@ -45,15 +48,13 @@ export class ReparacionesComponent implements OnInit {
       resultado: [''],
       causaIrreparable: [''],
       respaldoDatosAutorizado: [false],
-      garantiaDias: [0],
-      tipoEntrega: [''],
+      garantiaDias: [30], 
+      tipoEntrega: ['RECOGE_CLIENTE', [Validators.required]], 
       ubicacionAlmacenamiento: [''],
       notas: [''],
-      // Costos
       costoManoObra: [0],
       costoRefaccionesCompra: [0],
       costoRefaccionesPublico: [0],
-      // Nota: costoTotal suele ser calculado por el backend, pero si es editable déjalo aquí
       costoTotalPublico: [0] 
     });
   }
@@ -80,15 +81,23 @@ export class ReparacionesComponent implements OnInit {
     });
   }
 
+  // 👇 3. NUEVO MÉTODO PARA NAVEGAR A PIEZAS
+  irAComponentes(reparacion: Reparacion): void {
+    // Navega a: /modulesShared/reparaciones/{ID}/componentes
+    this.router.navigate(['/modulesShared/reparaciones', reparacion.id, 'componentes']);
+  }
+
   abrirModalCrear(): void {
     this.formularioReparacion.reset({
-      ordenId: 0,
-      tecnicoId: 0,
+      ordenId: 8, 
+      tecnicoId: 4, 
       dispositivoTipo: '',
       marca: '',
       modelo: '',
       respaldoDatosAutorizado: false,
-      garantiaDias: 30, // Valor por defecto ejemplo
+      garantiaDias: 30,
+      tipoEntrega: 'RECOGE_CLIENTE', 
+      resultado: 'Pendiente', 
       costoManoObra: 0,
       costoRefaccionesCompra: 0,
       costoRefaccionesPublico: 0,
@@ -132,7 +141,7 @@ export class ReparacionesComponent implements OnInit {
       next: () => {
         this.cargando.set(false);
         this.cerrarModal();
-        this.cargarReparaciones();
+        this.cargarReparaciones(); 
       },
       error: (err) => this.handleError('Error al guardar la reparación.', err, false),
     });
@@ -160,7 +169,25 @@ export class ReparacionesComponent implements OnInit {
   }
 
   private handleError(message: string, error: any, setGlobalError: boolean = true): void {
-    const apiError = error?.error?.message || error?.error || error?.message || 'Error desconocido';
+    let apiError = 'Error desconocido';
+
+    if (error?.error?.errors) {
+      const validationErrors = error.error.errors;
+      const errorMessages = Object.keys(validationErrors).map(key => {
+        return `${key}: ${validationErrors[key].join(', ')}`;
+      });
+      apiError = errorMessages.join(' | ');
+    } 
+    else if (error?.error?.message) {
+      apiError = error.error.message;
+    } 
+    else if (typeof error?.error === 'string') {
+      apiError = error.error;
+    }
+    else if (error?.message) {
+      apiError = error.message;
+    }
+
     const fullMessage = `${message} Detalles: ${apiError}`;
     
     if (this.mostrarModal()) {

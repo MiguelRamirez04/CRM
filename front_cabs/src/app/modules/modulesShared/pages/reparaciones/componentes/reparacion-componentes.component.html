@@ -1,0 +1,121 @@
+<div class="container mx-auto p-4">
+  
+  <button (click)="volver()" class="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2 font-medium transition-colors">
+    <span class="text-xl">←</span> Volver a Reparaciones
+  </button>
+
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold text-gray-800">
+      Refacciones - Reparación #{{ reparacionIdPadre }}
+    </h2>
+    
+    <button (click)="abrirModalCrear()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold shadow-sm transition-colors">
+      + Agregar Componente
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4 relative">
+      {{ error() }}
+    </div>
+  }
+
+  <div class="overflow-x-auto bg-white shadow rounded-lg border border-gray-200">
+    <table class="min-w-full leading-normal">
+      <thead class="bg-gray-100 border-b">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Componente</th>
+          <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Cant.</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Costo Unit.</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
+          <th class="px-4 py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of componentes(); track item.id) {
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3">
+              <div class="font-bold text-gray-900">{{ item.componente }}</div>
+              <div class="text-xs text-gray-500">{{ item.proveedor }}</div>
+            </td>
+            <td class="px-4 py-3 text-center text-gray-700">{{ item.cantidad }}</td>
+            <td class="px-4 py-3 text-right text-gray-700">{{ item.costoUnitarioPublico | currency }}</td>
+            <td class="px-4 py-3 text-right font-bold text-green-700">
+              {{ item.subtotalPublico | currency }}
+            </td>
+            <td class="px-4 py-3 text-center">
+              <button (click)="abrirModalEditar(item)" class="text-blue-600 hover:text-blue-900 font-semibold text-sm">Editar</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="p-8 text-center text-gray-500 italic">
+              No se han agregado refacciones a esta reparación.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (mostrarModal()) {
+  <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 max-h-[90vh] overflow-y-auto">
+      
+      <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
+        {{ modoModal() === 'crear' ? 'Agregar' : 'Editar' }} Refacción
+      </h3>
+      
+      <form [formGroup]="formComponente" (ngSubmit)="guardarComponente()" class="space-y-4">
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nombre del Componente/Refacción *</label>
+          <input formControlName="componente" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Cantidad *</label>
+            <input formControlName="cantidad" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Proveedor</label>
+            <input formControlName="proveedor" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-3 rounded border border-gray-200 grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Costo Compra ($)</label>
+            <input formControlName="costoUnitarioCompra" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Precio Público ($) *</label>
+            <input formControlName="costoUnitarioPublico" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border font-bold text-blue-800">
+          </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Garantía (Meses)</label>
+            <input formControlName="garantiaMeses" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Notas</label>
+            <textarea formControlName="notas" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6 pt-2 border-t">
+          <button type="button" (click)="mostrarModal.set(false)" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md font-medium">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-sm disabled:bg-blue-300" 
+            [disabled]="formComponente.invalid">
+            Guardar Refacción
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

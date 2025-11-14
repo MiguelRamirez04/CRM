@@ -74,12 +74,6 @@ export class Sidebar implements OnInit {
       icon: 'reparaciones',
       link: '/modulesShared/reparaciones', 
       children: [
-        {
-          label: 'Detalles de Reparación',
-          icon: 'reparaciones',
-          link: '/reparaciones/detalles',
-          roles: ['ADMINISTRACION', 'SOPORTE']
-        }
       ]
     },
     {

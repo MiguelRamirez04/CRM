@@ -167,49 +167,6 @@ public class WriteContext : DbContext
             entity.HasIndex(e => e.CitaProgramadaInicio);
         });
 
-        // Configuración de la entidad Cotizacion (sales_cotizaciones)
-        modelBuilder.Entity<Cotizacion>(entity =>
-        {
-            entity.ToTable("sales_cotizaciones");
-            entity.HasKey(e => e.Id);
-            
-            // Configurar columna calculada PERSISTED en BD
-            entity.Property(e => e.Total)
-                .HasComputedColumnSql("[subtotal]+[impuestos_total]", stored: true);
-            
-            // Configurar columnas decimales
-            entity.Property(e => e.Subtotal).HasColumnType("decimal(12,2)").IsRequired();
-            entity.Property(e => e.ImpuestosTotal).HasColumnName("impuestos_total").HasColumnType("decimal(12,2)").IsRequired();
-            entity.Property(e => e.Descuento).HasColumnType("decimal(12,2)");
-            entity.Property(e => e.CostoCapacitacion).HasColumnName("costo_capacitacion").HasColumnType("decimal(12,2)");
-            
-            // Configurar campos de texto
-            entity.Property(e => e.Estado).HasColumnType("varchar(20)").HasMaxLength(20).IsRequired().HasDefaultValue("NUEVA");
-            entity.Property(e => e.Observaciones).HasColumnType("varchar(500)").HasMaxLength(500);
-            entity.Property(e => e.Cliente).HasColumnType("varchar(255)").HasMaxLength(255);
-            entity.Property(e => e.Rfc).HasColumnType("varchar(13)").HasMaxLength(13);
-            entity.Property(e => e.Folio).HasColumnType("varchar(50)").HasMaxLength(50);
-            entity.Property(e => e.DescripcionServicio).HasColumnName("descrpcion_servicio").HasColumnType("varchar(1000)").HasMaxLength(1000);
-            
-            // Configurar fechas
-            entity.Property(e => e.CreadoEn).HasColumnName("creado_en").HasColumnType("datetime2(0)").IsRequired();
-            entity.Property(e => e.ActualizadoEn).HasColumnName("actualizado_en").HasColumnType("datetime2(0)");
-            
-            // Configurar campos de capacitación
-            entity.Property(e => e.HorasCapacitacion).HasColumnName("horas_capacitacion");
-            entity.Property(e => e.PaquetesCapacitacion).HasColumnName("paquetes_capacitacion");
-            
-            // Configurar campos de contacto
-            entity.Property(e => e.Telefono).HasColumnType("bigint");
-            entity.Property(e => e.Correo).HasColumnType("varchar(150)").HasMaxLength(150);
-            
-            // Índices para optimización
-            entity.HasIndex(e => e.OrdenId).HasDatabaseName("IX_cotizaciones_orden");
-            entity.HasIndex(e => e.Estado).HasDatabaseName("IX_cotizaciones_estado");
-            entity.HasIndex(e => e.CreadoEn).HasDatabaseName("IX_cotizaciones_fecha");
-            entity.HasIndex(e => e.Cliente).HasDatabaseName("IX_cotizaciones_cliente");
-        });
-
         // Configuración de la entidad Vehiculo (fleet_vehiculos)
         modelBuilder.Entity<Vehiculo>(entity =>
         {
@@ -227,7 +184,7 @@ public class WriteContext : DbContext
 
             entity.Property(e => e.TipoVehiculo).HasColumnName("tipo_vehiculo").HasMaxLength(50);
             entity.Property(e => e.EsDeEmpresa).HasColumnName("es_de_empresa").IsRequired(true);
-            entity.Property(e => e.Transmision).HasColumnName("transmision").HasMaxLength(20);
+            entity.Property(e => e.Transmision).HasColumnName("transmicion").HasMaxLength(20);
             entity.Property(e => e.Placas).HasColumnName("placas").HasMaxLength(20);
             entity.Property(e => e.Activo).HasColumnName("activo").IsRequired(true);
             entity.Property(e => e.Observaciones).HasColumnName("observaciones");

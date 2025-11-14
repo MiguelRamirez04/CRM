@@ -39,11 +39,6 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// </summary>
         Task<bool> ExistsAsync(int id);
 
-        /// <summary>
-        /// Obtiene cotizaciones creadas en una fecha específica (para generar folios)
-        /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha);
-
         // ✏️ OPERACIONES DE ESCRITURA
         /// <summary>
         /// Crea una nueva cotización
