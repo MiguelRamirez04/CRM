@@ -111,56 +111,6 @@ public class WriteContext : DbContext
     public DbSet<Notificacion> Notificaciones { get; set; } = null!;
 
     /// <summary>
-    /// Catálogo de monedas del sistema
-    /// </summary>
-    public DbSet<Moneda> Monedas { get; set; } = null!;
-
-    /// <summary>
-    /// Referencias a monedas del sistema legacy
-    /// </summary>
-    public DbSet<MonedasRef> MonedasRef { get; set; } = null!;
-
-    /// <summary>
-    /// Catálogo de agentes del sistema
-    /// </summary>
-    public DbSet<Agente> Agentes { get; set; } = null!;
-
-    /// <summary>
-    /// Referencias a agentes del sistema legacy
-    /// </summary>
-    public DbSet<AgentesRef> AgentesRef { get; set; } = null!;
-
-    /// <summary>
-    /// Catálogo de almacenes del sistema
-    /// </summary>
-    public DbSet<Almacen> Almacenes { get; set; } = null!;
-
-    /// <summary>
-    /// Referencias a almacenes del sistema legacy
-    /// </summary>
-    public DbSet<AlmacenesRef> AlmacenesRef { get; set; } = null!;
-
-    /// <summary>
-    /// Catálogo de productos del sistema
-    /// </summary>
-    public DbSet<Producto> Productos { get; set; } = null!;
-
-    /// <summary>
-    /// Referencias a productos del sistema legacy
-    /// </summary>
-    public DbSet<ProductosRef> ProductosRef { get; set; } = null!;
-
-    /// <summary>
-    /// Catálogo de documentos modelo del sistema
-    /// </summary>
-    public DbSet<DocumentoModelo> DocumentosModelo { get; set; } = null!;
-
-    /// <summary>
-    /// Referencias a documentos modelo del sistema legacy
-    /// </summary>
-    public DbSet<DocumentosModeloRef> DocumentosModeloRef { get; set; } = null!;
-
-    /// <summary>
     /// Vista de conceptos completos con datos locales y legacy
     /// </summary>
     public DbSet<VwConceptosCompletos> VwConceptosCompletos { get; set; } = null!;

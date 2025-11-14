@@ -96,6 +96,39 @@ builder.Services.AddDbContext<WriteContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ═══════════════════════════════════════════════════════════════
+// CONTEXTO LEGACY COMPAC - Base de datos adCABS2016
+// ═══════════════════════════════════════════════════════════════
+builder.Services.AddDbContext<LegacyCompacReadOnlyContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("CompacConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(30); // 30 segundos para consultas complejas
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null
+            );
+        }
+    )
+    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)); // Solo lectura
+
+// Contexto de escritura (usar con precaución - datos legacy)
+builder.Services.AddDbContext<LegacyCompacWriteContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("CompacConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(30); // 30 segundos para operaciones de escritura
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null
+            );
+        }
+    )); // Change Tracking habilitado por defecto
+
+// ═══════════════════════════════════════════════════════════════
 // UNIT OF WORK PATTERN
 // ═══════════════════════════════════════════════════════════════
 // Coordina transacciones entre múltiples repositorios
@@ -113,13 +146,13 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.ICotizacionReposit
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IOrdenTrabajoRepository, back_cabs.CRM.repositories.Recepcion.OrdenTrabajoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IClientesLegacyValidationRepository, back_cabs.CRM.repositories.ClientesLegacyValidationRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionRepository, back_cabs.CRM.repositories.Soporte.ReparacionRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IMonedaRepository, back_cabs.CRM.repositories.Legacy.MonedaRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAgenteRepository, back_cabs.CRM.repositories.Legacy.AgenteRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAlmacenRepository, back_cabs.CRM.repositories.Legacy.AlmacenRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IProductoRepository, back_cabs.CRM.repositories.Legacy.ProductoRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IDocumentoModeloRepository, back_cabs.CRM.repositories.Legacy.DocumentoModeloRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IConceptoRepository, back_cabs.CRM.repositories.Legacy.ConceptoRepository>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.INumeroSerieRepository, back_cabs.CRM.repositories.Legacy.NumeroSerieRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteRepository, back_cabs.CRM.repositories.Legacy.AdmAgenteRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMonedaRepository, back_cabs.CRM.repositories.Legacy.AdmMonedaRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAlmacenRepository, back_cabs.CRM.repositories.Legacy.AdmAlmacenRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmProductoRepository, back_cabs.CRM.repositories.Legacy.AdmProductoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoModeloRepository, back_cabs.CRM.repositories.Legacy.AdmDocumentoModeloRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmConceptoRepository, back_cabs.CRM.repositories.Legacy.AdmConceptoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmNumeroSerieRepository, back_cabs.CRM.repositories.Legacy.AdmNumeroSerieRepository>();
 
 // Inyección de servicios de la aplicación
 builder.Services.AddScoped<IServicioJwt, ServicioJwt>(); // ✅ Ahora usa interfaz para mejor testabilidad
@@ -135,14 +168,14 @@ builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
 
-// Registro de servicios Legacy
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IMonedaService, back_cabs.CRM.services.Legacy.MonedaService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAgenteService, back_cabs.CRM.services.Legacy.AgenteService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAlmacenService, back_cabs.CRM.services.Legacy.AlmacenService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IProductoService, back_cabs.CRM.services.Legacy.ProductoService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IDocumentoModeloService, back_cabs.CRM.services.Legacy.DocumentoModeloService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IConceptoService, back_cabs.CRM.services.Legacy.ConceptoService>();
-builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.INumeroSerieService, back_cabs.CRM.services.Legacy.NumeroSerieService>();
+// Registro de servicios Legacy (solo conexión directa a BD legacy adCABS2016)
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteService, back_cabs.CRM.services.Legacy.AdmAgenteService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMonedaService, back_cabs.CRM.services.Legacy.AdmMonedaService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAlmacenService, back_cabs.CRM.services.Legacy.AdmAlmacenService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmProductoService, back_cabs.CRM.services.Legacy.AdmProductoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmDocumentoModeloService, back_cabs.CRM.services.Legacy.AdmDocumentoModeloService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmConceptoService, back_cabs.CRM.services.Legacy.AdmConceptoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmNumeroSerieService, back_cabs.CRM.services.Legacy.AdmNumeroSerieService>();
 
 //Interfaces del los servicios que acabamos de realizar
 // Registra el repositorio para que el servicio pueda usarlo

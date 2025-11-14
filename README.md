@@ -1,4 +1,3 @@
-# 🚀 CRM Sistema - Proyecto Fullstack Configurado
 
 ## ✅ Estado del Proyecto: LISTO PARA DESARROLLO
 
