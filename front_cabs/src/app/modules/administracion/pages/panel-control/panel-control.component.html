@@ -1,0 +1,146 @@
+<div class="flex flex-col gap-8">
+    <!-- Encabezado -->
+    <app-ui-header
+        titulo="Bienvenido"
+        descripcion="Controle sus ventas y resultados desde un solo lugar."
+        [visualizarButton]="false"
+    ></app-ui-header>
+
+    <!-- Tarjetas y gráficas -->
+    <div class="flex flex-col gap-6 ">
+        <!-- Tarjetas de estado -->
+        <div class="w-full h-[120px] flex gap-2.5 ">
+            @for(tarjeta of tarjetas; track tarjeta.id){
+            <app-ui-card
+                class="flex-1"
+                [nameIcono]="tarjeta.nameIcono"
+                [title]="tarjeta.titulo"
+                [valor]="tarjeta.valor"
+                [porcentaje]="tarjeta.porcentaje"
+                [estadoEtiqueta]="tarjeta.estadoEtiqueta"
+                [viewLabel]="true"
+                [viewSimbolo]="tarjeta.viewSimbolo"
+                [selected]="tarjeta.id === tarjetaSeleccionadaId"
+                (seleccionar)="seleccionarTarjeta(tarjeta.id)"
+            ></app-ui-card>
+            }
+        </div>            
+
+        <!-- Gráfica -->
+        <div class="bg-white flex flex-col gap-2 pt-3 pb-3 rounded-xl border border-zinc-300">
+            <!-- Encabezado Subtitulo y boton desplegable -->
+            <div class="mx-4 flex justify-between items-center">
+                <app-ui-tipografia
+                    variante="h5"
+                    texto={{tituloSeleccionado}}
+                ></app-ui-tipografia>
+                <button class="rounded-md px-4 py-2 bg-gray-200 hover:bg-gray-300">
+                    Mes pasado
+                </button>                
+            </div>
+            <!-- Linea separadora -->
+            <app-ui-divider></app-ui-divider>
+            <!-- Grafica -->
+            <div class=" w-full h-[300px] mx-auto px-4">
+            <app-ui-barra-grafica 
+            [datos]="datosSeleccionados"
+            (barraClickeada)="actualizarValorTarjeta($event)"
+            ></app-ui-barra-grafica>
+
+
+            </div>
+        </div>
+    </div>
+    <!-- Contenedor de Resumen por empleado y Documentos subidos -->
+    <div class=" w-full h-auto flex  justify-between gap-4">
+        <!-- Resuemn por empleado-->
+        <div class=" w-[450px] h-[350px] bg-white flex flex-1 flex-col gap-2 pt-3 pb-3 rounded-xl border border-zinc-300">
+            <span class="text-lg font-semibold text-zinc-600 ml-4">Resumen por empleado</span>
+            <!-- Linea separadora -->
+            <div class="w-full h-px bg-zinc-300"></div>
+            <!-- Columnas -->
+            <div class="grid grid-cols-4 gap-2 px-4 ">
+                <span class="text-xs font-medium text-zinc-500">Empleado</span>
+                <span class="text-xs font-medium text-zinc-500">Ventas cotizadas</span>
+                <span class="text-xs font-medium text-zinc-500">Docs subidos</span>
+                <span class="text-xs font-medium text-zinc-500">Cotiz rechazadas</span>
+            </div>
+            <!-- Filas -->
+            <div class="grid grid-cols-4 gap-2 px-4 items-start">
+                <!-- Nombre y rol -->
+                <div class="flex flex-col ">
+                    <span class="text-base font-normal text-zinc-700">María García</span>
+                    <span class="text-sm font-normal text-zinc-500">Soporte</span>
+                </div>
+                <!-- Columna 2 -->
+                <div class="flex flex-col  justify-start ">
+                    <span class="text-base font-normal text-zinc-700">15</span>
+                </div>
+                <!-- Columna 3 -->
+                <div class="flex flex-col">
+                    <span class="text-base font-normal text-zinc-700">30</span>
+                </div>
+                <!-- Columna 4 -->
+                <div class="flex flex-col">
+                    <span class="text-base font-normal text-zinc-700">5</span>
+                </div>                      
+            </div>
+            <div class="grid grid-cols-4 gap-2 px-4 items-start">
+                <!-- Nombre y rol -->
+                <div class="flex flex-col ">
+                    <span class="text-base font-normal text-zinc-700">María García</span>
+                    <span class="text-sm font-normal text-zinc-500">Soporte</span>
+                </div>
+                <!-- Columna 2 -->
+                <div class="flex flex-col  justify-start ">
+                    <span class="text-base font-normal text-zinc-700">15</span>
+                </div>
+                <!-- Columna 3 -->
+                <div class="flex flex-col">
+                    <span class="text-base font-normal text-zinc-700">30</span>
+                </div>
+                <!-- Columna 4 -->
+                <div class="flex flex-col">
+                    <span class="text-base font-normal text-zinc-700">5</span>
+                </div>              
+            </div>
+        </div>
+        <!-- Documetos subidos -->
+        <div class="bg-white w-[450px] h-[350px] flex flex-1 flex-col gap-2 pt-3 pb-3 rounded-xl border border-zinc-300">
+            <span class="text-lg font-semibold text-zinc-600 ml-4">Documentos subidos</span>
+            <!-- Linea separadora -->
+            <div class="w-full h-px bg-zinc-300"></div>
+                <!-- Columnas -->
+            <div class="grid grid-cols-4 gap-2 px-4">
+                <span class="text-xs font-medium text-zinc-500">Archivo</span>
+                <span class="text-xs font-medium text-zinc-500">Subido por</span>
+                <span class="text-xs font-medium text-zinc-500">Fecha</span>
+                <span class="text-xs font-medium text-zinc-500">Enlace</span>
+            </div>
+            <!-- Filas -->
+            <div class="grid grid-cols-4 gap-2 px-4 items-start">
+                <!-- Columna 1 -->
+                <!-- Nombre del archivo -->
+                <div class="flex flex-col  justify-start ">
+                    <span class="text-base font-normal text-zinc-700">Cotiazión.pdf</span>
+                </div>
+                <!-- Columna 2 -->
+                <!-- Nombre del empleado -->                 
+                <div class="flex flex-col  justify-start ">
+                    <span class="text-base font-normal text-zinc-700">María García </span>
+                </div>
+                <!-- Columna 3 -->
+                <!-- Fecha -->
+                <div class="flex flex-col">
+                    <span class="text-base font-normal text-zinc-700">2025-09-29 16:18	</span>
+                </div>
+                <!-- Columna 4 -->
+                <!-- Enlace del documento -->                 
+                <div class="flex flex-col">
+                    <a class="text-base font-normal text-zinc-700">Ver</a>
+                </div>              
+            </div>
+        </div>
+    </div>
+</div>
+
