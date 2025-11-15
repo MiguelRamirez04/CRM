@@ -1,21 +1,22 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router'; // 👈 1. IMPORTAR ROUTER
+import { Router } from '@angular/router';
 import { ReparacionService } from '../../../../core/services/reparacion.service';
 import { Reparacion, ReparacionDto } from '../../../../core/models/reparacion.interface';
+import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
 
 @Component({
   selector: 'app-reparaciones',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, UiHeaderComponent],
   templateUrl: './reparaciones.component.html',
   styleUrls: ['./reparaciones.component.css']
 })
 export class ReparacionesComponent implements OnInit {
   private readonly reparacionService = inject(ReparacionService);
   private fb = inject(FormBuilder);
-  private router = inject(Router); // 👈 2. INYECTAR ROUTER
+  private router = inject(Router); 
 
   // Signals para estado reactivo
   reparaciones = signal<Reparacion[]>([]);

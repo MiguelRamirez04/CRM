@@ -45,6 +45,12 @@ export const routes: Routes = [
     data: { permission: 'soporte.read' },
     loadChildren: () => import('./modules/soporte/soporte.routes').then(m => m.soporteRoutes)
   },
+   {
+    path: 'legacy',
+    canActivate: [SecureAuthGuard], // Lo protegemos
+    data: { permission: 'administracion.read' }, // Usamos el mismo permiso que admin
+    loadChildren: () => import('./modules/legacy/legacy.routes').then(m => m.legacyRoutes)
+  },
   
   // Páginas de error
   {

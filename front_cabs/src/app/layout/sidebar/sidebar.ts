@@ -115,6 +115,29 @@ export class Sidebar implements OnInit {
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
+      label: 'Legacy',
+      icon: 'resumen',
+      children: [
+        {
+          label: 'Catálogos Base',
+          icon: 'ordenes', 
+          link: '/legacy/catalogos-base',
+          roles: ['ADMINISTRACION']
+        },
+        {
+          label: 'Config. Documentos',
+          icon: 'evaluaciones',
+          link: '/legacy/config-documentos',
+        },
+        {
+          label: 'Operaciones',
+          icon: 'reparaciones', 
+          link: '/legacy/operaciones',
+        },
+
+      ],
+    },
+    {
       label: 'Calendario',
       icon: 'calendario',
       link: '/dashboard/calendario',
