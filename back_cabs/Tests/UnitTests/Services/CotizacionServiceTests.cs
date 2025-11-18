@@ -153,6 +153,98 @@
 //         resultado.Cliente.Should().Be("Test Cliente");
 //         resultado.Subtotal.Should().Be(1000.00m);
         
+<<<<<<< .merge_file_5r40wW
+        _mockRepository.Verify(r => r.GetByIdAsync(1), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObtenerPorIdAsync_ConIdInexistente_DebeRetornarNull()
+    {
+        // Arrange
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(999))
+            .ReturnsAsync((Cotizacion)null!);
+
+        // Act
+        var resultado = await _service.ObtenerPorIdAsync(999);
+
+        // Assert
+        resultado.Should().BeNull("porque la cotización con ID 999 no existe");
+        _mockRepository.Verify(r => r.GetByIdAsync(999), Times.Once);
+    }
+
+    /// <summary>
+    /// 🎯 [Theory]: Test que se ejecuta múltiples veces con diferentes datos
+    /// [InlineData]: Cada línea es una ejecución con esos valores
+    /// </summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(-999)]
+    public async Task ObtenerPorIdAsync_ConIdInvalido_DebeRetornarNull(int idInvalido)
+    {
+        // Arrange
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(It.IsAny<int>()))  // It.IsAny = cualquier int
+            .ReturnsAsync((Cotizacion)null!);
+
+        // Act
+        var resultado = await _service.ObtenerPorIdAsync(idInvalido);
+
+        // Assert
+        resultado.Should().BeNull($"porque el ID {idInvalido} es inválido");
+    }
+
+    #endregion
+
+    #region Cálculos de Total Tests
+
+    /// <summary>
+    /// 🧮 Test de cálculos: Verifica Total y TotalFinal
+    /// IMPORTANTE: Total (BD) = Subtotal + Impuestos [columna PERSISTED]
+    ///             TotalFinal (C#) = Total - Descuento [propiedad calculada]
+    /// </summary>
+    [Theory]
+    [InlineData(1000.00, 160.00, 0.00, 1160.00, 1160.00)]      // Sin descuento
+    [InlineData(1000.00, 160.00, 100.00, 1160.00, 1060.00)]    // Con descuento
+    [InlineData(5000.00, 800.00, 200.00, 5800.00, 5600.00)]    // Descuento pequeño
+    [InlineData(10000.00, 1600.00, 2000.00, 11600.00, 9600.00)] // Descuento significativo
+    [InlineData(1000.00, 0.00, 0.00, 1000.00, 1000.00)]        // Sin impuestos ni descuento
+    public void CalcularTotal_ConDiferentesValores_DebeCalcularCorrectamente(
+        double subtotalDouble,
+        double impuestosDouble,
+        double? descuentoDouble,
+        double totalBDDouble,
+        double totalFinalDouble)
+    {
+        // Convertir de double a decimal (xUnit no soporta decimal en InlineData)
+        var subtotal = (decimal)subtotalDouble;
+        var impuestos = (decimal)impuestosDouble;
+        var descuento = descuentoDouble.HasValue ? (decimal?)descuentoDouble.Value : null;
+        var totalBD = (decimal)totalBDDouble;
+        var totalFinal = (decimal)totalFinalDouble;
+        
+        // Arrange
+        var cotizacion = new Cotizacion
+        {
+            Subtotal = subtotal,
+            ImpuestosTotal = impuestos,
+            Total = totalBD, // En BD se calcula automáticamente como PERSISTED
+            Descuento = descuento
+        };
+
+        // Act & Assert - Verificar Total de BD
+        cotizacion.Total.Should().Be(totalBD, 
+            $"porque Total (BD) debe ser {subtotal} + {impuestos} = {totalBD}");
+            
+        // Act & Assert - Verificar TotalFinal calculado
+        cotizacion.TotalFinal.Should().Be(totalFinal,
+            $"porque TotalFinal debe ser {totalBD} - {descuento ?? 0} = {totalFinal}");
+    }
+
+    #endregion
+}
+=======
 //         _mockRepository.Verify(r => r.GetByIdAsync(1), Times.Once);
 //     }
 
@@ -237,3 +329,4 @@
 
 //     #endregion
 // }
+>>>>>>> .merge_file_ExQnSL
