@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Cotización {{folio}}</title>
+    <style>
+        /* --- Estilos Generales --- */
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            padding: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .text-bold { font-weight: bold; }
+        .text-right { text-align: right; }
+        .no-border td { border: none !important; } /* Aplicado a <tr> */
+
+        /* --- 1. Tabla de Layout del Encabezado --- */
+        .layout-header {
+            width: 100%;
+        }
+        .header-left {
+            width: 60%;
+            vertical-align: top;
+        }
+        .header-right {
+            width: 40%;
+            vertical-align: top;
+            text-align: right;
+        }
+        .header-left img.logo-cabs { max-width: 250px; }
+        .header-right img.logo-bni { max-width: 60px; margin-left: 5px; }
+        .doc-title { font-size: 18px; font-weight: bold; }
+
+        /* --- 2. Cliente --- */
+        .client-box { border: 1px solid #000; padding: 8px; margin-top: 15px; }
+        .client-box td { font-size: 10px; padding: 1px 3px; }
+
+        /* --- 3. Tabla de Items --- */
+        .main-table { margin-top: 15px; }
+        .main-table th, .main-table td { border: 1px solid #000; padding: 4px; vertical-align: top; }
+        .main-table th { background-color: #f0f0f0; text-align: center; }
+
+        /* --- 4. Tabla de Layout del Pie --- */
+        .layout-footer {
+            width: 100%;
+            margin-top: 15px;
+        }
+        .footer-left {
+            width: 65%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+        .footer-right {
+            width: 35%;
+            vertical-align: top;
+        }
+        
+        .totals-box { border: 1px solid #000; padding: 5px; }
+        .totals-box td { padding: 2px 5px; }
+        
+        .bank-info img.logo-whatsapp { 
+            max-width: 14px; 
+            vertical-align: middle; 
+        }
+
+        /* --- 5. Footer (Marcas) --- */
+        .page-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .page-footer img.marcas-banner {
+            width: 100%;
+            max-width: 700px;
+        }
+    </style>
+</head>
+<body>
+
+    <table class="layout-header">
+        <tr class="no-border">
+            <td class="header-left">
+                <!-- Rutas corregidas para apuntar a la carpeta assets -->
+                <img src="front_cabs/public/logo_cabs1.jpg" class="logo-cabs" alt="CABS" />
+                <img src="front_cabs/public/cabs__horizontal.png" class="logo-cabs" alt="CABS Horizontal" style="margin-top: 5px;" />
+                AV. 20 DE NOVIEMBRE 1205 OTE. LOCAL 2<br />
+                FRACC. LA FLORIDA C.P. 34229<br />
+                DURANGO, DGO.<br />
+                TELS. (618) 810-18-50, 825-75-34<br />
+                E-mail: ventas@cabscomputacion.com<br />
+                www.cabscomputacion.com
+            </td>
+            
+            <td class="header-right">
+                <div class="doc-title">COTIZACIÓN</div>
+                <div>
+                    <img src="front_cabs/public/yosoybni.png" class="logo-bni" alt="YoSoyBNI" />
+                    <img src="front_cabs/public/logobni.jpg" class="logo-bni" alt="BNI" />
+                </div>
+                <table style="margin-top: 10px; float: right;">
+                    <tr class="no-border">
+                        <td class="text-right">Serie:</td>
+                        <td class="text-bold" style="width: 80px;">{{serie}}</td>
+                    </tr>
+                    <tr class="no-border">
+                        <td class="text-right">Folio:</td>
+                        <td class="text-bold">{{folio}}</td>
+                    </tr>
+                    <tr class="no-border">
+                        <td class="text-right">Fecha:</td>
+                        <td class="text-bold">{{fecha}}</td>
+                    </tr>
+                    <tr class="no-border">
+                        <td class="text-right">Vigencia:</td>
+                        <td class="text-bold">{{vigencia}}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div class="client-box">
+        <table class="no-border">
+            <tr class="no-border">
+                <td style="width: 10%;"><span class="text-bold">Cliente:</span></td>
+                <td style="width: 50%;">{{clienteNombre}}</td>
+                <td style="width: 10%;"><span class="text-bold">Teléfono:</span></td>
+                <td style="width: 30%;">{{clienteTelefono}}</td>
+            </tr>
+            <tr class="no-border">
+                <td><span class="text-bold">RFC:</span></td>
+                <td>{{clienteRfc}}</td>
+                <td><span class="text-bold">Localidad:</span></td>
+                <td>{{clienteLocalidad}}</td>
+            </tr>
+            <tr class="no-border">
+                <td><span class="text-bold">Domicilio:</span></td>
+                <td>{{clienteDomicilio}}</td>
+                <td><span class="text-bold">CP:</span></td>
+                <td>{{clienteCp}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th style="width: 8%;">Cant.</th>
+                <th style="width: 10%;">Unidad</th>
+                <th style="width: 34%;">Descripción</th>
+                <th style="width: 12%;" class="text-right">P. Unitario</th>
+                <th style="width: 8%;" class="text-right">% Desc</th>
+                <th style="width: 12%;" class="text-right">Imp. Desc</th>
+                <th style="width: 16%;" class="text-right">Importe</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Los detalles se insertarán aquí dinámicamente -->
+            {{detalles}}
+        </tbody>
+    </table>
+
+    <table class="layout-footer">
+        <tr class="no-border">
+            <td class="footer-left">
+                <span class="text-bold">Importe con letra:</span>
+                <div>({{importeConLetra}})</div>
+                <br />
+                <span class="text-bold">CONDICIONES DE VENTA:</span>
+                <ul style="list-style-type: disc; padding-left: 20px; margin-top: 5px;">
+                    <!-- Las condiciones se insertarán aquí -->
+                    {{condiciones}}
+                </ul>
+
+                <div class="bank-info" style="margin-top: 15px;">
+                    <span class="text-bold">DATOS BANCARIOS:</span><br />
+                    BANAMEX S.A. DE C.V. CTA. 5849852 SUC. 7002<br />
+                    CLABE: 002190700258498522<br />
+                    A NOMBRE DE: CABS COMPUTACION SA DE CV<br />
+                    <img src="front_cabs/public/whats.jpg" class="logo-whatsapp" alt="WA" />
+                    <span class="text-bold">618 109 0013</span>
+                </div>
+            </td>
+            <td class="footer-right">
+                <div class="totals-box">
+                    <table>
+                        <tr class="no-border">
+                            <td>Subtotal:</td>
+                            <td class="text-right text-bold">{{subtotal}}</td>
+                        </tr>
+                        <tr class="no-border">
+                            <td>Descuentos:</td>
+                            <td class="text-right text-bold">{{descuentos}}</td>
+                        </tr>
+                        <tr class="no-border">
+                            <td>SubTotal:</td>
+                            <td class="text-right text-bold">{{subtotalNeto}}</td>
+                        </tr>
+                        <tr class="no-border">
+                            <td>I.V.A.:</td>
+                            <td class="text-right text-bold">{{iva}}</td>
+                        </tr>
+                        <tr class="no-border">
+                            <td class="text-bold">TOTAL:</td>
+                            <td class="text-right text-bold">{{total}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page-footer">
+        <img src="front_cabs/public/marcas.png" class="marcas-banner" alt="Marcas" />
+    </div>
+
+</body>
+</html>

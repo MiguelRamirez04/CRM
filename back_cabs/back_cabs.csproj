@@ -37,13 +37,7 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="4.77.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Moq" Version="4.20.70" />
-<<<<<<< HEAD
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="QuestPDF" Version="2025.7.4" />
-    <PackageReference Include="RazorLight" Version="2.3.1" />
-=======
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
->>>>>>> 82c7081fd2e8229b1f81d451c9e3fbbf30c0e4b2
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
