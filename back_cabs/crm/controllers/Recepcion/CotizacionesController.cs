@@ -3,6 +3,7 @@ using CRM.DTOs.Response;
 using back_cabs.CRM.services.Recepcion;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using back_cabs.CRM.Core.Exceptions;
 
 namespace back_cabs.CRM.controllers.Recepcion;
 
@@ -58,6 +59,7 @@ public class CotizacionesController : ControllerBase
 
     [HttpGet("orden/{ordenId}")]
     [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
+    /*
     public async Task<IActionResult> GetByOrdenId(int ordenId)
     {
         try
@@ -70,36 +72,48 @@ public class CotizacionesController : ControllerBase
             _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}.", ordenId);
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
-    }
+    }*/
 
-    [HttpGet("estado/{estado}")]
+    /// <summary>
+    /// Obtiene cotizaciones filtradas por un campo de estado específico
+    /// </summary>
+    /// <param name="campo">Campo a filtrar: cancelado, afectado, impreso, usaCliente</param>
+    /// <param name="valor">Valor del campo: 0 o 1</param>
+    [HttpGet("estado/{campo}/{valor}")]
     [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
-    public async Task<IActionResult> GetByEstado(string estado)
+    [ProducesResponseType(400)]
+    public async Task<IActionResult> GetByEstado(string campo, int valor)
     {
         try
         {
-            var resultado = await _service.ObtenerPorEstadoAsync(estado);
+            if (valor != 0 && valor != 1)
+                return BadRequest(new { message = "El valor debe ser 0 o 1." });
+
+            var resultado = await _service.ObtenerPorEstadoAsync(campo, valor);
             return Ok(resultado);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener cotizaciones por estado {Estado}.", estado);
+            _logger.LogError(ex, "Error al obtener cotizaciones por estado {Campo} = {Valor}.", campo, valor);
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }
 
-    [HttpGet("cliente/{cliente}")]
+    /// <summary>
+    /// Obtiene cotizaciones por ID de cliente
+    /// </summary>
+    [HttpGet("cliente/{clienteId:int}")]
     [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
-    public async Task<IActionResult> GetByCliente(string cliente)
+    public async Task<IActionResult> GetByClienteId(int clienteId)
     {
         try
         {
-            var resultado = await _service.ObtenerPorClienteAsync(cliente);
+            var resultado = await _service.ObtenerPorClienteIdAsync(clienteId);
             return Ok(resultado);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener cotizaciones por cliente {Cliente}.", cliente);
+            _logger.LogError(ex, "Error al obtener cotizaciones por ClienteId {ClienteId}.", clienteId);
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }
@@ -107,7 +121,8 @@ public class CotizacionesController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CotizacionResponseDto), 201)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Create([FromBody] CotizacionCreateRequestDto request)
+    [ProducesResponseType(409)] // Conflict para duplicados
+    public async Task<IActionResult> Create([FromBody] CotizacionRequestDto request)
     {
         try
         {
@@ -126,10 +141,49 @@ public class CotizacionesController : ControllerBase
             
             return CreatedAtAction(nameof(GetById), new { id = resultado.Id }, resultado);
         }
+        catch (ForeignKeyNotFoundException ex)
+        {
+            // Excepción 1: Dato no corresponde a uno existente
+            _logger.LogWarning(ex, "FK no encontrada al crear cotización: {Campo} = {ValorId}", ex.Campo, ex.ValorId);
+            return BadRequest(new 
+            { 
+                error = "FOREIGN_KEY_NOT_FOUND",
+                message = ex.Message,
+                campo = ex.Campo,
+                valorId = ex.ValorId
+            });
+        }
+        catch (DuplicateRecordException ex)
+        {
+            // Excepción 2: Campo existente con duplicado
+            _logger.LogWarning(ex, "Registro duplicado al crear cotización: {Campo} = {Valor}", ex.Campo, ex.Valor);
+            return Conflict(new 
+            { 
+                error = "DUPLICATE_RECORD",
+                message = ex.Message,
+                campo = ex.Campo,
+                valor = ex.Valor
+            });
+        }
+        catch (ResourceAccessDeniedException ex)
+        {
+            // Excepción 3: Datos existentes pero no se puede acceder
+            _logger.LogWarning(ex, "Acceso denegado al crear cotización");
+            return StatusCode(403, new 
+            { 
+                error = "ACCESS_DENIED",
+                message = ex.Message
+            });
+        }
         catch (Exception ex)
         {
+<<<<<<< .merge_file_cV4Tyj
             _logger.LogError(ex, "❌ Error al crear cotización.");
             return StatusCode(500, new { message = "Error interno del servidor.", error = ex.Message });
+=======
+            _logger.LogError(ex, "Error inesperado al crear cotización");
+            return StatusCode(500, new { message = "Error interno del servidor." });
+>>>>>>> .merge_file_kBQfD5
         }
     }
 
@@ -137,7 +191,7 @@ public class CotizacionesController : ControllerBase
     [ProducesResponseType(typeof(CotizacionResponseDto), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Update(int id, [FromBody] CotizacionCreateRequestDto request)
+    public async Task<IActionResult> Update(int id, [FromBody] CotizacionRequestDto request)
     {
         try
         {
