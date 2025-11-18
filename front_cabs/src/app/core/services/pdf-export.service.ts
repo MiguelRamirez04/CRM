@@ -1,234 +1,110 @@
-import { Injectable } from '@angular/core';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import html2pdf from 'html2pdf.js';
 import { CotizacionResponse } from '../models/cotizacion.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PdfExportService {
+  private http = inject(HttpClient);
 
   constructor() { }
 
   /**
-   * Exporta una cotización a PDF con formato profesional
+   * Exporta una cotización a PDF usando una plantilla HTML.
+   * @param cotizacion - El objeto de la cotización con todos los datos.
    */
-  exportarCotizacionPDF(cotizacion: CotizacionResponse): void {
-    // Crear documento PDF (A4)
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 20;
+  async exportarCotizacionPDF(cotizacion: CotizacionResponse): Promise<void> {
+    try {
+      // 1. Cargar la plantilla HTML desde assets
+      const templateHtml = await firstValueFrom(
+        this.http.get('modules/dashboard/pages/cotizaciones/cotizacion_template.html', { responseType: 'text' })
+      );
 
-    // ========== ENCABEZADO ==========
-    doc.setFontSize(22);
-    doc.setTextColor(52, 66, 143); // #34428F
-    doc.setFont('helvetica', 'bold');
-    doc.text('COTIZACIÓN', pageWidth / 2, yPos, { align: 'center' });
-    
-    yPos += 10;
-    doc.setFontSize(10);
-    doc.setTextColor(107, 114, 128); // #6b7280
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Folio: ${cotizacion.folio}`, pageWidth / 2, yPos, { align: 'center' });
+      // 2. Reemplazar los placeholders con los datos de la cotización
+      const finalHtml = this.rellenarPlantilla(templateHtml, cotizacion);
 
-    // Línea separadora
-    yPos += 5;
-    doc.setDrawColor(229, 231, 235); // #e5e7eb
-    doc.setLineWidth(0.5);
-    doc.line(15, yPos, pageWidth - 15, yPos);
-    yPos += 10;
+      // 3. Configurar opciones para html2pdf
+      const options = {
+        margin:       [0.5, 0.5, 0.5, 0.5] as [number, number, number, number], // top, left, bottom, right in inches
+        filename:     `Cotizacion-${cotizacion.folio}.pdf`,
+        html2canvas:  { scale: 2, useCORS: true }, // Aumenta la escala para mejor calidad
+        jsPDF:        { unit: 'in', format: 'letter' }
+      };
 
-    // ========== INFORMACIÓN GENERAL ==========
-    doc.setFontSize(14);
-    doc.setTextColor(52, 66, 143);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Información General', 15, yPos);
-    yPos += 7;
+      // 4. Generar y descargar el PDF
+      html2pdf().from(finalHtml).set(options).save();
 
-    const infoGeneral = [
-      ['ID', `#${cotizacion.id}`],
-      ['Estado', this.obtenerLabelEstado(cotizacion.estado)],
-      ['Validez', cotizacion.validezDias ? `${cotizacion.validezDias} días` : '-'],
-      ['Fecha de Creación', new Date(cotizacion.creadoEn).toLocaleDateString('es-MX', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })]
-    ];
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [],
-      body: infoGeneral,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 },
-      columnStyles: {
-        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
-        1: { textColor: [17, 24, 39] }
-      }
-    });
-
-    yPos = (doc as any).lastAutoTable.finalY + 10;
-
-    // ========== INFORMACIÓN DEL CLIENTE ==========
-    doc.setFontSize(14);
-    doc.setTextColor(52, 66, 143);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Información del Cliente', 15, yPos);
-    yPos += 7;
-
-    const infoCliente = [
-      ['Cliente', cotizacion.cliente],
-      ['RFC', cotizacion.rfc],
-      ['Teléfono', cotizacion.telefono || '-'],
-      ['Correo', cotizacion.correo || '-']
-    ];
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [],
-      body: infoCliente,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 },
-      columnStyles: {
-        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
-        1: { textColor: [17, 24, 39] }
-      }
-    });
-
-    yPos = (doc as any).lastAutoTable.finalY + 10;
-
-    // ========== DESCRIPCIÓN DEL SERVICIO ==========
-    doc.setFontSize(14);
-    doc.setTextColor(52, 66, 143);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Descripción del Servicio', 15, yPos);
-    yPos += 7;
-
-    doc.setFontSize(10);
-    doc.setTextColor(17, 24, 39);
-    doc.setFont('helvetica', 'normal');
-    const descripcionLines = doc.splitTextToSize(cotizacion.descripcionServicio, pageWidth - 30);
-    doc.text(descripcionLines, 15, yPos);
-    yPos += descripcionLines.length * 5 + 5;
-
-    // ========== OBSERVACIONES (si existen) ==========
-    if (cotizacion.observaciones) {
-      doc.setFontSize(14);
-      doc.setTextColor(52, 66, 143);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Observaciones', 15, yPos);
-      yPos += 7;
-
-      doc.setFontSize(10);
-      doc.setTextColor(17, 24, 39);
-      doc.setFont('helvetica', 'normal');
-      const observacionesLines = doc.splitTextToSize(cotizacion.observaciones, pageWidth - 30);
-      doc.text(observacionesLines, 15, yPos);
-      yPos += observacionesLines.length * 5 + 5;
+    } catch (error) {
+      console.error('Error al generar el PDF desde la plantilla HTML:', error);
+      // Opcional: Mostrar una notificación de error al usuario
     }
-
-    // ========== CAPACITACIÓN (si existe) ==========
-    if (cotizacion.horasCapacitacion || cotizacion.paquetesCapacitacion || cotizacion.costoCapacitacion) {
-      doc.setFontSize(14);
-      doc.setTextColor(52, 66, 143);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Servicios de Capacitación', 15, yPos);
-      yPos += 7;
-
-      const capacitacion = [
-        ['Horas', `${cotizacion.horasCapacitacion || 0}`],
-        ['Paquetes', `${cotizacion.paquetesCapacitacion || 0}`],
-        ['Costo', this.formatearMoneda(cotizacion.costoCapacitacion || 0)]
-      ];
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [],
-        body: capacitacion,
-        theme: 'plain',
-        styles: { fontSize: 10, cellPadding: 2 },
-        columnStyles: {
-          0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
-          1: { textColor: [17, 24, 39] }
-        }
-      });
-
-      yPos = (doc as any).lastAutoTable.finalY + 10;
-    }
-
-    // ========== TOTALES ==========
-    doc.setFontSize(14);
-    doc.setTextColor(52, 66, 143);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Totales', 15, yPos);
-    yPos += 7;
-
-    const totalesData = [
-      ['Subtotal', this.formatearMoneda(cotizacion.subtotal)],
-      ['IVA (16%)', this.formatearMoneda(cotizacion.impuestosTotal)]
-    ];
-
-    if (cotizacion.descuento && cotizacion.descuento > 0) {
-      totalesData.push(['Descuento', `-${this.formatearMoneda(cotizacion.descuento)}`]);
-    }
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [],
-      body: totalesData,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 },
-      columnStyles: {
-        0: { fontStyle: 'bold', textColor: [107, 114, 128], cellWidth: 40 },
-        1: { textColor: [17, 24, 39] }
-      }
-    });
-
-    yPos = (doc as any).lastAutoTable.finalY + 3;
-
-    // Total Final destacado
-    doc.setDrawColor(229, 231, 235);
-    doc.line(15, yPos, pageWidth - 15, yPos);
-    yPos += 7;
-
-    doc.setFontSize(14);
-    doc.setTextColor(52, 66, 143);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Total Final', 15, yPos);
-    doc.text(this.formatearMoneda(cotizacion.total), pageWidth - 15, yPos, { align: 'right' });
-
-    // ========== PIE DE PÁGINA ==========
-    const footerY = doc.internal.pageSize.getHeight() - 20;
-    doc.setFontSize(8);
-    doc.setTextColor(107, 114, 128);
-    doc.setFont('helvetica', 'italic');
-    doc.text(
-      `Documento generado el ${new Date().toLocaleString('es-MX')}`,
-      pageWidth / 2,
-      footerY,
-      { align: 'center' }
-    );
-
-    // Guardar PDF
-    const nombreArchivo = `Cotizacion_${cotizacion.folio}_${new Date().getTime()}.pdf`;
-    doc.save(nombreArchivo);
   }
 
-  private formatearMoneda(valor: number): string {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN'
-    }).format(valor);
-  }
-
-  private obtenerLabelEstado(estado: string): string {
-    const estados: { [key: string]: string } = {
-      'pendiente': 'Pendiente',
-      'aprobada': 'Aprobada',
-      'rechazada': 'Rechazada',
-      'expirada': 'Expirada'
+  /**
+   * Rellena la plantilla HTML con los datos de la cotización.
+   * @param template - El string de la plantilla HTML.
+   * @param data - El objeto CotizacionResponse.
+   * @returns El HTML con los datos insertados.
+   */
+  private rellenarPlantilla(template: string, data: CotizacionResponse): string {
+    // Helper para formatear moneda
+    const formatCurrency = (value: number | undefined | null) => {
+      return (value ?? 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
     };
-    return estados[estado.toLowerCase()] || estado;
+
+    // Helper para formatear fecha
+    const formatDate = (date: string | Date) => {
+      return new Date(date).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    // Generar filas de la tabla de detalles (esto es un ejemplo, ajústalo a tu `CotizacionResponse`)
+    // NOTA: Tu `CotizacionResponse` no tiene un array de detalles. Usaré la descripción general.
+    // Si tuvieras detalles, el código sería como el que está comentado.
+    let detallesHtml = `
+      <tr>
+        <td class="text-right">1.00</td>
+        <td>Servicio</td>
+        <td>${data.descripcionServicio || 'Servicio General'}</td>
+        <td class="text-right">${formatCurrency(data.subtotal)}</td>
+        <td class="text-right">0.00</td>
+        <td class="text-right">${formatCurrency(0)}</td>
+        <td class="text-right">${formatCurrency(data.subtotal)}</td>
+      </tr>
+    `;
+    /*
+    // SI TUVIERAS UN ARRAY `data.detalles`:
+    let detallesHtml = data.detalles.map(item => `
+      <tr>
+        <td class="text-right">${item.cantidad.toFixed(2)}</td>
+        <td>${item.unidad}</td>
+        <td>${item.descripcion}</td>
+        <td class="text-right">${formatCurrency(item.precioUnitario)}</td>
+        <td class="text-right">0.00</td>
+        <td class="text-right">${formatCurrency(0)}</td>
+        <td class="text-right">${formatCurrency(item.importe)}</td>
+      </tr>
+    `).join('');
+    */
+
+    // Reemplazar todos los placeholders
+    return template
+      .replace(/{{folio}}/g, data.folio)
+      .replace(/{{fecha}}/g, formatDate(data.creadoEn))
+      .replace(/{{clienteNombre}}/g, data.cliente)
+      .replace(/{{clienteRfc}}/g, data.rfc)
+      .replace(/{{clienteTelefono}}/g, data.telefono?.toString() || '-')
+      .replace(/{{detalles}}/g, detallesHtml)
+      .replace(/{{subtotalNeto}}/g, formatCurrency(data.subtotal))
+      .replace(/{{iva}}/g, formatCurrency(data.impuestosTotal))
+      .replace(/{{descuentos}}/g, formatCurrency(data.descuento))
+      .replace(/{{total}}/g, formatCurrency(data.totalFinal))
+      // ... añade aquí el resto de reemplazos que necesites (vigencia, domicilio, etc.)
+      .replace(/{{serie}}/g, 'COT') // Placeholder
+      .replace(/{{vigencia}}/g, 'N/A') // Placeholder
+      .replace(/{{importeConLetra}}/g, 'IMPORTE CON LETRA PENDIENTE') // Placeholder
+      .replace(/{{condiciones}}/g, `<li>Precios sujetos a cambio sin previo aviso.</li><li>Pago de contado.</li>`); // Placeholder
   }
 }
