@@ -52,32 +52,23 @@ namespace back_cabs.CRM.controllers.Auth
         private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<AuthController> _logger;
         private readonly IConfiguration _configuration;
-<<<<<<< .merge_file_JH5MOT
         private readonly IAntiforgery _antiforgery;
-=======
         private readonly EmailService _emailService;
         
->>>>>>> .merge_file_HcdV9r
 
         public AuthController(
             UsuarioAuthService usuarioAuthService,
             ILogger<AuthController> logger,
             IConfiguration configuration,
-<<<<<<< .merge_file_JH5MOT
-            IAntiforgery antiforgery)
-=======
+            IAntiforgery antiforgery,
             EmailService emailService)
->>>>>>> .merge_file_HcdV9r
         {
             _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-<<<<<<< .merge_file_JH5MOT
             _antiforgery = antiforgery ?? throw new ArgumentNullException(nameof(antiforgery));
-=======
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // <-- Y aquí
 
->>>>>>> .merge_file_HcdV9r
         }
 
         /// <summary>

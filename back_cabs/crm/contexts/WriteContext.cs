@@ -6,10 +6,7 @@ using back_cabs.CRM.models.Administracion;
 using back_cabs.CRM.models.Soporte;
 using back_cabs.CRM.models.Files;
 using back_cabs.CRM.models;
-<<<<<<< .merge_file_Jq0WSv
 using back_cabs.CRM.models.legacy;
-=======
->>>>>>> .merge_file_lizUYh
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 

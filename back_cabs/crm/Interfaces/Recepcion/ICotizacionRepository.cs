@@ -42,15 +42,12 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         Task<bool> ExistsAsync(int id);
 
         /// <summary>
-<<<<<<< .merge_file_158T3x
         /// Obtiene cotizaciones creadas en una fecha específica (para generar folios)
         /// </summary>
         Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha);
-=======
         /// Valida que todas las llaves foráneas existan en la base de datos
         /// </summary>
         Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(int documentoDeId, int conceptoDocumentoId, int clienteProveedorId, int agenteId);
->>>>>>> .merge_file_6KolxL
 
         // ✏️ OPERACIONES DE ESCRITURA
         /// <summary>

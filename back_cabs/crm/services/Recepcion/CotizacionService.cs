@@ -134,19 +134,14 @@ public class CotizacionService
 
     /// <summary>
     /// Crea una nueva cotización.
-<<<<<<< .merge_file_XfnbHj
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// ✅ Genera folio automático con formato COT-YYYY-MM-DD-XXX
-=======
-    /// ✅ Valida llaves foráneas antes de crear
->>>>>>> .merge_file_xeC3yc
     /// </summary>
-    public async Task<CotizacionResponseDto> CrearAsync(CotizacionRequestDto request)
+    public async Task<CotizacionResponseDto> CrearAsync(CotizacionCreateRequestDto request)
     {
         try
         {
-<<<<<<< .merge_file_XfnbHj
-            var cotizacion = MapFromCreateRequestDto(request);
+            var cotizacion = MapFromRequestDto(request);
             cotizacion.CreadoEn = DateTime.UtcNow;
             
             // ✅ Generar folio automático si no se proporciona
@@ -154,39 +149,6 @@ public class CotizacionService
             {
                 cotizacion.Folio = await GenerarFolioAutomaticoAsync();
             }
-=======
-            // 1. Validar llaves foráneas
-            var validacionFKs = await _cotizacionRepository.ValidarLlavesForaneasAsync(
-                request.DocumentoDeId,
-                request.ConceptoDocumentoId,
-                request.ClienteProveedorId,
-                request.AgenteId
-            );
-
-            // 2. Lanzar excepciones específicas si alguna FK no existe
-            foreach (var (campo, existe) in validacionFKs)
-            {
-                if (!existe)
-                {
-                    var valorId = campo switch
-                    {
-                        "DocumentoDeId" => request.DocumentoDeId,
-                        "ConceptoDocumentoId" => request.ConceptoDocumentoId,
-                        "ClienteProveedorId" => request.ClienteProveedorId,
-                        "AgenteId" => request.AgenteId,
-                        _ => 0
-                    };
-                    throw new ForeignKeyNotFoundException(campo, valorId);
-                }
-            }
-
-            // 3. Validar duplicados si es necesario (por ejemplo, mismo Folio)
-            // TODO: Agregar validación de duplicados si se requiere
-
-            // 4. Mapear y crear la entidad
-            var cotizacion = MapFromRequestDto(request);
-            cotizacion.Fecha = DateTime.UtcNow; // El servidor establece la fecha de creación
->>>>>>> .merge_file_xeC3yc
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
@@ -214,7 +176,7 @@ public class CotizacionService
     /// Actualiza una cotización existente.
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// </summary>
-    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionRequestDto request)
+    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionCreateRequestDto request)
     {
         try
         {
@@ -226,7 +188,6 @@ public class CotizacionService
             }
 
             // Mapear cambios
-<<<<<<< .merge_file_XfnbHj
             existente.OrdenId = request.OrdenId;
             existente.IntakeLegacyId = request.IntakeLegacyId;
             existente.Subtotal = request.Subtotal;
@@ -247,21 +208,6 @@ public class CotizacionService
             existente.Descuento = request.Descuento;
             existente.DescripcionServicio = request.DescripcionServicio;
             existente.ActualizadoEn = DateTime.UtcNow;
-=======
-            //Datos Principales
-            existente.Folio = request.Folio ?? existente.Folio;
-            existente.FechaVencimiento = request.FechaVencimiento;
-            existente.FechaEntregaRecepcion = request.FechaEntregaRecepcion;
-            
-            //Datos Descriptivos
-            existente.Referencia = request.Referencia;
-            existente.Observaciones = request.Observaciones;
-            
-            //Totales en cantidad y dinero
-            existente.Neto = request.Neto;
-            existente.Total = request.Total;
-            existente.TotalUnidades = request.TotalUnidades;
->>>>>>> .merge_file_xeC3yc
 
             var actualizada = await _cotizacionRepository.UpdateAsync(existente);
 
@@ -311,7 +257,6 @@ public class CotizacionService
         return new CotizacionResponseDto
         {
             Id = cotizacion.Id,
-<<<<<<< .merge_file_XfnbHj
             OrdenId = cotizacion.OrdenId,
             IntakeLegacyId = cotizacion.IntakeLegacyId,
             Subtotal = cotizacion.Subtotal,
@@ -336,43 +281,13 @@ public class CotizacionService
             // Campos de contacto
             Telefono = cotizacion.Telefono,
             Correo = cotizacion.Correo
-=======
-
-            // DocumentoDeId = cotizacion.DocumentoDeId,
-            // ConceptoDocumentoId = cotizacion.ConceptoDocumentoId,
-            // ClienteProveedorId = cotizacion.ClienteProveedorId,
-            // AgenteId = cotizacion.AgenteId,
-            // DocumentoOrigenId = cotizacion.DocumentoOrigenId,
-
-            SerieDocumento = cotizacion.SerieDocumento,
-            Folio = cotizacion.Folio,
-            Fecha = cotizacion.Fecha,
-            FechaVencimiento = cotizacion.FechaVencimiento,
-            FechaEntregaRecepcion = cotizacion.FechaEntregaRecepcion,
-            RazonSocial = cotizacion.RazonSocial,
-            Rfc = cotizacion.Rfc,
-            Referencia = cotizacion.Referencia,
-            Observaciones = cotizacion.Observaciones,
-            Naturaleza = cotizacion.Naturaleza,
-            UsaCliente = cotizacion.UsaCliente,
-            Afectado = cotizacion.Afectado,
-            Impreso = cotizacion.Impreso,
-            Cancelado = cotizacion.Cancelado,
-            Neto = cotizacion.Neto,
-            Impuesto1 = cotizacion.Impuesto1,
-            DescuentoMovimiento = cotizacion.DescuentoMovimiento,
-            Total = cotizacion.Total,
-            Pendiente = cotizacion.Pendiente,
-            TotalUnidades = cotizacion.TotalUnidades
->>>>>>> .merge_file_xeC3yc
         };
     }
 
-    private static Cotizacion MapFromRequestDto(CotizacionRequestDto request)
+    private static Cotizacion MapFromRequestDto(CotizacionCreateRequestDto request)
     {
         return new Cotizacion
         {
-<<<<<<< .merge_file_XfnbHj
             OrdenId = request.OrdenId,
             IntakeLegacyId = request.IntakeLegacyId,
             Subtotal = request.Subtotal,
@@ -395,21 +310,6 @@ public class CotizacionService
             // Campos de contacto
             Telefono = request.Telefono,
             Correo = request.Correo
-=======
-            DocumentoDeId = request.DocumentoDeId,
-            ConceptoDocumentoId = request.ConceptoDocumentoId,
-            ClienteProveedorId = request.ClienteProveedorId,
-            AgenteId = request.AgenteId,
-            DocumentoOrigenId = request.DocumentoOrigenId,
-            SerieDocumento = request.SerieDocumento,
-            FechaVencimiento = request.FechaVencimiento,
-            FechaEntregaRecepcion = request.FechaEntregaRecepcion,
-            RazonSocial = request.RazonSocial,
-            Rfc = request.Rfc,
-            Referencia = request.Referencia,
-            Observaciones = request.Observaciones,
-            TotalUnidades = request.TotalUnidades
->>>>>>> .merge_file_xeC3yc
         };
     }
 }
