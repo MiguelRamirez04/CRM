@@ -11,14 +11,17 @@ namespace back_cabs.CRM.repositories.Legacy
     /// </summary>
     public class AdmDocumentoRepository : IAdmDocumentoRepository
     {
-        private readonly LegacyCompacReadOnlyContext _context;
+        private readonly LegacyCompacReadOnlyContext _readContext;
+        private readonly LegacyCompacWriteContext _writeContext;
         private readonly ILogger<AdmDocumentoRepository> _logger;
 
         public AdmDocumentoRepository(
-            LegacyCompacReadOnlyContext context,
+            LegacyCompacReadOnlyContext readContext,
+            LegacyCompacWriteContext writeContext,
             ILogger<AdmDocumentoRepository> logger)
         {
-            _context = context;
+            _readContext = readContext;
+            _writeContext = writeContext;
             _logger = logger;
         }
 
@@ -29,7 +32,7 @@ namespace back_cabs.CRM.repositories.Legacy
         {
             try
             {
-                var query = _context.AdmDocumentos.AsNoTracking();
+                var query = _readContext.AdmDocumentos.AsNoTracking();
 
                 // Aplicar filtros
                 if (filter.FechaInicio.HasValue)
@@ -111,7 +114,7 @@ namespace back_cabs.CRM.repositories.Legacy
         {
             try
             {
-                var documento = await _context.AdmDocumentos
+                var documento = await _readContext.AdmDocumentos
                     .AsNoTracking()
                     .FirstOrDefaultAsync(d => d.CIdDocumento == idDocumento);
 
@@ -131,7 +134,7 @@ namespace back_cabs.CRM.repositories.Legacy
         {
             try
             {
-                var movimientos = await _context.AdmMovimientos
+                var movimientos = await _readContext.AdmMovimientos
                     .AsNoTracking()
                     .Where(m => m.CIdDocumento == idDocumento)
                     .OrderBy(m => m.CNumeroMovimiento)
@@ -142,6 +145,354 @@ namespace back_cabs.CRM.repositories.Legacy
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al obtener movimientos del documento {IdDocumento}", idDocumento);
+                throw;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODOS POST (CREACIÓN)
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Crea un nuevo documento en la base de datos
+        /// </summary>
+        public async Task<int> CreateAsync(AdmDocumento documento)
+        {
+            try
+            {
+                _logger.LogInformation("📝 Insertando nuevo documento en BD. Serie: {Serie}, Folio: {Folio}", 
+                    documento.CSerieDocumento, documento.CFolio);
+
+                // Obtener el próximo ID disponible
+                var maxId = await _writeContext.AdmDocumentos.MaxAsync(d => (int?)d.CIdDocumento) ?? 0;
+                documento.CIdDocumento = maxId + 1;
+
+                await _writeContext.AdmDocumentos.AddAsync(documento);
+                await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Documento creado exitosamente. ID: {IdDocumento}", documento.CIdDocumento);
+
+                return documento.CIdDocumento;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al crear documento. Serie: {Serie}, Folio: {Folio}", 
+                    documento.CSerieDocumento, documento.CFolio);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un documento modelo por su ID
+        /// </summary>
+        public async Task<bool> ExistsDocumentoModeloAsync(int idDocumentoDe)
+        {
+            try
+            {
+                return await _readContext.AdmDocumentosModelo
+                    .AsNoTracking()
+                    .AnyAsync(dm => dm.CIdDocumentoDe == idDocumentoDe);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al verificar existencia de documento modelo {IdDocumentoDe}", idDocumentoDe);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un concepto por su ID
+        /// </summary>
+        public async Task<bool> ExistsConceptoAsync(int idConcepto)
+        {
+            try
+            {
+                return await _readContext.AdmConceptos
+                    .AsNoTracking()
+                    .AnyAsync(c => c.CIdConceptoDocumento == idConcepto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al verificar existencia de concepto {IdConcepto}", idConcepto);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un cliente/proveedor por su ID
+        /// </summary>
+        public async Task<bool> ExistsClienteProveedorAsync(int idClienteProveedor)
+        {
+            try
+            {
+                return await _readContext.AdmClientes
+                    .AsNoTracking()
+                    .AnyAsync(c => c.CIdClienteProveedor == idClienteProveedor);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al verificar existencia de cliente/proveedor {IdClienteProveedor}", idClienteProveedor);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un agente por su ID
+        /// </summary>
+        public async Task<bool> ExistsAgenteAsync(int idAgente)
+        {
+            try
+            {
+                return await _readContext.AdmAgentes
+                    .AsNoTracking()
+                    .AnyAsync(a => a.CIdAgente == idAgente);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al verificar existencia de agente {IdAgente}", idAgente);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe una moneda por su ID
+        /// </summary>
+        public async Task<bool> ExistsMonedaAsync(int idMoneda)
+        {
+            try
+            {
+                return await _readContext.AdmMonedas
+                    .AsNoTracking()
+                    .AnyAsync(m => m.CIdMoneda == idMoneda);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al verificar existencia de moneda {IdMoneda}", idMoneda);
+                throw;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODOS PARA COTIZACIONES MEJORADAS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene el folio actual del concepto
+        /// </summary>
+        public async Task<double> GetFolioActualAsync(int idConcepto)
+        {
+            try
+            {
+                var concepto = await _readContext.AdmConceptos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.CIdConceptoDocumento == idConcepto);
+
+                if (concepto == null)
+                {
+                    throw new InvalidOperationException($"No se encontró el concepto con ID {idConcepto}");
+                }
+
+                return concepto.CNoFolio;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo folio del concepto {IdConcepto}", idConcepto);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el folio del concepto
+        /// </summary>
+        public async Task UpdateFolioConceptoAsync(int idConcepto, double nuevoFolio)
+        {
+            try
+            {
+                var concepto = await _writeContext.AdmConceptos
+                    .FirstOrDefaultAsync(c => c.CIdConceptoDocumento == idConcepto);
+
+                if (concepto == null)
+                {
+                    throw new InvalidOperationException($"No se encontró el concepto con ID {idConcepto}");
+                }
+
+                concepto.CNoFolio = nuevoFolio;
+                await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Folio del concepto {IdConcepto} actualizado a {NuevoFolio}", idConcepto, nuevoFolio);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando folio del concepto {IdConcepto}", idConcepto);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Crea un documento con sus movimientos en una transacción
+        /// </summary>
+        public async Task<int> CreateDocumentoConMovimientosAsync(AdmDocumento documento, List<AdmMovimiento> movimientos)
+        {
+            using var transaction = await _writeContext.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Obtener y actualizar el folio
+                var folioActual = await GetFolioActualAsync(documento.CIdConceptoDocumento);
+                var nuevoFolio = folioActual + 1;
+                documento.CFolio = nuevoFolio;
+
+                // 2. Insertar el documento
+                await _writeContext.AdmDocumentos.AddAsync(documento);
+                await _writeContext.SaveChangesAsync();
+
+                var documentoId = documento.CIdDocumento;
+                _logger.LogInformation("✅ Documento creado con ID {DocumentoId}", documentoId);
+
+                // 3. Insertar los movimientos
+                foreach (var movimiento in movimientos)
+                {
+                    movimiento.CIdDocumento = documentoId;
+                    movimiento.CIdDocumentoDe = documento.CIdDocumentoDe;
+                }
+
+                await _writeContext.AdmMovimientos.AddRangeAsync(movimientos);
+                await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("✅ {CantidadMovimientos} movimientos creados para documento {DocumentoId}", 
+                    movimientos.Count, documentoId);
+
+                // 4. Actualizar el folio en admConceptos
+                await UpdateFolioConceptoAsync(documento.CIdConceptoDocumento, nuevoFolio);
+
+                // 5. Commit de la transacción
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Cotización creada exitosamente - ID: {DocumentoId}, Folio: {Folio}", 
+                    documentoId, nuevoFolio);
+
+                return documentoId;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error creando documento con movimientos. Transacción revertida.");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un almacén por su ID
+        /// </summary>
+        public async Task<bool> ExistsAlmacenAsync(int idAlmacen)
+        {
+            try
+            {
+                return await _readContext.AdmAlmacenes
+                    .AsNoTracking()
+                    .AnyAsync(a => a.CIdAlmacen == idAlmacen);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando existencia de almacén {IdAlmacen}", idAlmacen);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe un producto por su ID
+        /// </summary>
+        public async Task<bool> ExistsProductoAsync(int idProducto)
+        {
+            try
+            {
+                return await _readContext.AdmProductos
+                    .AsNoTracking()
+                    .AnyAsync(p => p.CIdProducto == idProducto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando existencia de producto {IdProducto}", idProducto);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existe una unidad de medida por su ID
+        /// </summary>
+        public async Task<bool> ExistsUnidadAsync(int idUnidad)
+        {
+            try
+            {
+                return await _readContext.AdmUnidadesMedidaPeso
+                    .AsNoTracking()
+                    .AnyAsync(u => u.CIdUnidad == idUnidad);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando existencia de unidad {IdUnidad}", idUnidad);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Cancela un documento (cambia CCANCELADO a 1)
+        /// </summary>
+        public async Task CancelarDocumentoAsync(int idDocumento, string? motivo, string usuario)
+        {
+            try
+            {
+                var documento = await _writeContext.AdmDocumentos
+                    .FirstOrDefaultAsync(d => d.CIdDocumento == idDocumento);
+
+                if (documento == null)
+                {
+                    throw new InvalidOperationException($"No se encontró el documento con ID {idDocumento}");
+                }
+
+                if (documento.CCancelado == 1)
+                {
+                    throw new InvalidOperationException($"El documento {documento.CSerieDocumento}-{documento.CFolio} ya está cancelado");
+                }
+
+                // Actualizar campos de cancelación
+                documento.CCancelado = 1;
+                documento.CUsuario = usuario;
+                
+                // Agregar motivo en observaciones si se proporcionó
+                if (!string.IsNullOrWhiteSpace(motivo))
+                {
+                    var observacionCancelacion = $"[CANCELADO: {DateTime.Now:yyyy-MM-dd HH:mm}] {motivo}";
+                    documento.CObservaciones = string.IsNullOrWhiteSpace(documento.CObservaciones)
+                        ? observacionCancelacion
+                        : $"{documento.CObservaciones}\\n{observacionCancelacion}";
+                }
+
+                await _writeContext.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Documento {IdDocumento} cancelado exitosamente por {Usuario}", 
+                    idDocumento, usuario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cancelando documento {IdDocumento}", idDocumento);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un documento por ID (solo encabezado)
+        /// </summary>
+        public async Task<AdmDocumento?> GetDocumentoByIdAsync(int idDocumento)
+        {
+            try
+            {
+                return await _readContext.AdmDocumentos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d => d.CIdDocumento == idDocumento);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo documento {IdDocumento}", idDocumento);
                 throw;
             }
         }

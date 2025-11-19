@@ -246,5 +246,127 @@ namespace back_cabs.CRM.controllers.Legacy
                 });
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ENDPOINT AUXILIAR PARA COTIZACIONES
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Busca clientes por Razón Social o RFC (para uso en cotizaciones)
+        /// </summary>
+        /// <remarks>
+        /// Endpoint simplificado para búsqueda rápida de clientes al crear cotizaciones.
+        /// Busca coincidencias parciales en Razón Social o RFC.
+        /// 
+        /// **Ejemplos de uso:**
+        /// - GET /api/AdmClientes/buscar?texto=COMPUTACION
+        /// - GET /api/AdmClientes/buscar?texto=ABC123456
+        /// 
+        /// **Respuesta:**
+        /// ```json
+        /// {
+        ///   "success": true,
+        ///   "data": [
+        ///     {
+        ///       "idCliente": 123,
+        ///       "codigoCliente": "C001",
+        ///       "razonSocial": "COMPUTACION Y SISTEMAS SA DE CV",
+        ///       "rfc": "CSI950101ABC",
+        ///       "email": "contacto@computacion.com",
+        ///       "telefono": "5551234567"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// </remarks>
+        /// <param name="texto">Texto a buscar (Razón Social o RFC)</param>
+        /// <param name="limit">Límite de resultados (default: 20, max: 50)</param>
+        /// <returns>Lista de clientes que coinciden con la búsqueda</returns>
+        [HttpGet("buscar")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> BuscarParaCotizacion(
+            [FromQuery] string texto,
+            [FromQuery] int limit = 20)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(texto))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'texto' es obligatorio"
+                    });
+                }
+
+                if (limit > 50)
+                {
+                    limit = 50;
+                }
+
+                _logger.LogInformation("🔍 Buscando clientes con texto: {Texto}, Límite: {Limit}", texto, limit);
+
+                // Buscar por razón social o RFC
+                var filter = new AdmClienteFilterDto
+                {
+                    RazonSocial = texto,
+                    Estatus = 1, // Solo activos
+                    NumeroPagina = 1,
+                    TamanoPagina = limit,
+                    IncluirDetalleUbicacion = true
+                };
+
+                var (clientes, totalRegistros, _) = await _service.SearchPaginatedAsync(filter);
+
+                // Si no encontró por razón social, buscar por RFC
+                if (clientes.Count == 0)
+                {
+                    filter.RazonSocial = null;
+                    filter.RFC = texto;
+                    (clientes, totalRegistros, _) = await _service.SearchPaginatedAsync(filter);
+                }
+
+                sw.Stop();
+                _logger.LogInformation("✅ Búsqueda completada en {Ms}ms. Encontrados: {Total}", 
+                    sw.ElapsedMilliseconds, clientes.Count);
+
+                // Simplificar respuesta para cotizaciones
+                var resultadosSimplificados = clientes.Select(c => new
+                {
+                    idCliente = c.Id,
+                    codigoCliente = c.CodigoCliente,
+                    razonSocial = c.Nombre,
+                    rfc = c.RFC,
+                    email = c.Email,
+                    telefono = c.Telefono
+                }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = resultadosSimplificados,
+                    totalEncontrados = clientes.Count,
+                    textoBuscado = texto,
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al buscar clientes después de {Ms}ms. Texto: {Texto}",
+                    sw.ElapsedMilliseconds, texto);
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al buscar clientes",
+                    error = ex.Message,
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+        }
     }
 }

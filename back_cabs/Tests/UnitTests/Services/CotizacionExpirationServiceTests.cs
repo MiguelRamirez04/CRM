@@ -52,7 +52,9 @@ public class CotizacionExpirationServiceTests
         var diasValidez = 30; // Debería expirar el 2 de marzo
         var fechaActual = new DateTime(2024, 3, 2); // 2 de marzo 2024
 
-        var cotizacion = new Cotizacion
+        var 
+        
+        cotizacion = new Cotizacion
         {
             Id = 1,
             CreadoEn = fechaCreacion,

@@ -163,5 +163,111 @@ namespace back_cabs.CRM.controllers
                 });
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ENDPOINT AUXILIAR PARA COTIZACIONES
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Busca productos por código o nombre (para uso en cotizaciones)
+        /// </summary>
+        /// <remarks>
+        /// Endpoint simplificado para búsqueda rápida de productos al crear cotizaciones.
+        /// Busca coincidencias parciales en código o nombre de producto.
+        /// 
+        /// **Ejemplos de uso:**
+        /// - GET /api/AdmProductos/buscar?texto=LAPTOP
+        /// - GET /api/AdmProductos/buscar?texto=MON-001
+        /// 
+        /// **Respuesta:**
+        /// ```json
+        /// {
+        ///   "success": true,
+        ///   "data": [
+        ///     {
+        ///       "idProducto": 456,
+        ///       "codigoProducto": "LAP-001",
+        ///       "nombreProducto": "LAPTOP HP PROBOOK 450",
+        ///       "descripcion": "LAPTOP HP PROBOOK 450 G10",
+        ///       "precio": 15000.00,
+        ///       "idUnidadBase": 1,
+        ///       "nombreUnidad": "PZA"
+        ///     }
+        ///   ]
+        /// }
+        /// ```
+        /// </remarks>
+        /// <param name="texto">Texto a buscar (código o nombre de producto)</param>
+        /// <param name="limit">Límite de resultados (default: 20, max: 50)</param>
+        /// <returns>Lista de productos que coinciden con la búsqueda</returns>
+        [HttpGet("buscar")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> BuscarParaCotizacion(
+            [FromQuery] string texto,
+            [FromQuery] int limit = 20)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(texto) || texto.Length < 2)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'texto' debe tener al menos 2 caracteres"
+                    });
+                }
+
+                if (limit > 50)
+                {
+                    limit = 50;
+                }
+
+                _logger.LogInformation("🔍 Buscando productos con texto: {Texto}, Límite: {Limit}", texto, limit);
+
+                // Usar el método de búsqueda existente
+                var paginatedResult = await _service.SearchPaginatedAsync(texto, 1, limit);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Búsqueda para cotización completada en {Ms}ms. Resultados: {Count}",
+                    sw.ElapsedMilliseconds, paginatedResult.Items.Count());
+
+                // Simplificar respuesta para cotizaciones
+                var resultadosSimplificados = paginatedResult.Items.Select(p => new
+                {
+                    idProducto = p.IdProducto,
+                    codigoProducto = p.CodigoProducto,
+                    nombreProducto = p.NombreProducto,
+                    descripcion = p.Descripcion,
+                    precio = p.Precio1, // Precio lista 1
+                    idUnidadBase = p.IdUnidadBase
+                }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = resultadosSimplificados,
+                    totalEncontrados = resultadosSimplificados.Count,
+                    textoBuscado = texto,
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al buscar productos después de {Ms}ms. Texto: {Texto}",
+                    sw.ElapsedMilliseconds, texto);
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al buscar productos",
+                    error = ex.Message,
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+        }
     }
 }

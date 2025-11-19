@@ -18,9 +18,10 @@ namespace back_cabs.CRM.repositories.Legacy
             ILogger<AdmUnidadMedidaPesoRepository> logger)
         {
             _context = context;
-            _logger = logger;
+            _logger = logger;   
         }
 
+        
         /// <summary>
         /// Obtener todas las unidades de medida
         /// </summary>
@@ -58,6 +59,8 @@ namespace back_cabs.CRM.repositories.Legacy
             }
         }
 
+       
+       
         /// <summary>
         /// Buscar unidades por nombre (búsqueda parcial case-insensitive)
         /// </summary>
