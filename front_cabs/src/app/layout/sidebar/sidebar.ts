@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BandejaPerfilComponent } from '../bandeja-perfil/bandeja-perfil.component';
 
 type IconType = 
   | 'resumen' 
@@ -33,7 +34,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,BandejaPerfilComponent],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })
@@ -51,8 +52,8 @@ export class Sidebar implements OnInit {
     {
       label: 'Resumen',
       icon: 'resumen',
-      link: '/dashboard',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
+      link: '/administracion',
+      roles: ['ADMINISTRACION']
     },
     {
       label: 'Evaluaciones',
@@ -71,15 +72,8 @@ export class Sidebar implements OnInit {
     {
       label: 'Reparaciones',
       icon: 'reparaciones',
-      link: '/reparaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE'],
+      link: '/modulesShared/reparaciones', 
       children: [
-        {
-          label: 'Detalles de Reparación',
-          icon: 'reparaciones',
-          link: '/reparaciones/detalles',
-          roles: ['ADMINISTRACION', 'SOPORTE']
-        }
       ]
     },
     {
@@ -91,7 +85,7 @@ export class Sidebar implements OnInit {
         {
           label: 'Ejecuciones de Orden',
           icon: 'ordenes',
-              link: '/recepcion/ordenes-trabajo/ejecuciones',
+          link: '/recepcion/ordenes-trabajo/ejecuciones',
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
         }
       ]
@@ -114,18 +108,34 @@ export class Sidebar implements OnInit {
       link: '/modulesShared/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
-    
-    {
-      label: 'Asignaciones',
-      icon: 'ordenes',
-      link: '/soporte/asignaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE']
-    },
     {
       label: 'Vehículos',
       icon: 'vehiculos',
-      link: '/soporte/vehiculos', 
+      link: '/modulesShared/vehiculos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
+    },
+    {
+      label: 'Legacy',
+      icon: 'resumen',
+      children: [
+        {
+          label: 'Catálogos Base',
+          icon: 'ordenes', 
+          link: '/legacy/catalogos-base',
+          roles: ['ADMINISTRACION']
+        },
+        {
+          label: 'Config. Documentos',
+          icon: 'evaluaciones',
+          link: '/legacy/config-documentos',
+        },
+        {
+          label: 'Operaciones',
+          icon: 'reparaciones', 
+          link: '/legacy/operaciones',
+        },
+
+      ],
     },
     {
       label: 'Calendario',
@@ -225,8 +235,9 @@ export class Sidebar implements OnInit {
    */
   isActive(link?: string): boolean {
     if (!link) return false;
-    return this.router.url === link || this.router.url.startsWith(link + '/');
+    return this.router.url === link;
   }
+
 
   /**
    * Verifica si algún hijo está activo

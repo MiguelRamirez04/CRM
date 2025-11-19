@@ -1,0 +1,558 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Cotizaciones Legacy</h1>
+        <p class="text-gray-600 mt-1">Gestión de cotizaciones desde Adminpaq</p>
+      </div>
+      <button 
+        (click)="abrirModalCrear()" 
+        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+        + Nueva Cotización
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-gray-900">Filtros de Búsqueda</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+          <input 
+            type="date" 
+            [(ngModel)]="filtros.fechaInicio"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+          <input 
+            type="date" 
+            [(ngModel)]="filtros.fechaFin"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Folio</label>
+          <input 
+            type="number" 
+            [(ngModel)]="filtros.folio"
+            placeholder="Número de folio"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Razón Social</label>
+          <input 
+            type="text" 
+            [(ngModel)]="filtros.razonSocial"
+            placeholder="Buscar por cliente"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filtros.incluirMovimientos"
+              class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <span class="text-sm text-gray-700">Incluir movimientos</span>
+          </label>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button 
+          (click)="aplicarFiltros()" 
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Buscar
+        </button>
+        <button 
+          (click)="limpiarFiltros()" 
+          class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Tabla de Cotizaciones -->
+    @if (!loading() && cotizaciones().length > 0) {
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Folio</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">IVA</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @for (cot of cotizaciones(); track cot.idDocumento) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-900">{{ cot.serie }}-{{ cot.folio }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {{ formatDate(cot.fecha) }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  {{ cot.razonSocial }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  {{ formatCurrency(cot.subtotal || 0) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  {{ formatCurrency(cot.impuesto1 || 0) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                  {{ formatCurrency(cot.total) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <span 
+                    [class]="cot.cancelado === 1 ? 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800' : 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'">
+                    {{ cot.cancelado === 1 ? 'Cancelada' : 'Activa' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                  <button 
+                    (click)="verDetalle(cot)"
+                    class="text-blue-600 hover:text-blue-900 font-medium mr-3">
+                    Ver Detalle
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="flex justify-between items-center mt-6">
+        <div class="text-sm text-gray-700">
+          Mostrando {{ (currentPage() - 1) * pageSize() + 1 }} a {{ Math.min(currentPage() * pageSize(), totalRecords()) }} de {{ totalRecords() }} resultados
+        </div>
+        <div class="flex gap-2">
+          <button 
+            (click)="cambiarPagina(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Anterior
+          </button>
+          <span class="px-4 py-2 text-gray-700">
+            Página {{ currentPage() }} de {{ totalPages() }}
+          </span>
+          <button 
+            (click)="cambiarPagina(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && cotizaciones().length === 0) {
+      <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No hay cotizaciones</h3>
+        <p class="mt-2 text-sm text-gray-500">Comienza creando una nueva cotización</p>
+        <button 
+          (click)="abrirModalCrear()" 
+          class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          + Nueva Cotización
+        </button>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- Modal Crear Cotización -->
+@if (showCreateModal()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+        <h2 class="text-2xl font-bold text-gray-900">Nueva Cotización</h2>
+        <button (click)="cerrarModalCrear()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        
+        <!-- Selección de Cliente -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
+          <div class="relative">
+            <input 
+              type="text"
+              [(ngModel)]="busquedaCliente"
+              (input)="buscarClientes()"
+              placeholder="Buscar cliente por nombre o RFC..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            
+            @if (clientes().length > 0) {
+              <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                @for (cliente of clientes(); track cliente.idCliente) {
+                  <div 
+                    (click)="seleccionarCliente(cliente)"
+                    class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                    <div class="font-medium text-gray-900">{{ cliente.razonSocial }}</div>
+                    <div class="text-sm text-gray-600">RFC: {{ cliente.rfc }}</div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          @if (clienteSeleccionado) {
+            <div class="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div class="flex justify-between items-center">
+                <div>
+                  <div class="font-medium text-blue-900">{{ clienteSeleccionado.razonSocial }}</div>
+                  <div class="text-sm text-blue-700">RFC: {{ clienteSeleccionado.rfc }}</div>
+                </div>
+                <button 
+                  (click)="clienteSeleccionado = null; busquedaCliente = ''"
+                  class="text-red-600 hover:text-red-800 text-sm font-medium">
+                  Cambiar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Agregar Productos -->
+        <div class="border-t border-gray-200 pt-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Productos *</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div class="lg:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Producto</label>
+              <div class="relative">
+                <input 
+                  type="text"
+                  [(ngModel)]="busquedaProducto"
+                  (input)="buscarProductos()"
+                  placeholder="Buscar producto..."
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                
+                @if (productos().length > 0) {
+                  <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    @for (producto of productos(); track producto.idProducto) {
+                      <div 
+                        (click)="seleccionarProducto(producto)"
+                        class="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0">
+                        <div class="font-medium text-gray-900">{{ producto.nombreProducto }}</div>
+                        <div class="text-sm text-gray-600">Código: {{ producto.codigoProducto }}</div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Almacén</label>
+              <select 
+                [(ngModel)]="productoTemporal.idAlmacen"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option [value]="0">Seleccionar...</option>
+                @for (almacen of almacenes(); track almacen.idAlmacen) {
+                  <option [value]="almacen.idAlmacen">{{ almacen.nombreAlmacen }}</option>
+                }
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Cantidad</label>
+              <input 
+                type="number"
+                [(ngModel)]="productoTemporal.unidades"
+                min="1"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+              <input 
+                type="number"
+                [(ngModel)]="productoTemporal.precio"
+                step="0.01"
+                min="0"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descuento %</label>
+              <input 
+                type="number"
+                [(ngModel)]="productoTemporal.porcentajeDescuento"
+                step="0.01"
+                min="0"
+                max="100"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex items-end md:col-span-2">
+              <button 
+                (click)="agregarProducto()"
+                class="w-full px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                + Agregar Producto
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de Productos Agregados -->
+          @if (productosSeleccionados().length > 0) {
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Producto</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Almacén</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Cantidad</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Precio</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Desc %</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Subtotal</th>
+                    <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  @for (prod of productosSeleccionados(); track $index) {
+                    <tr>
+                      <td class="px-4 py-2 text-sm text-gray-900">{{ prod.nombreProducto }}</td>
+                      <td class="px-4 py-2 text-sm text-gray-600">{{ prod.nombreAlmacen }}</td>
+                      <td class="px-4 py-2 text-sm text-right text-gray-900">{{ prod.unidades }}</td>
+                      <td class="px-4 py-2 text-sm text-right text-gray-900">{{ formatCurrency(prod.precio) }}</td>
+                      <td class="px-4 py-2 text-sm text-right text-gray-900">{{ prod.porcentajeDescuento || 0 }}%</td>
+                      <td class="px-4 py-2 text-sm text-right font-medium text-gray-900">
+                        {{ formatCurrency(prod.unidades * prod.precio * (1 - (prod.porcentajeDescuento || 0) / 100)) }}
+                      </td>
+                      <td class="px-4 py-2 text-center">
+                        <button 
+                          (click)="eliminarProducto($index)"
+                          class="text-red-600 hover:text-red-800">
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+
+        <!-- Descuentos e IVA -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-200 pt-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Descuento Doc 1 %</label>
+            <input 
+              type="number"
+              [(ngModel)]="nuevaCotizacion.descuentoDoc1"
+              step="0.01"
+              min="0"
+              max="100"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Descuento Doc 2 %</label>
+            <input 
+              type="number"
+              [(ngModel)]="nuevaCotizacion.descuentoDoc2"
+              step="0.01"
+              min="0"
+              max="100"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="flex items-center mt-8">
+              <input 
+                type="checkbox"
+                [(ngModel)]="nuevaCotizacion.aplicarIVA"
+                class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+              <span class="text-sm font-medium text-gray-700">Aplicar IVA ({{ nuevaCotizacion.porcentajeIVA }}%)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
+          <textarea 
+            [(ngModel)]="nuevaCotizacion.observaciones"
+            rows="3"
+            maxlength="254"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Observaciones adicionales..."></textarea>
+        </div>
+
+        <!-- Totales -->
+        @if (productosSeleccionados().length > 0) {
+          <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <h4 class="font-semibold text-gray-900 mb-3">Resumen</h4>
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-700">Subtotal:</span>
+                <span class="font-medium text-gray-900">{{ formatCurrency(calcularTotales().subtotal) }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-700">IVA ({{ nuevaCotizacion.porcentajeIVA }}%):</span>
+                <span class="font-medium text-gray-900">{{ formatCurrency(calcularTotales().iva) }}</span>
+              </div>
+              <div class="flex justify-between text-lg font-bold border-t border-blue-300 pt-2">
+                <span class="text-gray-900">Total:</span>
+                <span class="text-blue-600">{{ formatCurrency(calcularTotales().total) }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <div class="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+        <button 
+          (click)="cerrarModalCrear()"
+          class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          Cancelar
+        </button>
+        <button 
+          (click)="crearCotizacion()"
+          [disabled]="loading()"
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Crear Cotización
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Detalle -->
+@if (showDetailModal() && selectedCotizacion()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
+        <h2 class="text-2xl font-bold text-gray-900">Detalle de Cotización</h2>
+        <button (click)="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        @if (selectedCotizacion(); as cot) {
+          <!-- Información General -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <span class="text-sm text-gray-600">Folio:</span>
+              <div class="text-lg font-semibold">{{ cot.serie }}-{{ cot.folio }}</div>
+            </div>
+            <div>
+              <span class="text-sm text-gray-600">Fecha:</span>
+              <div class="text-lg font-semibold">{{ formatDate(cot.fecha) }}</div>
+            </div>
+            <div>
+              <span class="text-sm text-gray-600">Cliente:</span>
+              <div class="font-medium">{{ cot.razonSocial }}</div>
+            </div>
+            <div>
+              <span class="text-sm text-gray-600">Estado:</span>
+              <div>
+                <span 
+                  [class]="cot.cancelado === 1 ? 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800' : 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'">
+                  {{ cot.cancelado === 1 ? 'Cancelada' : 'Activa' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Movimientos -->
+          @if (cot.movimientos && cot.movimientos.length > 0) {
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Productos</h3>
+              <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Producto</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Cantidad</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Precio</th>
+                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  @for (mov of cot.movimientos; track mov.idMovimiento) {
+                    <tr>
+                      <td class="px-4 py-2 text-sm text-gray-900">{{ mov.nombreProducto }}</td>
+                      <td class="px-4 py-2 text-sm text-right text-gray-900">{{ mov.unidades }}</td>
+                      <td class="px-4 py-2 text-sm text-right text-gray-900">{{ formatCurrency(mov.precio) }}</td>
+                      <td class="px-4 py-2 text-sm text-right font-medium text-gray-900">
+                        {{ formatCurrency(mov.unidades * mov.precio) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          <!-- Totales -->
+          <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <span class="text-gray-700">Subtotal:</span>
+                <span class="font-medium">{{ formatCurrency(cot.subtotal || 0) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-700">Impuestos:</span>
+                <span class="font-medium">{{ formatCurrency(cot.impuesto1 || 0) }}</span>
+              </div>
+              <div class="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
+                <span>Total:</span>
+                <span class="text-blue-600">{{ formatCurrency(cot.total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          @if (cot.observaciones) {
+            <div>
+              <span class="text-sm font-medium text-gray-700">Observaciones:</span>
+              <div class="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                {{ cot.observaciones }}
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white">
+        @if (selectedCotizacion() && selectedCotizacion()!.cancelado === 0) {
+          <button 
+            (click)="cancelarCotizacion(selectedCotizacion()!.idDocumento)"
+            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            Cancelar Cotización
+          </button>
+        }
+        <button 
+          (click)="cerrarModalDetalle()"
+          class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}

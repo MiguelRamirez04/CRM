@@ -25,8 +25,8 @@ export const routes: Routes = [
   // Administración (solo admins)
   {
     path: 'administracion',
-    canActivate: [SecureAuthGuard, AdminGuard],
-    data: { role: 'admin' },
+    canActivate: [SecureAuthGuard,],
+    data: { permission: 'administracion.read' },
     loadChildren: () => import('./modules/administracion/administracion.routes').then(m => m.administracionRoutes)
   },
   
@@ -44,6 +44,12 @@ export const routes: Routes = [
     canActivate: [SecureAuthGuard],
     data: { permission: 'soporte.read' },
     loadChildren: () => import('./modules/soporte/soporte.routes').then(m => m.soporteRoutes)
+  },
+   {
+    path: 'legacy',
+    canActivate: [SecureAuthGuard], // Lo protegemos
+    data: { permission: 'administracion.read' }, // Usamos el mismo permiso que admin
+    loadChildren: () => import('./modules/legacy/legacy.routes').then(m => m.legacyRoutes)
   },
   
   // Viáticos (usuarios autenticados)

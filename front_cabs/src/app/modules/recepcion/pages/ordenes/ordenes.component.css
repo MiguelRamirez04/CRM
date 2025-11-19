@@ -1,7 +1,9 @@
-Ôªø@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import 'tailwindcss' reference;
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 /* ==========================================
-  DASHBOARD PREMIUM - DISE√ëO MODERNO
+  DASHBOARD PREMIUM - DISE—O MODERNO
   ========================================== */
 
 /* ===== CONTENEDOR PRINCIPAL ===== */
@@ -65,7 +67,7 @@
   margin: 0;
 }
 
-/* ===== SECCI√ìN DE ESTAD√çSTICAS ===== */
+/* ===== SECCI”N DE ESTADÕSTICAS ===== */
 .stats-section {
   margin-bottom: 2rem;
 }
@@ -83,7 +85,7 @@
   }
 }
 
-/* ===== TARJETAS DE ESTAD√çSTICAS ===== */
+/* ===== TARJETAS DE ESTADÕSTICAS ===== */
 .stat-card {
   background: white;
   border-radius: 16px;
@@ -278,7 +280,7 @@
   cursor: pointer;
 }
 
-/* ===== PANEL DE √ìRDENES ===== */
+/* ===== PANEL DE ”RDENES ===== */
 .orders-panel {
   background: rgb(255, 255, 255);
   border-radius: 16px;
@@ -399,7 +401,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* l√≠nea a cambiar (sobrescribe la anterior) */
+/* lÌnea a cambiar (sobrescribe la anterior) */
 .dashboard-container {
   background: #1720a113;
 }
@@ -493,4 +495,5 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 640px) {
   .modal-panel { margin: 1rem; max-width: calc(100vw - 2rem); }
 }
+
 

@@ -1,3 +1,5 @@
+@import 'tailwindcss' reference;
+
 /* Modal Overlay - Slide from Right */
 .modal-overlay {
   position: fixed;
@@ -346,3 +348,4 @@
     font-size: 1.25rem;
   }
 }
+

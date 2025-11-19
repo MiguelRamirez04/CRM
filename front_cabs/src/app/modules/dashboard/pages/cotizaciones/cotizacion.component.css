@@ -1,3 +1,5 @@
+@import 'tailwindcss' reference;
+
 /* Contenedor principal */
 .container {
   min-height: 100vh;

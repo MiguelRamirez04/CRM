@@ -20,6 +20,7 @@ using back_cabs.CRM.services.shared;
 using back_cabs.CRM.Repositories;
 using back_cabs.CRM.hubs;
 using Microsoft.Data.SqlClient;
+using back_cabs.CRM.Services.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -165,7 +166,6 @@ builder.Services.AddScoped<IFotosEvaluacion, FotosEvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.OrdenTrabajoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.CotizacionService>();
 builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
-builder.Services.AddScoped<back_cabs.CRM.services.Recepcion.DashRecepcionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
@@ -189,14 +189,12 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMovimientoSerieSe
 // Registra el repositorio para que el servicio pueda usarlo
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
-builder.Services.AddScoped<IGastoViaticoService, back_cabs.CRM.Services.Shared.GastoViaticoService>();
+builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionFotoRepository, back_cabs.CRM.Repositories.Soporte.ReparacionFotoRepository>();
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.FotosEvaluacionService>();
-
-// Registrar servicio en segundo plano para expiración de cotizaciones
-// builder.Services.AddHostedService<back_cabs.CRM.services.Background.CotizacionExpirationService>();
 
 // Servicios de procesamiento de imágenes y gestión de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.shared.ImageProcessingService>();
@@ -337,4 +335,4 @@ catch (Exception ex)
     throw;
 }
 
-
+Console.WriteLine("⣈⣽⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢘⣿⣿ \n⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣿ \n⣯⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡻ \n⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠐\n⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n ⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⢰⢧⠀⠀⢸⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠸⠀⠀⠀⠀⠀⠀⠀⠀⡇⢸⡘⡄⠀⢨⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⢧⢸⣷⡡⠀⡀⣯⢆⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠂⠀⣀⠀⢸⡿⠿⠀⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠷⠘⠦⢀⡑⠇⢻⣯⣂⡀⠀⣶⠀⢠⡗⠇⠀⠀⠀⠰⠟⢀⣵⠾⠗⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⠀⣤⣄⠄⠀⠉⠲⢠⣍⣓⠉⠀⢹⠀⣸⡻⢡⠀⠀⢠⣶⢋⠊⠋⠀⠀⠀⠀⢠⠆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⢠⠀⠲⣄⡸⣿⣧⠀⠀⠀⠀⠙⢻⣿⣵⡙⣇⢿⣿⣦⣴⣷⣿⢟⣥⣶⣇⠀⠀⠀⠀⢈⡴⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n}⠀⠀⠀⠀⠀⠀⠀⠀⠀⡄⠻⣿⣦⣯⣇⣴⣴⣶⣾⣶⣿⣿⣿⡼⣿⣿⣿⣿⣿⣷⣿⣯⣯⣇⣤⣠⣤⣶⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⠀⠀⠀⠀⠀⠀⠀⠘⠀⠈⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠟⡡⠂⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⡎⠀⠀⣀⠐⠀⠀⠀⠈⠀⠀⠀⠘⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀\n⣴⣶⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠈⢳⣽⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣛⠛⠁⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠘⢿\n⣿⣿⣿⠇⠠⣀⠀⣠⡾⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠁⠀⠀⠀⠀⣦⡠⣀⠀⠀⠀⠀⠀⠀\n⣿⣿⣟⣴⣿⡟⣼⣿⡿⠀⠀⠀⠀⠀⠀⢀⠈⠙⠿⣿⣿⣿⣿⣿⣭⣟⣿⣿⣿⣿⣿⡿⠟⠉⣠⡀⠀⣴⣦⡀⠀⣿⣿⣮⣻⣿⣶⣶⣾⣿\n⣿⣿⣿⣿⣿⣿⣿⣛⣥⣴⣶⢏⣠⣴⣾⢇⣤⣾⣷⣦⠉⠛⢿⣿⣿⣿⣿⣿⣿⠟⠋⠀⠀⢠⣿⣿⣄⢸⣿⣷⣦⡘⣿⣿⣾⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣿⣿⣿⠆⢀⠀⠈⠉⠉⠉⠁⠀⠀⠀⠀⠀⣼⣿⣿⣿⣧⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣅⢕⠔⢄⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢟⣿⣮⢷⣕⣄⠢⡀⡀⠀⠀⠀⠀⣸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⠟⠁⢀⣿⣿⣿⣷⣿⣮⢳⣝⢦⡂⡐⠀⠀⠏⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⢋⠉⠁⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣽⣷⣇⠀⢰⠀⠀⠋⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿");

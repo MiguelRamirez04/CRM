@@ -224,7 +224,9 @@
   animation: slideIn 0.3s ease-in-out;
 }
 
-/* Colores por tipo */
+/* Colores por tipo - Comentado para evitar conflicto con Tailwind v4 */
+/* Usar directamente las clases de Tailwind en el HTML */
+/*
 .text-blue-600 {
   color: #2563eb;
 }
@@ -232,3 +234,4 @@
 .text-green-600 {
   color: #16a34a;
 }
+*/

@@ -1,3 +1,5 @@
+@import 'tailwindcss' reference;
+
 /* Estilos base para el contenedor principal */
 .landing-container {
   position: relative;
@@ -158,3 +160,4 @@
     padding-top: 5rem;
   }
 }
+

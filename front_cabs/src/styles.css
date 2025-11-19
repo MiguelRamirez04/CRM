@@ -1,10 +1,14 @@
 /* Tailwind v4 */
 @import 'tailwindcss';
 
+/* Importar las utilidades predeterminadas de Tailwind */
+@import 'tailwindcss/utilities' layer(utilities);
+
 /* Configuración de Tailwind v4 */
 @theme {
   --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
 
+  /* Colores principales */
   --color-primary: #667eea;
   --color-primary-dark: #764ba2;
   --color-secondary: #6c757d;
@@ -14,6 +18,44 @@
   --color-info: #17a2b8;
   --color-light: #f8f9fa;
   --color-dark: #343a40;
+
+  /* Paleta completa de azules */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Paleta de grises */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Paleta de rojos */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  /* Paleta de verdes */
+  --color-green-100: #dcfce7;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
 
   --animate-fade-in: fadeIn 0.6s ease-out;
   --animate-slide-in-left: slideInLeft 0.5s ease-out;
@@ -31,6 +73,9 @@
 }
 
 :root {
+  /* Color de la lineas separadora y contorno  */
+    ---color-linea: rgb(217,217,217);
+
   /* Tamaño de texto */
     --font-text-xxxs: 8px;
     --font-text-xs: 12px;
@@ -53,6 +98,48 @@
     --color-text-tabnavegation: #000000;
     --color-text-enlace: #1447E6;
     --color-text-primario: #FFFFFF;
+
+ /* COLORES molecula de TABLA BASE*/
+    --color-primario: #34428F;
+    --elemento-seleccionado: #1D4ED8;
+    --fondo-principal: #FAFAFA;
+    --color-blanco: #ffffff;
+    --texto-body: #333333;
+    --texto-body-secundario: #666666;
+    --color-borde: #D9D9D9;
+    --fondo-tarjeta: #F3F4F6;
+    
+
+  /* COLORES etiquetas de ESTATUS*/
+    --color-sin-seguimiento-bg: #BBF7D0;
+    --color-sin-seguimiento-text: #166534;
+
+    --color-requiere-seguimiento-bg: #FED7AA;
+    --color-requiere-seguimiento-text: #9A3412;
+
+    --color-nuevo-bg: #BAE6FD;
+    --color-nuevo-text: #075985;
+
+    --color-revision-bg: #FEF08A;
+    --color-revision-text: #854D0E;
+
+    --color-rechazado-bg: #FECACA;
+    --color-rechazado-text: #991B1B;
+
+    --color-enviada-bg: #C7D2FE;
+    --color-enviada-text: #3730A3;
+
+    --color-aprobado-bg: #BBF7D0;
+    --color-aprobado-text: #166534;
+
+    --color-venta-realizada-bg: #BBF7D0;
+    --color-venta-realizada-text: #166534;
+
+    --color-sin-bg: #f3f4f6;
+    --color-sin-text: #4b5563;
+
+  /* 💠 Personalizado */
+  --color-personalizado-borde: #aaa;
 
   /* Espaciado */
     --padding--xs: 4px;

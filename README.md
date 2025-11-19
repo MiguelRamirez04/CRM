@@ -75,7 +75,7 @@ front_cabs/src/app/
 - ✅ HealthChecks (8.0.1) para monitoreo
 
 ### Frontend
-- ✅ Angular 17+ con Standalone Components
+- ✅ Angular 20+ con Standalone Components
 - ✅ Bootstrap 5 + ng-bootstrap para UI
 - ✅ heroicons para iconos
 - ✅ ngx-cookie-service para manejo seguro

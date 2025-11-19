@@ -1,3 +1,5 @@
+@import 'tailwindcss' reference;
+
 :host ::ng-deep .fc-button {
     background-color: transparent;
     color: var(--color-text-tabnavegation);
@@ -355,4 +357,5 @@
 ::ng-deep .fc-timegrid-body::-webkit-scrollbar {
     display: none !important;
 }
+
 

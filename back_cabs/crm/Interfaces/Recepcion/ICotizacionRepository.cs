@@ -19,10 +19,10 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// </summary>
         Task<Cotizacion?> GetByIdAsync(int id);
 
-        /// <summary>
-        /// Obtiene cotizaciones por OrdenId
-        /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByOrdenIdAsync(int ordenId);
+        // /// <summary>
+        // /// Obtiene cotizaciones por OrdenId
+        // /// </summary>
+        // Task<IEnumerable<Cotizacion>> GetOrdenServicioAsync (int ordenId);
 
         /// <summary>
         /// Obtiene cotizaciones por estado
@@ -38,11 +38,6 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// Verifica si existe una cotización con el ID especificado
         /// </summary>
         Task<bool> ExistsAsync(int id);
-
-        /// <summary>
-        /// Obtiene cotizaciones creadas en una fecha específica (para generar folios)
-        /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha);
 
         // ✏️ OPERACIONES DE ESCRITURA
         /// <summary>
