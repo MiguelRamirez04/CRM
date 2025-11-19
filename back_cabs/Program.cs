@@ -6,6 +6,7 @@ using back_cabs.CRM.services;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.services.Fleet;
 using back_cabs.services;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +21,7 @@ using back_cabs.CRM.services.shared;
 using back_cabs.CRM.Repositories;
 using back_cabs.CRM.hubs;
 using Microsoft.Data.SqlClient;
+using back_cabs.CRM.Services.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -138,12 +140,8 @@ builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAgenteService, back_
 // Registra el repositorio para que el servicio pueda usarlo
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.IDetalleEvaluacionRepository, back_cabs.CRM.Repositories.DetalleEvaluacionRepository>();
 builder.Services.AddScoped<IGastoViaticoRepository, GastoViaticoRepository>();
-<<<<<<< .merge_file_HPkaFP
-builder.Services.AddScoped<IGastoViaticoService, back_cabs.CRM.Services.Shared.GastoViaticoService>();
-=======
 builder.Services.AddScoped<IGastoViaticoService, GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Soporte.IReparacionFotoRepository, back_cabs.CRM.Repositories.Soporte.ReparacionFotoRepository>();
->>>>>>> .merge_file_rs01WH
 // Servicio de depuración para problemas de clientes legacy
 builder.Services.AddScoped<back_cabs.CRM.services.ClientesLegacyValidationService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionService>();

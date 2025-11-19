@@ -441,7 +441,6 @@ namespace back_cabs.CRM.services.Auth
         }
 
         /// <summary>
-<<<<<<< .merge_file_MjDcLr
         /// Obtiene todos los usuarios del sistema
         /// </summary>
         /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
@@ -537,7 +536,8 @@ namespace back_cabs.CRM.services.Auth
             }
 
             return rol.ToUpper().Trim();
-=======
+        }
+        ///<summary>
         /// Guarda el token de recuperación de contraseña en la base de datos
         /// </summary>
         public async Task GuardarTokenRecuperacionAsync(RecuperacionPasswordToken token)
@@ -583,7 +583,6 @@ namespace back_cabs.CRM.services.Auth
                 token.Usado = true;
                 await _writeContext.SaveChangesAsync();
             }
->>>>>>> .merge_file_pPVNaz
         }
     }
 }

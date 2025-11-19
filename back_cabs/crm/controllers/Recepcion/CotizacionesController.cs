@@ -122,7 +122,7 @@ public class CotizacionesController : ControllerBase
     [ProducesResponseType(typeof(CotizacionResponseDto), 201)]
     [ProducesResponseType(400)]
     [ProducesResponseType(409)] // Conflict para duplicados
-    public async Task<IActionResult> Create([FromBody] CotizacionRequestDto request)
+    public async Task<IActionResult> Create([FromBody] CotizacionCreateRequestDto request)
     {
         try
         {
@@ -177,13 +177,8 @@ public class CotizacionesController : ControllerBase
         }
         catch (Exception ex)
         {
-<<<<<<< .merge_file_cV4Tyj
-            _logger.LogError(ex, "❌ Error al crear cotización.");
-            return StatusCode(500, new { message = "Error interno del servidor.", error = ex.Message });
-=======
             _logger.LogError(ex, "Error inesperado al crear cotización");
             return StatusCode(500, new { message = "Error interno del servidor." });
->>>>>>> .merge_file_kBQfD5
         }
     }
 
@@ -191,7 +186,7 @@ public class CotizacionesController : ControllerBase
     [ProducesResponseType(typeof(CotizacionResponseDto), 200)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
-    public async Task<IActionResult> Update(int id, [FromBody] CotizacionRequestDto request)
+    public async Task<IActionResult> Update(int id, [FromBody] CotizacionCreateRequestDto request)
     {
         try
         {
