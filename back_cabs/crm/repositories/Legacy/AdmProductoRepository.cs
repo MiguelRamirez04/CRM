@@ -44,21 +44,29 @@ namespace back_cabs.CRM.repositories.Legacy
         /// Obtiene todos los productos con paginación
         /// Usa AsNoTracking para optimización (solo lectura)
         /// </summary>
-        public async Task<(List<AdmProducto> Data, int TotalRecords)> GetAllPaginatedAsync(int page, int pageSize)
+        public async Task<(List<AdmProducto> Data, int TotalRecords)> GetAllPaginatedAsync(int page, int pageSize, int? status = null)
         {
             try
             {
-                _logger.LogDebug("🔍 Consultando productos legacy página {Page} tamaño {PageSize}", page, pageSize);
+                _logger.LogDebug("🔍 Consultando productos legacy página {Page} tamaño {PageSize} estado {Status}", page, pageSize, status);
+
+                // Query base
+                var query = _context.AdmProductos.AsNoTracking();
+
+                // Aplicar filtro de estado si se proporciona
+                if (status.HasValue)
+                {
+                    query = query.Where(p => p.CStatusProducto == status.Value);
+                }
 
                 // Contar total de registros
-                var totalRecords = await _context.AdmProductos.CountAsync();
+                var totalRecords = await query.CountAsync();
 
                 // Calcular skip
                 var skip = (page - 1) * pageSize;
 
                 // Obtener datos paginados
-                var data = await _context.AdmProductos
-                    .AsNoTracking()
+                var data = await query
                     .OrderBy(p => p.CCodigoProducto)
                     .Skip(skip)
                     .Take(pageSize)
@@ -88,45 +96,85 @@ namespace back_cabs.CRM.repositories.Legacy
         public async Task<(List<AdmProducto> Data, int TotalRecords)> SearchPaginatedAsync(
             string searchTerm,
             int page,
-            int pageSize)
+            int pageSize,
+            int? status = null)
         {
             try
             {
-                _logger.LogDebug("🔍 Buscando productos legacy: '{SearchTerm}' página {Page} tamaño {PageSize}",
-                    searchTerm, page, pageSize);
+                _logger.LogDebug("🔍 Buscando productos legacy: '{SearchTerm}' página {Page} tamaño {PageSize} estado {Status}",
+                    searchTerm, page, pageSize, status);
 
                 var normalizedTerm = searchTerm.Trim().ToLower();
 
                 // Query base con filtros
-                var query = _context.AdmProductos
-                    .AsNoTracking()
-                    .Where(p =>
-                        p.CCodigoProducto.ToLower().Contains(normalizedTerm) ||
-                        p.CNombreProducto.ToLower().Contains(normalizedTerm)
-                    );
+                var query = _context.AdmProductos.AsNoTracking();
+
+                if (!string.IsNullOrWhiteSpace(normalizedTerm))
+                {
+                    query = query.Where(p => 
+                        p.CCodigoProducto.ToLower().Contains(normalizedTerm) || 
+                        p.CNombreProducto.ToLower().Contains(normalizedTerm));
+                }
+
+                if (status.HasValue)
+                {
+                    query = query.Where(p => p.CStatusProducto == status.Value);
+                }
 
                 // Contar total de registros filtrados
                 var totalRecords = await query.CountAsync();
 
-                // Calcular skip
-                var skip = (page - 1) * pageSize;
-
                 // Obtener datos paginados
                 var data = await query
                     .OrderBy(p => p.CCodigoProducto)
-                    .Skip(skip)
+                    .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
-                _logger.LogInformation("✅ Búsqueda exitosa: {Count} de {Total} productos legacy encontrados ('{SearchTerm}', página {Page})",
-                    data.Count, totalRecords, searchTerm, page);
+                _logger.LogInformation("✅ Búsqueda exitosa: {Count} de {Total} productos legacy (página {Page})",
+                    data.Count, totalRecords, page);
 
                 return (data, totalRecords);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al buscar productos legacy ('{SearchTerm}', página {Page}, tamaño {PageSize})",
+                _logger.LogError(ex, "❌ Error al buscar productos legacy paginados ('{SearchTerm}', página {Page}, tamaño {PageSize})",
                     searchTerm, page, pageSize);
+                throw;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODO: GET BY ID
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene un producto por su ID
+        /// </summary>
+        public async Task<AdmProducto?> GetByIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogDebug("🔍 Buscando producto legacy por ID: {Id}", id);
+
+                var producto = await _context.AdmProductos
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.CIdProducto == id);
+
+                if (producto != null)
+                {
+                    _logger.LogInformation("✅ Producto legacy encontrado: {Id} - {Nombre}", id, producto.CNombreProducto);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Producto legacy no encontrado: {Id}", id);
+                }
+
+                return producto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener producto legacy por ID: {Id}", id);
                 throw;
             }
         }

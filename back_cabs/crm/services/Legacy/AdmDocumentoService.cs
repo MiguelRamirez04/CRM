@@ -213,6 +213,7 @@ namespace back_cabs.CRM.services.Legacy
 
             return new AdmDocumentoResponseDto
             {
+                IdDocumento = entity.CIdDocumento,
                 SerieDocumento = entity.CSerieDocumento,
                 Folio = entity.CFolio,
                 Fecha = entity.CFecha,
@@ -220,6 +221,19 @@ namespace back_cabs.CRM.services.Legacy
                 FechaVencimiento = entity.CFechaVencimiento,
                 FechaProntoPago = entity.CFechaProntoPago,
                 FechaEntregaRecepcion = entity.CFechaEntregaRecepcion,
+
+                // Totales
+                Subtotal = entity.CNeto,
+                IVA = entity.CImpuesto1,
+                Total = entity.CTotal,
+
+                // Descuentos
+                DescuentoDoc1 = entity.CDescuentoDoc1,
+                DescuentoDoc2 = entity.CDescuentoDoc2,
+                DescuentoDoc3 = entity.CGasto1, // Usamos CGasto1 para el 3er descuento
+
+                // Estado
+                Estado = entity.CCancelado == 1 ? "Cancelada" : "Activa",
 
                 // Agente (nombre completo)
                 Agente = agente?.CNombreAgente,
@@ -753,18 +767,9 @@ namespace back_cabs.CRM.services.Legacy
                 }
 
                 // Descuentos a nivel documento (aplicados sobre el CNETO)
-                double descuentoDoc1Valor = 0;
-                if (dto.DescuentoDoc1.HasValue && dto.DescuentoDoc1.Value > 0)
-                {
-                    descuentoDoc1Valor = netoDocumento * (dto.DescuentoDoc1.Value / 100);
-                }
-
-                double descuentoDoc2Valor = 0;
-                if (dto.DescuentoDoc2.HasValue && dto.DescuentoDoc2.Value > 0)
-                {
-                    descuentoDoc2Valor = netoDocumento * (dto.DescuentoDoc2.Value / 100);
-                }
-
+                // NOTA: Se modificó para que sean importes directos, no porcentajes
+                double descuentoDoc1Valor = dto.DescuentoDoc1 ?? 0;
+                double descuentoDoc2Valor = dto.DescuentoDoc2 ?? 0;
                 double descuentoDoc3Valor = dto.DescuentoDoc3 ?? 0;
 
                 // Calcular pendiente
@@ -972,6 +977,41 @@ namespace back_cabs.CRM.services.Legacy
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al cancelar documento {IdDocumento}", dto.IdDocumento);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Elimina una cotización (solo si está cancelada)
+        /// </summary>
+        public async Task DeleteAsync(int idDocumento)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Iniciando eliminación de documento {IdDocumento}", idDocumento);
+
+                // Obtener el documento
+                var documento = await _repository.GetDocumentoByIdAsync(idDocumento);
+
+                if (documento == null)
+                {
+                    throw new InvalidOperationException($"No existe un documento con ID {idDocumento}");
+                }
+
+                // Validar que esté cancelado
+                if (documento.CCancelado != 1)
+                {
+                    throw new InvalidOperationException($"El documento {documento.CSerieDocumento}-{documento.CFolio} no se puede eliminar porque no está cancelado");
+                }
+
+                // Eliminar documento
+                await _repository.DeleteDocumentoAsync(idDocumento);
+
+                _logger.LogInformation("✅ Documento {IdDocumento} eliminado exitosamente", idDocumento);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al eliminar documento {IdDocumento}", idDocumento);
                 throw;
             }
         }

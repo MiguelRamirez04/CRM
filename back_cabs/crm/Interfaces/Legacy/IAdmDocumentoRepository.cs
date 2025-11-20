@@ -130,5 +130,10 @@ namespace back_cabs.CRM.Interfaces.Legacy
         /// <param name="idDocumento">ID del documento</param>
         /// <returns>El documento o null si no existe</returns>
         Task<AdmDocumento?> GetDocumentoByIdAsync(int idDocumento);
+
+        /// <summary>
+        /// Elimina un documento y sus movimientos asociados
+        /// </summary>
+        Task DeleteDocumentoAsync(int idDocumento);
     }
 }

@@ -604,7 +604,7 @@ namespace back_cabs.CRM.controllers.Legacy
             var sw = Stopwatch.StartNew();
             try
             {
-                _logger.LogInformation("🚫 [PUT] /api/AdmDocumentos/cotizacion/cancelar - Documento: {IdDocumento}",
+                _logger.LogInformation(" [PUT] /api/AdmDocumentos/cotizacion/cancelar - Documento: {IdDocumento}",
                     dto.IdDocumento);
 
                 // Validar ModelState
@@ -616,7 +616,7 @@ namespace back_cabs.CRM.controllers.Legacy
                         .Select(e => e.ErrorMessage)
                         .ToList();
 
-                    _logger.LogWarning("⚠️ Validación fallida después de {Ms}ms. Errores: {Errores}",
+                    _logger.LogWarning(" Validación fallida después de {Ms}ms. Errores: {Errores}",
                         sw.ElapsedMilliseconds, string.Join(", ", errors));
 
                     return BadRequest(new
@@ -671,5 +671,57 @@ namespace back_cabs.CRM.controllers.Legacy
                 });
             }
         }
+
+        /// <summary>
+        /// Elimina una cotización (solo si está cancelada)
+        /// </summary>
+        /// <param name="id">ID del documento a eliminar</param>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("🗑️ DELETE /api/AdmDocumentos/{Id}", id);
+
+                await _service.DeleteAsync(id);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Documento {Id} eliminado exitosamente en {Ms}ms", id, sw.ElapsedMilliseconds);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Documento {id} eliminado exitosamente",
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                sw.Stop();
+                _logger.LogWarning(ex, "⚠️ No se pudo eliminar el documento {Id}: {Message}", id, ex.Message);
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al eliminar documento {Id}", id);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al eliminar documento",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }
+

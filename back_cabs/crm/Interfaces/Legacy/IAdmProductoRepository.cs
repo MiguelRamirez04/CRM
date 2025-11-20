@@ -24,12 +24,13 @@ namespace back_cabs.CRM.Interfaces.Legacy
     public interface IAdmProductoRepository
     {
         /// <summary>
-        /// Obtiene todos los productos con paginación
+        /// Obtiene todos los productos legacy con paginación
         /// </summary>
         /// <param name="page">Número de página (1-based)</param>
         /// <param name="pageSize">Registros por página (default: 50)</param>
+        /// <param name="status">Estado del producto (opcional)</param>
         /// <returns>Tupla con lista de productos y total de registros</returns>
-        Task<(List<AdmProducto> Data, int TotalRecords)> GetAllPaginatedAsync(int page, int pageSize);
+        Task<(List<AdmProducto> Data, int TotalRecords)> GetAllPaginatedAsync(int page, int pageSize, int? status = null);
 
         /// <summary>
         /// Busca productos por código o nombre con paginación
@@ -37,7 +38,13 @@ namespace back_cabs.CRM.Interfaces.Legacy
         /// <param name="searchTerm">Término de búsqueda (código o nombre)</param>
         /// <param name="page">Número de página (1-based)</param>
         /// <param name="pageSize">Registros por página (default: 50)</param>
+        /// <param name="status">Estado del producto (opcional)</param>
         /// <returns>Tupla con lista de productos filtrados y total de registros</returns>
-        Task<(List<AdmProducto> Data, int TotalRecords)> SearchPaginatedAsync(string searchTerm, int page, int pageSize);
+        Task<(List<AdmProducto> Data, int TotalRecords)> SearchPaginatedAsync(string searchTerm, int page, int pageSize, int? status = null);
+
+        /// <summary>
+        /// Obtiene un producto por su ID
+        /// </summary>
+        Task<AdmProducto?> GetByIdAsync(int id);
     }
 }

@@ -35,6 +35,10 @@ namespace back_cabs.CRM.repositories.Legacy
                 var query = _readContext.AdmDocumentos.AsNoTracking();
 
                 // Aplicar filtros
+                
+                // ⚠️ FILTRO OBLIGATORIO: Solo cotizaciones (Serie "CA")
+                query = query.Where(d => d.CSerieDocumento == "CA");
+
                 if (filter.FechaInicio.HasValue)
                 {
                     query = query.Where(d => d.CFecha >= filter.FechaInicio.Value);
@@ -508,6 +512,46 @@ namespace back_cabs.CRM.repositories.Legacy
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo documento {IdDocumento}", idDocumento);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Elimina un documento y sus movimientos asociados
+        /// </summary>
+        public async Task DeleteDocumentoAsync(int idDocumento)
+        {
+            using var transaction = await _writeContext.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Eliminar movimientos
+                var movimientos = await _writeContext.AdmMovimientos
+                    .Where(m => m.CIdDocumento == idDocumento)
+                    .ToListAsync();
+                
+                if (movimientos.Any())
+                {
+                    _writeContext.AdmMovimientos.RemoveRange(movimientos);
+                    await _writeContext.SaveChangesAsync();
+                }
+
+                // 2. Eliminar documento
+                var documento = await _writeContext.AdmDocumentos
+                    .FirstOrDefaultAsync(d => d.CIdDocumento == idDocumento);
+                
+                if (documento != null)
+                {
+                    _writeContext.AdmDocumentos.Remove(documento);
+                    await _writeContext.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+                _logger.LogInformation("✅ Documento {IdDocumento} eliminado exitosamente", idDocumento);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error eliminando documento {IdDocumento}", idDocumento);
                 throw;
             }
         }

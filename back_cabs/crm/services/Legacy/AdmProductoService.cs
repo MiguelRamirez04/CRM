@@ -36,10 +36,12 @@ namespace back_cabs.CRM.services.Legacy
         // CONFIGURACIÓN DE CACHE
         // ═══════════════════════════════════════════════════════════════
 
-        private const string CACHE_KEY_ALL = "adm_productos:all:page:{0}:size:{1}";
-        private const string CACHE_KEY_SEARCH = "adm_productos:search:{0}:page:{1}:size:{2}";
+        private const string CACHE_KEY_ALL = "adm_productos:all:page:{0}:size:{1}:status:{2}";
+        private const string CACHE_KEY_SEARCH = "adm_productos:search:{0}:page:{1}:size:{2}:status:{3}";
+        private const string CACHE_KEY_ID = "adm_productos:id:{0}";
         private static readonly TimeSpan CACHE_TTL_GET_ALL = TimeSpan.FromMinutes(30);
         private static readonly TimeSpan CACHE_TTL_SEARCH = TimeSpan.FromMinutes(60);
+        private static readonly TimeSpan CACHE_TTL_ID = TimeSpan.FromMinutes(30);
 
         public AdmProductoService(
             IAdmProductoRepository repository,
@@ -55,7 +57,7 @@ namespace back_cabs.CRM.services.Legacy
         // MÉTODO: GET ALL PAGINADO CON CACHE
         // ═══════════════════════════════════════════════════════════════
 
-        public async Task<PaginatedResponseDto<AdmProductoResponseDto>> GetAllPaginatedAsync(int page, int pageSize)
+        public async Task<PaginatedResponseDto<AdmProductoResponseDto>> GetAllPaginatedAsync(int page, int pageSize, int? status = null)
         {
             try
             {
@@ -64,7 +66,8 @@ namespace back_cabs.CRM.services.Legacy
                 if (pageSize < 1) pageSize = 50;
                 if (pageSize > 100) pageSize = 100;
 
-                var cacheKey = string.Format(CACHE_KEY_ALL, page, pageSize);
+                var statusKey = status.HasValue ? status.Value.ToString() : "all";
+                var cacheKey = string.Format(CACHE_KEY_ALL, page, pageSize, statusKey);
 
                 // ✅ PASO 1: Verificar cache
                 _logger.LogDebug("🔍 Verificando cache Redis con key: {CacheKey}", cacheKey);
@@ -79,10 +82,10 @@ namespace back_cabs.CRM.services.Legacy
                 }
 
                 // ✅ PASO 2: CACHE MISS - Consultar base de datos
-                _logger.LogInformation("⚠️ CACHE MISS página {Page} tamaño {PageSize} - Consultando base de datos legacy",
-                    page, pageSize);
+                _logger.LogInformation("⚠️ CACHE MISS página {Page} tamaño {PageSize} estado {Status} - Consultando base de datos legacy",
+                    page, pageSize, status);
 
-                var (data, totalRecords) = await _repository.GetAllPaginatedAsync(page, pageSize);
+                var (data, totalRecords) = await _repository.GetAllPaginatedAsync(page, pageSize, status);
                 var productosDto = data.Select(MapToDto).ToList();
 
                 // Crear respuesta paginada
@@ -107,7 +110,7 @@ namespace back_cabs.CRM.services.Legacy
                     page, pageSize);
 
                 // Fallback sin cache
-                var (data, totalRecords) = await _repository.GetAllPaginatedAsync(page, pageSize);
+                var (data, totalRecords) = await _repository.GetAllPaginatedAsync(page, pageSize, status);
                 var productosDto = data.Select(MapToDto).ToList();
                 return new PaginatedResponseDto<AdmProductoResponseDto>
                 {
@@ -126,7 +129,8 @@ namespace back_cabs.CRM.services.Legacy
         public async Task<PaginatedResponseDto<AdmProductoResponseDto>> SearchPaginatedAsync(
             string searchTerm,
             int page,
-            int pageSize)
+            int pageSize,
+            int? status = null)
         {
             try
             {
@@ -148,7 +152,8 @@ namespace back_cabs.CRM.services.Legacy
                 if (pageSize > 100) pageSize = 100;
 
                 var normalizedTerm = searchTerm.Trim().ToLower();
-                var cacheKey = string.Format(CACHE_KEY_SEARCH, normalizedTerm, page, pageSize);
+                var statusKey = status.HasValue ? status.Value.ToString() : "all";
+                var cacheKey = string.Format(CACHE_KEY_SEARCH, normalizedTerm, page, pageSize, statusKey);
 
                 // ✅ PASO 1: Verificar cache
                 _logger.LogDebug("🔍 Verificando cache Redis búsqueda con key: {CacheKey}", cacheKey);
@@ -166,7 +171,7 @@ namespace back_cabs.CRM.services.Legacy
                 _logger.LogInformation("⚠️ CACHE MISS búsqueda '{SearchTerm}' página {Page} tamaño {PageSize} - Consultando base de datos legacy",
                     searchTerm, page, pageSize);
 
-                var (data, totalRecords) = await _repository.SearchPaginatedAsync(searchTerm, page, pageSize);
+                var (data, totalRecords) = await _repository.SearchPaginatedAsync(searchTerm, page, pageSize, status);
                 var productosDto = data.Select(MapToDto).ToList();
 
                 // Crear respuesta paginada
@@ -191,7 +196,7 @@ namespace back_cabs.CRM.services.Legacy
                     searchTerm, page, pageSize);
 
                 // Fallback sin cache
-                var (data, totalRecords) = await _repository.SearchPaginatedAsync(searchTerm, page, pageSize);
+                var (data, totalRecords) = await _repository.SearchPaginatedAsync(searchTerm, page, pageSize, status);
                 var productosDto = data.Select(MapToDto).ToList();
                 return new PaginatedResponseDto<AdmProductoResponseDto>
                 {
@@ -200,6 +205,57 @@ namespace back_cabs.CRM.services.Legacy
                     ResultadosPorPagina = pageSize,
                     TotalItems = totalRecords
                 };
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODO: OBTENER POR ID CON CACHE
+        // ═══════════════════════════════════════════════════════════════
+
+        public async Task<AdmProductoResponseDto?> GetByIdAsync(int id)
+        {
+            try
+            {
+                var cacheKey = string.Format(CACHE_KEY_ID, id);
+
+                // ✅ PASO 1: Verificar cache
+                _logger.LogDebug("🔍 Verificando cache Redis ID con key: {CacheKey}", cacheKey);
+
+                var cachedData = await _cacheService.GetAsync<AdmProductoResponseDto>(cacheKey);
+
+                if (cachedData != null)
+                {
+                    _logger.LogInformation("✅ CACHE HIT ID {Id} - Retornando producto desde Redis", id);
+                    return cachedData;
+                }
+
+                // ✅ PASO 2: CACHE MISS - Consultar base de datos
+                _logger.LogInformation("⚠️ CACHE MISS ID {Id} - Consultando base de datos legacy", id);
+
+                var producto = await _repository.GetByIdAsync(id);
+
+                if (producto == null)
+                {
+                    _logger.LogWarning("⚠️ Producto con ID {Id} no encontrado en BD", id);
+                    return null;
+                }
+
+                var productoDto = MapToDto(producto);
+
+                // ✅ PASO 3: Guardar en cache
+                await _cacheService.SetAsync(cacheKey, productoDto, CACHE_TTL_ID);
+                _logger.LogInformation("💾 Cache SET ID {Id}. TTL: {TTL} minutos",
+                    id, CACHE_TTL_ID.TotalMinutes);
+
+                return productoDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener producto por ID {Id}. Fallback a BD sin cache.", id);
+
+                // Fallback sin cache
+                var producto = await _repository.GetByIdAsync(id);
+                return producto != null ? MapToDto(producto) : null;
             }
         }
 

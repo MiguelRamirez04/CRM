@@ -48,5 +48,10 @@ namespace back_cabs.CRM.Interfaces.Legacy
         /// <param name="dto">DTO con datos de cancelación</param>
         /// <returns>Respuesta con datos de la cotización cancelada</returns>
         Task<AdmCotizacionCancelarResponseDto> CancelarCotizacionAsync(AdmCotizacionCancelarDto dto);
+
+        /// <summary>
+        /// Elimina una cotización (solo si está cancelada)
+        /// </summary>
+        Task DeleteAsync(int idDocumento);
     }
 }

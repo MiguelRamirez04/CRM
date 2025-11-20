@@ -6,6 +6,7 @@ namespace back_cabs.CRM.DTOs.Legacy
     /// </summary>
     public class AdmDocumentoResponseDto
     {
+        public int IdDocumento { get; set; }
         public string SerieDocumento { get; set; } = string.Empty;
         public double Folio { get; set; }
         public DateTime Fecha { get; set; }
@@ -14,6 +15,19 @@ namespace back_cabs.CRM.DTOs.Legacy
         public DateTime FechaProntoPago { get; set; }
         public DateTime FechaEntregaRecepcion { get; set; }
         
+        // Totales
+        public double Subtotal { get; set; }
+        public double IVA { get; set; }
+        public double Total { get; set; }
+        
+        // Descuentos
+        public double DescuentoDoc1 { get; set; }
+        public double DescuentoDoc2 { get; set; }
+        public double DescuentoDoc3 { get; set; }
+        
+        // Estado
+        public string Estado { get; set; } = "Activa";
+
         // Agente de ventas (nombre completo)
         public string? Agente { get; set; }
         

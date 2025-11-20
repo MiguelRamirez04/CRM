@@ -8,31 +8,51 @@ namespace back_cabs.CRM.services.Legacy
 {
     /// <summary>
     /// Servicio para clientes con domicilios de Adminpaq
+    /// OPTIMIZADO CON REDIS para búsquedas rápidas
     /// </summary>
     public class AdmClienteService : IAdmClienteService
     {
         private readonly IAdmClienteRepository _repository;
         private readonly LegacyCompacReadOnlyContext _context;
         private readonly ILogger<AdmClienteService> _logger;
+        private readonly ICacheService _cacheService;
+        
+        // Tiempos de caché
+        private readonly TimeSpan _cacheDurationBusqueda = TimeSpan.FromMinutes(10);
 
         public AdmClienteService(
             IAdmClienteRepository repository,
             LegacyCompacReadOnlyContext context,
-            ILogger<AdmClienteService> logger)
+            ILogger<AdmClienteService> logger,
+            ICacheService cacheService)
         {
             _repository = repository;
             _context = context;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         /// <summary>
         /// Búsqueda paginada de clientes con domicilio
+        /// OPTIMIZADO: Usa Redis para cachear resultados de búsquedas frecuentes
         /// </summary>
         public async Task<(List<AdmClienteConDomicilioResponseDto> Clientes, int TotalRegistros, int TotalPaginas)> SearchPaginatedAsync(AdmClienteFilterDto filter)
         {
             try
             {
-                _logger.LogInformation("🔍 Buscando clientes. Página: {Pagina}, Tamaño: {Tamanio}, CodigoCliente: {Codigo}, RazonSocial: {Razon}",
+                // Generar clave de caché basada en los filtros
+                var cacheKey = $"AdmClientes:Search:{filter.NumeroPagina}:{filter.TamanoPagina}:{filter.CodigoCliente}:{filter.RazonSocial}:{filter.RFC}:{filter.Estatus}:{filter.TipoDireccion}";
+                
+                // Intentar obtener desde caché
+                var cachedResult = await _cacheService.GetAsync<(List<AdmClienteConDomicilioResponseDto>, int, int)>(cacheKey);
+                if (cachedResult != default)
+                {
+                    _logger.LogInformation("✅ Cache HIT - Clientes obtenidos desde Redis. Key: {CacheKey}, Count: {Count}", 
+                        cacheKey, cachedResult.Item1.Count);
+                    return cachedResult;
+                }
+
+                _logger.LogInformation("🔍 Cache MISS - Buscando clientes desde BD. Página: {Pagina}, Tamaño: {Tamanio}, CodigoCliente: {Codigo}, RazonSocial: {Razon}",
                     filter.NumeroPagina, filter.TamanoPagina, filter.CodigoCliente ?? "null", filter.RazonSocial ?? "null");
 
                 var (clientes, total) = await _repository.SearchPaginatedAsync(filter);
@@ -42,10 +62,16 @@ namespace back_cabs.CRM.services.Legacy
 
                 var totalPaginas = (int)Math.Ceiling(total / (double)filter.TamanoPagina);
 
+                var resultado = (clientesConDomicilio, total, totalPaginas);
+
+                // Guardar en caché
+                await _cacheService.SetAsync(cacheKey, resultado, _cacheDurationBusqueda);
+                _logger.LogInformation("💾 Resultado guardado en Redis. Count: {Count}, Key: {CacheKey}", clientesConDomicilio.Count, cacheKey);
+
                 _logger.LogInformation("✅ Búsqueda de clientes completada. Total: {Total}, Retornados: {Retornados}",
                     total, clientesConDomicilio.Count);
 
-                return (clientesConDomicilio, total, totalPaginas);
+                return resultado;
             }
             catch (Exception ex)
             {
@@ -100,8 +126,7 @@ namespace back_cabs.CRM.services.Legacy
             {
                 var domiciliosQuery = _context.AdmDomicilios
                     .AsNoTracking()
-                    .Where(d => d.CIdCatalogo == cliente.CIdClienteProveedor)
-                    .Where(d => d.CTipoCatalogo == 1); // 1 = Cliente
+                    .Where(d => d.CIdCatalogo == cliente.CIdClienteProveedor);
 
                 if (tipoDireccion.HasValue)
                 {
@@ -119,11 +144,11 @@ namespace back_cabs.CRM.services.Legacy
 
                 if (doms.Any())
                 {
-                    _logger.LogInformation($"🏠 Cliente {cliente.CIdClienteProveedor} tiene {doms.Count} domicilio(s). Tipos: {string.Join(", ", doms.Select(d => d.CTipoDireccion))}");
+                    _logger.LogInformation($"🏠 Cliente {cliente.CIdClienteProveedor} (Tipo: {cliente.CTipoCliente}) tiene {doms.Count} domicilio(s). Tipos: {string.Join(", ", doms.Select(d => d.CTipoDireccion))}");
                 }
                 else
                 {
-                    _logger.LogWarning($"⚠️ Cliente {cliente.CIdClienteProveedor} NO tiene domicilios con CTipoCatalogo=1");
+                    _logger.LogWarning($"⚠️ Cliente {cliente.CIdClienteProveedor} (Tipo: {cliente.CTipoCliente}) NO tiene domicilios");
                 }
 
                 todosDomicilios.AddRange(doms);
@@ -205,15 +230,18 @@ namespace back_cabs.CRM.services.Legacy
         /// </summary>
         private string ObtenerTelefono(AdmCliente cliente, AdmDomicilio? domicilio)
         {
-            // Los teléfonos solo existen en admDomicilios, no en admClientes
-            if (domicilio != null && !string.IsNullOrWhiteSpace(domicilio.CTelefono1))
-                return domicilio.CTelefono1;
-            if (domicilio != null && !string.IsNullOrWhiteSpace(domicilio.CTelefono2))
-                return domicilio.CTelefono2;
-            if (domicilio != null && !string.IsNullOrWhiteSpace(domicilio.CTelefono3))
-                return domicilio.CTelefono3;
-            if (domicilio != null && !string.IsNullOrWhiteSpace(domicilio.CTelefono4))
-                return domicilio.CTelefono4;
+            // 1. Buscar en domicilio (prioridad)
+            if (domicilio != null)
+            {
+                if (!string.IsNullOrWhiteSpace(domicilio.CTelefono1)) return domicilio.CTelefono1;
+                if (!string.IsNullOrWhiteSpace(domicilio.CTelefono2)) return domicilio.CTelefono2;
+                if (!string.IsNullOrWhiteSpace(domicilio.CTelefono3)) return domicilio.CTelefono3;
+                if (!string.IsNullOrWhiteSpace(domicilio.CTelefono4)) return domicilio.CTelefono4;
+            }
+
+            // 2. Buscar en campos de contacto del cliente
+            if (!string.IsNullOrWhiteSpace(cliente.CCon1Tel)) return cliente.CCon1Tel;
+            if (!string.IsNullOrWhiteSpace(cliente.CWhatsapp)) return cliente.CWhatsapp;
 
             return "Sin teléfono";
         }

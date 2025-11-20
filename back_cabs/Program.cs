@@ -79,8 +79,19 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.Path = "/";
 });
 
-// Servicios básicos de ASP.NET Core
-builder.Services.AddControllers();
+// Servicios básicos de ASP.NET Core con configuración JSON en camelCase
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serializar propiedades en camelCase para compatibilidad con frontend
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        
+        // Permitir lectura de números como strings
+        options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+        
+        // Configurar timezone para fechas
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // Configurar SignalR para notificaciones en tiempo real con autenticación
 builder.Services.AddSignalR(options =>
@@ -199,6 +210,12 @@ builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, bac
 
 // Servicio de notificaciones con SignalR
 builder.Services.AddScoped<back_cabs.CRM.services.INotificacionService, back_cabs.CRM.services.NotificacionService>();
+
+// Servicios Legacy - Catálogos Adminpaq
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMonedaRepository, back_cabs.CRM.repositories.Legacy.AdmMonedaRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteRepository, back_cabs.CRM.repositories.Legacy.AdmAgenteRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMonedaService, back_cabs.CRM.services.Legacy.AdmMonedaService>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteService, back_cabs.CRM.services.Legacy.AdmAgenteService>();
 
 // Registrar la conexión a la base de datos para inyectar IDbConnection
 builder.Services.AddTransient<System.Data.IDbConnection>(sp => 

@@ -49,16 +49,16 @@ namespace back_cabs.CRM.DTOs.Legacy
 
         /// <summary>
         /// Descuento a nivel documento 1 (opcional)
-        /// Porcentaje de descuento aplicado al total
+        /// Importe de descuento aplicado al total (Valor monetario, NO porcentaje)
         /// </summary>
-        [Range(0, 100, ErrorMessage = "El descuento debe estar entre 0 y 100")]
+        [Range(0, double.MaxValue, ErrorMessage = "El descuento no puede ser negativo")]
         public double? DescuentoDoc1 { get; set; }
 
         /// <summary>
         /// Descuento a nivel documento 2 (opcional)
-        /// Descuento adicional aplicado al total
+        /// Importe de descuento adicional aplicado al total (Valor monetario, NO porcentaje)
         /// </summary>
-        [Range(0, 100, ErrorMessage = "El descuento debe estar entre 0 y 100")]
+        [Range(0, double.MaxValue, ErrorMessage = "El descuento no puede ser negativo")]
         public double? DescuentoDoc2 { get; set; }
 
         /// <summary>

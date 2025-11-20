@@ -57,6 +57,7 @@ namespace back_cabs.CRM.controllers
         /// </summary>
         /// <param name="page">Número de página (1-based). Default: 1</param>
         /// <param name="pageSize">Registros por página (1-100). Default: 50</param>
+        /// <param name="status">Estado del producto (0=Inactivo, 1=Activo, null=Todos). Default: null</param>
         /// <response code="200">Productos obtenidos exitosamente</response>
         /// <response code="401">No autorizado</response>
         /// <response code="500">Error interno del servidor</response>
@@ -64,16 +65,16 @@ namespace back_cabs.CRM.controllers
         [ProducesResponseType(typeof(PaginatedResponseDto<AdmProductoResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<IActionResult> GetAllPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 50, [FromQuery] int? status = null)
         {
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                _logger.LogInformation("📄 Solicitud GET /api/AdmProductos/paginated?page={Page}&pageSize={PageSize} iniciada",
-                    page, pageSize);
+                _logger.LogInformation("📄 Solicitud GET /api/AdmProductos/paginated?page={Page}&pageSize={PageSize}&status={Status} iniciada",
+                    page, pageSize, status);
 
-                var paginatedResult = await _service.GetAllPaginatedAsync(page, pageSize);
+                var paginatedResult = await _service.GetAllPaginatedAsync(page, pageSize, status);
 
                 stopwatch.Stop();
                 _logger.LogInformation("✅ GET /api/AdmProductos/paginated completado en {ElapsedMs}ms. Retornando página {Page} de {TotalPages} ({Count} de {TotalItems} productos legacy)",
@@ -119,7 +120,8 @@ namespace back_cabs.CRM.controllers
         public async Task<IActionResult> SearchPaginated(
             [FromQuery] string q,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50)
+            [FromQuery] int pageSize = 50,
+            [FromQuery] int? status = null)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -137,13 +139,13 @@ namespace back_cabs.CRM.controllers
                     });
                 }
 
-                _logger.LogInformation("🔍 Solicitud GET /api/AdmProductos/search/paginated?q={SearchTerm}&page={Page}&pageSize={PageSize} iniciada",
-                    q, page, pageSize);
+                _logger.LogInformation("🔍 Solicitud GET /api/AdmProductos/search/paginated?q={SearchTerm}&page={Page}&pageSize={PageSize}&status={Status} iniciada",
+                    q, page, pageSize, status);
 
-                var paginatedResult = await _service.SearchPaginatedAsync(q, page, pageSize);
+                var paginatedResult = await _service.SearchPaginatedAsync(q, page, pageSize, status);
 
                 stopwatch.Stop();
-                _logger.LogInformation("✅ GET /api/AdmProductos/search/paginated completado en {ElapsedMs}ms. Búsqueda '{SearchTerm}': página {Page} de {TotalPages} ({Count} de {TotalItems} productos legacy)",
+                _logger.LogInformation(" GET /api/AdmProductos/search/paginated completado en {ElapsedMs}ms. Búsqueda '{SearchTerm}': página {Page} de {TotalPages} ({Count} de {TotalItems} productos legacy)",
                     stopwatch.ElapsedMilliseconds, q, paginatedResult.Pagina, paginatedResult.TotalPaginas,
                     paginatedResult.Items.Count(), paginatedResult.TotalItems);
 
@@ -152,13 +154,74 @@ namespace back_cabs.CRM.controllers
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                _logger.LogError(ex, "❌ Error en GET /api/AdmProductos/search/paginated ('{SearchTerm}') después de {ElapsedMs}ms",
+                _logger.LogError(ex, " Error en GET /api/AdmProductos/search/paginated ('{SearchTerm}') después de {ElapsedMs}ms",
                     q, stopwatch.ElapsedMilliseconds);
 
                 return StatusCode(500, new
                 {
                     error = "Error interno del servidor",
                     message = "Ocurrió un error al buscar productos legacy",
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 🆔 GET BY ID - Obtener producto por ID
+        // ─────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Obtiene un producto legacy por su ID
+        /// </summary>
+        /// <param name="id">ID del producto</param>
+        /// <response code="200">Producto encontrado</response>
+        /// <response code="404">Producto no encontrado</response>
+        /// <response code="401">No autorizado</response>
+        /// <response code="500">Error interno del servidor</response>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(AdmProductoResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                _logger.LogInformation("🆔 Solicitud GET /api/AdmProductos/{Id} iniciada", id);
+
+                var producto = await _service.GetByIdAsync(id);
+
+                stopwatch.Stop();
+
+                if (producto == null)
+                {
+                    _logger.LogWarning("⚠️ Producto con ID {Id} no encontrado después de {ElapsedMs}ms",
+                        id, stopwatch.ElapsedMilliseconds);
+                    return NotFound(new
+                    {
+                        error = "Producto no encontrado",
+                        message = $"No se encontró ningún producto con el ID {id}",
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+
+                _logger.LogInformation("✅ GET /api/AdmProductos/{Id} completado en {ElapsedMs}ms",
+                    id, stopwatch.ElapsedMilliseconds);
+
+                return Ok(producto);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                _logger.LogError(ex, "❌ Error en GET /api/AdmProductos/{Id} después de {ElapsedMs}ms",
+                    id, stopwatch.ElapsedMilliseconds);
+
+                return StatusCode(500, new
+                {
+                    error = "Error interno del servidor",
+                    message = "Ocurrió un error al obtener el producto legacy",
                     timestamp = DateTime.UtcNow
                 });
             }
