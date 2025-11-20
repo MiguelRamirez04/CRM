@@ -38,6 +38,12 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
            Productos
         </a>
 
+        <a routerLink="./clientes"
+           routerLinkActive="!text-blue-600 !border-blue-600"
+           class="py-3 px-1 text-gray-600 font-medium whitespace-nowrap border-b-2 border-transparent transition-colors cursor-pointer hover:text-gray-900 hover:border-gray-300">
+           Clientes
+        </a>
+
       </nav>
       
       <div class="mt-6 fade-in">

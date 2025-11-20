@@ -290,14 +290,29 @@ export class CotizacionLegacyService {
       params = params.set('pageSize', filtros.pageSize.toString());
     }
 
-    return this.http.get<CotizacionLegacyApiResponse<CotizacionLegacyPaginado>>(
+    return this.http.get<any>(
       `${this.apiUrl}/search`,
       { params }
     ).pipe(
       map(response => {
-        if (response.success && response.data) {
-          console.log(`✅ Búsqueda completada: ${response.data.pagination.totalRecords} registros totales`);
-          console.log(`📄 Página ${response.data.pagination.currentPage}/${response.data.pagination.totalPages}`);
+        // Adaptar respuesta del backend (plana) a la estructura esperada por el frontend (anidada)
+        if (response.success && Array.isArray(response.data)) {
+          const adaptedResponse: CotizacionLegacyApiResponse<CotizacionLegacyPaginado> = {
+            success: true,
+            message: response.message,
+            executionTime: response.executionTime,
+            data: {
+              data: response.data,
+              pagination: response.pagination,
+              filters: response.filters
+            }
+          };
+          
+          if (adaptedResponse.data?.pagination) {
+            console.log(`✅ Búsqueda completada: ${adaptedResponse.data.pagination.totalRecords} registros totales`);
+            console.log(`📄 Página ${adaptedResponse.data.pagination.currentPage}/${adaptedResponse.data.pagination.totalPages}`);
+          }
+          return adaptedResponse;
         }
         return response;
       }),
@@ -395,6 +410,26 @@ export class CotizacionLegacyService {
   }
 
   /**
+   * 🗑️ Eliminar cotización (solo si está cancelada)
+   * Endpoint: DELETE /api/AdmDocumentos/{id}
+   */
+  eliminar(idDocumento: number): Observable<CotizacionLegacyApiResponse<null>> {
+    console.log(`🗑️ Eliminando cotización ID: ${idDocumento}`);
+    
+    return this.http.delete<CotizacionLegacyApiResponse<null>>(
+      `${this.apiUrl}/${idDocumento}`
+    ).pipe(
+      map(response => {
+        if (response.success) {
+          console.log(`✅ Cotización ${idDocumento} eliminada exitosamente`);
+        }
+        return response;
+      }),
+      catchError(this.manejarError)
+    );
+  }
+
+  /**
    * 💰 Calcular totales de cotización (cliente-side)
    * 
    * Calcula totales de forma local antes de enviar al servidor.
@@ -433,17 +468,19 @@ export class CotizacionLegacyService {
     // Calcular neto después de descuentos de productos
     let neto = subtotal - descuentoProductos;
 
-    // Aplicar descuentos a nivel documento
+    // Aplicar descuentos a nivel documento (Importes directos)
     let descuentoDocumento = 0;
     if (request.descuentoDoc1) {
-      const desc1 = neto * (request.descuentoDoc1 / 100);
-      descuentoDocumento += desc1;
-      neto -= desc1;
+      descuentoDocumento += request.descuentoDoc1;
+      neto -= request.descuentoDoc1;
     }
     if (request.descuentoDoc2) {
-      const desc2 = neto * (request.descuentoDoc2 / 100);
-      descuentoDocumento += desc2;
-      neto -= desc2;
+      descuentoDocumento += request.descuentoDoc2;
+      neto -= request.descuentoDoc2;
+    }
+    if (request.descuentoDoc3) {
+      descuentoDocumento += request.descuentoDoc3;
+      neto -= request.descuentoDoc3;
     }
 
     // Calcular IVA

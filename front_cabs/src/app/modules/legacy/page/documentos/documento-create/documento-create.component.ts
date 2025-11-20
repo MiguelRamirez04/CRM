@@ -57,8 +57,8 @@ export class DocumentoCreateComponent implements OnInit {
     aplicarIVA: false,
     porcentajeIVA: 16.0,
     cTotal: 0, // CTOTAL ingresado manualmente por el usuario
-    descuentoDoc1: 0, // Descuento nivel documento 1 (%)
-    descuentoDoc2: 0, // Descuento nivel documento 2 (%)
+    descuentoDoc1: 0, // Descuento nivel documento 1 ($)
+    descuentoDoc2: 0, // Descuento nivel documento 2 ($)
     descuentoDoc3: 0, // Descuento nivel documento 3 ($)
     observaciones: '',
     referencia: ''
@@ -79,7 +79,7 @@ export class DocumentoCreateComponent implements OnInit {
   // ==================== BÚSQUEDA CLIENTES ====================
   
   buscarClientes(): void {
-    if (this.busquedaCliente.length < 2) {
+    if (this.busquedaCliente.length < 3) {
       this.clientes.set([]);
       return;
     }
@@ -104,7 +104,7 @@ export class DocumentoCreateComponent implements OnInit {
   // ==================== BÚSQUEDA PRODUCTOS ====================
   
   buscarProductos(): void {
-    if (this.busquedaProducto.length < 2) {
+    if (this.busquedaProducto.length < 3) {
       this.productos.set([]);
       return;
     }
@@ -147,8 +147,8 @@ export class DocumentoCreateComponent implements OnInit {
       return;
     }
     
-    if (this.productoTemporal.unidades <= 0 || this.productoTemporal.precio <= 0) {
-      alert('La cantidad y precio deben ser mayores a 0');
+    if (this.productoTemporal.unidades <= 0) {
+      alert('La cantidad debe ser mayor a 0');
       return;
     }
 
@@ -183,13 +183,28 @@ export class DocumentoCreateComponent implements OnInit {
     return this.productosSeleccionados().reduce((sum, p) => sum + p.subtotal, 0);
   }
 
+  calcularNetoConDescuentos(): number {
+    const subtotal = this.formulario.cTotal || 0;
+    const desc1 = this.formulario.descuentoDoc1 || 0;
+    const desc2 = this.formulario.descuentoDoc2 || 0;
+    const desc3 = this.formulario.descuentoDoc3 || 0;
+    return subtotal - desc1 - desc2 - desc3;
+  }
+
   calcularIVA(): number {
     if (!this.formulario.aplicarIVA) return 0;
-    return this.formulario.cTotal * (this.formulario.porcentajeIVA / 100);
+    const neto = this.calcularNetoConDescuentos();
+    return neto * (this.formulario.porcentajeIVA / 100);
   }
 
   calcularTotalConIVA(): number {
-    return this.formulario.cTotal + this.calcularIVA();
+    return this.calcularNetoConDescuentos() + this.calcularIVA();
+  }
+
+  calcularTotalDescuentos(): number {
+    return (this.formulario.descuentoDoc1 || 0) + 
+           (this.formulario.descuentoDoc2 || 0) + 
+           (this.formulario.descuentoDoc3 || 0);
   }
 
   // ==================== CREAR COTIZACIÓN ====================

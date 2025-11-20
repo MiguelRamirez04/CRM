@@ -31,82 +31,38 @@ export interface ClienteLegacyBusqueda {
 }
 
 /**
+ * Detalle completo de ubicación
+ */
+export interface UbicacionDetalle {
+  calle: string;
+  numeroExterior: string;
+  numeroInterior: string;
+  colonia: string;
+  codigoPostal: string;
+  ciudad: string;
+  municipio: string;
+  estado: string;
+  pais: string;
+  telefono1: string;
+  telefono2: string;
+  telefonoCompleto: string;
+}
+
+/**
  * Respuesta completa de cliente Legacy
  * Endpoint: GET /api/AdmClientes/{id}
+ * Endpoint: GET /api/AdmClientes/search
  */
 export interface ClienteLegacyResponse {
-  // === IDENTIFICACIÓN ===
-  idCliente: number;
+  id: number;
   codigoCliente: string;
-  razonSocial: string;
+  nombre: string;
   rfc: string;
-  curp: string | null;
-
-  // === INFORMACIÓN DE CONTACTO ===
-  tipoCliente: number; // 1 = Cliente, 2 = Proveedor, 3 = Acreedor
-  tipoClienteDescripcion: string;
-  fechaAlta: string; // ISO date
-  status: number; // 0 = Inactivo, 1 = Activo
-  estaActivo: boolean;
-
-  // === DOMICILIO FISCAL ===
-  calleFiscal: string | null;
-  numeroExteriorFiscal: string | null;
-  numeroInteriorFiscal: string | null;
-  coloniaFiscal: string | null;
-  poblacionFiscal: string | null;
-  estadoFiscal: string | null;
-  paisFiscal: string | null;
-  codigoPostalFiscal: string | null;
-
-  // === DOMICILIO ENTREGA ===
-  calleEntrega: string | null;
-  numeroExteriorEntrega: string | null;
-  numeroInteriorEntrega: string | null;
-  coloniaEntrega: string | null;
-  poblacionEntrega: string | null;
-  estadoEntrega: string | null;
-  paisEntrega: string | null;
-  codigoPostalEntrega: string | null;
-
-  // === INFORMACIÓN FINANCIERA ===
-  usaCreditoCliente: number; // 0 = No, 1 = Sí
-  limiteCredito: number;
-  diasCredito: number;
-  descuentoProntoPago: number;
-  interesMoratorio: number;
-
-  // === CONTACTO ===
-  email: string | null;
-  telefono1: string | null;
-  telefono2: string | null;
-  telefono3: string | null;
-  fax: string | null;
-  paginaWeb: string | null;
-  contacto: string | null;
-
-  // === CLASIFICACIONES ===
-  clasificacion1: number;
-  clasificacion2: number;
-  clasificacion3: number;
-  clasificacion4: number;
-  clasificacion5: number;
-  clasificacion6: number;
-
-  // === IDs DE RELACIONES ===
-  idMoneda: number;
-  idAgente: number;
-  idAlmacen: number;
-  idListaPrecio: number;
-  idPais: number;
-
-  // === BANCARIZACIÓN ===
-  bancoNombre: string | null;
-  bancoCuenta: string | null;
-  bancoSucursal: string | null;
-
-  // === AUDITORÍA ===
-  timestamp: string;
+  telefono: string;
+  email: string;
+  ubicacion: string;
+  estado: string;
+  ubicacionDetalle?: UbicacionDetalle;
 }
 
 /**
@@ -119,9 +75,13 @@ export interface ClienteLegacyFiltros {
   codigoCliente?: string; // Búsqueda parcial
   email?: string; // Búsqueda parcial
   telefono?: string; // Búsqueda parcial
-  soloActivos?: boolean; // true = solo clientes activos
-  page?: number; // Número de página (default: 1)
-  pageSize?: number; // Registros por página (default: 50, max: 100)
+  estado?: string; // Estado del domicilio
+  ciudad?: string; // Ciudad del domicilio
+  estatus?: number | null; // 0 = Inactivo, 1 = Activo, null = Todos
+  tipoDireccion?: number; // 1 = Fiscal, 2 = Envío, 3 = Otros
+  incluirDetalleUbicacion?: boolean; // Incluir detalle de ubicación
+  numeroPagina?: number; // Número de página (default: 1)
+  tamanoPagina?: number; // Registros por página (default: 50, max: 100)
 }
 
 /**

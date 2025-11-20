@@ -17,6 +17,7 @@ export class DialogVistaDocumentosComponent implements OnInit {
   @Input() idDocumento!: number;
   @Output() cerrar = new EventEmitter<void>();
   @Output() solicitudCancelacion = new EventEmitter<number>();
+  @Output() solicitudEliminacion = new EventEmitter<number>();
 
   // Signals
   visible = signal<boolean>(false);
@@ -58,7 +59,7 @@ export class DialogVistaDocumentosComponent implements OnInit {
   }
 
   solicitarCancelacion(): void {
-    if (this.cotizacion()?.cancelado === 1) {
+    if (this.cotizacion()?.estado === 'Cancelada') {
       alert('⚠️ Esta cotización ya está cancelada');
       return;
     }
@@ -66,6 +67,18 @@ export class DialogVistaDocumentosComponent implements OnInit {
     const confirmar = confirm('¿Está seguro de que desea cancelar esta cotización?');
     if (confirmar) {
       this.solicitudCancelacion.emit(this.idDocumento);
+    }
+  }
+
+  solicitarEliminacion(): void {
+    if (this.cotizacion()?.estado !== 'Cancelada') {
+      alert('⚠️ Solo se pueden eliminar cotizaciones canceladas');
+      return;
+    }
+
+    const confirmar = confirm('¿Está seguro de que desea eliminar permanentemente esta cotización?');
+    if (confirmar) {
+      this.solicitudEliminacion.emit(this.idDocumento);
     }
   }
 
@@ -86,12 +99,46 @@ export class DialogVistaDocumentosComponent implements OnInit {
   }
 
   getEstadoBadge(cotizacion: CotizacionLegacyResponse): { text: string; class: string } {
-    if (cotizacion.cancelado === 1) {
+    if (cotizacion.estado === 'Cancelada') {
       return { text: 'CANCELADO', class: 'bg-red-100 text-red-800 border-red-200' };
     }
-    if (cotizacion.afectado === 1) {
-      return { text: 'AFECTADO', class: 'bg-green-100 text-green-800 border-green-200' };
+    if (cotizacion.estado === 'Activa') {
+      return { text: 'ACTIVA', class: 'bg-green-100 text-green-800 border-green-200' };
     }
-    return { text: 'PENDIENTE', class: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
+    return { text: cotizacion.estado, class: 'bg-gray-100 text-gray-800 border-gray-200' };
+  }
+
+  getDescuento1(): number {
+    const cot = this.cotizacion();
+    if (!cot) return 0;
+    return cot.descuentoDoc1 || 0;
+  }
+
+  getDescuento2(): number {
+    const cot = this.cotizacion();
+    if (!cot) return 0;
+    return cot.descuentoDoc2 || 0;
+  }
+
+  getDescuento3(): number {
+    const cot = this.cotizacion();
+    if (!cot) return 0;
+    return cot.descuentoDoc3 || 0;
+  }
+
+  getTotalDescuentos(): number {
+    return this.getDescuento1() + this.getDescuento2() + this.getDescuento3();
+  }
+
+  // Calcular el total correcto (Subtotal - Descuentos + IVA)
+  getTotalCalculado(): number {
+    const cot = this.cotizacion();
+    if (!cot) return 0;
+    
+    const subtotal = cot.subtotal || 0;
+    const descuentos = this.getTotalDescuentos();
+    const iva = cot.iva || 0;
+    
+    return subtotal - descuentos + iva;
   }
 }

@@ -130,52 +130,63 @@ export class ProductoLegacyService {
     console.log('📋 Búsqueda paginada con filtros:', filtros);
     
     let params = new HttpParams();
+    let endpoint = `${this.apiUrl}/paginated`;
+
+    // Si hay término de búsqueda (nombre o código), usamos el endpoint de búsqueda
+    const searchTerm = filtros.nombreProducto || filtros.codigoProducto;
     
-    // Añadir filtros solo si tienen valor
-    if (filtros.nombreProducto) {
-      params = params.set('nombreProducto', filtros.nombreProducto);
+    if (searchTerm) {
+      endpoint = `${this.apiUrl}/search/paginated`;
+      params = params.set('q', searchTerm);
     }
-    if (filtros.codigoProducto) {
-      params = params.set('codigoProducto', filtros.codigoProducto);
-    }
-    if (filtros.tipoProducto !== undefined) {
-      params = params.set('tipoProducto', filtros.tipoProducto.toString());
-    }
-    if (filtros.soloActivos !== undefined) {
-      params = params.set('soloActivos', filtros.soloActivos.toString());
-    }
-    if (filtros.conExistencias !== undefined) {
-      params = params.set('conExistencias', filtros.conExistencias.toString());
-    }
-    if (filtros.idFamilia !== undefined) {
-      params = params.set('idFamilia', filtros.idFamilia.toString());
-    }
-    if (filtros.idLinea !== undefined) {
-      params = params.set('idLinea', filtros.idLinea.toString());
-    }
-    if (filtros.precioMinimo !== undefined) {
-      params = params.set('precioMinimo', filtros.precioMinimo.toString());
-    }
-    if (filtros.precioMaximo !== undefined) {
-      params = params.set('precioMaximo', filtros.precioMaximo.toString());
-    }
+
+    // Parámetros de paginación
     if (filtros.page) {
       params = params.set('page', filtros.page.toString());
     }
     if (filtros.pageSize) {
       params = params.set('pageSize', filtros.pageSize.toString());
     }
+    
+    // Parámetro de estado (status)
+    if (filtros.status !== undefined && filtros.status !== null) {
+      params = params.set('status', filtros.status.toString());
+    }
 
-    return this.http.get<ProductoLegacyApiResponse<ProductoLegacyPaginado>>(
-      `${this.apiUrl}/search`,
+    return this.http.get<any>(
+      endpoint,
       { params }
     ).pipe(
       map(response => {
-        if (response.success && response.data) {
-          console.log(`✅ Búsqueda paginada: ${response.data.pagination.totalRecords} registros totales`);
-          console.log(`📄 Página ${response.data.pagination.currentPage}/${response.data.pagination.totalPages}`);
-        }
-        return response;
+        // ADAPTADOR: El backend retorna PaginatedResponseDto directamente, no envuelto en ApiResponse
+        // Mapeamos la respuesta del backend al formato que espera el componente
+        
+        const backendData = response;
+        const totalRecords = backendData.totalItems || 0;
+        const totalPages = backendData.totalPaginas || 0;
+        const currentPage = backendData.pagina || 1;
+        const pageSize = backendData.resultadosPorPagina || 50;
+
+        const mappedResponse: ProductoLegacyApiResponse<ProductoLegacyPaginado> = {
+          success: true,
+          data: {
+            data: backendData.items || [],
+            pagination: {
+              currentPage: currentPage,
+              pageSize: pageSize,
+              totalRecords: totalRecords,
+              totalPages: totalPages,
+              hasNextPage: currentPage < totalPages,
+              hasPreviousPage: currentPage > 1
+            },
+            filters: filtros
+          }
+        };
+
+        console.log(`✅ Búsqueda paginada: ${totalRecords} registros totales`);
+        console.log(`📄 Página ${currentPage}/${totalPages}`);
+        
+        return mappedResponse;
       }),
       catchError(this.manejarError)
     );
@@ -216,16 +227,14 @@ export class ProductoLegacyService {
    *   }
    * });
    */
-  obtenerPorId(id: number): Observable<ProductoLegacyApiResponse<ProductoLegacyResponse>> {
+  obtenerPorId(id: number): Observable<ProductoLegacyResponse> {
     console.log(`📦 Obteniendo producto con ID: ${id}`);
     
-    return this.http.get<ProductoLegacyApiResponse<ProductoLegacyResponse>>(
+    return this.http.get<ProductoLegacyResponse>(
       `${this.apiUrl}/${id}`
     ).pipe(
       map(response => {
-        if (response.success && response.data) {
-          console.log(`✅ Producto obtenido: ${response.data.nombreProducto}`);
-        }
+        console.log(`✅ Producto obtenido: ${response.nombreProducto}`);
         return response;
       }),
       catchError(this.manejarError)

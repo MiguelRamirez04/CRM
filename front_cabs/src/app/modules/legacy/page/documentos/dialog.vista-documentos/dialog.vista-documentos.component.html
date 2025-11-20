@@ -4,9 +4,8 @@
 
 <!-- Overlay con fondo difuminado -->
 <div 
-  class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-40 transition-opacity duration-300"
-  [class.opacity-0]="!visible()"
-  [class.opacity-100]="visible()"
+  *ngIf="visible()"
+  class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm transition-all duration-300 z-40"
   (click)="cerrarPanel()">
 </div>
 
@@ -79,11 +78,6 @@
               [class]="'px-4 py-2 rounded-full text-sm font-bold border-2 ' + getEstadoBadge(cot).class">
               {{ getEstadoBadge(cot).text }}
             </span>
-            @if (cot.impreso === 1) {
-              <span class="px-4 py-2 rounded-full text-sm font-bold bg-purple-100 text-purple-800 border-2 border-purple-200">
-                IMPRESO
-              </span>
-            }
           }
         </div>
 
@@ -98,7 +92,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <p class="text-sm text-gray-600 mb-1">Serie</p>
-              <p class="font-bold text-gray-900 text-lg">{{ cotizacion()!.serie }}</p>
+              <p class="font-bold text-gray-900 text-lg">{{ cotizacion()!.serieDocumento }}</p>
             </div>
             <div>
               <p class="text-sm text-gray-600 mb-1">Folio</p>
@@ -114,12 +108,7 @@
                 <p class="font-semibold text-gray-900">{{ formatDate(cotizacion()!.fechaVencimiento) }}</p>
               </div>
             }
-            @if (cotizacion()!.referencia) {
-              <div class="col-span-2">
-                <p class="text-sm text-gray-600 mb-1">Referencia</p>
-                <p class="font-semibold text-gray-900">{{ cotizacion()!.referencia }}</p>
-              </div>
-            }
+            <!-- Referencia removed as it is not in DTO -->
           </div>
         </div>
 
@@ -136,10 +125,7 @@
               <p class="text-sm text-gray-600 mb-1">Razón Social</p>
               <p class="font-bold text-gray-900 text-lg">{{ cotizacion()!.razonSocial }}</p>
             </div>
-            <div>
-              <p class="text-sm text-gray-600 mb-1">RFC</p>
-              <p class="font-semibold text-gray-700">{{ cotizacion()!.rfc }}</p>
-            </div>
+            <!-- RFC removed as it is not in DTO -->
           </div>
         </div>
 
@@ -156,38 +142,40 @@
               <span class="text-gray-700 font-medium">Subtotal:</span>
               <span class="text-lg font-bold text-gray-900">{{ formatCurrency(cotizacion()!.subtotal) }}</span>
             </div>
-            @if (cotizacion()!.descuento1 > 0) {
-              <div class="flex justify-between items-center text-red-600">
-                <span class="font-medium">Descuento 1:</span>
-                <span class="font-semibold">- {{ formatCurrency(cotizacion()!.descuento1) }}</span>
+            
+            <!-- Descuentos aplicados -->
+            <div class="bg-orange-50 rounded-lg p-3 border border-orange-200 -mx-2">
+              <p class="text-xs font-semibold text-orange-700 mb-2">Descuentos Aplicados:</p>
+              <div class="space-y-1 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Descuento 1:</span>
+                  <span class="font-semibold text-gray-900">{{ formatCurrency(getDescuento1()) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Descuento 2:</span>
+                  <span class="font-semibold text-gray-900">{{ formatCurrency(getDescuento2()) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Descuento 3:</span>
+                  <span class="font-semibold text-gray-900">{{ formatCurrency(getDescuento3()) }}</span>
+                </div>
+                <div class="flex justify-between pt-2 border-t border-orange-300">
+                  <span class="text-orange-700 font-bold">Total Descuentos:</span>
+                  <span class="text-orange-700 font-bold">-{{ formatCurrency(getTotalDescuentos()) }}</span>
+                </div>
               </div>
-            }
-            @if (cotizacion()!.descuento2 > 0) {
-              <div class="flex justify-between items-center text-red-600">
-                <span class="font-medium">Descuento 2:</span>
-                <span class="font-semibold">- {{ formatCurrency(cotizacion()!.descuento2) }}</span>
-              </div>
-            }
-            <div class="flex justify-between items-center pt-2 border-t-2 border-green-300">
-              <span class="text-gray-700 font-bold">CNETO (Total):</span>
-              <span class="text-xl font-bold text-green-700">{{ formatCurrency(cotizacion()!.neto) }}</span>
             </div>
-            @if (cotizacion()!.impuesto1 > 0) {
+            
+            @if (cotizacion()!.iva > 0) {
               <div class="flex justify-between items-center">
-                <span class="text-gray-700 font-medium">IVA:</span>
-                <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(cotizacion()!.impuesto1) }}</span>
+                <span class="text-gray-700 font-medium">IVA (16%):</span>
+                <span class="text-lg font-semibold text-gray-900">{{ formatCurrency(cotizacion()!.iva) }}</span>
               </div>
             }
             <div class="flex justify-between items-center pt-3 border-t-2 border-green-400 bg-green-200 bg-opacity-50 -mx-5 px-5 py-3 mt-3 rounded-b-xl">
               <span class="text-gray-900 font-bold text-lg">TOTAL:</span>
-              <span class="text-2xl font-bold text-green-800">{{ formatCurrency(cotizacion()!.total) }}</span>
+              <span class="text-2xl font-bold text-green-800">{{ formatCurrency(getTotalCalculado()) }}</span>
             </div>
-            @if (cotizacion()!.pendiente !== cotizacion()!.total) {
-              <div class="flex justify-between items-center pt-2 border-t-2 border-green-300">
-                <span class="text-orange-700 font-bold">Pendiente:</span>
-                <span class="text-xl font-bold text-orange-600">{{ formatCurrency(cotizacion()!.pendiente) }}</span>
-              </div>
-            }
           </div>
         </div>
 
@@ -224,9 +212,9 @@
                       <p class="font-bold text-blue-600">{{ formatCurrency(mov.neto) }}</p>
                     </div>
                   </div>
-                  @if (mov.descuento > 0) {
+                  @if (mov.descuentoLinea > 0) {
                     <div class="mt-2 text-sm">
-                      <span class="text-red-600 font-medium">Descuento: {{ formatCurrency(mov.descuento) }}</span>
+                      <span class="text-red-600 font-medium">Descuento: {{ formatCurrency(mov.descuentoLinea) }}</span>
                     </div>
                   }
                   @if (mov.observaciones) {
@@ -240,18 +228,7 @@
           </div>
         }
 
-        <!-- Observaciones -->
-        @if (cotizacion()!.observaciones) {
-          <div class="bg-yellow-50 rounded-2xl p-5 border-2 border-yellow-200">
-            <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-              </svg>
-              Observaciones
-            </h3>
-            <p class="text-gray-700 whitespace-pre-wrap">{{ cotizacion()!.observaciones }}</p>
-          </div>
-        }
+        <!-- Observaciones removed as it is not in DTO -->
 
       </div>
     </div>
@@ -263,16 +240,28 @@
         class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
         Cerrar
       </button>
-      @if (cotizacion()!.cancelado !== 1) {
-        <button 
-          (click)="solicitarCancelacion()"
-          class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-          Cancelar Cotización
-        </button>
-      }
+      <div class="flex gap-3">
+        @if (cotizacion()!.estado === 'Cancelada') {
+          <button 
+            (click)="solicitarEliminacion()"
+            class="px-6 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors font-medium flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Eliminar Permanentemente
+          </button>
+        }
+        @if (cotizacion()!.estado !== 'Cancelada') {
+          <button 
+            (click)="solicitarCancelacion()"
+            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            Cancelar Cotización
+          </button>
+        }
+      </div>
     </div>
   }
 </div>

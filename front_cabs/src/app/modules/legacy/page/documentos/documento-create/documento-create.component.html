@@ -106,7 +106,7 @@
         </div>
 
         @if (productoTemporal.idProducto > 0) {
-          <div class="form-row mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div class="form-row mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm">
             <div class="form-group">
               <label class="form-label">Cantidad</label>
               <input 
@@ -114,7 +114,7 @@
                 [(ngModel)]="productoTemporal.unidades"
                 (input)="calcularSubtotalProducto()"
                 min="1"
-                class="form-input">
+                class="form-input font-medium">
             </div>
             <div class="form-group">
               <label class="form-label">Precio Unitario</label>
@@ -124,7 +124,7 @@
                 (input)="calcularSubtotalProducto()"
                 min="0"
                 step="0.01"
-                class="form-input">
+                class="form-input font-medium">
             </div>
             <div class="form-group">
               <label class="form-label">Descuento ($)</label>
@@ -134,11 +134,11 @@
                 (input)="calcularSubtotalProducto()"
                 min="0"
                 step="0.01"
-                class="form-input">
+                class="form-input font-medium">
             </div>
             <div class="form-group">
               <label class="form-label">Subtotal</label>
-              <div class="p-2 bg-white border border-gray-300 rounded font-bold text-gray-900">
+              <div class="p-3 bg-white border border-slate-200 rounded-lg font-bold text-slate-900 text-right">
                 {{ formatCurrency(productoTemporal.subtotal) }}
               </div>
             </div>
@@ -146,7 +146,7 @@
               <button 
                 type="button"
                 (click)="agregarProducto()"
-                class="btn btn-primary w-full">
+                class="btn btn-primary w-full shadow-md">
                 Agregar
               </button>
             </div>
@@ -168,7 +168,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of productosSeleccionados(); track item.idProducto) {
+                @for (item of productosSeleccionados(); track $index) {
                   <tr>
                     <td class="font-medium">{{ item.codigoProducto }}</td>
                     <td>{{ item.nombreProducto }}</td>
@@ -179,7 +179,7 @@
                       {{ formatCurrency(item.subtotal) }}
                     </td>
                     <td class="text-center">
-                      <button (click)="eliminarProducto(item.idProducto)" class="btn-remove">
+                      <button (click)="eliminarProducto($index)" class="btn-remove">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
@@ -191,8 +191,9 @@
             </table>
           </div>
         } @else {
-          <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-            <p class="text-gray-500">No hay productos seleccionados</p>
+          <div class="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300">
+            <p class="text-slate-500 font-medium">No hay productos seleccionados</p>
+            <p class="text-sm text-slate-400 mt-1">Busque y seleccione productos para comenzar</p>
           </div>
         }
       </div>
@@ -211,60 +212,108 @@
           
           <div>
             <!-- CTOTAL (Campo Obligatorio) -->
-            <div class="total-item bg-blue-50 p-2 rounded mb-2">
-              <span class="total-label font-bold text-blue-900">CTOTAL *</span>
+            <div class="total-item bg-indigo-50 p-4 rounded-lg mb-3 border-2 border-indigo-300">
+              <span class="total-label font-bold text-indigo-900">CTOTAL (Subtotal) *</span>
               <input 
                 type="number" 
                 [(ngModel)]="formulario.cTotal"
+                (input)="calcularTotalConIVA()"
                 min="0"
                 step="0.01"
-                class="form-input w-32 text-right font-bold text-blue-900">
+                placeholder="0.00"
+                class="form-input w-40 text-right font-bold text-indigo-900 border-indigo-300 focus:border-indigo-500 focus:ring-indigo-500">
             </div>
-            <p class="text-xs text-blue-700 mb-4 text-right">Monto total final a pagar por el cliente</p>
+            <p class="text-xs text-indigo-600 mb-4 text-right font-medium">💡 Ingrese el subtotal antes de descuentos</p>
 
             <!-- Descuentos a Nivel Documento -->
-            <div class="total-item">
-              <span class="total-label">Descuento 1 (%):</span>
-              <input 
-                type="number" 
-                [(ngModel)]="formulario.descuentoDoc1"
-                min="0"
-                max="100"
-                step="0.01"
-                class="form-input w-24 text-right">
+            <div class="bg-orange-50 p-4 rounded-lg border border-orange-200 mb-4">
+              <p class="text-sm font-bold text-orange-700 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Descuentos (Opcional)
+              </p>
+              
+              <div class="space-y-2">
+                <div class="total-item">
+                  <span class="total-label text-sm">Descuento 1:</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">$</span>
+                    <input 
+                      type="number" 
+                      [(ngModel)]="formulario.descuentoDoc1"
+                      (input)="calcularTotalConIVA()"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      class="form-input w-32 text-right">
+                  </div>
+                </div>
+
+                <div class="total-item">
+                  <span class="total-label text-sm">Descuento 2:</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">$</span>
+                    <input 
+                      type="number" 
+                      [(ngModel)]="formulario.descuentoDoc2"
+                      (input)="calcularTotalConIVA()"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      class="form-input w-32 text-right">
+                  </div>
+                </div>
+
+                <div class="total-item">
+                  <span class="total-label text-sm">Descuento 3:</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">$</span>
+                    <input 
+                      type="number" 
+                      [(ngModel)]="formulario.descuentoDoc3"
+                      (input)="calcularTotalConIVA()"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      class="form-input w-32 text-right">
+                  </div>
+                </div>
+
+                @if (calcularTotalDescuentos() > 0) {
+                  <div class="total-item pt-2 border-t border-orange-300">
+                    <span class="total-label font-bold text-orange-700">Total Descuentos:</span>
+                    <span class="text-orange-700 font-bold">-{{ formatCurrency(calcularTotalDescuentos()) }}</span>
+                  </div>
+                }
+              </div>
             </div>
 
-            <div class="total-item">
-              <span class="total-label">Descuento 2 (%):</span>
-              <input 
-                type="number" 
-                [(ngModel)]="formulario.descuentoDoc2"
-                min="0"
-                max="100"
-                step="0.01"
-                class="form-input w-24 text-right">
-            </div>
+            <!-- Cálculos en Tiempo Real -->
+            <div class="bg-white border-2 border-gray-200 rounded-lg p-4 space-y-2">
+              <div class="total-item">
+                <span class="total-label">Subtotal Productos:</span>
+                <span class="total-value text-gray-600">{{ formatCurrency(calcularSubtotalGeneral()) }}</span>
+              </div>
 
-            <div class="total-item">
-              <span class="total-label">Descuento 3 ($):</span>
-              <input 
-                type="number" 
-                [(ngModel)]="formulario.descuentoDoc3"
-                min="0"
-                step="0.01"
-                class="form-input w-24 text-right">
-            </div>
+              @if (calcularTotalDescuentos() > 0) {
+                <div class="total-item text-red-600">
+                  <span class="total-label">Descuentos:</span>
+                  <span class="font-semibold">-{{ formatCurrency(calcularTotalDescuentos()) }}</span>
+                </div>
+              }
 
-            <div class="total-item border-t pt-2 mt-2">
-              <span class="total-label">Subtotal Productos:</span>
-              <span class="total-value">{{ formatCurrency(calcularSubtotalGeneral()) }}</span>
-            </div>
+              <div class="total-item border-t pt-2">
+                <span class="total-label font-semibold">Neto (después de desc.):</span>
+                <span class="total-value font-semibold">{{ formatCurrency(calcularNetoConDescuentos()) }}</span>
+              </div>
             
             <div class="total-item">
               <div class="flex items-center gap-2">
                 <input 
                   type="checkbox" 
                   [(ngModel)]="formulario.aplicarIVA" 
+                  (change)="calcularTotalConIVA()"
                   id="checkIVA"
                   class="rounded text-blue-600">
                 <label for="checkIVA" class="total-label cursor-pointer">IVA ({{ formulario.porcentajeIVA }}%):</label>

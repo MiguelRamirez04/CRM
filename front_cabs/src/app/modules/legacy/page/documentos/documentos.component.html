@@ -121,7 +121,7 @@
             @for (cot of cotizaciones(); track cot.idDocumento) {
               <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-900">{{ cot.serie }}-{{ cot.folio }}</span>
+                  <span class="text-sm font-medium text-gray-900">{{ cot.serieDocumento }}-{{ cot.folio }}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                   {{ formatDate(cot.fecha) }}
@@ -133,15 +133,15 @@
                   {{ formatCurrency(cot.subtotal || 0) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                  {{ formatCurrency(cot.impuesto1 || 0) }}
+                  {{ formatCurrency(cot.iva || 0) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
                   {{ formatCurrency(cot.total) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   <span 
-                    [class]="cot.cancelado === 1 ? 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800' : 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'">
-                    {{ cot.cancelado === 1 ? 'Cancelada' : 'Activa' }}
+                    [class]="cot.estado === 'Cancelada' ? 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800' : 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'">
+                    {{ cot.estado }}
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
@@ -206,6 +206,8 @@
   <app-dialog-vista-documentos
     [idDocumento]="idDocumentoSeleccionado()"
     (cerrar)="cerrarModalDetalle()"
-    (solicitudCancelacion)="cancelarCotizacion($event)">
+    (solicitudCancelacion)="cancelarCotizacion($event)"
+    (solicitudEliminacion)="eliminarCotizacion($event)">
   </app-dialog-vista-documentos>
 }
+

@@ -33,6 +33,10 @@ export const legacyRoutes: Routes = [
             path: 'productos', 
             loadComponent: () => import('./page/productos/productos.component').then(m => m.ProductosComponent) 
           },
+          { 
+            path: 'clientes', 
+            loadComponent: () => import('./page/clientes-legacy/clientes-legacy.component').then(m => m.ClientesLegacyComponent) 
+          },
           // Redirección interna de Catálogos
           { path: '', redirectTo: 'monedas', pathMatch: 'full' }
         ]

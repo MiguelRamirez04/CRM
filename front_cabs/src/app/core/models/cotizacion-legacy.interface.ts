@@ -51,9 +51,9 @@ export interface CotizacionLegacyCreateRequest {
   productos: CotizacionMovimientoLegacyDto[]; // Lista de productos (mínimo 1)
 
   // === DESCUENTOS ===
-  descuentoDoc1?: number | null; // Descuento % a nivel documento 1 (0-100)
-  descuentoDoc2?: number | null; // Descuento % a nivel documento 2 (0-100)
-  descuentoDoc3?: number | null; // Descuento en valores absolutos ($) a nivel documento 3
+  descuentoDoc1?: number | null; // Descuento ($) a nivel documento 1
+  descuentoDoc2?: number | null; // Descuento ($) a nivel documento 2
+  descuentoDoc3?: number | null; // Descuento ($) a nivel documento 3
 
   // === TOTAL ===
   cTotal: number; // CTOTAL - Monto total final (OBLIGATORIO, ingresado manualmente)
@@ -149,52 +149,33 @@ export interface CotizacionLegacyFiltros {
  * GET /api/AdmDocumentos/{id}
  */
 export interface CotizacionLegacyResponse {
-  // === IDENTIFICACIÓN ===
   idDocumento: number;
-  idConceptoDocumento: number;
-  idDocumentoDe: number;
-  serie: string;
+  serieDocumento: string;
   folio: number;
-  fecha: string; // ISO date
-
-  // === CLIENTE ===
-  idCliente: number;
+  fecha: string;
   razonSocial: string;
-  rfc: string;
+  fechaVencimiento: string;
+  fechaProntoPago: string;
+  fechaEntregaRecepcion: string;
+  
+  // Totales
+  subtotal: number;
+  iva: number;
+  total: number;
+  
+  // Descuentos
+  descuentoDoc1: number;
+  descuentoDoc2: number;
+  descuentoDoc3: number;
+  
+  // Estado
+  estado: string; // "Activa" | "Cancelada"
 
-  // === FECHAS ===
-  fechaVencimiento: string | null; // ISO date
-  fechaProntoPago: string | null; // ISO date
-  fechaEntregaRecepcion: string | null; // ISO date
+  // Agente
+  agente?: string;
 
-  // === MONTOS ===
-  subtotal: number; // CSUBTOTAL
-  impuesto1: number; // CIMPUESTO1 (IVA)
-  impuesto2: number; // CIMPUESTO2
-  impuesto3: number; // CIMPUESTO3
-  retencion1: number; // CRETENCION1
-  retencion2: number; // CRETENCION2
-  descuento1: number; // CDESCUENTO1
-  descuento2: number; // CDESCUENTO2
-  neto: number; // CNETO (calculado)
-  total: number; // CTOTAL (calculado)
-  pendiente: number; // CPENDIENTE (calculado)
-
-  // === INFORMACIÓN ADICIONAL ===
-  observaciones: string | null;
-  referencia: string | null;
-  idAgente: number | null;
-  idMoneda: number;
-  tipoCambio: number;
-
-  // === ESTADOS ===
-  afectado: number; // 0 = No, 1 = Sí
-  impreso: number; // 0 = No, 1 = Sí
-  cancelado: number; // 0 = No, 1 = Sí
-  devuelto: number; // 0 = No, 1 = Sí
-
-  // === MOVIMIENTOS (PRODUCTOS) ===
-  movimientos?: CotizacionMovimientoLegacyResponse[]; // Solo si incluirMovimientos = true
+  // Movimientos
+  movimientos?: CotizacionMovimientoLegacyResponse[];
 }
 
 /**
@@ -202,17 +183,33 @@ export interface CotizacionLegacyResponse {
  */
 export interface CotizacionMovimientoLegacyResponse {
   idMovimiento: number;
+  numeroMovimiento: number;
   idProducto: number;
   codigoProducto: string;
   nombreProducto: string;
+  descripcionProducto: string;
   idAlmacen: number;
+  codigoAlmacen: string;
   nombreAlmacen: string;
   unidades: number;
+  unidadesCapturadas: number;
+  idUnidad: number;
   precio: number;
+  precioCapturado: number;
+  costoCapturado: number;
   porcentajeDescuento: number;
-  descuento: number; // Monto de descuento calculado
-  neto: number; // Total del movimiento (calculado)
+  descuentoLinea: number;
+  impuesto1: number;
+  impuesto2: number;
+  impuesto3: number;
+  retencion1: number;
+  retencion2: number;
+  neto: number;
+  total: number;
+  referencia: string;
   observaciones: string | null;
+  afectado: number;
+  venta: number;
 }
 
 /**

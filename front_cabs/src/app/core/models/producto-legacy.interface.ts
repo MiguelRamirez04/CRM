@@ -118,6 +118,7 @@ export interface ProductoLegacyFiltros {
   codigoProducto?: string; // Búsqueda parcial
   tipoProducto?: number; // 1 = Producto, 2 = Servicio, 3 = Paquete
   soloActivos?: boolean; // true = solo productos activos
+  status?: number | null; // 0 = Inactivo, 1 = Activo, null = Todos
   conExistencias?: boolean; // true = solo con stock disponible
   idFamilia?: number; // Filtrar por familia de productos
   idLinea?: number; // Filtrar por línea de productos

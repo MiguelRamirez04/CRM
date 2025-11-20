@@ -143,26 +143,53 @@ export class ClienteLegacyService {
     if (filtros.telefono) {
       params = params.set('telefono', filtros.telefono);
     }
-    if (filtros.soloActivos !== undefined) {
-      params = params.set('soloActivos', filtros.soloActivos.toString());
+    if (filtros.estado) {
+      params = params.set('estado', filtros.estado);
     }
-    if (filtros.page) {
-      params = params.set('page', filtros.page.toString());
+    if (filtros.ciudad) {
+      params = params.set('ciudad', filtros.ciudad);
     }
-    if (filtros.pageSize) {
-      params = params.set('pageSize', filtros.pageSize.toString());
+    if (filtros.estatus !== undefined && filtros.estatus !== null) {
+      params = params.set('estatus', filtros.estatus.toString());
+    }
+    if (filtros.tipoDireccion) {
+      params = params.set('tipoDireccion', filtros.tipoDireccion.toString());
+    }
+    if (filtros.incluirDetalleUbicacion !== undefined) {
+      params = params.set('incluirDetalleUbicacion', filtros.incluirDetalleUbicacion.toString());
+    }
+    if (filtros.numeroPagina) {
+      params = params.set('numeroPagina', filtros.numeroPagina.toString());
+    }
+    if (filtros.tamanoPagina) {
+      params = params.set('tamanoPagina', filtros.tamanoPagina.toString());
     }
 
-    return this.http.get<ClienteLegacyApiResponse<ClienteLegacyPaginado>>(
+    return this.http.get<any>(
       `${this.apiUrl}/search`,
       { params }
     ).pipe(
       map(response => {
-        if (response.success && response.data) {
-          console.log(`✅ Búsqueda paginada: ${response.data.pagination.totalRecords} registros totales`);
-          console.log(`📄 Página ${response.data.pagination.currentPage}/${response.data.pagination.totalPages}`);
-        }
-        return response;
+        // Adaptador para formato consistente
+        const mappedResponse: ClienteLegacyApiResponse<ClienteLegacyPaginado> = {
+          success: response.success || true,
+          data: {
+            data: response.data || [],
+            pagination: response.pagination || {
+              currentPage: 1,
+              pageSize: 50,
+              totalPages: 1,
+              totalRecords: 0,
+              hasNextPage: false,
+              hasPreviousPage: false
+            },
+            filters: filtros
+          },
+          message: response.message
+        };
+
+        console.log(`✅ Búsqueda paginada: ${mappedResponse.data?.pagination.totalRecords || 0} registros totales`);
+        return mappedResponse;
       }),
       catchError(this.manejarError)
     );
@@ -200,17 +227,19 @@ export class ClienteLegacyService {
    *   }
    * });
    */
-  obtenerPorId(id: number): Observable<ClienteLegacyApiResponse<ClienteLegacyResponse>> {
+  obtenerPorId(id: number, incluirDetalleUbicacion: boolean = true): Observable<ClienteLegacyResponse> {
     console.log(`👤 Obteniendo cliente con ID: ${id}`);
     
-    return this.http.get<ClienteLegacyApiResponse<ClienteLegacyResponse>>(
-      `${this.apiUrl}/${id}`
+    const params = new HttpParams().set('incluirDetalleUbicacion', incluirDetalleUbicacion.toString());
+    
+    return this.http.get<any>(
+      `${this.apiUrl}/${id}`,
+      { params }
     ).pipe(
       map(response => {
-        if (response.success && response.data) {
-          console.log(`✅ Cliente obtenido: ${response.data.razonSocial}`);
-        }
-        return response;
+        const cliente = response.data || response;
+        console.log(`✅ Cliente obtenido: ${cliente.razonSocial}`);
+        return cliente;
       }),
       catchError(this.manejarError)
     );
