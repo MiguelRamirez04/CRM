@@ -34,20 +34,6 @@ import { RouterLink } from '@angular/router'; // Para el botón "Volver"
       </div>
     </div>
   `,
-  styles: [`
-    .back-button {
-      @apply text-blue-600 hover:text-blue-800 font-medium mb-6 flex items-center gap-2 transition-colors;
-    }
-    .placeholder-title {
-      @apply text-3xl font-bold text-gray-900 mb-6;
-    }
-    .placeholder-content {
-      @apply bg-white p-8 rounded-lg shadow-md border border-gray-200 text-gray-700 leading-relaxed;
-    }
-    .api-endpoint {
-      @apply text-sm text-gray-500 bg-gray-100 p-3 rounded-md inline-block border;
-    }
-  `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MonedasComponent {

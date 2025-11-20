@@ -362,6 +362,9 @@ namespace back_cabs.CRM.contexts
                 entity.ToTable("admDocumentos", "dbo");
                 entity.HasKey(e => e.CIdDocumento);
                 
+                entity.Property(e => e.CIdDocumento)
+                    .ValueGeneratedNever();
+
                 // Ignorar navegación para evitar ciclos
                 entity.Ignore(e => e.DocumentoModelo);
                 entity.Ignore(e => e.Concepto);
@@ -373,6 +376,9 @@ namespace back_cabs.CRM.contexts
             {
                 entity.ToTable("admMovimientos", "dbo");
                 entity.HasKey(e => e.CIdMovimiento);
+
+                entity.Property(e => e.CIdMovimiento)
+                    .ValueGeneratedNever();
                 
                 // Ignorar navegación para evitar ciclos
                 entity.Ignore(e => e.Documento);

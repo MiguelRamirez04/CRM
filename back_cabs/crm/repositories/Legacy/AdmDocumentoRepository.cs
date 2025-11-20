@@ -336,21 +336,36 @@ namespace back_cabs.CRM.repositories.Legacy
             using var transaction = await _writeContext.Database.BeginTransactionAsync();
             try
             {
-                // 1. Obtener y actualizar el folio
+                // 1. Generar ID manual para Documento (Legacy no usa Identity)
+                var maxIdDocumento = await _writeContext.AdmDocumentos
+                    .OrderByDescending(d => d.CIdDocumento)
+                    .Select(d => d.CIdDocumento)
+                    .FirstOrDefaultAsync();
+                
+                documento.CIdDocumento = maxIdDocumento + 1;
+
+                // 2. Obtener y actualizar el folio
                 var folioActual = await GetFolioActualAsync(documento.CIdConceptoDocumento);
                 var nuevoFolio = folioActual + 1;
                 documento.CFolio = nuevoFolio;
 
-                // 2. Insertar el documento
+                // 3. Insertar el documento
                 await _writeContext.AdmDocumentos.AddAsync(documento);
                 await _writeContext.SaveChangesAsync();
 
                 var documentoId = documento.CIdDocumento;
                 _logger.LogInformation("✅ Documento creado con ID {DocumentoId}", documentoId);
 
-                // 3. Insertar los movimientos
+                // 4. Generar IDs manuales para Movimientos e Insertar
+                var maxIdMovimiento = await _writeContext.AdmMovimientos
+                    .OrderByDescending(m => m.CIdMovimiento)
+                    .Select(m => m.CIdMovimiento)
+                    .FirstOrDefaultAsync();
+
                 foreach (var movimiento in movimientos)
                 {
+                    maxIdMovimiento++;
+                    movimiento.CIdMovimiento = maxIdMovimiento;
                     movimiento.CIdDocumento = documentoId;
                     movimiento.CIdDocumentoDe = documento.CIdDocumentoDe;
                 }
@@ -361,10 +376,10 @@ namespace back_cabs.CRM.repositories.Legacy
                 _logger.LogInformation("✅ {CantidadMovimientos} movimientos creados para documento {DocumentoId}", 
                     movimientos.Count, documentoId);
 
-                // 4. Actualizar el folio en admConceptos
+                // 5. Actualizar el folio en admConceptos
                 await UpdateFolioConceptoAsync(documento.CIdConceptoDocumento, nuevoFolio);
 
-                // 5. Commit de la transacción
+                // 6. Commit de la transacción
                 await transaction.CommitAsync();
 
                 _logger.LogInformation("✅ Cotización creada exitosamente - ID: {DocumentoId}, Folio: {Folio}", 

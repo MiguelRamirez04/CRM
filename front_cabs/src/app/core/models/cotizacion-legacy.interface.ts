@@ -26,9 +26,10 @@ export interface CotizacionMovimientoLegacyDto {
   idProducto: number; // FK a admProductos (obligatorio)
   idAlmacen: number; // FK a admAlmacenes (obligatorio)
   idUnidad?: number | null; // FK a admUnidadesMedidaPeso (opcional, usa unidad por defecto del producto)
-  unidades: number; // Cantidad de unidades (obligatorio, debe ser > 0)
+  unidades: number; // Cantidad de unidades (obligatorio, puede ser 0)
   precio: number; // Precio unitario (obligatorio, puede modificarse del producto)
   porcentajeDescuento?: number | null; // Descuento % a nivel movimiento (0-100)
+  descuentoImporte?: number | null; // Descuento en valores absolutos ($) a nivel movimiento
   observaciones?: string | null; // Observaciones del movimiento (max 200 caracteres)
 }
 
@@ -52,6 +53,10 @@ export interface CotizacionLegacyCreateRequest {
   // === DESCUENTOS ===
   descuentoDoc1?: number | null; // Descuento % a nivel documento 1 (0-100)
   descuentoDoc2?: number | null; // Descuento % a nivel documento 2 (0-100)
+  descuentoDoc3?: number | null; // Descuento en valores absolutos ($) a nivel documento 3
+
+  // === TOTAL ===
+  cTotal: number; // CTOTAL - Monto total final (OBLIGATORIO, ingresado manualmente)
 
   // === PAGOS ===
   montoPagado?: number | null; // Monto abonado o pagado (default: 0)
@@ -225,6 +230,16 @@ export interface CotizacionLegacyPaginado {
     hasPreviousPage: boolean;
   };
   filters: CotizacionLegacyFiltros;
+}
+
+/**
+ * Resumen de cotizaciones por rango de fechas
+ * GET /api/AdmDocumentos/resumen
+ */
+export interface CotizacionLegacyResumen {
+  fechaInicio: string; // ISO date
+  fechaFin: string; // ISO date
+  totalDocumentos: number; // Total de documentos en el rango
 }
 
 /**

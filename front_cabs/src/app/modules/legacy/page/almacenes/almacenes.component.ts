@@ -10,16 +10,16 @@ import { RouterLink } from '@angular/router'; // Para el botón "Volver"
       <div class="max-w-7xl mx-auto">
         
         <!-- Botón para regresar al menú -->
-        <a routerLink="/legacy" class="back-button">
+        <a routerLink="/legacy" class="text-blue-600 hover:text-blue-800 font-medium mb-6 flex items-center gap-2 transition-colors">
           &larr; Volver al Menú de Catálogos
         </a>
 
         <!-- Título -->
-        <h1 class="placeholder-title">Catálogo de Almacenes</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Catálogo de Almacenes</h1>
         
         <!-- Contenido de la página -->
-        <div class="placeholder-content">
-          <p class="api-endpoint">API Endpoint: <strong>GET /api/Almacenes</strong></p>
+        <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-gray-700 leading-relaxed">
+          <p class="text-sm text-gray-500 bg-gray-100 p-3 rounded-md inline-block border">API Endpoint: <strong>GET /api/Almacenes</strong></p>
           <p>
             Aquí iría tu componente real para mostrar la tabla (datagrid) 
             con la información de los almacenes (VwAlmacenesCompletas).
@@ -34,20 +34,6 @@ import { RouterLink } from '@angular/router'; // Para el botón "Volver"
       </div>
     </div>
   `,
-  styles: [`
-    .back-button {
-      @apply text-blue-600 hover:text-blue-800 font-medium mb-6 flex items-center gap-2 transition-colors;
-    }
-    .placeholder-title {
-      @apply text-3xl font-bold text-gray-900 mb-6;
-    }
-    .placeholder-content {
-      @apply bg-white p-8 rounded-lg shadow-md border border-gray-200 text-gray-700 leading-relaxed;
-    }
-    .api-endpoint {
-      @apply text-sm text-gray-500 bg-gray-100 p-3 rounded-md inline-block border;
-    }
-  `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AlmacenesComponent {

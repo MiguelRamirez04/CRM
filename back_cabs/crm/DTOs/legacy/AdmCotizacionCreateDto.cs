@@ -62,6 +62,23 @@ namespace back_cabs.CRM.DTOs.Legacy
         public double? DescuentoDoc2 { get; set; }
 
         /// <summary>
+        /// Descuento a nivel documento 3 (opcional)
+        /// Tercer descuento adicional aplicado al total
+        /// </summary>
+        [Range(0, double.MaxValue, ErrorMessage = "El descuento no puede ser negativo")]
+        public double? DescuentoDoc3 { get; set; }
+
+        /// <summary>
+        /// CTOTAL - Monto total final de la cotización (OBLIGATORIO)
+        /// Este es el valor que el usuario proporciona manualmente.
+        /// El sistema NO lo calcula automáticamente.
+        /// Es el monto neto que el cliente pagará.
+        /// </summary>
+        [Required(ErrorMessage = "El CTOTAL es obligatorio")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "El CTOTAL debe ser mayor a 0")]
+        public double CTotal { get; set; }
+
+        /// <summary>
         /// Monto que el cliente pagó o abonó (opcional)
         /// Si no se envía o es 0, CPendiente = CTotal
         /// Si se envía, CPendiente = CTotal - MontoPagado
@@ -114,7 +131,7 @@ namespace back_cabs.CRM.DTOs.Legacy
         /// FK a admAlmacenes
         /// </summary>
         [Required(ErrorMessage = "El ID del almacén es obligatorio")]
-        [Range(1, int.MaxValue, ErrorMessage = "El ID del almacén debe ser mayor a 0")]
+        // [Range(1, int.MaxValue, ErrorMessage = "El ID del almacén debe ser mayor a 0")]
         public int IdAlmacen { get; set; }
 
         /// <summary>
@@ -125,9 +142,10 @@ namespace back_cabs.CRM.DTOs.Legacy
 
         /// <summary>
         /// Cantidad de unidades (obligatorio)
+        /// Nota: Se permite 0 porque lo importante es el CTOTAL del documento
         /// </summary>
         [Required(ErrorMessage = "La cantidad de unidades es obligatoria")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0")]
+        [Range(0, double.MaxValue, ErrorMessage = "La cantidad no puede ser negativa")]
         public double Unidades { get; set; }
 
         /// <summary>
@@ -144,6 +162,13 @@ namespace back_cabs.CRM.DTOs.Legacy
         /// </summary>
         [Range(0, 100, ErrorMessage = "El descuento debe estar entre 0 y 100")]
         public double? PorcentajeDescuento { get; set; }
+
+        /// <summary>
+        /// Importe de descuento a nivel movimiento (opcional)
+        /// Descuento en valores absolutos ($) aplicado al producto
+        /// </summary>
+        [Range(0, double.MaxValue, ErrorMessage = "El descuento por importe no puede ser negativo")]
+        public double? DescuentoImporte { get; set; }
 
         /// <summary>
         /// Observaciones del movimiento (opcional)

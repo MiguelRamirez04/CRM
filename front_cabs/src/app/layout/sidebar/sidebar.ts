@@ -4,7 +4,6 @@ import { RouterModule, Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BandejaPerfilComponent } from '../bandeja-perfil/bandeja-perfil.component';
 
 type IconType = 
   | 'resumen' 
@@ -34,7 +33,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule,BandejaPerfilComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })

@@ -73,7 +73,8 @@ import {
   CotizacionLegacyFiltros,
   CotizacionLegacyResponse,
   CotizacionLegacyPaginado,
-  CotizacionLegacyApiResponse
+  CotizacionLegacyApiResponse,
+  CotizacionLegacyResumen
 } from '../models/cotizacion-legacy.interface';
 
 @Injectable({
@@ -345,6 +346,47 @@ export class CotizacionLegacyService {
         if (response.success && response.data) {
           console.log(`✅ Cotización obtenida: Folio ${response.data.folio}`);
           console.log(`👤 Cliente: ${response.data.razonSocial}`);
+        }
+        return response;
+      }),
+      catchError(this.manejarError)
+    );
+  }
+
+  /**
+   * 📊 Obtener resumen de cotizaciones por rango de fechas
+   * Endpoint: GET /api/AdmDocumentos/resumen
+   * 
+   * Retorna el total de documentos en un rango de fechas específico.
+   * Útil para dashboards o widgets de resumen.
+   * 
+   * @param fechaInicio - Fecha inicial (formato ISO: YYYY-MM-DD)
+   * @param fechaFin - Fecha final (formato ISO: YYYY-MM-DD)
+   * @returns Observable con respuesta conteniendo resumen
+   * 
+   * @example
+   * this.cotizacionService.obtenerResumen('2025-01-01', '2025-12-31').subscribe({
+   *   next: (response) => {
+   *     if (response.success && response.data) {
+   *       console.log(`📊 Total documentos: ${response.data.totalDocumentos}`);
+   *     }
+   *   }
+   * });
+   */
+  obtenerResumen(fechaInicio: string, fechaFin: string): Observable<CotizacionLegacyApiResponse<{ fechaInicio: string; fechaFin: string; totalDocumentos: number }>> {
+    console.log(`📊 Obteniendo resumen de cotizaciones: ${fechaInicio} - ${fechaFin}`);
+    
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin);
+
+    return this.http.get<CotizacionLegacyApiResponse<{ fechaInicio: string; fechaFin: string; totalDocumentos: number }>>(
+      `${this.apiUrl}/resumen`,
+      { params }
+    ).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          console.log(`✅ Resumen obtenido: ${response.data.totalDocumentos} documentos`);
         }
         return response;
       }),

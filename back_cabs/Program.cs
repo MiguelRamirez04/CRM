@@ -105,27 +105,21 @@ builder.Services.AddDbContext<LegacyCompacReadOnlyContext>(options =>
         sqlOptions =>
         {
             sqlOptions.CommandTimeout(30); // 30 segundos para consultas complejas
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(5),
-                errorNumbersToAdd: null
-            );
+            // EnableRetryOnFailure removido para permitir transacciones manuales
         }
     )
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)); // Solo lectura
 
 // Contexto de escritura (usar con precaución - datos legacy)
+// IMPORTANTE: EnableRetryOnFailure está DESHABILITADO para permitir transacciones manuales
+// Si se necesita retry logic, usar Database.CreateExecutionStrategy()
 builder.Services.AddDbContext<LegacyCompacWriteContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("CompacConnection"),
         sqlOptions =>
         {
             sqlOptions.CommandTimeout(30); // 30 segundos para operaciones de escritura
-            sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(5),
-                errorNumbersToAdd: null
-            );
+            // EnableRetryOnFailure removido para soportar transacciones manuales en CreateDocumentoConMovimientosAsync
         }
     )); // Change Tracking habilitado por defecto
 

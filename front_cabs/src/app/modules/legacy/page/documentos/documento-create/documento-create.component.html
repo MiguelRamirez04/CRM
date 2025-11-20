@@ -1,0 +1,298 @@
+<div class="container">
+  <div class="form-wrapper">
+    
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h2 class="header-title">Nueva Cotización</h2>
+        <small class="header-id">Complete los datos para crear una nueva cotización</small>
+      </div>
+      <button 
+        (click)="cancelar()" 
+        class="btn btn-secondary">
+        Cancelar
+      </button>
+    </div>
+
+    <!-- Overlay de carga -->
+    @if (loading()) {
+      <div class="form-overlay">
+        <div class="spinner"></div>
+        <p>Procesando cotización...</p>
+      </div>
+    }
+
+    <div class="p-6">
+      
+      <!-- Sección Cliente -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+          Información del Cliente
+        </h3>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label class="form-label">Buscar Cliente <span class="text-red-500">*</span></label>
+            <div class="search-container">
+              <input 
+                type="text" 
+                [(ngModel)]="busquedaCliente"
+                (input)="buscarClientes()"
+                placeholder="Buscar por razón social o RFC..."
+                class="form-input">
+              
+              @if (clientes().length > 0) {
+                <div class="search-results">
+                  @for (cliente of clientes(); track cliente.idCliente) {
+                    <div (click)="seleccionarCliente(cliente)" class="search-item">
+                      <div class="search-item-title">{{ cliente.razonSocial }}</div>
+                      <div class="search-item-subtitle">RFC: {{ cliente.rfc }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        @if (clienteSeleccionado) {
+          <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <div>
+              <div class="font-bold text-green-800">{{ clienteSeleccionado.razonSocial }}</div>
+              <div class="text-sm text-green-600">RFC: {{ clienteSeleccionado.rfc }}</div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Sección Productos -->
+      <div class="form-section">
+        <h3 class="section-title">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+          </svg>
+          Productos y Servicios
+        </h3>
+
+        <div class="form-row mb-6">
+          <div class="form-group full-width">
+            <label class="form-label">Agregar Producto</label>
+            <div class="search-container">
+              <input 
+                type="text" 
+                [(ngModel)]="busquedaProducto"
+                (input)="buscarProductos()"
+                placeholder="Buscar por código o nombre..."
+                class="form-input">
+              
+              @if (productos().length > 0) {
+                <div class="search-results">
+                  @for (producto of productos(); track producto.idProducto) {
+                    <div (click)="seleccionarProducto(producto)" class="search-item">
+                      <div class="search-item-title">{{ producto.codigoProducto }} - {{ producto.nombreProducto }}</div>
+                      <div class="search-item-subtitle">Precio: ${{ producto.precio }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        @if (productoTemporal.idProducto > 0) {
+          <div class="form-row mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div class="form-group">
+              <label class="form-label">Cantidad</label>
+              <input 
+                type="number" 
+                [(ngModel)]="productoTemporal.unidades"
+                (input)="calcularSubtotalProducto()"
+                min="1"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Precio Unitario</label>
+              <input 
+                type="number" 
+                [(ngModel)]="productoTemporal.precio"
+                (input)="calcularSubtotalProducto()"
+                min="0"
+                step="0.01"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descuento ($)</label>
+              <input 
+                type="number" 
+                [(ngModel)]="productoTemporal.descuentoImporte"
+                (input)="calcularSubtotalProducto()"
+                min="0"
+                step="0.01"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subtotal</label>
+              <div class="p-2 bg-white border border-gray-300 rounded font-bold text-gray-900">
+                {{ formatCurrency(productoTemporal.subtotal) }}
+              </div>
+            </div>
+            <div class="form-group flex justify-end items-end">
+              <button 
+                type="button"
+                (click)="agregarProducto()"
+                class="btn btn-primary w-full">
+                Agregar
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (productosSeleccionados().length > 0) {
+          <div class="products-table-container">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Descripción</th>
+                  <th class="text-center">Unidades</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-right">Descuento</th>
+                  <th class="text-right">Importe</th>
+                  <th class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of productosSeleccionados(); track item.idProducto) {
+                  <tr>
+                    <td class="font-medium">{{ item.codigoProducto }}</td>
+                    <td>{{ item.nombreProducto }}</td>
+                    <td class="text-center">{{ item.unidades }}</td>
+                    <td class="text-right">{{ formatCurrency(item.precio) }}</td>
+                    <td class="text-right text-red-600">{{ item.descuentoImporte > 0 ? '- ' + formatCurrency(item.descuentoImporte) : '-' }}</td>
+                    <td class="text-right font-medium">
+                      {{ formatCurrency(item.subtotal) }}
+                    </td>
+                    <td class="text-center">
+                      <button (click)="eliminarProducto(item.idProducto)" class="btn-remove">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+            <p class="text-gray-500">No hay productos seleccionados</p>
+          </div>
+        }
+      </div>
+
+      <!-- Sección Totales -->
+      <div class="totals-section">
+        <div class="totals-grid">
+          <div class="form-group">
+            <label class="form-label">Observaciones</label>
+            <textarea 
+              [(ngModel)]="formulario.observaciones"
+              rows="3" 
+              class="form-textarea"
+              placeholder="Observaciones adicionales..."></textarea>
+          </div>
+          
+          <div>
+            <!-- CTOTAL (Campo Obligatorio) -->
+            <div class="total-item bg-blue-50 p-2 rounded mb-2">
+              <span class="total-label font-bold text-blue-900">CTOTAL *</span>
+              <input 
+                type="number" 
+                [(ngModel)]="formulario.cTotal"
+                min="0"
+                step="0.01"
+                class="form-input w-32 text-right font-bold text-blue-900">
+            </div>
+            <p class="text-xs text-blue-700 mb-4 text-right">Monto total final a pagar por el cliente</p>
+
+            <!-- Descuentos a Nivel Documento -->
+            <div class="total-item">
+              <span class="total-label">Descuento 1 (%):</span>
+              <input 
+                type="number" 
+                [(ngModel)]="formulario.descuentoDoc1"
+                min="0"
+                max="100"
+                step="0.01"
+                class="form-input w-24 text-right">
+            </div>
+
+            <div class="total-item">
+              <span class="total-label">Descuento 2 (%):</span>
+              <input 
+                type="number" 
+                [(ngModel)]="formulario.descuentoDoc2"
+                min="0"
+                max="100"
+                step="0.01"
+                class="form-input w-24 text-right">
+            </div>
+
+            <div class="total-item">
+              <span class="total-label">Descuento 3 ($):</span>
+              <input 
+                type="number" 
+                [(ngModel)]="formulario.descuentoDoc3"
+                min="0"
+                step="0.01"
+                class="form-input w-24 text-right">
+            </div>
+
+            <div class="total-item border-t pt-2 mt-2">
+              <span class="total-label">Subtotal Productos:</span>
+              <span class="total-value">{{ formatCurrency(calcularSubtotalGeneral()) }}</span>
+            </div>
+            
+            <div class="total-item">
+              <div class="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="formulario.aplicarIVA" 
+                  id="checkIVA"
+                  class="rounded text-blue-600">
+                <label for="checkIVA" class="total-label cursor-pointer">IVA ({{ formulario.porcentajeIVA }}%):</label>
+              </div>
+              <span class="total-value">{{ formatCurrency(calcularIVA()) }}</span>
+            </div>
+            
+            <div class="total-item final">
+              <span class="total-label font-bold">TOTAL CALCULADO:</span>
+              <span class="total-value highlight">{{ formatCurrency(calcularTotalConIVA()) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Acciones -->
+      <div class="actions-footer">
+        <button (click)="cancelar()" class="btn btn-secondary">
+          Cancelar
+        </button>
+        <button 
+          (click)="crearCotizacion()" 
+          [disabled]="loading() || !clienteSeleccionado || productosSeleccionados().length === 0 || formulario.cTotal <= 0"
+          class="btn btn-primary">
+          Crear Cotización
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

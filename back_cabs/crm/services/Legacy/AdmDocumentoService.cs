@@ -550,11 +550,27 @@ namespace back_cabs.CRM.services.Legacy
                 }
 
                 // Validar productos y almacenes
+                var productosInfo = new Dictionary<int, AdmProducto>();
                 foreach (var producto in dto.Productos)
                 {
-                    if (!await _repository.ExistsProductoAsync(producto.IdProducto))
+                    var prodDb = await _context.AdmProductos
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.CIdProducto == producto.IdProducto);
+
+                    if (prodDb == null)
                     {
                         throw new InvalidOperationException($"No existe un producto con ID {producto.IdProducto}");
+                    }
+
+                    if (!productosInfo.ContainsKey(producto.IdProducto))
+                    {
+                        productosInfo.Add(producto.IdProducto, prodDb);
+                    }
+
+                    // Si el almacén es 0, asignamos el 1 por defecto
+                    if (producto.IdAlmacen == 0)
+                    {
+                        producto.IdAlmacen = 1;
                     }
 
                     if (!await _repository.ExistsAlmacenAsync(producto.IdAlmacen))
@@ -577,11 +593,12 @@ namespace back_cabs.CRM.services.Legacy
                 // PASO 2: CARGAR INFORMACIÓN DE PRODUCTOS
                 // ═══════════════════════════════════════════════════════════════
 
-                var productosIds = dto.Productos.Select(p => p.IdProducto).Distinct().ToList();
-                var productosInfo = await _context.AdmProductos
-                    .AsNoTracking()
-                    .Where(p => productosIds.Contains(p.CIdProducto))
-                    .ToDictionaryAsync(p => p.CIdProducto);
+                // Ya se cargaron en la validación para evitar error de sintaxis SQL con Contains en versiones antiguas
+                // var productosIds = dto.Productos.Select(p => p.IdProducto).Distinct().ToList();
+                // var productosInfo = await _context.AdmProductos
+                //    .AsNoTracking()
+                //    .Where(p => productosIds.Contains(p.CIdProducto))
+                //    .ToDictionaryAsync(p => p.CIdProducto);
 
                 // ═══════════════════════════════════════════════════════════════
                 // PASO 3: CALCULAR TOTALES
@@ -590,7 +607,6 @@ namespace back_cabs.CRM.services.Legacy
                 _logger.LogInformation("🧮 Calculando totales...");
 
                 double sumaNetoMovimientos = 0;
-                double sumaDescuentoMovimientos = 0;
 
                 var movimientos = new List<AdmMovimiento>();
                 int numeroMovimiento = 1;
@@ -603,9 +619,16 @@ namespace back_cabs.CRM.services.Legacy
                     double netoMovimiento = productoDto.Unidades * productoDto.Precio;
 
                     // Calcular descuento del movimiento
+                    // Soporta tanto porcentaje como importe fijo
                     double descuentoMovimiento = 0;
-                    if (productoDto.PorcentajeDescuento.HasValue && productoDto.PorcentajeDescuento.Value > 0)
+                    if (productoDto.DescuentoImporte.HasValue && productoDto.DescuentoImporte.Value > 0)
                     {
+                        // Descuento por importe fijo tiene prioridad
+                        descuentoMovimiento = productoDto.DescuentoImporte.Value;
+                    }
+                    else if (productoDto.PorcentajeDescuento.HasValue && productoDto.PorcentajeDescuento.Value > 0)
+                    {
+                        // Descuento por porcentaje
                         descuentoMovimiento = netoMovimiento * (productoDto.PorcentajeDescuento.Value / 100);
                     }
 
@@ -623,7 +646,6 @@ namespace back_cabs.CRM.services.Legacy
                     }
 
                     sumaNetoMovimientos += netoFinalMovimiento;
-                    sumaDescuentoMovimientos += descuentoMovimiento;
 
                     // Crear movimiento
                     var movimiento = new AdmMovimiento
@@ -698,31 +720,52 @@ namespace back_cabs.CRM.services.Legacy
                     movimientos.Add(movimiento);
                 }
 
-                // Calcular descuentos a nivel documento
+                // ═══════════════════════════════════════════════════════════════
+                // PASO 3: CALCULAR TOTALES Y DESCUENTOS
+                // IMPORTANTE: Se usa el CTOTAL proporcionado por el usuario, NO se calcula
+                // ═══════════════════════════════════════════════════════════════
+
+                _logger.LogInformation("🧮 Procesando cálculos con CTOTAL manual = {CTotal}...", dto.CTotal);
+
+                // Suma de descuentos a nivel movimiento (calculada de los movimientos ya creados)
+                double sumaDescuentoMovimientos = movimientos.Sum(m => m.CDescuento1);
+
+                // ⚠️ CAMBIO CRÍTICO: El CTOTAL es proporcionado por el usuario
+                // No se calcula autom\u00e1ticamente. El usuario define el precio final.
+                double totalDocumento = dto.CTotal;
+
+                // Calcular CNETO (Total antes de impuestos)
+                // Si se aplica IVA: CNETO = CTOTAL / (1 + PorcentajeIVA/100)
+                // Si no: CNETO = CTOTAL
+                double netoDocumento;
+                double impuestoTotal;
+
+                if (dto.AplicarIVA)
+                {
+                    // CNETO = CTOTAL / (1 + 0.16) si IVA = 16%
+                    netoDocumento = totalDocumento / (1 + (dto.PorcentajeIVA / 100));
+                    impuestoTotal = totalDocumento - netoDocumento;
+                }
+                else
+                {
+                    netoDocumento = totalDocumento;
+                    impuestoTotal = 0;
+                }
+
+                // Descuentos a nivel documento (aplicados sobre el CNETO)
                 double descuentoDoc1Valor = 0;
                 if (dto.DescuentoDoc1.HasValue && dto.DescuentoDoc1.Value > 0)
                 {
-                    descuentoDoc1Valor = sumaNetoMovimientos * (dto.DescuentoDoc1.Value / 100);
+                    descuentoDoc1Valor = netoDocumento * (dto.DescuentoDoc1.Value / 100);
                 }
 
                 double descuentoDoc2Valor = 0;
                 if (dto.DescuentoDoc2.HasValue && dto.DescuentoDoc2.Value > 0)
                 {
-                    descuentoDoc2Valor = sumaNetoMovimientos * (dto.DescuentoDoc2.Value / 100);
+                    descuentoDoc2Valor = netoDocumento * (dto.DescuentoDoc2.Value / 100);
                 }
 
-                // Calcular neto final del documento
-                double netoDocumento = sumaNetoMovimientos - descuentoDoc1Valor - descuentoDoc2Valor;
-
-                // Calcular impuesto total
-                double impuestoTotal = 0;
-                if (dto.AplicarIVA)
-                {
-                    impuestoTotal = netoDocumento * (dto.PorcentajeIVA / 100);
-                }
-
-                // Calcular total del documento
-                double totalDocumento = netoDocumento + impuestoTotal;
+                double descuentoDoc3Valor = dto.DescuentoDoc3 ?? 0;
 
                 // Calcular pendiente
                 double montoPagado = dto.MontoPagado ?? 0;
@@ -730,20 +773,20 @@ namespace back_cabs.CRM.services.Legacy
 
                 if (pendiente < 0)
                 {
-                    throw new InvalidOperationException("El monto pagado no puede ser mayor al total de la cotización");
+                    throw new InvalidOperationException("El monto pagado no puede ser mayor al total de la cotizaci\u00f3n");
                 }
 
-                _logger.LogInformation("💰 Totales calculados - Neto: {Neto}, Impuesto: {Impuesto}, Total: {Total}, Pendiente: {Pendiente}",
-                    netoDocumento, impuestoTotal, totalDocumento, pendiente);
+                _logger.LogInformation("💰 Totales finales - CTOTAL (Manual): {Total}, CNETO: {Neto}, Impuesto: {Impuesto}, Pendiente: {Pendiente}, Desc1: {Desc1}, Desc2: {Desc2}, Desc3: {Desc3}",
+                    totalDocumento, netoDocumento, impuestoTotal, pendiente, descuentoDoc1Valor, descuentoDoc2Valor, descuentoDoc3Valor);
 
                 // ═══════════════════════════════════════════════════════════════
                 // PASO 4: CREAR DOCUMENTO
                 // ═══════════════════════════════════════════════════════════════
 
-                var fechaActual = DateTime.Now;
-                var fechaVencimiento = dto.FechaVencimiento ?? fechaActual.AddDays(30);
-                var fechaProntoPago = dto.FechaProntoPago ?? fechaVencimiento;
-                var fechaEntregaRecepcion = dto.FechaEntregaRecepcion ?? fechaActual;
+                var fechaActual = DateTime.Now.Date; // Fecha sin hora como requiere AdminPAQ
+                var fechaVencimiento = dto.FechaVencimiento?.Date ?? fechaActual.AddDays(30);
+                var fechaProntoPago = dto.FechaProntoPago?.Date ?? fechaVencimiento;
+                var fechaEntregaRecepcion = dto.FechaEntregaRecepcion?.Date ?? fechaActual;
 
                 var documento = new AdmDocumento
                 {
@@ -786,7 +829,7 @@ namespace back_cabs.CRM.services.Legacy
                     CDescuentoMov = sumaDescuentoMovimientos,
                     CDescuentoDoc1 = descuentoDoc1Valor,
                     CDescuentoDoc2 = descuentoDoc2Valor,
-                    CGasto1 = 0,
+                    CGasto1 = descuentoDoc3Valor, // ✅ Usamos CGasto1 para almacenar el 3er descuento
                     CGasto2 = 0,
                     CGasto3 = 0,
                     CTotal = totalDocumento,
