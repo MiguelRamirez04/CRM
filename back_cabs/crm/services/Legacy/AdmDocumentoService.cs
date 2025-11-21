@@ -14,15 +14,18 @@ namespace back_cabs.CRM.services.Legacy
         private readonly IAdmDocumentoRepository _repository;
         private readonly LegacyCompacReadOnlyContext _context;
         private readonly ILogger<AdmDocumentoService> _logger;
+        private readonly ICacheService _cacheService;
 
         public AdmDocumentoService(
             IAdmDocumentoRepository repository,
             LegacyCompacReadOnlyContext context,
-            ILogger<AdmDocumentoService> logger)
+            ILogger<AdmDocumentoService> logger,
+            ICacheService cacheService)
         {
             _repository = repository;
             _context = context;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         /// <summary>
@@ -1012,6 +1015,259 @@ namespace back_cabs.CRM.services.Legacy
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al eliminar documento {IdDocumento}", idDocumento);
+                throw;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODOS PARA REPORTES Y ESTADÍSTICAS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene estadísticas generales de cotizaciones para dashboard
+        /// </summary>
+        public async Task<EstadisticasGeneralesDto> GetEstadisticasGeneralesAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                // Generar clave de caché
+                var cacheKey = $"dashboard:estadisticas:{fechaInicio?.ToString("yyyyMMdd") ?? "all"}:{fechaFin?.ToString("yyyyMMdd") ?? "all"}";
+
+                // Intentar obtener del caché
+                var cached = await _cacheService.GetAsync<EstadisticasGeneralesDto>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogInformation("📦 Estadísticas obtenidas desde Redis caché");
+                    return cached;
+                }
+
+                _logger.LogInformation("📊 Obteniendo estadísticas generales. Período: {FechaInicio} - {FechaFin}",
+                    fechaInicio?.ToString("yyyy-MM-dd") ?? "sin límite",
+                    fechaFin?.ToString("yyyy-MM-dd") ?? "sin límite");
+
+                var estadisticas = await _repository.GetEstadisticasGeneralesAsync(fechaInicio, fechaFin);
+
+                // Guardar en caché por 5 minutos
+                await _cacheService.SetAsync(cacheKey, estadisticas, TimeSpan.FromMinutes(5));
+
+                _logger.LogInformation("✅ Estadísticas obtenidas: {Total} cotizaciones, ${Monto:N2} total, {Clientes} clientes únicos",
+                    estadisticas.TotalCotizaciones,
+                    estadisticas.MontoTotal,
+                    estadisticas.ClientesUnicos);
+
+                return estadisticas;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener estadísticas generales");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el top N de clientes con más cotizaciones y montos
+        /// </summary>
+        public async Task<List<TopClienteDto>> GetTopClientesAsync(int top, DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                // Validar top
+                if (top < 1) top = 10;
+                if (top > 100) top = 100;
+
+                // Generar clave de caché
+                var cacheKey = $"dashboard:topclientes:{top}:{fechaInicio?.ToString("yyyyMMdd") ?? "all"}:{fechaFin?.ToString("yyyyMMdd") ?? "all"}";
+
+                // Intentar obtener del caché
+                var cached = await _cacheService.GetAsync<List<TopClienteDto>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogInformation("📦 Top clientes obtenidos desde Redis caché");
+                    return cached;
+                }
+
+                _logger.LogInformation("📊 Obteniendo top {Top} clientes. Período: {FechaInicio} - {FechaFin}",
+                    top,
+                    fechaInicio?.ToString("yyyy-MM-dd") ?? "sin límite",
+                    fechaFin?.ToString("yyyy-MM-dd") ?? "sin límite");
+
+                var topClientes = await _repository.GetTopClientesAsync(top, fechaInicio, fechaFin);
+
+                // Guardar en caché por 5 minutos
+                await _cacheService.SetAsync(cacheKey, topClientes, TimeSpan.FromMinutes(5));
+
+                _logger.LogInformation("✅ Top clientes obtenido: {Count} registros",
+                    topClientes.Count);
+
+                return topClientes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener top clientes");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene cotizaciones próximas a vencer en los próximos N días con paginación
+        /// </summary>
+        public async Task<(List<CotizacionVencimientoDto> items, int total)> GetProximasVencerAsync(int dias, int page, int pageSize)
+        {
+            try
+            {
+                // Validar días
+                if (dias < 1) dias = 7;
+                if (dias > 90) dias = 90;
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 20;
+
+                _logger.LogInformation("📊 Obteniendo cotizaciones próximas a vencer en {Dias} días (Página {Page})", dias, page);
+
+                var resultado = await _repository.GetProximasVencerAsync(dias, page, pageSize);
+
+                _logger.LogInformation("✅ {Count} cotizaciones próximas a vencer obtenidas", resultado.items.Count);
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener cotizaciones próximas a vencer");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene rendimiento por agente de ventas
+        /// </summary>
+        public async Task<List<RendimientoAgenteDto>> GetRendimientoAgentesAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                // Validar fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    throw new ArgumentException("La fecha inicial no puede ser mayor a la fecha final");
+                }
+
+                // Generar clave de caché
+                var cacheKey = $"dashboard:agentes:{fechaInicio?.ToString("yyyyMMdd") ?? "all"}:{fechaFin?.ToString("yyyyMMdd") ?? "all"}";
+
+                // Intentar obtener del caché
+                var cached = await _cacheService.GetAsync<List<RendimientoAgenteDto>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogInformation("📦 Rendimiento de agentes obtenido desde Redis caché");
+                    return cached;
+                }
+
+                _logger.LogInformation("📊 Obteniendo rendimiento de agentes desde {FechaInicio} hasta {FechaFin}",
+                    fechaInicio?.ToShortDateString() ?? "inicio", fechaFin?.ToShortDateString() ?? "fin");
+
+                var rendimiento = await _repository.GetRendimientoAgentesAsync(fechaInicio, fechaFin);
+
+                // Guardar en caché por 5 minutos
+                await _cacheService.SetAsync(cacheKey, rendimiento, TimeSpan.FromMinutes(5));
+
+                _logger.LogInformation("✅ Rendimiento de {Count} agentes obtenido", rendimiento.Count);
+
+                return rendimiento;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener rendimiento de agentes");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene productos más cotizados por frecuencia y volumen
+        /// </summary>
+        public async Task<List<ProductoCotizadoDto>> GetProductosMasCotizadosAsync(int top, DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                // Validar parámetros
+                if (top < 1) top = 10;
+                if (top > 100) top = 100;
+
+                // Validar fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    throw new ArgumentException("La fecha inicial no puede ser mayor a la fecha final");
+                }
+
+                // Si no se especifican fechas, NO usar defaults - usar null para obtener todo
+                // Esto permite al frontend decidir el rango
+
+                // Generar clave de caché
+                var cacheKey = $"dashboard:productos:{top}:{fechaInicio?.ToString("yyyyMMdd") ?? "all"}:{fechaFin?.ToString("yyyyMMdd") ?? "all"}";
+
+                // Intentar obtener del caché
+                var cached = await _cacheService.GetAsync<List<ProductoCotizadoDto>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogInformation("📦 Productos obtenidos desde Redis caché");
+                    return cached;
+                }
+
+                _logger.LogInformation("📊 Obteniendo top {Top} productos más cotizados desde {FechaInicio} hasta {FechaFin}",
+                    top, fechaInicio?.ToShortDateString() ?? "inicio", fechaFin?.ToShortDateString() ?? "fin");
+
+                var productos = await _repository.GetProductosMasCotizadosAsync(top, fechaInicio, fechaFin);
+
+                // Guardar en caché por 5 minutos
+                await _cacheService.SetAsync(cacheKey, productos, TimeSpan.FromMinutes(5));
+
+                _logger.LogInformation("✅ {Count} productos más cotizados obtenidos", productos.Count);
+
+                return productos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener productos más cotizados");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene distribución de cotizaciones por rangos de monto
+        /// </summary>
+        public async Task<List<CotizacionPorRangoDto>> GetCotizacionesPorRangoMontoAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                // Validar fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    throw new ArgumentException("La fecha inicial no puede ser mayor a la fecha final");
+                }
+
+                // Generar clave de caché
+                var cacheKey = $"dashboard:rangos:{fechaInicio?.ToString("yyyyMMdd") ?? "all"}:{fechaFin?.ToString("yyyyMMdd") ?? "all"}";
+
+                // Intentar obtener del caché
+                var cached = await _cacheService.GetAsync<List<CotizacionPorRangoDto>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogInformation("📦 Rangos de monto obtenidos desde Redis caché");
+                    return cached;
+                }
+
+                _logger.LogInformation("📊 Obteniendo distribución de cotizaciones por rangos de monto desde {FechaInicio} hasta {FechaFin}",
+                    fechaInicio?.ToShortDateString() ?? "inicio", fechaFin?.ToShortDateString() ?? "fin");
+
+                var rangos = await _repository.GetCotizacionesPorRangoMontoAsync(fechaInicio, fechaFin);
+
+                // Guardar en caché por 5 minutos
+                await _cacheService.SetAsync(cacheKey, rangos, TimeSpan.FromMinutes(5));
+
+                _logger.LogInformation("✅ Distribución por rangos obtenida: {Count} rangos analizados", rangos.Count);
+
+                return rangos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener cotizaciones por rango de monto");
                 throw;
             }
         }

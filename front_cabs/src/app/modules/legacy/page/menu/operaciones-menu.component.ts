@@ -22,10 +22,10 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router'; //
            Documentos
         </a>
 
-        <a routerLink="./movimientos"
+        <a routerLink="./metricas-documentos"
            routerLinkActive="!text-blue-600 !border-blue-600"
            class="py-3 px-1 text-gray-600 font-medium whitespace-nowrap border-b-2 border-transparent transition-colors cursor-pointer hover:text-gray-900 hover:border-gray-300">
-           Movimientos
+           Metricas
         </a>
 
         <a routerLink="./movimientos-serie"

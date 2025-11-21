@@ -78,6 +78,10 @@ export const legacyRoutes: Routes = [
             loadComponent: () => import('./page/documentos/documento-create/documento-create.component').then(m => m.DocumentoCreateComponent) 
           },
           { 
+            path: 'metricas-documentos', 
+            loadComponent: () => import('./page/metricas-documentos/metricas-documentos.component').then(m => m.MetricasDocumentosComponent) 
+          },
+          { 
             path: 'movimientos', 
             loadComponent: () => import('./page/movimientos/movimientos.component').then(m => m.MovimientosComponent) 
           },

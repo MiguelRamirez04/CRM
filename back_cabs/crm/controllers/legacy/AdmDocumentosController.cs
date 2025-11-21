@@ -722,6 +722,537 @@ namespace back_cabs.CRM.controllers.Legacy
                 });
             }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ENDPOINTS PARA REPORTES Y ESTADÍSTICAS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene estadísticas generales de cotizaciones para dashboard
+        /// </summary>
+        /// <remarks>
+        /// Retorna métricas clave como:
+        /// - Total de cotizaciones en el período
+        /// - Montos totales, promedios, máximos y mínimos
+        /// - Cotizaciones activas vs canceladas
+        /// - Clientes únicos y productos únicos
+        /// 
+        /// Parámetros opcionales:
+        /// - fechaInicio: Filtrar desde esta fecha (formato: yyyy-MM-dd)
+        /// - fechaFin: Filtrar hasta esta fecha (formato: yyyy-MM-dd)
+        /// </remarks>
+        [HttpGet("estadisticas")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetEstadisticas([FromQuery] DateTime? fechaInicio, [FromQuery] DateTime? fechaFin)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/estadisticas - Período: {FechaInicio} - {FechaFin}",
+                    fechaInicio?.ToString("yyyy-MM-dd") ?? "sin límite",
+                    fechaFin?.ToString("yyyy-MM-dd") ?? "sin límite");
+
+                // Validación de fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "La fecha inicial no puede ser mayor que la fecha final"
+                    });
+                }
+
+                var estadisticas = await _service.GetEstadisticasGeneralesAsync(fechaInicio, fechaFin);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Estadísticas obtenidas en {Ms}ms: {Total} cotizaciones, ${Monto:N2} total",
+                    sw.ElapsedMilliseconds,
+                    estadisticas.TotalCotizaciones,
+                    estadisticas.MontoTotal);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = estadisticas,
+                    filtros = new
+                    {
+                        fechaInicio,
+                        fechaFin
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener estadísticas después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener estadísticas",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el ranking de top clientes por cotizaciones y montos
+        /// </summary>
+        /// <remarks>
+        /// Retorna los clientes más activos ordenados por monto total, incluyendo:
+        /// - Datos del cliente (ID, código, razón social, RFC)
+        /// - Total de cotizaciones y montos
+        /// - Promedio de monto por cotización
+        /// - Cotizaciones activas
+        /// - Fecha de última cotización
+        /// - Posición en el ranking
+        /// 
+        /// Parámetros:
+        /// - top: Número de clientes a retornar (default: 10, max: 100)
+        /// - fechaInicio: Filtrar desde esta fecha (opcional)
+        /// - fechaFin: Filtrar hasta esta fecha (opcional)
+        /// </remarks>
+        [HttpGet("top-clientes")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetTopClientes(
+            [FromQuery] int top = 10,
+            [FromQuery] DateTime? fechaInicio = null,
+            [FromQuery] DateTime? fechaFin = null)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/top-clientes - Top: {Top}, Período: {FechaInicio} - {FechaFin}",
+                    top,
+                    fechaInicio?.ToString("yyyy-MM-dd") ?? "sin límite",
+                    fechaFin?.ToString("yyyy-MM-dd") ?? "sin límite");
+
+                // Validación de parámetros
+                if (top < 1)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'top' debe ser mayor a 0"
+                    });
+                }
+
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "La fecha inicial no puede ser mayor que la fecha final"
+                    });
+                }
+
+                var topClientes = await _service.GetTopClientesAsync(top, fechaInicio, fechaFin);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Top clientes obtenido en {Ms}ms: {Count} registros",
+                    sw.ElapsedMilliseconds,
+                    topClientes.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = topClientes,
+                    filtros = new
+                    {
+                        top,
+                        fechaInicio,
+                        fechaFin
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener top clientes después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener top clientes",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene cotizaciones próximas a vencer (alertas)
+        /// </summary>
+        /// <remarks>
+        /// Retorna cotizaciones activas que vencen en los próximos N días, ordenadas por urgencia.
+        /// Incluye nivel de urgencia (Crítico, Alto, Medio, Bajo) basado en días restantes.
+        ///
+        /// Parámetros:
+        /// - dias: Número de días para considerar como "próximas a vencer" (default: 7, max: 90)
+        ///
+        /// Niveles de urgencia:
+        /// - Crítico: 1 día o menos
+        /// - Alto: 2-3 días
+        /// - Medio: 4-7 días
+        /// - Bajo: 8+ días
+        /// </remarks>
+        [HttpGet("proximas-vencer")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetProximasVencer(
+            [FromQuery] int dias = 30,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/proximas-vencer - Días: {Dias}, Página: {Page}", dias, page);
+
+                // Validación de parámetros
+                if (dias < 1)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'dias' debe ser mayor a 0"
+                    });
+                }
+
+                if (dias > 90)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'dias' no puede ser mayor a 90"
+                    });
+                }
+
+                if (page < 1)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'page' debe ser mayor a 0"
+                    });
+                }
+
+                if (pageSize < 1 || pageSize > 100)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'pageSize' debe estar entre 1 y 100"
+                    });
+                }
+
+                var (cotizaciones, totalRegistros) = await _service.GetProximasVencerAsync(dias, page, pageSize);
+
+                var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Cotizaciones próximas a vencer obtenidas en {Ms}ms: {Count} registros de {Total}",
+                    sw.ElapsedMilliseconds,
+                    cotizaciones.Count,
+                    totalRegistros);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = cotizaciones,
+                    pagination = new
+                    {
+                        currentPage = page,
+                        pageSize,
+                        totalPages = totalPaginas,
+                        totalRecords = totalRegistros,
+                        hasNextPage = page < totalPaginas,
+                        hasPreviousPage = page > 1
+                    },
+                    filtros = new
+                    {
+                        dias
+                    },
+                    resumen = new
+                    {
+                        total = totalRegistros,
+                        criticos = cotizaciones.Count(c => c.NivelUrgencia == "Crítico"),
+                        altos = cotizaciones.Count(c => c.NivelUrgencia == "Alto"),
+                        medios = cotizaciones.Count(c => c.NivelUrgencia == "Medio"),
+                        bajos = cotizaciones.Count(c => c.NivelUrgencia == "Bajo")
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener cotizaciones próximas a vencer después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener cotizaciones próximas a vencer",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene rendimiento por agente de ventas
+        /// </summary>
+        /// <remarks>
+        /// Retorna métricas de rendimiento para cada agente de ventas incluyendo:
+        /// - Total de cotizaciones realizadas
+        /// - Monto total y promedio de cotizaciones
+        /// - Número de cotizaciones ganadas y pendientes
+        /// - Tasa de conversión (cotizaciones ganadas / total)
+        ///
+        /// Parámetros opcionales:
+        /// - fechaInicio: Fecha inicial del rango (formato: YYYY-MM-DD)
+        /// - fechaFin: Fecha final del rango (formato: YYYY-MM-DD)
+        /// Si no se especifican fechas, se usa el último mes por defecto.
+        /// </remarks>
+        [HttpGet("rendimiento-agentes")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetRendimientoAgentes([FromQuery] DateTime? fechaInicio, [FromQuery] DateTime? fechaFin)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/rendimiento-agentes - Inicio: {FechaInicio}, Fin: {FechaFin}",
+                    fechaInicio?.ToShortDateString() ?? "Sin especificar",
+                    fechaFin?.ToShortDateString() ?? "Sin especificar");
+
+                // Validación de fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "La fecha inicial no puede ser mayor a la fecha final"
+                    });
+                }
+
+                var rendimiento = await _service.GetRendimientoAgentesAsync(fechaInicio, fechaFin);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Rendimiento de agentes obtenido en {Ms}ms: {Count} agentes",
+                    sw.ElapsedMilliseconds,
+                    rendimiento.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = rendimiento,
+                    filtros = new
+                    {
+                        fechaInicio = fechaInicio?.ToString("yyyy-MM-dd"),
+                        fechaFin = fechaFin?.ToString("yyyy-MM-dd")
+                    },
+                    resumen = new
+                    {
+                        totalAgentes = rendimiento.Count,
+                        totalCotizaciones = rendimiento.Sum(r => r.TotalCotizaciones),
+                        montoTotalGeneral = rendimiento.Sum(r => r.MontoTotal),
+                        promedioConversion = rendimiento.Any() ? rendimiento.Average(r => r.TasaConversion) : 0,
+                        mejorAgente = rendimiento.OrderByDescending(r => r.MontoTotal).FirstOrDefault()?.NombreAgente
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener rendimiento de agentes después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener rendimiento de agentes",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene productos más cotizados por frecuencia y volumen
+        /// </summary>
+        /// <remarks>
+        /// Retorna el ranking de productos más demandados en cotizaciones, ordenados por:
+        /// - Número total de cotizaciones que incluyen el producto
+        /// - Monto total cotizado del producto
+        ///
+        /// Incluye métricas como:
+        /// - Cantidad total cotizada
+        /// - Precio promedio por unidad
+        /// - Número de clientes únicos
+        ///
+        /// Parámetros opcionales:
+        /// - top: Número de productos a retornar (1-100, default: 10)
+        /// - fechaInicio: Fecha inicial del rango (formato: YYYY-MM-DD)
+        /// - fechaFin: Fecha final del rango (formato: YYYY-MM-DD)
+        /// Si no se especifican fechas, se usa el último mes por defecto.
+        /// </remarks>
+        [HttpGet("productos-mas-cotizados")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetProductosMasCotizados([FromQuery] int top = 10, [FromQuery] DateTime? fechaInicio = null, [FromQuery] DateTime? fechaFin = null)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/productos-mas-cotizados - Top: {Top}, Inicio: {FechaInicio}, Fin: {FechaFin}",
+                    top, fechaInicio?.ToShortDateString() ?? "Sin especificar",
+                    fechaFin?.ToShortDateString() ?? "Sin especificar");
+
+                // Validación de parámetros
+                if (top < 1 || top > 100)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El parámetro 'top' debe estar entre 1 y 100"
+                    });
+                }
+
+                // Validación de fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "La fecha inicial no puede ser mayor a la fecha final"
+                    });
+                }
+
+                var productos = await _service.GetProductosMasCotizadosAsync(top, fechaInicio, fechaFin);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Productos más cotizados obtenidos en {Ms}ms: {Count} productos",
+                    sw.ElapsedMilliseconds,
+                    productos.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = productos,
+                    filtros = new
+                    {
+                        top,
+                        fechaInicio = fechaInicio?.ToString("yyyy-MM-dd"),
+                        fechaFin = fechaFin?.ToString("yyyy-MM-dd")
+                    },
+                    resumen = new
+                    {
+                        totalProductos = productos.Count,
+                        montoTotalGeneral = productos.Sum(p => p.MontoTotal),
+                        cantidadTotalGeneral = productos.Sum(p => p.CantidadTotal),
+                        clientesUnicosTotal = productos.Sum(p => p.ClientesUnicos)
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener productos más cotizados después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener productos más cotizados",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene distribución de cotizaciones por rangos de monto
+        /// </summary>
+        /// <remarks>
+        /// Retorna estadísticas de cotizaciones agrupadas por rangos de monto predefinidos:
+        /// - $0 - $1,000
+        /// - $1,000 - $5,000
+        /// - $5,000 - $10,000
+        /// - $10,000 - $25,000
+        /// - $25,000 - $50,000
+        /// - $50,000+
+        ///
+        /// Incluye métricas como total de cotizaciones, montos acumulados,
+        /// promedios y distribución por estatus.
+        ///
+        /// Parámetros opcionales:
+        /// - fechaInicio: Fecha inicial del rango (formato: YYYY-MM-DD)
+        /// - fechaFin: Fecha final del rango (formato: YYYY-MM-DD)
+        /// Si no se especifican fechas, se usa el último mes por defecto.
+        /// </remarks>
+        [HttpGet("cotizaciones-por-rango-monto")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetCotizacionesPorRangoMonto([FromQuery] DateTime? fechaInicio = null, [FromQuery] DateTime? fechaFin = null)
+        {
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                _logger.LogInformation("📊 GET /api/AdmDocumentos/cotizaciones-por-rango-monto - Inicio: {FechaInicio}, Fin: {FechaFin}",
+                    fechaInicio?.ToShortDateString() ?? "Sin especificar",
+                    fechaFin?.ToShortDateString() ?? "Sin especificar");
+
+                // Validación de fechas
+                if (fechaInicio.HasValue && fechaFin.HasValue && fechaInicio.Value > fechaFin.Value)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "La fecha inicial no puede ser mayor a la fecha final"
+                    });
+                }
+
+                var rangos = await _service.GetCotizacionesPorRangoMontoAsync(fechaInicio, fechaFin);
+
+                sw.Stop();
+                _logger.LogInformation("✅ Cotizaciones por rango de monto obtenidas en {Ms}ms: {Count} rangos",
+                    sw.ElapsedMilliseconds,
+                    rangos.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = rangos,
+                    filtros = new
+                    {
+                        fechaInicio = fechaInicio?.ToString("yyyy-MM-dd"),
+                        fechaFin = fechaFin?.ToString("yyyy-MM-dd")
+                    },
+                    resumen = new
+                    {
+                        totalRangos = rangos.Count,
+                        totalCotizaciones = rangos.Sum(r => r.TotalCotizaciones),
+                        montoTotalGeneral = rangos.Sum(r => r.MontoTotal),
+                        rangoMasFrecuente = rangos.OrderByDescending(r => r.TotalCotizaciones).FirstOrDefault()?.RangoMonto,
+                        rangoMayorMonto = rangos.OrderByDescending(r => r.MontoTotal).FirstOrDefault()?.RangoMonto
+                    },
+                    executionTime = $"{sw.ElapsedMilliseconds}ms"
+                });
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+                _logger.LogError(ex, "❌ Error al obtener cotizaciones por rango de monto después de {Ms}ms", sw.ElapsedMilliseconds);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al obtener cotizaciones por rango de monto",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }
 

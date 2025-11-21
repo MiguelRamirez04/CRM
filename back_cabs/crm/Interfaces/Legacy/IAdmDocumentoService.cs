@@ -53,5 +53,60 @@ namespace back_cabs.CRM.Interfaces.Legacy
         /// Elimina una cotización (solo si está cancelada)
         /// </summary>
         Task DeleteAsync(int idDocumento);
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODOS PARA REPORTES Y ESTADÍSTICAS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene estadísticas generales de cotizaciones para dashboard
+        /// </summary>
+        /// <param name="fechaInicio">Fecha inicial del rango (opcional)</param>
+        /// <param name="fechaFin">Fecha final del rango (opcional)</param>
+        /// <returns>Estadísticas agregadas del período</returns>
+        Task<EstadisticasGeneralesDto> GetEstadisticasGeneralesAsync(DateTime? fechaInicio, DateTime? fechaFin);
+
+        /// <summary>
+        /// Obtiene el top N de clientes con más cotizaciones y montos
+        /// </summary>
+        /// <param name="top">Número de clientes a retornar</param>
+        /// <param name="fechaInicio">Fecha inicial del rango (opcional)</param>
+        /// <param name="fechaFin">Fecha final del rango (opcional)</param>
+        /// <returns>Lista ordenada de top clientes</returns>
+        Task<List<TopClienteDto>> GetTopClientesAsync(int top, DateTime? fechaInicio, DateTime? fechaFin);
+
+        /// <summary>
+        /// Obtiene cotizaciones próximas a vencer en los próximos N días con paginación
+        /// </summary>
+        /// <param name="dias">Número de días para considerar como "próximas a vencer"</param>
+        /// <param name="page">Número de página</param>
+        /// <param name="pageSize">Registros por página</param>
+        /// <returns>Lista de cotizaciones próximas a vencer y total de registros</returns>
+        Task<(List<CotizacionVencimientoDto> items, int total)> GetProximasVencerAsync(int dias, int page, int pageSize);
+
+        /// <summary>
+        /// Obtiene rendimiento por agente de ventas
+        /// </summary>
+        /// <param name="fechaInicio">Fecha inicial del rango (opcional)</param>
+        /// <param name="fechaFin">Fecha final del rango (opcional)</param>
+        /// <returns>Lista de agentes con métricas de rendimiento</returns>
+        Task<List<RendimientoAgenteDto>> GetRendimientoAgentesAsync(DateTime? fechaInicio, DateTime? fechaFin);
+
+        /// <summary>
+        /// Obtiene productos más cotizados por frecuencia y volumen
+        /// </summary>
+        /// <param name="top">Número de productos a retornar (top N)</param>
+        /// <param name="fechaInicio">Fecha inicial del rango (opcional)</param>
+        /// <param name="fechaFin">Fecha final del rango (opcional)</param>
+        /// <returns>Lista de productos más cotizados</returns>
+        Task<List<ProductoCotizadoDto>> GetProductosMasCotizadosAsync(int top, DateTime? fechaInicio, DateTime? fechaFin);
+
+        /// <summary>
+        /// Obtiene distribución de cotizaciones por rangos de monto
+        /// </summary>
+        /// <param name="fechaInicio">Fecha inicial del rango (opcional)</param>
+        /// <param name="fechaFin">Fecha final del rango (opcional)</param>
+        /// <returns>Lista de rangos con estadísticas de cotizaciones</returns>
+        Task<List<CotizacionPorRangoDto>> GetCotizacionesPorRangoMontoAsync(DateTime? fechaInicio, DateTime? fechaFin);
     }
 }

@@ -1,0 +1,422 @@
+<div class="container mx-auto p-6 bg-gray-50 min-h-screen">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Dashboard de Cotizaciones</h1>
+    <div class="text-sm text-gray-500 mt-2 md:mt-0">
+      <span class="bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200">
+        Legacy System
+      </span>
+    </div>
+  </div>
+
+  <!-- Filtros de Fecha -->
+  <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-end">
+      <div class="flex-1">
+        <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+        <input 
+          type="date" 
+          id="fechaInicio"
+          [(ngModel)]="fechaInicio"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+      </div>
+      <div class="flex-1">
+        <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+        <input 
+          type="date" 
+          id="fechaFin"
+          [(ngModel)]="fechaFin"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+      </div>
+      <button 
+        (click)="applyFilters()"
+        class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+      >
+        Aplicar Filtros
+      </button>
+      <button 
+        (click)="clearFilters()"
+        class="px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors shadow-sm"
+      >
+        Limpiar Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex flex-wrap gap-2 mb-8 border-b border-gray-200 pb-2 overflow-x-auto">
+    <button 
+      (click)="setActiveTab('general')"
+      [class.bg-blue-600]="activeTab === 'general'"
+      [class.text-white]="activeTab === 'general'"
+      [class.bg-white]="activeTab !== 'general'"
+      [class.text-gray-600]="activeTab !== 'general'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      General
+    </button>
+    <button 
+      (click)="setActiveTab('clientes')"
+      [class.bg-blue-600]="activeTab === 'clientes'"
+      [class.text-white]="activeTab === 'clientes'"
+      [class.bg-white]="activeTab !== 'clientes'"
+      [class.text-gray-600]="activeTab !== 'clientes'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      Top Clientes
+    </button>
+    <button 
+      (click)="setActiveTab('agentes')"
+      [class.bg-blue-600]="activeTab === 'agentes'"
+      [class.text-white]="activeTab === 'agentes'"
+      [class.bg-white]="activeTab !== 'agentes'"
+      [class.text-gray-600]="activeTab !== 'agentes'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      Rendimiento Agentes
+    </button>
+    <button 
+      (click)="setActiveTab('productos')"
+      [class.bg-blue-600]="activeTab === 'productos'"
+      [class.text-white]="activeTab === 'productos'"
+      [class.bg-white]="activeTab !== 'productos'"
+      [class.text-gray-600]="activeTab !== 'productos'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      Productos
+    </button>
+    <button 
+      (click)="setActiveTab('rangos')"
+      [class.bg-blue-600]="activeTab === 'rangos'"
+      [class.text-white]="activeTab === 'rangos'"
+      [class.bg-white]="activeTab !== 'rangos'"
+      [class.text-gray-600]="activeTab !== 'rangos'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      Rangos de Monto
+    </button>
+    <button 
+      (click)="setActiveTab('vencimientos')"
+      [class.bg-blue-600]="activeTab === 'vencimientos'"
+      [class.text-white]="activeTab === 'vencimientos'"
+      [class.bg-white]="activeTab !== 'vencimientos'"
+      [class.text-gray-600]="activeTab !== 'vencimientos'"
+      class="px-4 py-2 rounded-lg font-medium transition-colors shadow-sm hover:bg-blue-500 hover:text-white capitalize whitespace-nowrap"
+    >
+      Próximas a Vencer
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+    <strong class="font-bold">Error!</strong>
+    <span class="block sm:inline"> {{ error }}</span>
+  </div>
+
+  <!-- Content Area -->
+  <div *ngIf="!loading && !error">
+    
+    <!-- General Tab -->
+    <div *ngIf="activeTab === 'general'" class="space-y-6">
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" *ngIf="estadisticasGenerales">
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 transition-transform hover:scale-105">
+          <div class="text-gray-500 text-sm uppercase font-semibold">Total Cotizaciones</div>
+          <div class="text-3xl font-bold text-gray-800 mt-2">{{ estadisticasGenerales.totalCotizaciones | number }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 transition-transform hover:scale-105">
+          <div class="text-gray-500 text-sm uppercase font-semibold">Monto Total</div>
+          <div class="text-3xl font-bold text-gray-800 mt-2">{{ estadisticasGenerales.montoTotal | currency:'USD' }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500 transition-transform hover:scale-105">
+          <div class="text-gray-500 text-sm uppercase font-semibold">Promedio</div>
+          <div class="text-3xl font-bold text-gray-800 mt-2">{{ estadisticasGenerales.montoPromedio | currency:'USD' }}</div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-yellow-500 transition-transform hover:scale-105">
+          <div class="text-gray-500 text-sm uppercase font-semibold">Tasa Conversión (Est.)</div>
+          <div class="text-3xl font-bold text-gray-800 mt-2">
+            {{ (estadisticasGenerales.totalCotizaciones > 0 ? (estadisticasGenerales.cotizacionesActivas / estadisticasGenerales.totalCotizaciones) : 0) | percent:'1.1-2' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl shadow-md">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">Estado de Cotizaciones</h3>
+          <div class="relative h-64 w-full flex justify-center">
+            <canvas id="generalStatusChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center text-center">
+           <div class="p-4 bg-blue-50 rounded-full mb-4">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+             </svg>
+           </div>
+           <h3 class="text-xl font-bold text-gray-800 mb-2">Análisis de Datos</h3>
+           <p class="text-gray-600 max-w-md">
+             Selecciona las pestañas superiores para ver detalles específicos sobre clientes, agentes, productos y vencimientos.
+           </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clientes Tab -->
+    <div *ngIf="activeTab === 'clientes'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Tabla de Datos (Izquierda) -->
+      <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Detalle Top Clientes</h2>
+        <div class="overflow-y-auto max-h-[500px]">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let cliente of topClientes; let i = index" class="hover:bg-gray-50">
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500 font-bold">{{ i + 1 }}</td>
+                <td class="px-3 py-2 text-sm text-gray-900 truncate max-w-[150px]" title="{{ cliente.razonSocial }}">
+                  {{ cliente.razonSocial || 'Desconocido' }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                  {{ cliente.montoTotal | currency:'USD':'symbol':'1.0-0' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico (Derecha) -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Visualización Gráfica</h2>
+        <div class="h-[500px] w-full">
+          <canvas id="topClientesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agentes Tab -->
+    <div *ngIf="activeTab === 'agentes'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Tabla de Datos -->
+      <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Detalle Agentes</h2>
+        <div class="overflow-y-auto max-h-[500px]">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agente</th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Activas</th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cancel</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let agente of rendimientoAgentes" class="hover:bg-gray-50">
+                <td class="px-3 py-2 text-sm text-gray-900 truncate max-w-[120px]" title="{{ agente.nombreAgente }}">
+                  {{ agente.nombreAgente }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-green-600 text-center font-bold">
+                  {{ agente.cotizacionesActivas }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-red-600 text-center font-bold">
+                  {{ agente.cotizacionesCanceladas }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Rendimiento (Activas vs Canceladas)</h2>
+        <div class="h-[500px] w-full">
+          <canvas id="rendimientoAgentesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Productos Tab -->
+    <div *ngIf="activeTab === 'productos'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Tabla de Datos -->
+      <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Top Productos</h2>
+        <div class="overflow-y-auto max-h-[500px]">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Freq.</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let prod of productosMasCotizados" class="hover:bg-gray-50 cursor-pointer transition-colors">
+                <td class="px-3 py-2 text-sm text-gray-900 truncate max-w-[120px]" title="{{ prod.nombreProducto }}">
+                  <span class="font-medium text-blue-600 hover:text-blue-800">
+                    {{ prod.nombreProducto || 'Desconocido' }}
+                  </span>
+                  <div class="text-xs text-gray-500">{{ prod.codigoProducto }}</div>
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center font-bold">
+                  {{ prod.totalCotizaciones }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {{ prod.montoTotal | currency:'USD':'symbol':'1.0-0' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Frecuencia de Cotización</h2>
+        <div class="h-[500px] w-full">
+          <canvas id="productosChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rangos Tab -->
+    <div *ngIf="activeTab === 'rangos'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Tabla de Datos -->
+      <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md overflow-hidden">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Distribución por Monto</h2>
+        <div class="overflow-y-auto max-h-[500px]">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rango</th>
+                <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cant.</th>
+                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let rango of cotizacionesPorRango" class="hover:bg-gray-50">
+                <td class="px-3 py-2 text-sm text-gray-900 font-medium">
+                  {{ rango.rangoMonto }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 text-center font-bold">
+                  {{ rango.totalCotizaciones }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                  {{ (rango.totalCotizaciones / (estadisticasGenerales?.totalCotizaciones || 1)) | percent:'1.1-1' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+        <h2 class="text-xl font-bold mb-4 text-gray-700">Distribución Visual</h2>
+        <div class="h-[500px] w-full flex justify-center">
+          <canvas id="rangosChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vencimientos Tab -->
+    <div *ngIf="activeTab === 'vencimientos'" class="bg-white p-6 rounded-xl shadow-md overflow-hidden">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-700">Próximas a Vencer (30 días)</h2>
+        <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Prioridad Alta</span>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Folio</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Emisión</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimiento</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let item of proximasVencer" class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                #{{ item.folio }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                {{ item.razonSocial }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ item.fechaCreacion | date:'dd/MM/yyyy' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ item.fechaVencimiento | date:'dd/MM/yyyy' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
+                {{ item.montoTotal | currency:'USD' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class.bg-red-100]="item.diasRestantes <= 5" 
+                      [class.text-red-800]="item.diasRestantes <= 5"
+                      [class.bg-yellow-100]="item.diasRestantes > 5 && item.diasRestantes <= 15"
+                      [class.text-yellow-800]="item.diasRestantes > 5 && item.diasRestantes <= 15"
+                      [class.bg-green-100]="item.diasRestantes > 15"
+                      [class.text-green-800]="item.diasRestantes > 15"
+                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                  {{ item.diasRestantes }} días restantes
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="proximasVencer.length === 0" class="text-center py-12 bg-gray-50 rounded-lg mt-4">
+          <p class="text-gray-500 text-lg">No hay cotizaciones próximas a vencer en los siguientes 30 días.</p>
+        </div>
+
+        <!-- Paginación -->
+        <div *ngIf="proximasVencerTotal > proximasVencerPageSize" class="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
+          <div class="text-sm text-gray-700">
+            Mostrando {{ ((proximasVencerPage - 1) * proximasVencerPageSize) + 1 }} - 
+            {{ Math.min(proximasVencerPage * proximasVencerPageSize, proximasVencerTotal) }} 
+            de {{ proximasVencerTotal }} registros
+          </div>
+          <div class="flex gap-2">
+            <button 
+              (click)="previousProximasVencerPage()"
+              [disabled]="proximasVencerPage === 1"
+              [class.opacity-50]="proximasVencerPage === 1"
+              [class.cursor-not-allowed]="proximasVencerPage === 1"
+              class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:hover:bg-white transition-colors"
+            >
+              Anterior
+            </button>
+            <span class="px-3 py-1 text-sm bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-medium">
+              Página {{ proximasVencerPage }} de {{ totalProximasVencerPages }}
+            </span>
+            <button 
+              (click)="nextProximasVencerPage()"
+              [disabled]="proximasVencerPage === totalProximasVencerPages"
+              [class.opacity-50]="proximasVencerPage === totalProximasVencerPages"
+              [class.cursor-not-allowed]="proximasVencerPage === totalProximasVencerPages"
+              class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:hover:bg-white transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,7 +1,9 @@
+using System.Data;
 using back_cabs.CRM.contexts;
 using back_cabs.CRM.DTOs.Legacy;
 using back_cabs.CRM.Interfaces.Legacy;
 using back_cabs.CRM.models.legacy;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace back_cabs.CRM.repositories.Legacy
@@ -552,6 +554,475 @@ namespace back_cabs.CRM.repositories.Legacy
             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, "❌ Error eliminando documento {IdDocumento}", idDocumento);
+                throw;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MÉTODOS PARA REPORTES Y ESTADÍSTICAS
+        // ═══════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Obtiene estadísticas generales de cotizaciones para dashboard
+        /// </summary>
+        public async Task<EstadisticasGeneralesDto> GetEstadisticasGeneralesAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                var connection = _readContext.Database.GetDbConnection();
+                if (connection.State != ConnectionState.Open)
+                    await connection.OpenAsync();
+
+                var estadisticas = new EstadisticasGeneralesDto
+                {
+                    FechaInicio = fechaInicio,
+                    FechaFin = fechaFin
+                };
+
+                // 1. Estadísticas de Documentos
+                // Usamos Raw SQL para evitar problemas de traducción de EF Core 8 con bases de datos legacy
+                // y para asegurar el casting correcto de tipos float/double a decimal
+                var sqlDocs = @"
+                    SELECT 
+                        COUNT(*) as TotalCotizaciones,
+                        CAST(COALESCE(SUM(CTOTAL), 0) AS DECIMAL(18,2)) as MontoTotal,
+                        CAST(COALESCE(AVG(CTOTAL), 0) AS DECIMAL(18,2)) as MontoPromedio,
+                        CAST(COALESCE(MAX(CTOTAL), 0) AS DECIMAL(18,2)) as MontoMaximo,
+                        CAST(COALESCE(MIN(CTOTAL), 0) AS DECIMAL(18,2)) as MontoMinimo,
+                        SUM(CASE WHEN CCANCELADO = 0 THEN 1 ELSE 0 END) as CotizacionesActivas,
+                        SUM(CASE WHEN CCANCELADO = 1 THEN 1 ELSE 0 END) as CotizacionesCanceladas,
+                        COUNT(DISTINCT CIDCLIENTEPROVEEDOR) as ClientesUnicos
+                    FROM admDocumentos
+                    WHERE CSERIEDOCUMENTO = 'CA'
+                    AND (@FechaInicio IS NULL OR CFECHA >= @FechaInicio)
+                    AND (@FechaFin IS NULL OR CFECHA <= @FechaFin)";
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sqlDocs;
+                    
+                    var pInicio = command.CreateParameter();
+                    pInicio.ParameterName = "@FechaInicio";
+                    pInicio.Value = fechaInicio.HasValue ? (object)fechaInicio.Value : DBNull.Value;
+                    command.Parameters.Add(pInicio);
+
+                    var pFin = command.CreateParameter();
+                    pFin.ParameterName = "@FechaFin";
+                    pFin.Value = fechaFin.HasValue ? (object)fechaFin.Value : DBNull.Value;
+                    command.Parameters.Add(pFin);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            estadisticas.TotalCotizaciones = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                            estadisticas.MontoTotal = reader.IsDBNull(1) ? 0 : reader.GetDecimal(1);
+                            estadisticas.MontoPromedio = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2);
+                            estadisticas.MontoMaximo = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3);
+                            estadisticas.MontoMinimo = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4);
+                            estadisticas.CotizacionesActivas = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
+                            estadisticas.CotizacionesCanceladas = reader.IsDBNull(6) ? 0 : reader.GetInt32(6);
+                            estadisticas.ClientesUnicos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7);
+                        }
+                    }
+                }
+
+                // 2. Productos Únicos (Join con Movimientos)
+                var sqlProds = @"
+                    SELECT COUNT(DISTINCT m.CIDPRODUCTO)
+                    FROM admMovimientos m
+                    INNER JOIN admDocumentos d ON m.CIDDOCUMENTO = d.CIDDOCUMENTO
+                    WHERE d.CSERIEDOCUMENTO = 'CA'
+                    AND (@FechaInicio IS NULL OR d.CFECHA >= @FechaInicio)
+                    AND (@FechaFin IS NULL OR d.CFECHA <= @FechaFin)
+                    AND m.CIDPRODUCTO > 0";
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sqlProds;
+                    
+                    var pInicio = command.CreateParameter();
+                    pInicio.ParameterName = "@FechaInicio";
+                    pInicio.Value = fechaInicio.HasValue ? (object)fechaInicio.Value : DBNull.Value;
+                    command.Parameters.Add(pInicio);
+
+                    var pFin = command.CreateParameter();
+                    pFin.ParameterName = "@FechaFin";
+                    pFin.Value = fechaFin.HasValue ? (object)fechaFin.Value : DBNull.Value;
+                    command.Parameters.Add(pFin);
+
+                    var result = await command.ExecuteScalarAsync();
+                    estadisticas.ProductosUnicos = result != null && result != DBNull.Value ? Convert.ToInt32(result) : 0;
+                }
+
+                _logger.LogInformation("✅ Estadísticas generales calculadas: {Total} cotizaciones, {Monto} total",
+                    estadisticas.TotalCotizaciones, estadisticas.MontoTotal);
+
+                return estadisticas;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo estadísticas generales");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el top N de clientes con más cotizaciones y montos
+        /// </summary>
+        public async Task<List<TopClienteDto>> GetTopClientesAsync(int top, DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                var query = _readContext.AdmDocumentos
+                    .AsNoTracking()
+                    .AsSplitQuery() // Optimización: divide queries complejas
+                    .Where(d => d.CSerieDocumento == "CA"); // Solo cotizaciones
+
+                // Aplicar filtros de fecha
+                if (fechaInicio.HasValue)
+                {
+                    query = query.Where(d => d.CFecha >= fechaInicio.Value);
+                }
+
+                if (fechaFin.HasValue)
+                {
+                    query = query.Where(d => d.CFecha <= fechaFin.Value);
+                }
+
+                // Agrupar por cliente y obtener estadísticas
+                // OPTIMIZACIÓN: proyección temprana para reducir datos transferidos
+                var topClientes = await query
+                    .Join(_readContext.AdmClientes.AsNoTracking(),
+                        d => d.CIdClienteProveedor,
+                        c => c.CIdClienteProveedor,
+                        (d, c) => new { 
+                            ClienteId = d.CIdClienteProveedor, 
+                            CodigoCliente = c.CCodigoCliente,
+                            RazonSocial = c.CRazonSocial,
+                            Rfc = c.CRfc,
+                            Total = d.CTotal,
+                            Cancelado = d.CCancelado,
+                            Fecha = d.CFecha
+                        })
+                    .GroupBy(dc => new
+                    {
+                        dc.ClienteId,
+                        dc.CodigoCliente,
+                        dc.RazonSocial,
+                        dc.Rfc
+                    })
+                    .Select(g => new
+                    {
+                        IdCliente = g.Key.ClienteId,
+                        CodigoCliente = g.Key.CodigoCliente,
+                        RazonSocial = g.Key.RazonSocial,
+                        Rfc = g.Key.Rfc,
+                        TotalCotizaciones = g.Count(),
+                        MontoTotal = g.Sum(dc => dc.Total),
+                        CotizacionesActivas = g.Count(dc => dc.Cancelado == 0),
+                        UltimaCotizacion = g.Max(dc => dc.Fecha)
+                    })
+                    .OrderByDescending(c => c.MontoTotal)
+                    .Take(top)
+                    .ToListAsync();
+
+                // Convertir a DTO con ranking
+                var resultado = topClientes.Select((cliente, index) => new TopClienteDto
+                {
+                    IdCliente = cliente.IdCliente,
+                    CodigoCliente = cliente.CodigoCliente ?? string.Empty,
+                    RazonSocial = cliente.RazonSocial ?? string.Empty,
+                    Rfc = cliente.Rfc ?? string.Empty,
+                    TotalCotizaciones = cliente.TotalCotizaciones,
+                    MontoTotal = (decimal)cliente.MontoTotal,
+                    MontoPromedio = cliente.TotalCotizaciones > 0 
+                        ? (decimal)cliente.MontoTotal / cliente.TotalCotizaciones 
+                        : 0,
+                    CotizacionesActivas = cliente.CotizacionesActivas,
+                    UltimaCotizacion = cliente.UltimaCotizacion,
+                    Ranking = index + 1
+                }).ToList();
+
+                _logger.LogInformation("✅ Top {Top} clientes obtenidos: {Count} registros",
+                    top, resultado.Count);
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo top clientes");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene cotizaciones próximas a vencer en los próximos N días con paginación
+        /// </summary>
+        public async Task<(List<CotizacionVencimientoDto> items, int total)> GetProximasVencerAsync(int dias, int page, int pageSize)
+        {
+            try
+            {
+                var fechaActual = DateTime.Now.Date;
+                var fechaLimite = fechaActual.AddDays(dias);
+
+                var query = _readContext.AdmDocumentos
+                    .AsNoTracking()
+                    .Where(d => d.CSerieDocumento == "CA" && // Solo cotizaciones
+                               d.CCancelado == 0 && // Solo activas
+                               d.CFechaVencimiento >= fechaActual && // No vencidas
+                               d.CFechaVencimiento <= fechaLimite); // Próximas a vencer
+
+                var total = await query.CountAsync();
+
+                var cotizaciones = await query
+                    .OrderBy(d => d.CFechaVencimiento) // Más urgentes primero
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var resultado = cotizaciones.Select(d =>
+                {
+                    var diasRestantes = (d.CFechaVencimiento.Date - fechaActual).Days;
+                    var nivelUrgencia = diasRestantes switch
+                    {
+                        <= 1 => "Crítico",
+                        <= 3 => "Alto",
+                        <= 7 => "Medio",
+                        _ => "Bajo"
+                    };
+
+                    return new CotizacionVencimientoDto
+                    {
+                        IdDocumento = d.CIdDocumento,
+                        SerieDocumento = d.CSerieDocumento ?? string.Empty,
+                        Folio = d.CFolio,
+                        RazonSocial = d.CRazonSocial ?? string.Empty,
+                        MontoTotal = (decimal)d.CTotal,
+                        FechaVencimiento = d.CFechaVencimiento,
+                        DiasRestantes = diasRestantes,
+                        NivelUrgencia = nivelUrgencia,
+                        FechaCreacion = d.CFecha,
+                        Estatus = "Activa"
+                    };
+                }).ToList();
+
+                _logger.LogInformation("✅ {Count} cotizaciones próximas a vencer en {Dias} días obtenidas (Página {Page})",
+                    resultado.Count, dias, page);
+
+                return (resultado, total);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo cotizaciones próximas a vencer");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene rendimiento por agente de ventas
+        /// </summary>
+        public async Task<List<RendimientoAgenteDto>> GetRendimientoAgentesAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                var query = from doc in _readContext.AdmDocumentos.AsNoTracking()
+                           join agente in _readContext.AdmAgentes.AsNoTracking() on doc.CIdAgente equals agente.CIdAgente into agenteJoin
+                           from agente in agenteJoin.DefaultIfEmpty()
+                           where doc.CSerieDocumento == "CA" // Solo cotizaciones
+                                 && (!fechaInicio.HasValue || doc.CFecha >= fechaInicio.Value)
+                                 && (!fechaFin.HasValue || doc.CFecha <= fechaFin.Value)
+                           group doc by new { agente.CIdAgente, agente.CNombreAgente } into g
+                           select new RendimientoAgenteDto
+                           {
+                               IdAgente = (int?)g.Key.CIdAgente ?? 0,
+                               NombreAgente = g.Key.CNombreAgente ?? "Sin Asignar",
+                               TotalCotizaciones = g.Count(),
+                               MontoTotal = (decimal)g.Sum(d => d.CTotal),
+                               MontoPromedio = g.Count() > 0 ? (decimal)g.Average(d => d.CTotal) : 0,
+                               CotizacionesActivas = g.Count(d => d.CCancelado == 0),
+                               CotizacionesCanceladas = g.Count(d => d.CCancelado == 1),
+                               TasaConversion = g.Count() > 0 ? (decimal)g.Count(d => d.CCancelado == 0) / g.Count() * 100 : 0
+                           };
+
+                var resultado = await query.OrderByDescending(r => r.MontoTotal).ToListAsync();
+
+                _logger.LogInformation("✅ Rendimiento de {Count} agentes obtenido", resultado.Count);
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo rendimiento de agentes");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene productos más cotizados por frecuencia y volumen
+        /// </summary>
+        public async Task<List<ProductoCotizadoDto>> GetProductosMasCotizadosAsync(int top, DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo productos más cotizados: top={Top}, fechas={Inicio}-{Fin}", 
+                    top, fechaInicio?.ToString("yyyy-MM-dd") ?? "sin límite", fechaFin?.ToString("yyyy-MM-dd") ?? "sin límite");
+
+                // Usar RAW SQL para evitar OPENJSON con '$' que causa error en SQL Server viejo
+                // NOTA: Casteamos a DECIMAL(18,2) porque las columnas originales son float/double
+                var sql = @"
+                    SELECT TOP (@Top)
+                        m.CIDPRODUCTO AS IdProducto,
+                        p.CCODIGOPRODUCTO AS CodigoProducto,
+                        p.CNOMBREPRODUCTO AS NombreProducto,
+                        COUNT(DISTINCT m.CIDDOCUMENTO) AS TotalCotizaciones,
+                        CAST(COALESCE(SUM(m.CUNIDADES), 0) AS DECIMAL(18,2)) AS CantidadTotal,
+                        CAST(COALESCE(SUM(m.CTOTAL), 0) AS DECIMAL(18,2)) AS MontoTotal,
+                        CAST(CASE 
+                            WHEN SUM(m.CUNIDADES) > 0 THEN SUM(m.CTOTAL) / SUM(m.CUNIDADES)
+                            ELSE 0
+                        END AS DECIMAL(18,2)) AS PrecioPromedio,
+                        COUNT(DISTINCT d.CIDCLIENTEPROVEEDOR) AS ClientesUnicos
+                    FROM dbo.admMovimientos m
+                    INNER JOIN dbo.admDocumentos d ON m.CIDDOCUMENTO = d.CIDDOCUMENTO
+                    LEFT JOIN dbo.admProductos p ON m.CIDPRODUCTO = p.CIDPRODUCTO
+                    WHERE d.CSERIEDOCUMENTO = 'CA' 
+                        AND m.CIDPRODUCTO > 0";
+
+                var parameters = new List<Microsoft.Data.SqlClient.SqlParameter>
+                {
+                    new("@Top", top)
+                };
+
+                if (fechaInicio.HasValue)
+                {
+                    sql += " AND d.CFECHA >= @FechaInicio";
+                    parameters.Add(new("@FechaInicio", fechaInicio.Value));
+                }
+
+                if (fechaFin.HasValue)
+                {
+                    sql += " AND d.CFECHA <= @FechaFin";
+                    parameters.Add(new("@FechaFin", fechaFin.Value));
+                }
+
+                sql += @"
+                    GROUP BY m.CIDPRODUCTO, p.CCODIGOPRODUCTO, p.CNOMBREPRODUCTO
+                    ORDER BY COUNT(DISTINCT m.CIDDOCUMENTO) DESC, SUM(m.CTOTAL) DESC";
+
+                // Ejecutar query raw
+                var connection = _readContext.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                command.Parameters.AddRange(parameters.ToArray());
+
+                var resultado = new List<ProductoCotizadoDto>();
+                using var reader = await command.ExecuteReaderAsync();
+                
+                int ranking = 1;
+                while (await reader.ReadAsync())
+                {
+                    resultado.Add(new ProductoCotizadoDto
+                    {
+                        IdProducto = reader.GetInt32(0),
+                        CodigoProducto = reader.IsDBNull(1) ? "SIN CODIGO" : reader.GetString(1),
+                        NombreProducto = reader.IsDBNull(2) ? "SIN NOMBRE" : reader.GetString(2),
+                        TotalCotizaciones = reader.GetInt32(3),
+                        CantidadTotal = reader.GetDecimal(4),
+                        MontoTotal = reader.GetDecimal(5),
+                        PrecioPromedio = reader.GetDecimal(6),
+                        ClientesUnicos = reader.GetInt32(7),
+                        Ranking = ranking++
+                    });
+                }
+
+                _logger.LogInformation("✅ {Count} productos más cotizados obtenidos con RAW SQL", resultado.Count);
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo productos más cotizados");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene distribución de cotizaciones por rangos de monto
+        /// </summary>
+        public async Task<List<CotizacionPorRangoDto>> GetCotizacionesPorRangoMontoAsync(DateTime? fechaInicio, DateTime? fechaFin)
+        {
+            try
+            {
+                var query = _readContext.AdmDocumentos
+                    .AsNoTracking()
+                    .Where(d => d.CSerieDocumento == "CA"); // Solo cotizaciones
+
+                // Aplicar filtros de fecha
+                if (fechaInicio.HasValue)
+                {
+                    query = query.Where(d => d.CFecha >= fechaInicio.Value);
+                }
+
+                if (fechaFin.HasValue)
+                {
+                    query = query.Where(d => d.CFecha <= fechaFin.Value);
+                }
+
+                var cotizaciones = await query.ToListAsync();
+
+                // Definir rangos de monto predefinidos
+                var rangos = new (decimal Min, decimal? Max, string Label)[]
+                {
+                    (0m, 1000m, "$0 - $1,000"),
+                    (1000m, 5000m, "$1,000 - $5,000"),
+                    (5000m, 10000m, "$5,000 - $10,000"),
+                    (10000m, 25000m, "$10,000 - $25,000"),
+                    (25000m, 50000m, "$25,000 - $50,000"),
+                    (50000m, null, "$50,000+")
+                };
+
+                var resultado = new List<CotizacionPorRangoDto>();
+                var totalCotizaciones = cotizaciones.Count;
+                var montoTotalGeneral = cotizaciones.Sum(d => d.CTotal);
+
+                foreach (var rango in rangos)
+                {
+                    var cotizacionesEnRango = cotizaciones.Where(d =>
+                        (decimal)d.CTotal >= rango.Min &&
+                        (!rango.Max.HasValue || (decimal)d.CTotal < rango.Max.Value));
+
+                    var listaCotizacionesRango = cotizacionesEnRango.ToList();
+
+                    if (listaCotizacionesRango.Any())
+                    {
+                        var dto = new CotizacionPorRangoDto
+                        {
+                            RangoMonto = rango.Label,
+                            MontoMinimo = rango.Min,
+                            MontoMaximo = rango.Max,
+                            TotalCotizaciones = listaCotizacionesRango.Count,
+                            MontoTotal = (decimal)listaCotizacionesRango.Sum(d => d.CTotal),
+                            MontoPromedio = (decimal)listaCotizacionesRango.Average(d => d.CTotal),
+                            CotizacionesActivas = listaCotizacionesRango.Count(d => d.CCancelado == 0),
+                            CotizacionesCanceladas = listaCotizacionesRango.Count(d => d.CCancelado == 1),
+                            PorcentajeDelTotal = totalCotizaciones > 0 ? (decimal)listaCotizacionesRango.Count / totalCotizaciones * 100 : 0
+                        };
+
+                        resultado.Add(dto);
+                    }
+                }
+
+                _logger.LogInformation("✅ Distribución por rangos de monto obtenida: {Count} rangos, {Total} cotizaciones totales",
+                    resultado.Count, totalCotizaciones);
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo cotizaciones por rango de monto");
                 throw;
             }
         }

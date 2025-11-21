@@ -1,0 +1,101 @@
+### =====================================================
+### PRUEBAS DE APIS DE REPORTES DE COTIZACIONES
+### =====================================================
+### API 1: Estadísticas Generales
+### API 2: Top Clientes
+### =====================================================
+
+### Variables globales
+@baseUrl = http://localhost:5176/api
+@token = {{login.response.body.token}}
+
+### =====================================================
+### 1. LOGIN PARA AUTENTICACIÓN
+### =====================================================
+# @name login
+POST {{baseUrl}}/Auth/login
+Content-Type: application/json
+
+{
+  "usuario": "Adrian",
+  "password": "Adrian_Administrador_123"
+}
+
+### =====================================================
+### 2. ESTADÍSTICAS GENERALES (Sin filtros de fecha)
+### =====================================================
+# @name estadisticas_sin_filtro
+GET {{baseUrl}}/AdmDocumentos/estadisticas
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 3. ESTADÍSTICAS GENERALES (Con rango de fechas)
+### =====================================================
+# @name estadisticas_con_fechas
+GET {{baseUrl}}/AdmDocumentos/estadisticas?fechaInicio=2024-01-01&fechaFin=2025-12-31
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 4. ESTADÍSTICAS GENERALES (Último mes)
+### =====================================================
+# @name estadisticas_ultimo_mes
+GET {{baseUrl}}/AdmDocumentos/estadisticas?fechaInicio=2025-10-21&fechaFin=2025-11-21
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 5. TOP 10 CLIENTES (Sin filtros)
+### =====================================================
+# @name top_clientes_10
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=10
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 6. TOP 5 CLIENTES (Sin filtros)
+### =====================================================
+# @name top_clientes_5
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=5
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 7. TOP 20 CLIENTES (Con rango de fechas)
+### =====================================================
+# @name top_clientes_con_fechas
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=20&fechaInicio=2024-01-01&fechaFin=2025-12-31
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 8. TOP 10 CLIENTES (Último mes)
+### =====================================================
+# @name top_clientes_ultimo_mes
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=10&fechaInicio=2025-10-21&fechaFin=2025-11-21
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 9. PRUEBA CON TOP MUY GRANDE
+### =====================================================
+# @name top_clientes_limite
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=200
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 10. PRUEBA CON FECHAS INVÁLIDAS (Debe retornar error)
+### =====================================================
+# @name estadisticas_fechas_invalidas
+GET {{baseUrl}}/AdmDocumentos/estadisticas?fechaInicio=2025-12-31&fechaFin=2025-01-01
+Authorization: Bearer {{token}}
+
+### =====================================================
+### 11. PRUEBA CON TOP INVÁLIDO (Debe retornar error)
+### =====================================================
+# @name top_clientes_invalido
+GET {{baseUrl}}/AdmDocumentos/top-clientes?top=0
+Authorization: Bearer {{token}}
+
+### =====================================================
+### NOTAS:
+### - Las APIs retornan métricas agregadas de cotizaciones (Serie "CA")
+### - Estadísticas incluye: total cotizaciones, montos, clientes únicos, productos únicos
+### - Top Clientes incluye: ranking por monto total, número de cotizaciones, última actividad
+### - Validaciones automáticas de parámetros (fechas, top)
+### - Performance optimizada con consultas agregadas en BD
+### =====================================================
