@@ -44,7 +44,7 @@ namespace back_cabs.CRM.hubs
         /// <summary>
         /// Se ejecuta cuando un cliente se desconecta del hub
         /// </summary>
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             if (exception != null)
             {

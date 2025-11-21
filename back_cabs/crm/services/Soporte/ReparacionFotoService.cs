@@ -141,7 +141,10 @@ namespace back_cabs.CRM.services.Soporte
             var fotos = await _repository.GetByReparacionIdWithDetailsAsync(reparacionId);
 
             // 2. Mapear (Lógica de Servicio)
-            var result = fotos.Select(foto => MapToResponseDto(foto, foto.Documento)).ToList();
+            var result = fotos
+                .Where(foto => foto.Documento != null)
+                .Select(foto => MapToResponseDto(foto, foto.Documento!))
+                .ToList();
             
             _logger.LogInformation("Se encontraron {Count} fotos", result.Count);
             return result;

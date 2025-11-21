@@ -171,7 +171,7 @@ namespace back_cabs.Tests.UnitTests.Services
         {
             // Arrange
             int reparacionId = 1;
-            var dto = new ReparacionFotoUploadRequestDto { Archivo = null }; // Archivo nulo
+            var dto = new ReparacionFotoUploadRequestDto { Archivo = default! }; // Archivo nulo
             _mockRepository.Setup(r => r.ReparacionExistsAsync(reparacionId)).ReturnsAsync(true);
 
             // Act

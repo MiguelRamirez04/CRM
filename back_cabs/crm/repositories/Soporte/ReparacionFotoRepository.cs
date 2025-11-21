@@ -50,7 +50,7 @@ namespace back_cabs.CRM.Repositories.Soporte
                 // Esta consulta incluye todo lo necesario para el mapeo del DTO
                 return await _readContext.Set<ReparacionFoto>()
                     .Include(f => f.Documento)
-                        .ThenInclude(d => d.CreadoPorUsuario)
+                        .ThenInclude(d => d!.CreadoPorUsuario)
                     .Where(f => f.ReparacionId == reparacionId)
                     .OrderBy(f => f.CreadoEn)
                     .AsNoTracking()

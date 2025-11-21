@@ -70,7 +70,7 @@ namespace back_cabs.Tests.UnitTests.Services
             var fotosDbSet = new Mock<DbSet<EvaluacionFoto>>();
             _mockReadContext.Setup(c => c.EvaluacionesFotos).Returns(fotosDbSet.Object);
             _mockReadContext.Setup(c => c.EvaluacionesFotos.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<EvaluacionFoto, bool>>>(), default))
-                .ReturnsAsync((EvaluacionFoto)null);
+                .ReturnsAsync(default(EvaluacionFoto)!);
 
             var fotosDbSetWrite = new Mock<DbSet<EvaluacionFoto>>();
             _mockWriteContext.Setup(c => c.EvaluacionesFotos).Returns(fotosDbSetWrite.Object);
@@ -218,7 +218,7 @@ namespace back_cabs.Tests.UnitTests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Id.Should().Be(fotoId);
+            result!.Id.Should().Be(fotoId);
             result.NombreArchivo.Should().Be("foto3.jpg");
         }
 
@@ -251,7 +251,7 @@ namespace back_cabs.Tests.UnitTests.Services
             var fotosDbSet = new Mock<DbSet<EvaluacionFoto>>();
             _mockWriteContext.Setup(c => c.EvaluacionesFotos).Returns(fotosDbSet.Object);
             _mockWriteContext.Setup(c => c.EvaluacionesFotos.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<EvaluacionFoto, bool>>>(), default))
-                .ReturnsAsync((EvaluacionFoto)null);
+                .ReturnsAsync(default(EvaluacionFoto)!);
 
             // Act
             var result = await _service.DeleteFotoAsync(fotoId, usuarioId);

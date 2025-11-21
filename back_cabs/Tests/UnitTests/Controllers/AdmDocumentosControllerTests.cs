@@ -107,7 +107,7 @@ public class AdmDocumentosControllerTests
         var response = statusCodeResult.Value;
         response.Should().NotBeNull();
 
-        var responseData = response.GetType().GetProperty("data")?.GetValue(response);
+        var responseData = response!.GetType().GetProperty("data")?.GetValue(response);
         responseData.Should().NotBeNull();
         responseData.Should().BeEquivalentTo(expectedResponse);
 
@@ -171,7 +171,7 @@ public class AdmDocumentosControllerTests
         statusCodeResult.StatusCode.Should().Be(201);
 
         var response = statusCodeResult.Value;
-        var data = response.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
+        var data = response!.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
 
         data.Should().NotBeNull();
         data!.CantidadProductos.Should().Be(3);
@@ -243,7 +243,7 @@ public class AdmDocumentosControllerTests
         statusCodeResult.StatusCode.Should().Be(201);
 
         var response = statusCodeResult.Value;
-        var data = response.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
+        var data = response!.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
 
         data.Should().NotBeNull();
         data!.Neto.Should().Be(855.0);
@@ -294,7 +294,7 @@ public class AdmDocumentosControllerTests
         // Assert
         var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
         var response = statusCodeResult.Value;
-        var data = response.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
+        var data = response!.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
 
         data.Should().NotBeNull();
         data!.Total.Should().Be(1160.0);
@@ -343,7 +343,7 @@ public class AdmDocumentosControllerTests
         // Assert
         var statusCodeResult = result.Should().BeOfType<ObjectResult>().Subject;
         var response = statusCodeResult.Value;
-        var data = response.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
+        var data = response!.GetType().GetProperty("data")?.GetValue(response) as AdmCotizacionCreateResponseDto;
 
         data.Should().NotBeNull();
         data!.Impuesto.Should().Be(0.0);

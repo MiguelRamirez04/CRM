@@ -124,7 +124,7 @@ public class CotizacionService
 
             // Mapear cambios
             //Datos Principales
-            existente.Folio = (double)request.Folio;
+            existente.Folio = request.Folio.HasValue ? (double)request.Folio.Value : existente.Folio;
             existente.FechaVencimiento = request.FechaVencimiento;
             existente.FechaEntregaRecepcion = request.FechaEntregaRecepcion;
             
