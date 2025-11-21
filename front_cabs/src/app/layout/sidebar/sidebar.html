@@ -9,8 +9,11 @@
 
   <!-- Logo -->
   <div class="sidebar-logo">
-    <img *ngIf="!isCollapsed" src="/logoCompleto.png" alt="Logo de la empresa" class="logo-full" />
-    <img *ngIf="isCollapsed" src="/logo.png" alt="Logo de la empresa" class="logo-small" />
+    @if (!isCollapsed) {
+      <img src="/logoCompleto.png" alt="Logo de la empresa" class="logo-full" />
+    } @else {
+      <img src="/logo.png" alt="Logo de la empresa" class="logo-small" />
+    }
   </div>
 
   <!-- Lista principal de navegación -->

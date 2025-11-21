@@ -43,8 +43,8 @@ export class Sidebar implements OnInit {
   isCollapsed = false;
   mostrarBandejaPerfil = false;
 
-  user$: Observable<User | null>;
-  currentUserRole$: Observable<string | null>;
+  user$!: Observable<User | null>;
+  currentUserRole$!: Observable<string | null>;
 
   // Navegación completa con control de acceso por roles
   private readonly allNavItems: NavItem[] = [
@@ -180,7 +180,7 @@ export class Sidebar implements OnInit {
     private authService: SecureAuthService,
     private router: Router
   ) {
-    this.user$ = this.authService.currentUser$;
+    this.user$ = this.authService.currentUser$ as Observable<User | null>;
     this.currentUserRole$ = this.user$.pipe(
       map(user => user?.role || null)
     );
@@ -242,8 +242,13 @@ export class Sidebar implements OnInit {
    * Verifica si algún hijo está activo
    */
   hasActiveChild(item: NavItem): boolean {
-    if (!item.children) return false;
-    return item.children.some(child => this.isActive(child.link));
+    if (!item.children || item.children.length === 0) return false;
+    return item.children.some(child => {
+      if (child.link) {
+        return this.isActive(child.link);
+      }
+      return false;
+    });
   }
 
   /**
