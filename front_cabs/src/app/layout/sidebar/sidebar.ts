@@ -51,8 +51,8 @@ export class Sidebar implements OnInit {
     {
       label: 'Resumen',
       icon: 'resumen',
-      link: '/dashboard',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
+      link: '/administracion',
+      roles: ['ADMINISTRACION']
     },
     {
       label: 'Evaluaciones',
@@ -71,8 +71,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Reparaciones',
       icon: 'reparaciones',
-      link: '/reparaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE'],
+      link: '/modulesShared/reparaciones', 
       children: [
         {
           label: 'Detalles de Reparación',
@@ -91,7 +90,7 @@ export class Sidebar implements OnInit {
         {
           label: 'Ejecuciones de Orden',
           icon: 'ordenes',
-              link: '/recepcion/ordenes-trabajo/ejecuciones',
+          link: '/recepcion/ordenes-trabajo/ejecuciones',
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
         }
       ]
@@ -114,17 +113,10 @@ export class Sidebar implements OnInit {
       link: '/modulesShared/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
-    
-    {
-      label: 'Asignaciones',
-      icon: 'ordenes',
-      link: '/soporte/asignaciones',
-      roles: ['ADMINISTRACION', 'SOPORTE']
-    },
     {
       label: 'Vehículos',
       icon: 'vehiculos',
-      link: '/soporte/vehiculos', 
+      link: '/modulesShared/vehiculos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
     {
@@ -225,8 +217,9 @@ export class Sidebar implements OnInit {
    */
   isActive(link?: string): boolean {
     if (!link) return false;
-    return this.router.url === link || this.router.url.startsWith(link + '/');
+    return this.router.url === link;
   }
+
 
   /**
    * Verifica si algún hijo está activo

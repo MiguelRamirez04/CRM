@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.contenedor-paginacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.info-registros {
+  color: var(--texto-body-secundario, #666666);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.controles-paginacion {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.boton-pagina {
+  padding: 8px 14px;
+  border: 1px solid var(--color-borde, #D9D9D9);
+  background: var(--color-blanco, #ffffff);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 40px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.boton-pagina:hover:not(:disabled):not(.puntos) {
+  background: var(--fondo-principal, #F4F4F5);
+  border-color: var(--elemento-seleccionado, #1D4ED8);
+}
+
+.boton-pagina.activo {
+  background: var(--color-primario, #34428F);
+  color: var(--color-blanco, #ffffff);
+  border-color: var(--color-primario, #34428F);
+  font-weight: 600;
+}
+
+.boton-pagina.puntos {
+  border: none;
+  cursor: default;
+  background: transparent;
+}
+
+.boton-pagina.puntos:hover {
+  background: transparent;
+}
+
+.boton-pagina:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.boton-navegacion {
+  font-weight: 500;
+  min-width: 80px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .contenedor-paginacion {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .info-registros {
+    text-align: center;
+  }
+
+  .controles-paginacion {
+    justify-content: center;
+  }
+
+  .boton-pagina {
+    padding: 10px 12px;
+    min-width: 36px;
+    font-size: 13px;
+  }
+
+  .boton-navegacion {
+    min-width: 70px;
+  }
+}

@@ -20,6 +20,7 @@
 .sidebar-container.collapsed {
   max-width: 88px;
   width: 88px;
+  box-shadow: none;
 }
 
 /* Botón toggle */
@@ -69,18 +70,18 @@
 
 /* Navegación principal */
 .sidebar-nav-container {
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 1rem;
   flex: 1;
   overflow-y: auto;
 }
 
 .sidebar-nav-secondary {
-  padding: 0 1.5rem 1rem;
+  padding: 1rem 1.5rem 1rem;
 }
 
 /* Sección title */
 .nav-section-title {
-  padding: 1rem 1rem 0.5rem;
+  padding: 0 1rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: #9ca3af;
@@ -125,7 +126,7 @@
 .nav-link.active,
 .nav-link.nav-link-active {
   background-color: #eff2ff;
-  color: #2753ff;
+  color: #4F46E5;
   font-weight: 600;
 }
 
@@ -136,9 +137,16 @@
   padding: 0;
 }
 
+/* Espacio para la flecha cuando el sidebar está expandido */
 .nav-link.has-children {
   padding-right: 2.5rem;
 }
+
+/* Ajuste cuando el sidebar está colapsado */
+.nav-link.has-children.collapsed {
+  padding-right: 0; /* o 0 si prefieres eliminarlo completamente */
+}
+
 
 /* Icon wrapper */
 .nav-icon-wrapper {
@@ -151,7 +159,8 @@
 }
 
 .nav-icon-wrapper.active {
-  color: #2753ff;
+  color: #4F46E5;
+  
 }
 
 .nav-icon {
@@ -180,7 +189,7 @@
 }
 
 .nav-label.active {
-  color: #2753ff;
+  color: #4F46E5;
 }
 
 /* Submenu toggle button */
@@ -200,7 +209,7 @@
 }
 
 .submenu-toggle:hover {
-  color: #2753ff;
+  color: #4F46E5;
 }
 
 .submenu-toggle.expanded svg {
@@ -248,7 +257,7 @@
 }
 
 .submenu-link.active .submenu-indicator {
-  background-color: #2753ff;
+  background-color: #4F46E5;
 }
 
 /* Divider */

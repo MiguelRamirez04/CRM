@@ -31,6 +31,9 @@
 }
 
 :root {
+  /* Color de la lineas separadora y contorno  */
+    ---color-linea: rgb(217,217,217);
+
   /* Tamaño de texto */
     --font-text-xxxs: 8px;
     --font-text-xs: 12px;
@@ -53,6 +56,48 @@
     --color-text-tabnavegation: #000000;
     --color-text-enlace: #1447E6;
     --color-text-primario: #FFFFFF;
+
+ /* COLORES molecula de TABLA BASE*/
+    --color-primario: #34428F;
+    --elemento-seleccionado: #1D4ED8;
+    --fondo-principal: #FAFAFA;
+    --color-blanco: #ffffff;
+    --texto-body: #333333;
+    --texto-body-secundario: #666666;
+    --color-borde: #D9D9D9;
+    --fondo-tarjeta: #F3F4F6;
+    
+
+  /* COLORES etiquetas de ESTATUS*/
+    --color-sin-seguimiento-bg: #BBF7D0;
+    --color-sin-seguimiento-text: #166534;
+
+    --color-requiere-seguimiento-bg: #FED7AA;
+    --color-requiere-seguimiento-text: #9A3412;
+
+    --color-nuevo-bg: #BAE6FD;
+    --color-nuevo-text: #075985;
+
+    --color-revision-bg: #FEF08A;
+    --color-revision-text: #854D0E;
+
+    --color-rechazado-bg: #FECACA;
+    --color-rechazado-text: #991B1B;
+
+    --color-enviada-bg: #C7D2FE;
+    --color-enviada-text: #3730A3;
+
+    --color-aprobado-bg: #BBF7D0;
+    --color-aprobado-text: #166534;
+
+    --color-venta-realizada-bg: #BBF7D0;
+    --color-venta-realizada-text: #166534;
+
+    --color-sin-bg: #f3f4f6;
+    --color-sin-text: #4b5563;
+
+  /* 💠 Personalizado */
+  --color-personalizado-borde: #aaa;
 
   /* Espaciado */
     --padding--xs: 4px;

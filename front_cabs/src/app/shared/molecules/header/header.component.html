@@ -1,0 +1,23 @@
+<div class="flex items-center justify-between w-full">
+    <!-- Titulo y label -->
+    <div class=" flex gap-1 flex-col">
+        <app-ui-tipografia
+            variante="h2"
+            texto={{titulo}}
+            >
+            </app-ui-tipografia>
+        @if (visualizarDescripcion) {
+            <app-ui-tipografia
+                variante="p"
+                texto={{descripcion}}
+            >
+            </app-ui-tipografia>
+        }
+    </div>
+    @if(visualizarButton){
+        <app-ui-boton
+            texto = {{buttonLabel}}
+        ></app-ui-boton>
+
+    }
+</div>
