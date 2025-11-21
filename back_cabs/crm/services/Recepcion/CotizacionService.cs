@@ -3,6 +3,7 @@ using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Sales;
 using Microsoft.Extensions.Logging;
+using back_cabs.CRM.Core.Exceptions;
 
 namespace back_cabs.CRM.services.Recepcion;
 
@@ -61,23 +62,23 @@ public class CotizacionService
     // }
 
     /// <summary>
-    /// Obtiene cotizaciones por estado.
-    /// ✅ Usa Repository Pattern para consultas filtradas
+    /// Obtiene cotizaciones por estado (campo y valor específicos).
     /// </summary>
-    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorEstadoAsync(string estado)
+    /// <param name="campo">Campo a filtrar: "cancelado", "afectado", "impreso", "usaCliente"</param>
+    /// <param name="valor">Valor del campo: 0 o 1</param>
+    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorEstadoAsync(string campo, int valor)
     {
-        var cotizaciones = await _cotizacionRepository.GetByEstadoAsync(estado);
+        var cotizaciones = await _cotizacionRepository.GetByEstadoAsync(campo, valor);
 
         return cotizaciones.Select(MapToResponseDto);
     }
 
     /// <summary>
-    /// Obtiene cotizaciones por cliente.
-    /// ✅ Usa Repository Pattern para consultas filtradas
+    /// Obtiene cotizaciones por ID de cliente.
     /// </summary>
-    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorClienteAsync(string cliente)
+    public async Task<IEnumerable<CotizacionResponseDto>> ObtenerPorClienteIdAsync(int clienteId)
     {
-        var cotizaciones = await _cotizacionRepository.GetByClienteAsync(cliente);
+        var cotizaciones = await _cotizacionRepository.GetByClienteIdAsync(clienteId);
 
         return cotizaciones.Select(MapToResponseDto);
     }
@@ -86,19 +87,39 @@ public class CotizacionService
     /// Crea una nueva cotización.
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// </summary>
-    public async Task<CotizacionResponseDto> CrearAsync(CotizacionRequestDto request)
+    public async Task<CotizacionResponseDto> CrearAsync(CotizacionCreateRequestDto request)
     {
         try
         {
+<<<<<<< HEAD
             // Mapear desde el DTO de solicitud a la entidad del dominio
             var cotizacion = MapFromRequestDto(request);
             cotizacion.Fecha = DateTime.UtcNow; // El servidor establece la fecha de creación
+=======
+            var cotizacion = MapFromRequestDto(request);
+            cotizacion.CreadoEn = DateTime.UtcNow;
+            
+            // ✅ Generar folio automático si no se proporciona
+            if (string.IsNullOrWhiteSpace(cotizacion.Folio))
+            {
+                cotizacion.Folio = await GenerarFolioAutomaticoAsync();
+            }
+>>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
             _logger.LogInformation("Cotización creada con ID {Id}", creada.Id);
 
             return MapToResponseDto(creada);
+        }
+        catch (ForeignKeyNotFoundException)
+        {
+            // Re-lanzar las excepciones personalizadas sin envolverlas
+            throw;
+        }
+        catch (DuplicateRecordException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -111,7 +132,7 @@ public class CotizacionService
     /// Actualiza una cotización existente.
     /// ✅ Usa Repository Pattern para escritura transaccional
     /// </summary>
-    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionRequestDto request)
+    public async Task<CotizacionResponseDto?> ActualizarAsync(int id, CotizacionCreateRequestDto request)
     {
         try
         {
@@ -123,6 +144,7 @@ public class CotizacionService
             }
 
             // Mapear cambios
+<<<<<<< HEAD
             //Datos Principales
             existente.Folio = request.Folio.HasValue ? (double)request.Folio.Value : existente.Folio;
             existente.FechaVencimiento = request.FechaVencimiento;
@@ -136,6 +158,28 @@ public class CotizacionService
             existente.Neto = request.Neto;
             existente.Total = request.Total;
             existente.TotalUnidades = request.TotalUnidades;
+=======
+            existente.OrdenId = request.OrdenId;
+            existente.IntakeLegacyId = request.IntakeLegacyId;
+            existente.Subtotal = request.Subtotal;
+            existente.ImpuestosTotal = request.ImpuestosTotal;
+            // Total se recalcula automáticamente en BD (columna PERSISTED)
+            existente.Estado = request.Estado;
+            existente.Observaciones = request.Observaciones;
+            existente.ValidezDias = request.ValidezDias;
+            // Campos de capacitación
+            existente.HorasCapacitacion = request.HorasCapacitacion;
+            existente.PaquetesCapacitacion = request.PaquetesCapacitacion;
+            existente.CostoCapacitacion = request.CostoCapacitacion;
+            // Campos de información del cliente
+            existente.Cliente = request.Cliente;
+            existente.Rfc = request.Rfc;
+            existente.Folio = request.Folio;
+            // Campos adicionales
+            existente.Descuento = request.Descuento;
+            existente.DescripcionServicio = request.DescripcionServicio;
+            existente.ActualizadoEn = DateTime.UtcNow;
+>>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
             var actualizada = await _cotizacionRepository.UpdateAsync(existente);
 
@@ -185,6 +229,7 @@ public class CotizacionService
         return new CotizacionResponseDto
         {
             Id = cotizacion.Id,
+<<<<<<< HEAD
 
             // DocumentoDeId = cotizacion.DocumentoDeId,
             // ConceptoDocumentoId = cotizacion.ConceptoDocumentoId,
@@ -212,13 +257,40 @@ public class CotizacionService
             Total = cotizacion.Total,
             Pendiente = cotizacion.Pendiente,
             TotalUnidades = cotizacion.TotalUnidades
+=======
+            OrdenId = cotizacion.OrdenId,
+            IntakeLegacyId = cotizacion.IntakeLegacyId,
+            Subtotal = cotizacion.Subtotal,
+            ImpuestosTotal = cotizacion.ImpuestosTotal,
+            Total = cotizacion.Total,
+            Estado = cotizacion.Estado,
+            Observaciones = cotizacion.Observaciones,
+            ActualizadoEn = cotizacion.ActualizadoEn,
+            CreadoEn = cotizacion.CreadoEn,
+            ValidezDias = cotizacion.ValidezDias,
+            // Campos de capacitación
+            HorasCapacitacion = cotizacion.HorasCapacitacion,
+            PaquetesCapacitacion = cotizacion.PaquetesCapacitacion,
+            CostoCapacitacion = cotizacion.CostoCapacitacion,
+            // Campos de información del cliente
+            Cliente = cotizacion.Cliente,
+            Rfc = cotizacion.Rfc,
+            Folio = cotizacion.Folio,
+            // Campos adicionales
+            Descuento = cotizacion.Descuento,
+            DescripcionServicio = cotizacion.DescripcionServicio,
+            // Campos de contacto
+            Telefono = cotizacion.Telefono,
+            Correo = cotizacion.Correo
+>>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         };
     }
 
-    private static Cotizacion MapFromRequestDto(CotizacionRequestDto request)
+    private static Cotizacion MapFromRequestDto(CotizacionCreateRequestDto request)
     {
         return new Cotizacion
         {
+<<<<<<< HEAD
             DocumentoDeId = request.DocumentoDeId,
             ConceptoDocumentoId = request.ConceptoDocumentoId,
             ClienteProveedorId = request.ClienteProveedorId,
@@ -232,6 +304,30 @@ public class CotizacionService
             Referencia = request.Referencia,
             Observaciones = request.Observaciones,
             TotalUnidades = request.TotalUnidades
+=======
+            OrdenId = request.OrdenId,
+            IntakeLegacyId = request.IntakeLegacyId,
+            Subtotal = request.Subtotal,
+            ImpuestosTotal = request.ImpuestosTotal,
+            // Total se calcula automáticamente en BD como columna PERSISTED
+            Estado = request.Estado,
+            Observaciones = request.Observaciones,
+            ValidezDias = request.ValidezDias,
+            // Campos de capacitación
+            HorasCapacitacion = request.HorasCapacitacion,
+            PaquetesCapacitacion = request.PaquetesCapacitacion,
+            CostoCapacitacion = request.CostoCapacitacion,
+            // Campos de información del cliente
+            Cliente = request.Cliente,
+            Rfc = request.Rfc,
+            Folio = request.Folio,
+            // Campos adicionales
+            Descuento = request.Descuento,
+            DescripcionServicio = request.DescripcionServicio,
+            // Campos de contacto
+            Telefono = request.Telefono,
+            Correo = request.Correo
+>>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         };
     }
 }

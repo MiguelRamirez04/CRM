@@ -6,6 +6,7 @@ using back_cabs.CRM.services;
 using back_cabs.CRM.services.Auth;
 using back_cabs.CRM.services.Fleet;
 using back_cabs.services;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -174,6 +175,7 @@ builder.Services.AddScoped<back_cabs.CRM.Services.Shared.GastoViaticoService>();
 builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EjecucionOrdenService>();
 builder.Services.AddScoped<back_cabs.CRM.services.shared.EvaluacionDetallesService>();
+builder.Services.AddScoped<EmailService>();
 
 // Registro de servicios Legacy (solo conexión directa a BD legacy adCABS2016)
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteService, back_cabs.CRM.services.Legacy.AdmAgenteService>();

@@ -34,7 +34,7 @@ namespace back_cabs.CRM.repositories.Recepcion
             {
                 var cotizaciones = await _readContext.Cotizaciones
                     .AsNoTracking()
-                    .OrderByDescending(c => c.Fecha) // Ordenado por la nueva fecha del documento
+                    .OrderByDescending(c => c.CreadoEn)
                     .ToListAsync();
 
                 _logger.LogDebug("Obtenidas {Count} cotizaciones", cotizaciones.Count);
@@ -73,86 +73,62 @@ namespace back_cabs.CRM.repositories.Recepcion
             }
         }
 
-        // /// <summary>
-        // /// Obtiene cotizaciones por el ID del documento de origen (ej. Orden de Trabajo).
-        // /// </summary>
-        // public async Task<IEnumerable<Cotizacion>> GetOrdenServicio(int IDConcepto)
-        // {
-        //     try
-        //     {
-        //         var resultado = await _readContext.Cotizaciones
-        //             .AsNoTracking()
-        //             .Where(c => c.ConceptoDocumentoId == IDConcepto) // Adaptado para usar DocumentoOrigenId
-        //             .OrderByDescending(c => c.Fecha)
-        //             .ToListAsync();
+        public async Task<IEnumerable<Cotizacion>> GetByOrdenIdAsync(int ordenId)
+        {
+            try
+            {
+                var cotizaciones = await _readContext.Cotizaciones
+                    .AsNoTracking()
+                    .Where(c => c.OrdenId == ordenId)
+                    .OrderByDescending(c => c.CreadoEn)
+                    .ToListAsync();
 
-        //         _logger.LogDebug("Se obtuvo la Orden de Servicio con ID {resultado.id}", resultado.Count, IDConcepto);
-        //         return resultado;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error al obtener cotizaciones por DocumentoOrigenId {OrdenId}", ordenId);
-        //         throw;
-        //     }
-        // }
+                _logger.LogDebug("Obtenidas {Count} cotizaciones para OrdenId {OrdenId}", cotizaciones.Count, ordenId);
+                return cotizaciones;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}", ordenId);
+                throw;
+            }
+        }
 
-        /// <summary>
-        /// Obtiene cotizaciones filtrando por un estado basado en las nuevas banderas.
-        /// "CANCELADO": c.Cancelado == 1
-        /// "AFECTADO": c.Afectado == 1
-        /// "NUEVA" (o cualquier otro): c.Cancelado == 0 y c.Afectado == 0
-        /// </summary>
         public async Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string estado)
         {
             try
             {
-                IQueryable<Cotizacion> query = _readContext.Cotizaciones.AsNoTracking();
-
-                // Adaptación de la lógica de estado a las nuevas banderas
-                switch (estado.ToUpper())
-                {
-                    case "CANCELADO":
-                        query = query.Where(c => c.Cancelado == 1);
-                        break;
-                    case "AFECTADO":
-                        query = query.Where(c => c.Afectado == 1);
-                        break;
-                    default: // Asumimos que cualquier otro estado (como "NUEVA") significa no cancelado y no afectado.
-                        query = query.Where(c => c.Cancelado == 0 && c.Afectado == 0);
-                        break;
-                }
-
-                var cotizaciones = await query.OrderByDescending(c => c.Fecha).ToListAsync();
+                var cotizaciones = await _readContext.Cotizaciones
+                    .AsNoTracking()
+                    .Where(c => c.Estado == estado)
+                    .OrderByDescending(c => c.CreadoEn)
+                    .ToListAsync();
 
                 _logger.LogDebug("Obtenidas {Count} cotizaciones con estado {Estado}", cotizaciones.Count, estado);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por estado adaptado {Estado}", estado);
+                _logger.LogError(ex, "Error al obtener cotizaciones por estado {Estado}", estado);
                 throw;
             }
         }
 
-        /// <summary>
-        /// Obtiene cotizaciones buscando en la Razón Social del cliente.
-        /// </summary>
         public async Task<IEnumerable<Cotizacion>> GetByClienteAsync(string cliente)
         {
             try
             {
                 var cotizaciones = await _readContext.Cotizaciones
                     .AsNoTracking()
-                    .Where(c => c.RazonSocial != null && c.RazonSocial.Contains(cliente)) // Adaptado para usar RazonSocial
-                    .OrderByDescending(c => c.Fecha)
+                    .Where(c => c.Cliente != null && c.Cliente.Contains(cliente))
+                    .OrderByDescending(c => c.CreadoEn)
                     .ToListAsync();
 
-                _logger.LogDebug("Obtenidas {Count} cotizaciones para cliente (Razón Social) {Cliente}", cotizaciones.Count, cliente);
+                _logger.LogDebug("Obtenidas {Count} cotizaciones para cliente {Cliente}", cotizaciones.Count, cliente);
                 return cotizaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener cotizaciones por cliente (Razón Social) {Cliente}", cliente);
+                _logger.LogError(ex, "Error al obtener cotizaciones por cliente {Cliente}", cliente);
                 throw;
             }
         }
@@ -232,6 +208,21 @@ namespace back_cabs.CRM.repositories.Recepcion
                 _logger.LogError(ex, "Error al eliminar cotización {Id}", id);
                 throw;
             }
+        }
+
+        public Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string campo, int valor)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<Cotizacion>> GetByClienteIdAsync(int clienteId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(int documentoDeId, int conceptoDocumentoId, int clienteProveedorId, int agenteId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

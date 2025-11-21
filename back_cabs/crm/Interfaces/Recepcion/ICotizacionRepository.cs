@@ -25,20 +25,33 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         // Task<IEnumerable<Cotizacion>> GetOrdenServicioAsync (int ordenId);
 
         /// <summary>
-        /// Obtiene cotizaciones por estado
+        /// Obtiene cotizaciones filtradas por un campo de estado específico
         /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string estado);
+        /// <param name="campo">Campo a filtrar: "cancelado", "afectado", "impreso", "usaCliente"</param>
+        /// <param name="valor">Valor del campo: 0 o 1</param>
+        Task<IEnumerable<Cotizacion>> GetByEstadoAsync(string campo, int valor);
 
         /// <summary>
-        /// Obtiene cotizaciones por cliente
+        /// Obtiene cotizaciones por ID de cliente (ClienteProveedorId)
         /// </summary>
-        Task<IEnumerable<Cotizacion>> GetByClienteAsync(string cliente);
+        Task<IEnumerable<Cotizacion>> GetByClienteIdAsync(int clienteId);
 
         /// <summary>
         /// Verifica si existe una cotización con el ID especificado
         /// </summary>
         Task<bool> ExistsAsync(int id);
 
+<<<<<<< HEAD
+=======
+        /// <summary>
+        /// Obtiene cotizaciones creadas en una fecha específica (para generar folios)
+        /// </summary>
+        Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha);
+        /// Valida que todas las llaves foráneas existan en la base de datos
+        /// </summary>
+        Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(int documentoDeId, int conceptoDocumentoId, int clienteProveedorId, int agenteId);
+
+>>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         // ✏️ OPERACIONES DE ESCRITURA
         /// <summary>
         /// Crea una nueva cotización

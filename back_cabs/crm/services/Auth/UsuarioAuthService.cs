@@ -23,6 +23,7 @@ using back_cabs.CRM.Interfaces.Auth;
 using CRM.DTOs.Request;
 using CRM.DTOs.Response;
 using back_cabs.CRM.models.Auth;
+using back_cabs.CRM.models;
 using back_cabs.CRM.validators.Auth;
 using back_cabs.CRM.Middleware;
 using back_cabs.services;
@@ -535,6 +536,53 @@ namespace back_cabs.CRM.services.Auth
             }
 
             return rol.ToUpper().Trim();
+        }
+        ///<summary>
+        /// Guarda el token de recuperación de contraseña en la base de datos
+        /// </summary>
+        public async Task GuardarTokenRecuperacionAsync(RecuperacionPasswordToken token)
+        {
+            if (_writeContext == null) throw new InvalidOperationException("WriteContext no disponible");
+            _writeContext.RecuperacionPasswordTokens.Add(token);
+            await _writeContext.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Obtiene el token de recuperación por email y token
+        /// </summary>
+        public async Task<RecuperacionPasswordToken?> ObtenerTokenRecuperacionAsync(string email, string token)
+        {
+            if (_readContext == null) throw new InvalidOperationException("ReadContext no disponible");
+            return await _readContext.RecuperacionPasswordTokens
+                .FirstOrDefaultAsync(t => t.Email == email && t.Token == token);
+        }
+
+        /// <summary>
+        /// Actualiza la contraseña del usuario por email
+        /// </summary>
+        public async Task<bool> ActualizarContrasenaPorEmailAsync(string email, string nuevaPassword)
+        {
+            if (_writeContext == null) throw new InvalidOperationException("WriteContext no disponible");
+            var usuario = await _writeContext.UsuariosAuth.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return false;
+            usuario.Password = back_cabs.CRM.Middleware.ApiUtilities.GenerateSha256Hash(nuevaPassword);
+            usuario.ActualizadoEn = DateTime.UtcNow;
+            await _writeContext.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Marca el token de recuperación como usado
+        /// </summary>
+        public async Task MarcarTokenRecuperacionUsadoAsync(int tokenId)
+        {
+            if (_writeContext == null) throw new InvalidOperationException("WriteContext no disponible");
+            var token = await _writeContext.RecuperacionPasswordTokens.FirstOrDefaultAsync(t => t.Id == tokenId);
+            if (token != null)
+            {
+                token.Usado = true;
+                await _writeContext.SaveChangesAsync();
+            }
         }
     }
 }
