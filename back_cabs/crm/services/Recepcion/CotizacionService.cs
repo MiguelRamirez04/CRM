@@ -91,11 +91,6 @@ public class CotizacionService
     {
         try
         {
-<<<<<<< HEAD
-            // Mapear desde el DTO de solicitud a la entidad del dominio
-            var cotizacion = MapFromRequestDto(request);
-            cotizacion.Fecha = DateTime.UtcNow; // El servidor establece la fecha de creación
-=======
             var cotizacion = MapFromRequestDto(request);
             cotizacion.CreadoEn = DateTime.UtcNow;
             
@@ -104,7 +99,6 @@ public class CotizacionService
             {
                 cotizacion.Folio = await GenerarFolioAutomaticoAsync();
             }
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
             var creada = await _cotizacionRepository.CreateAsync(cotizacion);
 
@@ -144,21 +138,6 @@ public class CotizacionService
             }
 
             // Mapear cambios
-<<<<<<< HEAD
-            //Datos Principales
-            existente.Folio = request.Folio.HasValue ? (double)request.Folio.Value : existente.Folio;
-            existente.FechaVencimiento = request.FechaVencimiento;
-            existente.FechaEntregaRecepcion = request.FechaEntregaRecepcion;
-            
-            //Datos Descriptivos
-            existente.Referencia = request.Referencia;
-            existente.Observaciones = request.Observaciones;
-            
-            //Totales en cantidad y dinero
-            existente.Neto = request.Neto;
-            existente.Total = request.Total;
-            existente.TotalUnidades = request.TotalUnidades;
-=======
             existente.OrdenId = request.OrdenId;
             existente.IntakeLegacyId = request.IntakeLegacyId;
             existente.Subtotal = request.Subtotal;
@@ -179,7 +158,6 @@ public class CotizacionService
             existente.Descuento = request.Descuento;
             existente.DescripcionServicio = request.DescripcionServicio;
             existente.ActualizadoEn = DateTime.UtcNow;
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
             var actualizada = await _cotizacionRepository.UpdateAsync(existente);
 
@@ -222,6 +200,32 @@ public class CotizacionService
         }
     }
 
+    /// <summary>
+    /// Genera un folio único para una cotización basado en la fecha actual y un contador.
+    /// </summary>
+    /// <returns>Folio generado automáticamente.</returns>
+    private async Task<string> GenerarFolioAutomaticoAsync()
+    {
+        try
+        {
+            // Obtener el número de cotizaciones creadas en la fecha actual
+            var fechaActual = DateTime.Now.Date;
+            var cotizacionesHoy = await _cotizacionRepository.GetByFechaCreadoAsync(fechaActual);
+
+            // Generar el folio basado en la fecha y el número de cotizaciones
+            var contador = cotizacionesHoy.Count() + 1;
+            var folio = $"COT-{fechaActual:yyyyMMdd}-{contador:D4}";
+
+            _logger.LogInformation("Folio generado automáticamente: {Folio}", folio);
+            return folio;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al generar el folio automáticamente.");
+            throw;
+        }
+    }
+
     // ✅ MÉTODOS DE MAPEO: Separación clara entre entidades y DTOs
 
     private static CotizacionResponseDto MapToResponseDto(Cotizacion cotizacion)
@@ -229,35 +233,6 @@ public class CotizacionService
         return new CotizacionResponseDto
         {
             Id = cotizacion.Id,
-<<<<<<< HEAD
-
-            // DocumentoDeId = cotizacion.DocumentoDeId,
-            // ConceptoDocumentoId = cotizacion.ConceptoDocumentoId,
-            // ClienteProveedorId = cotizacion.ClienteProveedorId,
-            // AgenteId = cotizacion.AgenteId,
-            // DocumentoOrigenId = cotizacion.DocumentoOrigenId,
-
-            SerieDocumento = cotizacion.SerieDocumento,
-            Folio = cotizacion.Folio,
-            Fecha = cotizacion.Fecha,
-            FechaVencimiento = cotizacion.FechaVencimiento,
-            FechaEntregaRecepcion = cotizacion.FechaEntregaRecepcion,
-            RazonSocial = cotizacion.RazonSocial,
-            Rfc = cotizacion.Rfc,
-            Referencia = cotizacion.Referencia,
-            Observaciones = cotizacion.Observaciones,
-            Naturaleza = cotizacion.Naturaleza,
-            UsaCliente = cotizacion.UsaCliente,
-            Afectado = cotizacion.Afectado,
-            Impreso = cotizacion.Impreso,
-            Cancelado = cotizacion.Cancelado,
-            Neto = cotizacion.Neto,
-            Impuesto1 = cotizacion.Impuesto1,
-            DescuentoMovimiento = cotizacion.DescuentoMovimiento,
-            Total = cotizacion.Total,
-            Pendiente = cotizacion.Pendiente,
-            TotalUnidades = cotizacion.TotalUnidades
-=======
             OrdenId = cotizacion.OrdenId,
             IntakeLegacyId = cotizacion.IntakeLegacyId,
             Subtotal = cotizacion.Subtotal,
@@ -282,7 +257,6 @@ public class CotizacionService
             // Campos de contacto
             Telefono = cotizacion.Telefono,
             Correo = cotizacion.Correo
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         };
     }
 
@@ -290,21 +264,6 @@ public class CotizacionService
     {
         return new Cotizacion
         {
-<<<<<<< HEAD
-            DocumentoDeId = request.DocumentoDeId,
-            ConceptoDocumentoId = request.ConceptoDocumentoId,
-            ClienteProveedorId = request.ClienteProveedorId,
-            AgenteId = request.AgenteId,
-            DocumentoOrigenId = request.DocumentoOrigenId,
-            SerieDocumento = request.SerieDocumento,
-            FechaVencimiento = request.FechaVencimiento,
-            FechaEntregaRecepcion = request.FechaEntregaRecepcion,
-            RazonSocial = request.RazonSocial,
-            Rfc = request.Rfc,
-            Referencia = request.Referencia,
-            Observaciones = request.Observaciones,
-            TotalUnidades = request.TotalUnidades
-=======
             OrdenId = request.OrdenId,
             IntakeLegacyId = request.IntakeLegacyId,
             Subtotal = request.Subtotal,
@@ -327,7 +286,6 @@ public class CotizacionService
             // Campos de contacto
             Telefono = request.Telefono,
             Correo = request.Correo
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         };
     }
 }

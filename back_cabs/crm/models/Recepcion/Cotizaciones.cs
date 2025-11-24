@@ -4,13 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace back_cabs.CRM.models.Sales
 {
     /// <summary>
-<<<<<<< HEAD
-    /// Entidad que representa una cotización de venta.
-    /// Mapea a la tabla: dbo.sales_cotizaciones
-=======
     /// Entidad que representa una cotización de servicios.
     /// Mapea a la tabla sales_cotizaciones en SQL Server.
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
     /// </summary>
     [Table("sales_cotizaciones")]  
     public class Cotizacion
@@ -32,10 +27,6 @@ namespace back_cabs.CRM.models.Sales
         [Column("impuestos_total", TypeName = "decimal(12,2)")]
         public decimal ImpuestosTotal { get; set; } = 0;
 
-<<<<<<< HEAD
-        [Column("CIDDOCUMENTOORIGEN")]
-        public int? DocumentoOrigenId { get; set; }
-=======
         /// <summary>
         /// Total calculado: Subtotal + Impuestos (en BD como columna calculada PERSISTED)
         /// IMPORTANTE: En BD es [subtotal]+[impuestos_total], NO incluye descuento
@@ -53,80 +44,10 @@ namespace back_cabs.CRM.models.Sales
 
         [Column("actualizado_en")]
         public DateTime? ActualizadoEn { get; set; }
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
         [Column("creado_en")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
 
-<<<<<<< HEAD
-        [Column("CFOLIO")]
-        public double Folio { get; set; }
-
-        [Column("CFECHA")]
-        public DateTime Fecha { get; set; }
-
-        [Column("CFECHAVENCIMIENTO")]
-        public DateTime? FechaVencimiento { get; set; }
-
-        [Column("CFECHAENTREGARECEPCION")]
-        public DateTime? FechaEntregaRecepcion { get; set; }
-
-        // --- Datos Descriptivos (Cliente, Texto) ---
-        [Column("CRAZONSOCIAL")]
-        [StringLength(60)]
-        public string? RazonSocial { get; set; }
-
-        [Column("CRFC")]
-        [StringLength(20)]
-        public string? Rfc { get; set; }
-
-        [Column("CREFERENCIA")]
-        [StringLength(20)]
-        public string? Referencia { get; set; }
-
-        [Column("COBSERVACIONES", TypeName = "varchar(max)")]
-        public string? Observaciones { get; set; }
-
-        // --- Banderas y Estados ---
-        [Column("CNATURALEZA")]
-        public int Naturaleza { get; set; }
-
-        [Column("CUSACLIENTE")]
-        public int UsaCliente { get; set; }
-
-        [Column("CAFECTADO")]
-        public int Afectado { get; set; }
-
-        [Column("CIMPRESO")]
-        public int Impreso { get; set; }
-
-        [Column("CCANCELADO")]
-        public int Cancelado { get; set; }
-
-        // --- Importes y Totales ---
-        [Column("CNETO")]
-        public double Neto { get; set; }
-
-        [Column("CIMPUESTO1")]
-        public double Impuesto1 { get; set; }
-
-        [Column("CDESCUENTOMOV")]
-        public double DescuentoMovimiento { get; set; }
-
-        [Column("CTOTAL")]
-        public double Total { get; set; }
-
-        [Column("CPENDIENTE")]
-        public double Pendiente { get; set; }
-
-        [Column("CTOTALUNIDADES")]
-        public double TotalUnidades { get; set; }
-
-        // Propiedades de navegación (opcionales, para relaciones con otras entidades)
-        // Ejemplo:
-        // [ForeignKey("ClienteProveedorId")]
-        // public virtual ClienteProveedor Cliente { get; set; }
-=======
         [Column("validez_dias")]
         public int? ValidezDias { get; set; }
 
@@ -205,6 +126,5 @@ namespace back_cabs.CRM.models.Sales
         /// </summary>
         [NotMapped]
         public decimal TotalFinal => Total - (Descuento ?? 0);
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
-    }
+        }
 }

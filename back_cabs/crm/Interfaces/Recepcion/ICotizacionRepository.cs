@@ -41,8 +41,6 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// </summary>
         Task<bool> ExistsAsync(int id);
 
-<<<<<<< HEAD
-=======
         /// <summary>
         /// Obtiene cotizaciones creadas en una fecha específica (para generar folios)
         /// </summary>
@@ -51,7 +49,6 @@ namespace back_cabs.CRM.Interfaces.Recepcion
         /// </summary>
         Task<Dictionary<string, bool>> ValidarLlavesForaneasAsync(int documentoDeId, int conceptoDocumentoId, int clienteProveedorId, int agenteId);
 
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
         // ✏️ OPERACIONES DE ESCRITURA
         /// <summary>
         /// Crea una nueva cotización

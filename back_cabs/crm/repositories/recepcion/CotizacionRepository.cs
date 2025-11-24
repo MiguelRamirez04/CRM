@@ -224,5 +224,24 @@ namespace back_cabs.CRM.repositories.Recepcion
         {
             throw new NotImplementedException();
         }
+
+        public async Task<IEnumerable<Cotizacion>> GetByFechaCreadoAsync(DateTime fecha)
+        {
+            try
+            {
+                var cotizaciones = await _readContext.Cotizaciones
+                    .AsNoTracking()
+                    .Where(c => c.CreadoEn.Date == fecha.Date)
+                    .ToListAsync();
+
+                _logger.LogDebug("Obtenidas {Count} cotizaciones para la fecha {Fecha}", cotizaciones.Count, fecha);
+                return cotizaciones;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener cotizaciones por fecha: {Fecha}", fecha);
+                throw;
+            }
+        }
     }
 }

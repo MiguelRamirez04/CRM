@@ -57,23 +57,6 @@ public class CotizacionesController : ControllerBase
         }
     }
 
-<<<<<<< HEAD
-    // [HttpGet("orden/{ordenId}")]
-    // [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
-    // public async Task<IActionResult> GetByOrdenId(int ordenId)
-    // {
-    //     try
-    //     {
-    //         var resultado = await _service.ObtenerPorOrdenIdAsync(ordenId);
-    //         return Ok(resultado);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError(ex, "Error al obtener cotizaciones por OrdenId {OrdenId}.", ordenId);
-    //         return StatusCode(500, new { message = "Error interno del servidor." });
-    //     }
-    // }
-=======
     [HttpGet("orden/{ordenId}")]
     [ProducesResponseType(typeof(IEnumerable<CotizacionResponseDto>), 200)]
     /*
@@ -90,7 +73,6 @@ public class CotizacionesController : ControllerBase
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }*/
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
 
     /// <summary>
     /// Obtiene cotizaciones filtradas por un campo de estado específico
@@ -186,11 +168,7 @@ public class CotizacionesController : ControllerBase
         }
         catch (Exception ex)
         {
-<<<<<<< HEAD
-            _logger.LogError(ex, "Error al crear cotización.");
-=======
             _logger.LogError(ex, "Error inesperado al crear cotización");
->>>>>>> 29afbe45571ab99f1c722a38a504c27ea9e3be5c
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
     }
