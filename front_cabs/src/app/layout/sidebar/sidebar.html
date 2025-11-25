@@ -105,30 +105,30 @@
             {{ item.label }}
           </span>
           }
-  <!-- Flecha solo si el sidebar está expandido y el item tiene hijos -->
-  @if (!isCollapsed && hasChildren(item)) {
-    <button type="button" (click)="toggleSubmenu(item, $event)" class="submenu-toggle"
-      [class.expanded]="item.expanded">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-        stroke-width="1.5" stroke="currentColor" class="icon-xs">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-      </svg>
-    </button>
-  }
-</a>
+          <!-- Flecha solo si el sidebar está expandido y el item tiene hijos -->
+          @if (!isCollapsed && hasChildren(item)) {
+            <button type="button" (click)="toggleSubmenu(item, $event)" class="submenu-toggle"
+              [class.expanded]="item.expanded">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icon-xs">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          }
+        </a>
 
-<!-- Submenu solo si el sidebar está expandido y el item está expandido -->
-@if (!isCollapsed && hasChildren(item) && item.expanded) {
-  <div class="submenu-container">
-    @for (child of item.children; track $index) {
-      <a [routerLink]="child.link" routerLinkActive="nav-link-active" class="nav-link submenu-link"
-        [class.active]="isActive(child.link)">
-        <span class="submenu-indicator"></span>
-        <span class="nav-label">{{ child.label }}</span>
-      </a>
-    }
-  </div>
-}
+        <!-- Submenu solo si el sidebar está expandido y el item está expandido -->
+        @if (!isCollapsed && hasChildren(item) && item.expanded) {
+          <div class="submenu-container">
+            @for (child of item.children; track $index) {
+              <a [routerLink]="child.link" routerLinkActive="nav-link-active" class="nav-link submenu-link"
+                [class.active]="isActive(child.link)">
+                <span class="submenu-indicator"></span>
+                <span class="nav-label">{{ child.label }}</span>
+              </a>
+            }
+          </div>
+        }
       </div>
       }
     </nav>
@@ -182,35 +182,5 @@
         </a>
       }
     </nav>
-  </div>
-  <!-- Footer usuario -->
-  <div class="sidebar-footer">
-    <button (click)="toggleBandejaPerfil()" class="user-button">
-      <div class="user-info">
-        <!-- Iniciales -->
-        <div class="user-avatar">
-          {{ getInitials(user$ | async) }}
-        </div>
-        <!-- Nombre y rol -->
-        @if (!isCollapsed) {
-        <div class="user-details">
-          <p class="user-name">
-            {{ (user$ | async)?.nombreCompleto || (user$ | async)?.name || ((user$ | async)?.nombre + ' ' + (user$ |
-            async)?.apellido) }}
-          </p>
-          <p class="user-role">
-            {{ (user$ | async)?.role || 'Sin rol' }}
-          </p>
-        </div>
-        }
-      </div>
-      <!-- Flecha -->
-      @if (!isCollapsed) {
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="icon-sm">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-      </svg>
-      }
-    </button>
   </div>
 </aside>
