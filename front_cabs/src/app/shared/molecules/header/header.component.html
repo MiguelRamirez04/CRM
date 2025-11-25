@@ -1,23 +1,23 @@
-<div class="flex items-center justify-between w-full">
-    <!-- Titulo y label -->
-    <div class=" flex gap-1 flex-col">
-        <app-ui-tipografia
-            variante="h2"
-            texto={{titulo}}
-            >
-            </app-ui-tipografia>
-        @if (visualizarDescripcion) {
-            <app-ui-tipografia
-                variante="p"
-                texto={{descripcion}}
-            >
-            </app-ui-tipografia>
-        }
-    </div>
-    @if(visualizarButton){
-        <app-ui-boton
-            texto = {{buttonLabel}}
-        ></app-ui-boton>
+<div class="bg-white rounded-lg p-5 mb-6 border-b border-gray-100">
+  <div class="flex items-center justify-between w-full">
+    <div class="flex flex-col gap-0">
+      <app-ui-tipografia variante="h2" [texto]="titulo" class="text-2xl font-semibold text-gray-800"></app-ui-tipografia>
 
-    }
+      @if (visualizarDescripcion) {
+        <app-ui-tipografia variante="p" [texto]="descripcion" class="text-sm text-gray-500 mt-0.5"></app-ui-tipografia>
+      }
+    </div>
+
+    <div class="flex-shrink-0 flex items-center gap-3">
+      <ng-content select="[headerRight]"></ng-content>
+
+      @if (visualizarButton) {
+        <app-ui-boton [texto]="buttonLabel"></app-ui-boton>
+      }
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <ng-content></ng-content>
+  </div>
 </div>

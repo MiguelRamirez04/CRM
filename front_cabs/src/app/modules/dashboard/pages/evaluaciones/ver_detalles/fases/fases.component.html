@@ -1,82 +1,287 @@
-<div class="contenedor-principal">
-  <!-- Encabezado -->
-  <div class="encabezado-fase">
-    <h1 class="titulo-fase">{{ datosFase?.fase || 'Sin título' }}</h1>
+<!-- ============================================== -->
+<!-- TEMPLATE COMPARTIDO PARA FASES ANTES Y DESPUÉS -->
+<!-- Modo 1: Con side-panel (standalone) -->
+<!-- Modo 2: Solo contenido (embebido) -->
+<!-- ============================================== -->
 
-    <div class="fila-info">
-      <div class="info-item con-fondo">
-        <span class="info-label">Lugar:</span>
-        <span class="info-valor">{{ datosFase?.lugar || 'N/A' }}</span>
-      </div>
-      <div class="info-item con-fondo">
-        <span class="info-label">Fecha de creación:</span>
-        <span class="info-valor">{{ datosFase && datosFase.creadoEn ? formatearFecha(datosFase.creadoEn) : 'N/A' }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Score de calidad de fase</span>
-        <div class="score-container">
-          <span class="score-numero">{{ datosFase?.scoreFase || 0 }}</span>
-          <div class="score-barra">
-            <div class="score-progreso" [style.width]="scoreWidth"></div>
+<!-- MODO STANDALONE: Con su propio side-panel -->
+<ng-container *ngIf="!soloContenido">
+  <app-side-panel 
+    [mostrar]="mostrarPanel" 
+    [titulo]="'Evaluación Fase ' + labelFase" 
+    [ancho]="'lg'"
+    (cerrar)="cerrarPanel()">
+    
+    <ng-container *ngTemplateOutlet="contenidoFase"></ng-container>
+
+    <!-- FOOTER -->
+    <div footer class="flex space-x-3">
+      <app-ui-boton
+        [variante]="'terciario'"
+        [texto]="'Volver a detalles'"
+        [anchoCompleto]="true"
+        (alClickear)="volverADetalles()">
+      </app-ui-boton>
+
+      <app-ui-boton
+        *ngIf="error"
+        [variante]="'primario'"
+        [texto]="'Reintentar'"
+        [anchoCompleto]="true"
+        [estaCargando]="cargando"
+        (alClickear)="reintentar()">
+      </app-ui-boton>
+    </div>
+  </app-side-panel>
+</ng-container>
+
+<!-- MODO EMBEBIDO: Solo contenido sin panel -->
+<ng-container *ngIf="soloContenido">
+  <ng-container *ngTemplateOutlet="contenidoFase"></ng-container>
+</ng-container>
+
+<!-- ============================================== -->
+<!-- TEMPLATE DEL CONTENIDO (COMPARTIDO) -->
+<!-- ============================================== -->
+<ng-template #contenidoFase>
+  
+  <!-- ESTADO DE CARGA -->
+  <app-loading-spinner 
+    *ngIf="cargando" 
+    [mensaje]="'Cargando datos de la fase...'">
+  </app-loading-spinner>
+
+  <!-- ESTADO DE ERROR -->
+  <app-alert *ngIf="error && !cargando" [tipo]="'error'">
+    {{ error }}
+  </app-alert>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <ng-container *ngIf="datosFase && !cargando && !error">
+
+    <!-- Badge de fase -->
+    <div class="mb-6">
+      <app-badge 
+        [tipo]="tipoBadgeFase" 
+        [mostrarIcono]="true">
+        {{ labelFase }}
+      </app-badge>
+    </div>
+
+    <!-- SECCIÓN: INFORMACIÓN GENERAL -->
+    <app-detail-section 
+      [titulo]="'Información General'" 
+      [icono]="ICONOS.info"
+      [colorIcono]="'text-blue-600'">
+      
+      <div class="space-y-3">
+        <!-- Lugar -->
+        <app-detail-field [label]="'Lugar'" [layout]="'horizontal'">
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.mapPin"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span class="font-medium text-gray-900">{{ datosFase.lugar || 'N/A' }}</span>
           </div>
-          <span class="score-total">/100</span>
+        </app-detail-field>
+
+        <!-- Fecha de creación -->
+        <app-detail-field [label]="'Fecha de creación'" [layout]="'horizontal'">
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.calendar"></path>
+            </svg>
+            <span class="text-gray-700">{{ formatearFecha(datosFase.creadoEn) }}</span>
+          </div>
+        </app-detail-field>
+
+        <!-- ID del detalle -->
+        <app-detail-field [label]="'ID de detalle'" [layout]="'horizontal'">
+          <div class="flex items-center space-x-2">
+            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+            </svg>
+            <span class="font-medium text-gray-900">#{{ datosFase.id }}</span>
+          </div>
+        </app-detail-field>
+      </div>
+    </app-detail-section>
+
+    <!-- SECCIÓN: SCORE DE CALIDAD -->
+    <app-detail-section 
+      [titulo]="'Score de Calidad de Fase'" 
+      [icono]="ICONOS.chart"
+      [colorIcono]="'text-green-600'">
+      
+      <div class="space-y-4">
+        <!-- Score visual -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-4xl font-bold" [ngClass]="claseScore">
+              {{ datosFase.scoreFase ?? 0 }}
+            </span>
+            <span class="text-2xl text-gray-400">/100</span>
+          </div>
+          
+          <app-badge 
+            [tipo]="obtenerTipoBadgeScore(datosFase.scoreFase)"
+            [mostrarIcono]="true">
+            {{ (datosFase.scoreFase ?? 0) >= 80 ? 'Excelente' : 
+               (datosFase.scoreFase ?? 0) >= 60 ? 'Bueno' :
+               (datosFase.scoreFase ?? 0) >= 40 ? 'Regular' : 'Bajo' }}
+          </app-badge>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div 
+            class="h-full rounded-full transition-all duration-500"
+            [ngClass]="claseScore"
+            [style.width]="scoreWidth">
+          </div>
         </div>
       </div>
-    </div>
+    </app-detail-section>
 
-    <div class="seccion-texto">
-      <h3 class="seccion-titulo">Descripción</h3>
-      <p class="seccion-contenido">{{ datosFase?.descripcion || 'Sin descripción' }}</p>
-    </div>
+    <!-- SECCIÓN: DESCRIPCIÓN -->
+    <app-detail-section 
+      *ngIf="datosFase.descripcion"
+      [titulo]="'Descripción'" 
+      [icono]="ICONOS.documento"
+      [colorIcono]="'text-purple-600'">
+      
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {{ datosFase.descripcion }}
+      </p>
+    </app-detail-section>
 
-    <div class="seccion-texto">
-      <h3 class="seccion-titulo">Sugerencias/Recomendaciones</h3>
-      <p class="seccion-contenido">{{ datosFase?.sugerencias || 'Sin sugerencias' }}</p>
-    </div>
+    <app-alert *ngIf="!datosFase.descripcion" [tipo]="'info'">
+      Sin descripción disponible
+    </app-alert>
 
-    <div class="seccion-texto">
-      <h3 class="seccion-titulo">Nota general de evidencia</h3>
-      <p class="seccion-contenido">{{ datosFase?.evidenciasNota || 'Sin notas' }}</p>
-    </div>
-  </div>
+    <!-- SECCIÓN: SUGERENCIAS -->
+    <app-detail-section 
+      *ngIf="datosFase.sugerencias"
+      [titulo]="'Sugerencias/Recomendaciones'" 
+      [icono]="ICONOS.lightbulb"
+      [colorIcono]="'text-yellow-600'">
+      
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {{ datosFase.sugerencias }}
+      </p>
+    </app-detail-section>
 
-  <!-- Sección de Fotos -->
-  <div class="seccion-fotos">
-    <h2 class="titulo-fotos">Fotos de Evidencia - ANTES</h2>
+    <app-alert *ngIf="!datosFase.sugerencias" [tipo]="'info'">
+      Sin sugerencias disponibles
+    </app-alert>
 
-    <!-- Tarjetas de Fotos -->
-    <div class="tarjeta-foto" *ngFor="let foto of fotos">
-      <div class="vista-previa-foto">
-  <img *ngIf="foto.urlImagen"
-       [src]="foto.urlImagen"
-       alt="Foto de evidencia"
-       class="imagen-foto">
-  <div *ngIf="!foto.urlImagen" class="sin-foto">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icono-foto">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-    </svg>
-    <span class="texto-foto">Sin imagen</span>
-  </div>
-</div>
+    <!-- SECCIÓN: NOTAS DE EVIDENCIA -->
+    <app-detail-section 
+      *ngIf="datosFase.evidenciasNota"
+      [titulo]="'Nota General de Evidencia'" 
+      [icono]="ICONOS.clipboard"
+      [colorIcono]="'text-indigo-600'">
+      
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {{ datosFase.evidenciasNota }}
+      </p>
+    </app-detail-section>
 
+    <app-alert *ngIf="!datosFase.evidenciasNota" [tipo]="'info'">
+      Sin notas de evidencia
+    </app-alert>
 
-      <div class="detalles-foto">
-        <div class="fila-detalles">
-          <div class="detalle-item con-fondo">
-            <span class="detalle-label">Tipo de foto:</span>
-            <span class="detalle-valor">{{ foto.tipo || 'N/A' }}</span>
-          </div>
-          <div class="detalle-item con-fondo">
-            <span class="detalle-label">Fecha de subida:</span>
-            <span class="detalle-valor">{{ foto.creadoEn ? formatearFecha(foto.creadoEn) : 'N/A' }}</span>
-          </div>
+    <!-- SECCIÓN: FOTOS DE EVIDENCIA -->
+    <app-detail-section 
+      [titulo]="'Fotos de Evidencia'" 
+      [icono]="ICONOS.photo"
+      [colorIcono]="'text-orange-600'">
+      
+      <div class="mb-4">
+        <app-badge [tipo]="tieneFotos ? 'success' : 'default'" [mostrarIcono]="false">
+          {{ cantidadFotos }} {{ cantidadFotos === 1 ? 'foto' : 'fotos' }}
+        </app-badge>
+      </div>
+
+      <!-- Sin fotos -->
+      <app-alert *ngIf="!tieneFotos" [tipo]="'info'">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.photo"></path>
+          </svg>
+          <span>No hay fotos de evidencia para esta fase</span>
         </div>
-        <div class="detalle-item con-fondo">
-          <span class="detalle-label">Descripción:</span>
-          <p class="descripcion-foto">{{ foto.descripcion || 'Sin descripción' }}</p>
+      </app-alert>
+
+      <!-- Grid de fotos -->
+      <div *ngIf="tieneFotos" class="space-y-4">
+        <div 
+          *ngFor="let foto of fotos; let i = index"
+          class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+          
+          <!-- Encabezado de foto -->
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-semibold text-gray-900">Foto #{{ i + 1 }}</span>
+            <app-badge [tipo]="'default'" [mostrarIcono]="false">
+              {{ foto.tipo || 'General' }}
+            </app-badge>
+          </div>
+
+          <!-- Imagen -->
+          <div class="mb-3 rounded-lg overflow-hidden bg-gray-100">
+            <img 
+              *ngIf="foto.urlImagen"
+              [src]="foto.urlImagen"
+              [alt]="foto.descripcion || 'Foto de evidencia'"
+              class="w-full h-64 object-cover"
+              loading="lazy">
+            
+            <div *ngIf="!foto.urlImagen" class="w-full h-64 flex items-center justify-center">
+              <div class="text-center text-gray-400">
+                <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.photo"></path>
+                </svg>
+                <span class="text-sm">Sin imagen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles de la foto -->
+          <div class="space-y-2">
+            <app-detail-field 
+              *ngIf="foto.nombreArchivo" 
+              [label]="'Archivo'" 
+              [layout]="'vertical'">
+              <span class="text-xs font-mono text-gray-600 break-all">{{ foto.nombreArchivo }}</span>
+            </app-detail-field>
+
+            <app-detail-field [label]="'Fecha'" [layout]="'vertical'">
+              <span class="text-sm text-gray-700">{{ formatearFecha(foto.creadoEn) }}</span>
+            </app-detail-field>
+
+            <app-detail-field 
+              *ngIf="foto.tamanoBytes" 
+              [label]="'Tamaño'" 
+              [layout]="'vertical'">
+              <span class="text-sm text-gray-700">{{ (foto.tamanoBytes / 1024).toFixed(2) }} KB</span>
+            </app-detail-field>
+
+            <app-detail-field 
+              *ngIf="foto.descripcion" 
+              [label]="'Descripción'" 
+              [layout]="'vertical'">
+              <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ foto.descripcion }}</p>
+            </app-detail-field>
+
+            <div *ngIf="!foto.descripcion" class="text-sm text-gray-400 italic text-center py-2">
+              Sin descripción
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
+    </app-detail-section>
+
+  </ng-container>
+
+</ng-template>

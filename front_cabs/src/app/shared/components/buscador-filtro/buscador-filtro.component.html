@@ -1,5 +1,5 @@
 <div class="barra-herramientas">
-  <!--Caja de búsqueda -->
+  <!-- Caja de búsqueda -->
   <div class="caja-busqueda">
     <input 
       type="text"
@@ -14,7 +14,7 @@
     </svg>
   </div>
 
-  <!--Botón de filtro -->
+  <!-- Botón de filtro -->
   <button 
     *ngIf="configuracion.mostrarBotonFiltro"
     class="boton-filtro"
@@ -26,4 +26,17 @@
     </svg>
     Filtro
   </button>
+
+  <!-- Botón de nuevo usando el componente atómico -->
+  <div *ngIf="configuracion.mostrarBotonNuevo" class="contenedor-boton-nuevo">
+    <app-ui-boton
+      [variante]="'azul-4'"
+      [texto]="configuracion.textoBotonNuevo || 'Nuevo'"
+      [anchoCompleto]="false"
+      [mostrarIcono]="true"
+      [iconoPersonalizado]="iconoAgregar"
+      (alClickear)="alClicNuevo()"
+      >
+    </app-ui-boton>
+  </div>
 </div>

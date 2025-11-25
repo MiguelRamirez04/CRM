@@ -7,36 +7,34 @@
   <!-- Controles de paginación -->
   <div class="controles-paginacion" *ngIf="mostrarBotonesPagina">
     <!-- Botón Anterior -->
-    <button 
-      class="boton-pagina boton-navegacion" 
-      (click)="paginaAnterior()" 
-      [disabled]="!habilitarBotonAnterior"
-      [attr.aria-label]="'Ir a página anterior'">
-      {{ textoAnterior }}
-    </button>
+    <app-ui-boton
+      [texto]="textoAnterior"
+      [variante]="'terciario'"
+      [anchoCompleto]="false"
+      [estaDeshabilitado]="!habilitarBotonAnterior"
+      [clasesAdicionales]="'!py-2 !px-4'"
+      (alClickear)="paginaAnterior()">
+    </app-ui-boton>
 
     <!-- Botones de páginas -->
-    <button 
-      *ngFor="let pagina of paginasVisibles" 
-      class="boton-pagina" 
-      [ngClass]="{
-        'activo': pagina === paginaActual, 
-        'puntos': esPuntosSuspensivos(pagina)
-      }"
-      (click)="irAPagina(pagina)"
-      [disabled]="esPuntosSuspensivos(pagina)"
-      [attr.aria-label]="esPuntosSuspensivos(pagina) ? null : 'Ir a página ' + pagina"
-      [attr.aria-current]="pagina === paginaActual ? 'page' : null">
-      {{ pagina }}
-    </button>
+    <app-ui-boton
+      *ngFor="let pagina of paginasVisibles"
+      [texto]="pagina.toString()"
+      [variante]="pagina === paginaActual ? 'primario' : 'azul-4'"
+      [anchoCompleto]="false"
+      [estaDeshabilitado]="esPuntosSuspensivos(pagina)"
+      [clasesAdicionales]="'!py-2 !px-4 min-w-[2.5rem] ' + (esPuntosSuspensivos(pagina) ? '!cursor-default !hover:scale-100' : '')"
+      (alClickear)="irAPagina(pagina)">
+    </app-ui-boton>
 
     <!-- Botón Siguiente -->
-    <button 
-      class="boton-pagina boton-navegacion" 
-      (click)="paginaSiguiente()" 
-      [disabled]="!habilitarBotonSiguiente"
-      [attr.aria-label]="'Ir a página siguiente'">
-      {{ textoSiguiente }}
-    </button>
+    <app-ui-boton
+      [texto]="textoSiguiente"
+      [variante]="'terciario'"
+      [anchoCompleto]="false"
+      [estaDeshabilitado]="!habilitarBotonSiguiente"
+      [clasesAdicionales]="'!py-2 !px-4'"
+      (alClickear)="paginaSiguiente()">
+    </app-ui-boton>
   </div>
 </div>
