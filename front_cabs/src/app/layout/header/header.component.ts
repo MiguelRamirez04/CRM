@@ -22,16 +22,20 @@ import { NotificacionesComponent } from '../../shared/components/notificaciones/
 import { ClickOutsideDirective } from '../../shared/directives/click-outside.directive';
 import { SignalRService } from '../../core/services/signalr.service';
 import { SecureAuthService } from '../../core/services/secure-auth.service';
+import { UiIconComponent } from "../../shared/atoms/icono/icono.component";
+import { UitipografiaComponent } from "../../shared/atoms/tipografia/tipografia.component";
+import { UiAvatarComponent } from "../../shared/atoms/avatar/avatar.component";
+import { User } from '../../core/services/secure-auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, NotificacionesComponent, ClickOutsideDirective],
+  imports: [CommonModule, NotificacionesComponent, ClickOutsideDirective, UiIconComponent, UitipografiaComponent, UiAvatarComponent,],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-  usuarioActual: any = null;
+  usuarioActual: User | null = null;
   mostrarMenuUsuario = false;
   signalRConectado = false;
 
@@ -118,5 +122,45 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Método para cerrar menú cuando se hace clic fuera
   onClickOutside() {
     this.mostrarMenuUsuario = false;
+  }
+
+  /* 
+  * Metodo para leer el nombre 
+  */
+  getFullName(user: User | null): string {
+    if (!user) return 'Usuario';
+    if (user.nombre && user.apellido) return `${user.nombre} ${user.apellido}`;
+    if (user.nombreCompleto) return user.nombreCompleto;
+    if (user.name) return user.name;
+    return 'Usuario';
+  }  
+
+
+  private rolesMap: Record<number, string> = {
+  1: 'Administración',
+  2: 'Soporte',
+  3: 'Recepción'
+};
+  /*
+  * Metodo para leer el rol 
+  */
+  getUserRole(user: User | null): string {
+    if (!user) return 'Sin rol';
+
+    const capitalize = (text: string) =>
+      text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+
+    // Caso: rol numérico
+    if (typeof user.rol === 'number' && user.rol !== null) {
+      const rolTexto = this.rolesMap[user.rol] || 'Sin rol';
+      return capitalize(rolTexto);
+    }
+
+    // Caso: rol como string
+    if (typeof user.role === 'string') {
+      return capitalize(user.role);
+    }
+
+    return 'Sin rol';
   }
 }
