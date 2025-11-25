@@ -1,6 +1,10 @@
+// ============================================
+// ARCHIVO COMPLETO: secure-auth.service.ts
+// ============================================
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, timer, throwError, of } from 'rxjs';
+import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
 import { map, tap, catchError, switchMap, share, take } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
 import { Router } from '@angular/router';
@@ -8,16 +12,20 @@ import { environment } from '../../../environments/environment';
 import { RolUsuario } from '../enums/rol-usuario.enum';
 import { TipoTransmision } from '../enums/tipo-transmision.enum';
 
+// ============================================
+// INTERFACES (NO ELIMINAR)
+// ============================================
+
 export interface User {
   id: number;
   nombre: string;
   apellido: string;
   nombreCompleto?: string;
-  telefono?: number | null; // Acepta long desde backend (JS number soporta hasta 2^53)
+  telefono?: number | null;
   email: string;
   rol?: number | null;
-  name?: string; // Mantener para compatibilidad
-  role?: string; // Mantener para compatibilidad
+  name?: string;
+  role?: string;
   permissions?: string[];
 }
 
@@ -32,22 +40,20 @@ export interface RegisterRequest {
   telefono?: number | null;
   email: string;
   contrasena: string;
-  confirmarContrasena: string; // Enviar confirmación (requerida por el backend)
+  confirmarContrasena: string;
   rol: RolUsuario;
   transmisionHabilitada?: TipoTransmision | string | null;
   activo?: boolean;
 }
 
-// Respuesta de login del backend (AuthController.Login)
 export interface AuthResponse {
   user: User;
-  token?: string;        // Backend devuelve 'token'
-  accessToken?: string;  // Compatibilidad si cambiamos nombre en el futuro
-  refreshToken?: string; // Solo para desarrollo
+  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
   expiresIn: number;
 }
 
-// Respuesta de registro del backend (RegistroExitosoResponseDto)
 export interface RegistroResponse {
   usuario: {
     id: number;
@@ -66,9 +72,13 @@ export interface RegistroResponse {
 }
 
 export interface RefreshResponse {
-  accessToken?: string; // Solo para desarrollo
+  accessToken?: string;
   expiresIn: number;
 }
+
+// ============================================
+// SERVICIO
+// ============================================
 
 @Injectable({
   providedIn: 'root'
@@ -77,7 +87,7 @@ export class SecureAuthService {
   private readonly baseUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private refreshTokenRequest: Observable<RefreshResponse> | null = null;
-  private logoutPerformed = false; // Flag para controlar logout realizado
+  private logoutPerformed = false;
   private csrfTokenSubject = new BehaviorSubject<string | null>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -94,7 +104,6 @@ export class SecureAuthService {
   }
 
   private initializeAuth(): void {
-    // Verificar si hay un usuario guardado en cookies
     const userCookie = this.cookieService.get('user');
     if (userCookie) {
       try {
@@ -107,14 +116,39 @@ export class SecureAuthService {
     }
   }
 
+  // ============================================
+  // LOGIN - CON GUARDADO DE TOKEN JWT
+  // ============================================
   login(loginData: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/api/auth/login`, loginData)
       .pipe(
         tap(response => {
-          // Reset flag de logout al hacer login exitoso
+          console.log('✅ Respuesta de login recibida:', response);
+          
           this.logoutPerformed = false;
 
-          // Guardar usuario en cookie (no sensible)
+          // ⚠️ CRÍTICO: Guardar el TOKEN JWT
+          const token = response.token || response.accessToken;
+          
+          if (token) {
+            localStorage.setItem('access_token', token);
+            console.log('✅ Token JWT guardado:', token.substring(0, 30) + '...');
+          } else {
+            console.error('❌ ERROR: El backend NO devolvió el token JWT');
+          }
+
+          // Guardar refreshToken si existe
+          if (response.refreshToken) {
+            localStorage.setItem('refresh_token', response.refreshToken);
+          }
+
+          // Guardar expiración
+          if (response.expiresIn) {
+            const expiresAt = Date.now() + (response.expiresIn * 1000);
+            localStorage.setItem('token_expires_at', expiresAt.toString());
+          }
+
+          // Guardar usuario en cookie
           this.cookieService.set('user', JSON.stringify(response.user), {
             path: '/',
             secure: environment.production,
@@ -122,52 +156,77 @@ export class SecureAuthService {
           });
 
           this.currentUserSubject.next(response.user);
+          
+          console.log('✅ Autenticación completada correctamente');
         }),
         catchError(this.handleError)
       );
   }
 
+  // ============================================
+  // OBTENER TOKEN
+  // ============================================
+  getToken(): string | null {
+    const token = localStorage.getItem('access_token');
+    
+    if (token && this.isTokenExpired()) {
+      console.warn('⚠️ Token expirado, limpiando...');
+      this.clearAuthData();
+      return null;
+    }
+    
+    return token;
+  }
+
+  // ============================================
+  // VERIFICAR EXPIRACIÓN
+  // ============================================
+  private isTokenExpired(): boolean {
+    const expiresAt = localStorage.getItem('token_expires_at');
+    if (!expiresAt) return false;
+    
+    const expirationTime = parseInt(expiresAt, 10);
+    const now = Date.now();
+    
+    return now >= (expirationTime - 300000);
+  }
+
+  // ============================================
+  // REGISTER
+  // ============================================
   register(registerData: RegisterRequest): Observable<RegistroResponse> {
     return this.http.post<RegistroResponse>(`${this.baseUrl}/api/auth/registro`, registerData)
       .pipe(
         tap(response => {
-          // Opcional: Iniciar sesión automáticamente o manejar la respuesta
           console.log('Registro exitoso:', response);
+          
+          if (response.token) {
+            localStorage.setItem('access_token', response.token);
+          }
         }),
         catchError(this.handleError)
       );
   }
 
+  // ============================================
+  // LOGOUT
+  // ============================================
   logout(): Observable<void> {
-    // Logout inmediato del lado cliente - el servidor validará tokens automáticamente
-    // cuando se intenten hacer requests con tokens expirados/inválidos
     this.logoutPerformed = true;
     this.forceLogout();
     return of(void 0);
   }
 
-  /**
-   * Cierra sesión inmediatamente sin llamar al servidor
-   * Útil para manejar tokens expirados o errores de autenticación
-   */
   forceLogout(): void {
     this.logoutPerformed = true;
     this.clearAuthData();
     this.redirectToLogin();
   }
 
-  /**
-   * Solo limpia los datos de autenticación sin redireccionar
-   * Útil para guards que manejan su propia redirección
-   */
   clearSession(): void {
     this.clearAuthData();
   }
 
-  /**
-   * Redirige al usuario después de un login exitoso
-   * Usa returnUrl si está disponible, sino va al dashboard
-   */
   handleLoginSuccess(returnUrl?: string): void {
     const targetUrl = returnUrl && returnUrl !== '/auth/login' ? returnUrl : '/dashboard';
     setTimeout(() => {
@@ -175,13 +234,24 @@ export class SecureAuthService {
     }, 100);
   }
 
+  // ============================================
+  // LIMPIAR DATOS
+  // ============================================
   private clearAuthData(): void {
     this.cookieService.delete('user', '/');
+    
+    // Limpiar tokens
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('token_expires_at');
+    
     this.currentUserSubject.next(null);
+    this.csrfTokenSubject.next(null);
+    
+    console.log('✅ Datos de autenticación limpiados');
   }
 
   private redirectToLogin(): void {
-    // Usar setTimeout para evitar problemas de navegación durante el procesamiento
     setTimeout(() => {
       this.router.navigate(['/auth/login'], { 
         replaceUrl: true,
@@ -190,12 +260,15 @@ export class SecureAuthService {
     }, 100);
   }
 
+  // ============================================
+  // MÉTODOS DE USUARIO
+  // ============================================
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
   }
 
   isAuthenticated(): boolean {
-    return !!this.getCurrentUser();
+    return !!this.getCurrentUser() && !!this.getToken();
   }
 
   hasPermission(permission: string): boolean {
@@ -208,12 +281,16 @@ export class SecureAuthService {
     return user ? user.role === role : false;
   }
 
-  /**
-   * Verificar estado de autenticación (para guards)
-   */
+  // ============================================
+  // CHECK AUTH STATUS
+  // ============================================
   checkAuthStatus(): Observable<boolean> {
-    // Si se realizó logout, no considerar autenticado hasta nuevo login
     if (this.logoutPerformed) {
+      return of(false);
+    }
+
+    if (!this.getToken()) {
+      this.clearAuthData();
       return of(false);
     }
 
@@ -221,7 +298,6 @@ export class SecureAuthService {
       return this.isLoggedIn$;
     }
 
-    // Si no hay usuario local, intentar verificar con el servidor
     return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
       .pipe(
         map(user => {
@@ -240,9 +316,9 @@ export class SecureAuthService {
       );
   }
 
-  /**
-   * Refresh token (para interceptor)
-   */
+  // ============================================
+  // REFRESH TOKEN
+  // ============================================
   refreshToken(): Observable<RefreshResponse> {
     if (this.refreshTokenRequest) {
       return this.refreshTokenRequest;
@@ -251,12 +327,18 @@ export class SecureAuthService {
     this.refreshTokenRequest = this.http.post<RefreshResponse>(`${this.baseUrl}/api/auth/refresh`, {})
       .pipe(
         tap(response => {
-          // Actualizar tiempo de expiración si viene
+          if (response.accessToken) {
+            localStorage.setItem('access_token', response.accessToken);
+            console.log('✅ Token refrescado correctamente');
+          }
+          
           if (response.expiresIn) {
-            // Podrías guardar el nuevo tiempo de expiración aquí
+            const expiresAt = Date.now() + (response.expiresIn * 1000);
+            localStorage.setItem('token_expires_at', expiresAt.toString());
           }
         }),
         catchError(error => {
+          console.error('❌ Error al refrescar token:', error);
           this.clearAuthData();
           return throwError(error);
         }),
@@ -269,16 +351,13 @@ export class SecureAuthService {
     return this.refreshTokenRequest;
   }
 
-  /**
-   * Solicitar reset de contraseña
-   */
+  // ============================================
+  // PASSWORD RESET
+  // ============================================
   requestPasswordReset(email: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/api/auth/forgot-password`, { email });
   }
 
-  /**
-   * Reset de contraseña con token
-   */
   resetPassword(token: string, newPassword: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/api/auth/reset-password`, {
       token,
@@ -286,17 +365,55 @@ export class SecureAuthService {
     });
   }
 
+  // ============================================
+  // CSRF TOKEN
+  // ============================================
+  obtenerCsrfToken(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/api/auth/csrf-token`, {
+      withCredentials: true
+    }).pipe(
+      tap((response: any) => {
+        if (response?.csrfToken) {
+          this.csrfTokenSubject.next(response.csrfToken);
+          console.log('✅ Token CSRF almacenado');
+        }
+      }),
+      catchError(error => {
+        console.error('❌ Error obteniendo token CSRF:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getCsrfToken(): string | null {
+    return this.csrfTokenSubject.value;
+  }
+
+  inicializarCsrfToken(): Observable<any> {
+    return this.isLoggedIn$.pipe(
+      take(1),
+      switchMap(isLoggedIn => {
+        if (isLoggedIn) {
+          console.log('🔄 Inicializando token CSRF...');
+          return this.obtenerCsrfToken();
+        }
+        return of(null);
+      })
+    );
+  }
+
+  // ============================================
+  // ERROR HANDLER
+  // ============================================
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Ha ocurrido un error desconocido';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = error.error.message;
     } else {
-      // Error del lado del servidor o de red
       switch (error.status) {
         case 0:
-          errorMessage = 'No se pudo conectar con el servidor. Verifica que el backend esté encendido en la URL configurada y que no haya bloqueos de CORS/firewall.';
+          errorMessage = 'No se pudo conectar con el servidor';
           break;
         case 400:
           errorMessage = error.error?.message || 'Datos inválidos';
@@ -327,51 +444,4 @@ export class SecureAuthService {
     console.error('Auth error:', error);
     return throwError(() => new Error(errorMessage));
   };
-
-  /**
-   * Obtiene y almacena el token CSRF del servidor
-   * Se debe llamar después del login exitoso
-   */
-  obtenerCsrfToken(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/auth/csrf-token`, {
-      withCredentials: true // Necesario para cookies HttpOnly
-    }).pipe(
-      tap((response: any) => {
-        console.log('✅ Token CSRF obtenido:', response);
-        // Almacenar el token del response body (NO de la cookie)
-        if (response?.csrfToken) {
-          this.csrfTokenSubject.next(response.csrfToken);
-          console.log('✅ Token CSRF almacenado en servicio');
-        }
-      }),
-      catchError(error => {
-        console.error('❌ Error obteniendo token CSRF:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Obtiene el token CSRF actual
-   */
-  getCsrfToken(): string | null {
-    return this.csrfTokenSubject.value;
-  }
-
-  /**
-   * Inicializa el token CSRF al iniciar la aplicación
-   * Se llama desde el app initializer
-   */
-  inicializarCsrfToken(): Observable<any> {
-    return this.isLoggedIn$.pipe(
-      take(1),
-      switchMap(isLoggedIn => {
-        if (isLoggedIn) {
-          console.log('🔄 Inicializando token CSRF...');
-          return this.obtenerCsrfToken();
-        }
-        return of(null);
-      })
-    );
-  }
 }
