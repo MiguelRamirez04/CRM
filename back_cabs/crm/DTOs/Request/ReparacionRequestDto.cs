@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 using System.ComponentModel.DataAnnotations;
 
 namespace back_cabs.CRM.DTOs.Soporte
@@ -72,13 +67,10 @@ namespace back_cabs.CRM.DTOs.Soporte
         public string? UbicacionAlmacenamiento { get; init; }
         public string? Notas { get; init; }
 
-<<<<<<< HEAD
         public string? NombreCliente {get; init;}
 
         public long Telefono {get; init;}
 
-=======
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
     }
 
     public record ReparacionActualizacionRequestDto
@@ -160,13 +152,7 @@ namespace back_cabs.CRM.DTOs.Soporte
         public int? GarantiaMeses { get; init; }
         public decimal? CostoUnitarioCompra { get; init; }
         public decimal? CostoUnitarioPublico { get; init; }
-<<<<<<< HEAD
         public string? Notas { get; init; }
 
     }
-=======
-        public string? Notas { get; init; }
-
-    }
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }

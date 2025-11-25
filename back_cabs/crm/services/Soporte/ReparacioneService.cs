@@ -42,14 +42,6 @@ namespace back_cabs.CRM.services.Soporte
                 _logger.LogInformation("Iniciando creación de reparación para la orden ID: {OrdenId}", request.OrdenId);
 
                 // Validacion de Referencias: DELEGADO AL REPOSITORIO
-<<<<<<< HEAD
-=======
-                var ordenExistente = await _reparacionRepository.OrdenExisteAsync(request.OrdenId);
-                if (!ordenExistente)
-                {
-                    throw new KeyNotFoundException($"No se encontró la orden de trabajo con ID: {request.OrdenId}");
-                }
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
                 var tecnicoExistente = await _reparacionRepository.TecnicoExisteAsync(request.TecnicoId);
                 if (!tecnicoExistente)
                 {
@@ -79,13 +71,9 @@ namespace back_cabs.CRM.services.Soporte
                     EntregadoEn = request.EntregadoEn,
                     TipoEntrega = TipoEntrega.RECOGE_CLIENTE.ToString().ToUpper(), // Valor inicial definido por el negocio
                     UbicacionAlmacenamiento = request.UbicacionAlmacenamiento,
-<<<<<<< HEAD
                     Notas = request.Notas,
                     NombreCliente = request.NombreCliente,
                     Telefono = request.Telefono
-=======
-                    Notas = request.Notas
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
                     // Los campos calculados (CostoTotalCompra, etc.) no se asignan aquí
                 };
 
@@ -259,11 +247,7 @@ namespace back_cabs.CRM.services.Soporte
 
                 if (componente == null)
                 {
-<<<<<<< HEAD
                     _logger.LogWarning("Componente de reparación no encontrado por ID {Id}", id);
-=======
-                     _logger.LogWarning("Componente de reparación no encontrado por ID {Id}", id);
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
                     // Lanzar excepción es más consistente con otros métodos si se espera que exista
                     throw new KeyNotFoundException($"Componente de reparación no encontrado por ID {id}");
                 }
@@ -278,7 +262,6 @@ namespace back_cabs.CRM.services.Soporte
                 throw;
             }
         }
-<<<<<<< HEAD
         public async Task<List<ReparacionComponenteResponseDto>?> ObtenerComponentesporIdReparacionAsync(int repId)
         {
             try
@@ -304,8 +287,6 @@ namespace back_cabs.CRM.services.Soporte
                 throw;
             }
         }
-=======
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 
         public async Task<ReparacionComponenteResponseDto> CrearComponenteReparacionAsync(ReparacionComponenteRequestDto request)
         {
@@ -327,11 +308,7 @@ namespace back_cabs.CRM.services.Soporte
                 }
                 if (request.Cantidad <= 0)
                 {
-<<<<<<< HEAD
                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
-=======
-                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
                 }
 
                 // Mapeo de DTO a Entidad
@@ -376,17 +353,10 @@ namespace back_cabs.CRM.services.Soporte
                     throw new KeyNotFoundException($"No se encontró el componente de reparación con ID: {id}");
                 }
 
-<<<<<<< HEAD
                 // Lógica de Negocio (Validación de entrada)
                 if (request.cantidad <= 0) // Asumiendo que 'cantidad' es el nombre en el DTO
                 {
                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
-=======
-                 // Lógica de Negocio (Validación de entrada)
-                if (request.cantidad <= 0) // Asumiendo que 'cantidad' es el nombre en el DTO
-                {
-                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
                 }
 
                 // Actualizar los campos desde el DTO (Mapeo Parcial)
@@ -432,11 +402,7 @@ namespace back_cabs.CRM.services.Soporte
         // =====================================================================
         private ReparacionResponseDto MapearAResponseDto(Reparacion reparacion)
         {
-<<<<<<< HEAD
-            if (reparacion == null) return null!; // Manejo de nulos
-=======
              if (reparacion == null) return null!; // Manejo de nulos
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
             // Lógica para mapear de Entidad a DTO de Respuesta
             return new ReparacionResponseDto
             {
@@ -465,23 +431,15 @@ namespace back_cabs.CRM.services.Soporte
                 TipoEntrega = reparacion.TipoEntrega,
                 UbicacionAlmacenamiento = reparacion.UbicacionAlmacenamiento,
                 Notas = reparacion.Notas,
-<<<<<<< HEAD
                 CostoTotalPublico = reparacion.CostoTotalPublico, // Asume que la entidad lo tiene calculado
                 NombreCliente = reparacion.NombreCliente,
                 Telefono = reparacion.Telefono
-=======
-                CostoTotalPublico = reparacion.CostoTotalPublico // Asume que la entidad lo tiene calculado
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
             };
         }
 
         private ReparacionComponenteResponseDto MapearAResponseComponenteDto(ReparacionComponente componente)
         {
-<<<<<<< HEAD
             if (componente == null) return null!; // Manejo de nulos
-=======
-             if (componente == null) return null!; // Manejo de nulos
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
             // Lógica para mapear de Entidad a DTO de Respuesta
             return new ReparacionComponenteResponseDto
             {
@@ -497,11 +455,6 @@ namespace back_cabs.CRM.services.Soporte
                 SubtotalPublico = componente.SubtotalPublico, // Asume que la entidad lo tiene calculado
                 Notas = componente.Notas
             };
-<<<<<<< HEAD
-        }
-    }
-=======
         }
     }
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }

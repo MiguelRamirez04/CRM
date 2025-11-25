@@ -30,15 +30,12 @@ namespace back_cabs.CRM.Interfaces.Soporte
         Task<Reparacion?> ObtenerReparacionPorIdAsync(int id);
 
         /// <summary>
-<<<<<<< HEAD
         /// Obtiene los componentes específicos por ID de reparacion SIN TRACKING (solo lectura).
         /// </summary>
         Task<IEnumerable<ReparacionComponente>> ObtenerComponentePorIdReparacionAsync(int repID);
 
 
         /// <summary>
-=======
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
         /// Persiste una nueva entidad Reparacion.
         /// </summary>
         /// <returns>La entidad Reparacion creada (con su ID).</returns>
@@ -51,14 +48,11 @@ namespace back_cabs.CRM.Interfaces.Soporte
         Task<(int FilasAfectadas, Reparacion? ReparacionActualizada)> ActualizarReparacionAsync(Reparacion reparacionActualizada); // <-- Recibe y devuelve ENTIDAD
 
         /// <summary>
-<<<<<<< HEAD
-=======
         /// Verifica si una orden de trabajo existe.
         /// </summary>
         Task<bool> OrdenExisteAsync(int ordenId);
 
         /// <summary>
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
         /// Verifica si un técnico existe.
         /// </summary>
         Task<bool> TecnicoExisteAsync(int tecnicoId);
@@ -98,11 +92,6 @@ namespace back_cabs.CRM.Interfaces.Soporte
         /// Persiste los cambios de un componente existente.
         /// </summary>
         /// <returns>Tupla con filas afectadas y la entidad actualizada.</returns>
-<<<<<<< HEAD
-        Task<(int FilasAfectadas, ReparacionComponente? ComponenteActualizado)> ActualizarComponenteReparacionAsync(ReparacionComponente componente); // <-- Recibe y devuelve ENTIDAD
-    }
-=======
         Task<(int FilasAfectadas, ReparacionComponente? ComponenteActualizado)> ActualizarComponenteReparacionAsync(ReparacionComponente componente); // <-- Recibe y devuelve ENTIDAD
     }
->>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }

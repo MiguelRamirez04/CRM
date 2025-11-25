@@ -270,6 +270,11 @@ namespace back_cabs.CRM.repositories.Soporte
             }
         }
 
+        public Task<IEnumerable<ReparacionComponente>> ObtenerComponentePorIdReparacionAsync(int repID)
+        {
+            throw new NotImplementedException();
+        }
+
 
         // ELIMINAR TODA LA SECCIÓN DE IMPLEMENTACIÓN EXPLÍCITA INCORRECTA
         // 
