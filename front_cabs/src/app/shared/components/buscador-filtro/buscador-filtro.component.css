@@ -1,0 +1,86 @@
+@import 'tailwindcss' reference;
+
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.barra-herramientas {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.caja-busqueda {
+  width: 40%;
+  position: relative;
+}
+
+.caja-busqueda input {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  border: 1px solid var(--color-borde, #D9D9D9);
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  color: var(--texto-dentro-input, #666666);
+  background: var(--color-blanco, #ffffff);
+}
+
+.caja-busqueda input:focus {
+  border-color: var(--elemento-seleccionado, #1D4ED8);
+}
+
+.caja-busqueda input::placeholder {
+  color: var(--texto-dentro-input, #666666);
+}
+
+.icono-busqueda {
+  height: 16px;
+  width: 16px;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texto-dentro-input, #666666);
+  pointer-events: none;
+}
+
+.icono-filtro {
+  color: var(--texto-dentro-input, #666666);
+  height: 16px;
+  width: 16px;
+}
+
+.boton-filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 1px solid var(--color-borde, #D9D9D9);
+  background: var(--color-blanco, #ffffff);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--texto-dentro-input, #666666);
+  transition: background-color 0.2s ease;
+}
+
+.boton-filtro:hover {
+  background: var(--fondo--input, #F4F4F5);
+}
+
+.boton-filtro:active {
+  transform: scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .barra-herramientas {
+    flex-direction: column;
+  }
+
+  .caja-busqueda {
+    width: 100%;
+  }
+}

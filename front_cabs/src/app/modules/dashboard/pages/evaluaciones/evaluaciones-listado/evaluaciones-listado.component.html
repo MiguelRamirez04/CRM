@@ -1,0 +1,140 @@
+<div class="contenedor-principal">
+  <h1 class="titulo-principal">Evaluaciones</h1>
+
+  <div class="barra-herramientas">
+    <div class="caja-busqueda">
+      <input 
+        type="text" 
+        placeholder="Buscar por ID o evaluador"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+        stroke="currentColor" class="icono-busqueda">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+    </div>
+    
+    <button class="boton-filtro" (click)="onFilter()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+        stroke="currentColor" class="icono-filtro">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+      </svg>
+      Filtro
+    </button>
+    
+    <button class="boton-nuevo" (click)="onNuevaEvaluacion()">
+      <span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+          stroke="currentColor" class="icono-agregar">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      </span>
+      Nueva evaluación
+    </button>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" style="background-color: #fee; border: 1px solid #fcc; padding: 1rem; margin: 1rem 0; border-radius: 4px; color: #c33;">
+    {{ error }}
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="cargando" style="text-align: center; padding: 2rem;">
+    <p>Cargando evaluaciones...</p>
+  </div>
+
+  <!-- Tabla de evaluaciones -->
+  <table class="tabla-evaluaciones" *ngIf="!cargando">
+    <thead class="encabezado-tabla">
+      <tr>
+        <th class="celda-encabezado">ID</th>
+        <th class="celda-encabezado">Objetivo</th>
+        <th class="celda-encabezado">Evaluador</th>
+        <th class="celda-encabezado">Fecha de creación</th>
+        <th class="celda-encabezado">Score</th>
+        <th class="celda-encabezado">Seguimiento</th>
+        <th class="celda-encabezado">Acción</th>
+      </tr>
+    </thead>
+    <tbody style="background-color: white;">
+      <tr *ngIf="evaluaciones.length === 0">
+        <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
+          No se encontraron evaluaciones
+        </td>
+      </tr>
+      <tr class="fila-datos" *ngFor="let evaluacion of evaluaciones">
+        <td class="celda-dato">{{ evaluacion.id }}</td>
+        <td class="celda-dato">
+          <div class="texto-objetivo" [innerHTML]="(evaluacion.objetivo || 'Sin objetivo').replace('\n', '<br>')"></div>
+        </td>
+        <td class="celda-dato">{{ evaluacion.evaluadorId }}</td>
+        <td class="celda-dato">{{ formatearFecha(evaluacion.creadoEn) }}</td>
+        <td class="celda-dato">{{ evaluacion.scoreCalidadTotal || 'N/A' }}</td>
+        <td class="celda-dato">
+          <span class="etiqueta" [ngClass]="evaluacion.requiereSeguimiento ? 'etiqueta-alerta' : 'etiqueta-exito'">
+            <svg *ngIf="!evaluacion.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="icono-tabla">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <svg *ngIf="evaluacion.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="icono-tabla">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            {{ evaluacion.requiereSeguimiento ? 'Requiere seguimiento' : 'Sin seguimiento' }}
+          </span>
+        </td>
+        <td class="celda-dato">
+          <div class="contenedor-acciones">
+            <button class="boton-accion boton-ver" (click)="onVerDetalles(evaluacion)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icono-tabla">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              Ver detalles
+            </button>
+            <button class="boton-accion boton-editar" (click)="onEditar(evaluacion)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icono-tabla">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+              </svg>
+              Editar
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="paginacion" *ngIf="!cargando && evaluaciones.length > 0">
+    <div class="info-paginacion">
+      Visualizando {{ startItem }}-{{ endItem }} de {{ totalItems }} entradas
+    </div>
+    <div class="controles-paginacion">
+      <button class="boton-pagina" (click)="previousPage()" [disabled]="currentPage === 1">
+        Atrás
+      </button>
+      <button 
+        *ngFor="let page of getVisiblePages()" 
+        class="boton-pagina" 
+        [ngClass]="{'activo': page === currentPage, 'puntos': page === '...'}"
+        (click)="page !== '...' && goToPage(+page)"
+        [disabled]="page === '...'"
+      >
+        {{ page }}
+      </button>
+      <button class="boton-pagina" (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>

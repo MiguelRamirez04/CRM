@@ -1,0 +1,746 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-1 py-2"> 
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-10 border border-[#4C6EF5]/35">
+    <h2 class="text-4xl font-semibold text-center text-gray-800 mb-3 font-poppins">
+      Crear un nueva usuario
+    </h2>
+
+    <p class="text-center text-gray-600 mb-2 leading-tight font-inter">
+      Complete la siguiente información para registrar CABS.
+    </p>
+
+    <!-- Alertas de error -->
+    <div *ngIf="errorMessage" class="bg-[#dc3545]/80 border-l-4 border-[#dc3545] text-[#dc3545] p-4 mb-6 rounded-md" role="alert">
+      <div class="flex items-center">
+        <i class="fas fa-exclamation-triangle mr-3 text-lg"></i>
+        <div>
+          <p class="font-bold">Error</p>
+          <p class="text-sm">{{ errorMessage }}</p>
+        </div>
+        <button type="button" class="ml-auto" (click)="errorMessage = null">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
+
+     <!-- Nombre y Apellido juntos -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+  <!-- Nombre -->
+  <div class="relative group">
+    <label for="nombre" class="block text-sm font-semibold text-gray-700 mb-1">
+      Nombre <span class="text-red-500">*</span>
+    </label>
+
+    <div
+      class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+      [ngClass]="{
+        'border border-red-400 ring-2 ring-red-300': registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched,
+        'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+          !(registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched)
+      }"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+        [ngClass]="{
+          'text-red-500': registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched,
+          'text-indigo-500': !(registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched)
+        }"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.5-1.632Z"
+        />
+      </svg>
+
+      <input
+        id="nombre"
+        type="text"
+        formControlName="nombre"
+        placeholder="Juan"
+        class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-3 focus:outline-none transition"
+      />
+    </div>
+
+    <p
+      *ngIf="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched"
+      class="text-red-500 text-sm mt-1 flex items-center gap-1"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-4 h-4"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+        />
+      </svg>
+      El nombre es obligatorio
+    </p>
+  </div>
+
+  <!-- Apellido -->
+  <div class="relative group">
+    <label for="apellido" class="block text-sm font-semibold text-gray-700 mb-1">
+      Apellido <span class="text-red-500">*</span>
+    </label>
+
+    <div
+      class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+      [ngClass]="{
+        'border border-red-400 ring-2 ring-red-300': registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched,
+        'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+          !(registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched)
+      }"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+        [ngClass]="{
+          'text-red-500': registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched,
+          'text-indigo-500': !(registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched)
+        }"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.118a7.5 7.5 0 0 1 15 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.5-1.632Z"
+        />
+      </svg>
+
+      <input
+        id="apellido"
+        type="text"
+        formControlName="apellido"
+        placeholder="Pérez García"
+        class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-3 focus:outline-none transition"
+      />
+    </div>
+
+    <p
+      *ngIf="registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched"
+      class="text-red-500 text-sm mt-1 flex items-center gap-1"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-4 h-4"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+        />
+      </svg>
+      El apellido es obligatorio
+    </p>
+  </div>
+</div>
+
+
+      <!-- Rol y Teléfono -->
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<!-- Rol y Teléfono -->
+
+  <!-- Rol -->
+<div>
+  <label class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+    Rol <span class="text-red-500">*</span>
+  </label>
+
+  <div class="relative">
+    <div
+      (click)="toggleRol()"
+      class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out cursor-pointer"
+      [ngClass]="{
+        'border border-red-400 ring-2 ring-red-300': (registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched) || (formularioEnviado && registerForm.get('rol')?.invalid),
+        'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+          !((registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched) || (formularioEnviado && registerForm.get('rol')?.invalid))
+      }"
+    >
+      <!-- Icono usuario -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+        [ngClass]="{
+          'text-red-500': (registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched) || (formularioEnviado && registerForm.get('rol')?.invalid),
+          'text-indigo-500': !((registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched) || (formularioEnviado && registerForm.get('rol')?.invalid))
+        }"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+        />
+      </svg>
+
+      <!-- Texto seleccionado o placeholder -->
+      <div 
+        class="w-full bg-transparent font-medium rounded-lg py-2.5 pl-10 pr-10"
+        [ngClass]="{
+          'text-gray-400': !registerForm.get('rol')?.value,
+          'text-gray-800': registerForm.get('rol')?.value
+        }"
+      >
+        {{ registerForm.get('rol')?.value || 'Seleccione un rol' }}
+      </div>
+
+      <!-- Flecha -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute right-3 top-3 w-5 h-5 pointer-events-none transition-transform duration-200"
+        [ngClass]="{ 'rotate-180': rolAbierto }"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </div>
+
+    <!-- Dropdown -->
+    <div
+      *ngIf="rolAbierto"
+      class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto"
+    >
+      <!-- Placeholder deshabilitado -->
+      <div class="px-4 py-2.5 text-gray-400 bg-gray-100 cursor-not-allowed font-medium border-b border-gray-200">
+        Seleccione un rol
+      </div>
+
+      <!-- Opciones reales -->
+      <div
+        *ngFor="let rol of roles"
+        (click)="seleccionarRol(rol)"
+        class="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer transition-colors duration-150 text-gray-800 font-medium"
+        [ngClass]="{ 'bg-indigo-100': registerForm.get('rol')?.value === rol }"
+      >
+        {{ rol }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <p
+    *ngIf="(registerForm.get('rol')?.invalid && registerForm.get('rol')?.touched) || (formularioEnviado && registerForm.get('rol')?.invalid)"
+    class="text-red-500 text-sm mt-1 flex items-center gap-1"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+      />
+    </svg>
+    Debe seleccionar un rol
+  </p>
+</div>
+
+        
+          <!-- Teléfono -->
+           <div class="mt-0">
+<div class="relative group">
+  <label for="telefono" class="block text-sm font-semibold text-gray-700 mb-1">
+    Teléfono de contacto <span class="text-red-500">*</span>
+  </label>
+  
+  <!-- Contenedor del input -->
+  <div
+    class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+    [ngClass]="{
+      'border border-red-400 ring-2 ring-red-300': (registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched) || (formularioEnviado && registerForm.get('telefono')?.invalid),
+      'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+        !((registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched) || (formularioEnviado && registerForm.get('telefono')?.invalid))
+    }"
+  >
+    <!-- Ícono de teléfono -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+      [ngClass]="{
+        'text-red-500': (registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched) || (formularioEnviado && registerForm.get('telefono')?.invalid),
+        'text-indigo-500': !((registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched) || (formularioEnviado && registerForm.get('telefono')?.invalid))
+      }"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102A1.125 1.125 0 0 0 5.872 2.25H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
+      />
+    </svg>
+
+    <!-- Input -->
+    <input
+      id="telefono"
+      type="text"
+      formControlName="telefono"
+      placeholder="5512345678"
+      maxlength="10"
+      class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-3 focus:outline-none transition"
+    />
+  </div>
+
+  <!-- Mensaje de error con ícono -->
+  <p
+    *ngIf="(registerForm.get('telefono')?.invalid && registerForm.get('telefono')?.touched) || (formularioEnviado && registerForm.get('telefono')?.invalid)"
+    class="text-red-500 text-sm mt-1 flex items-center gap-1"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+      />
+    </svg>
+    El teléfono es obligatorio
+  </p>
+</div>
+           </div>
+         
+     
+       <!-- Correo electrónico -->
+      </div>
+<div class="relative group">
+
+  <label for="email" class="block text-sm font-semibold text-gray-700 mb-1">
+    Correo electrónico <span class="text-red-500">*</span>
+  </label>
+
+  <div
+    class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+    [ngClass]="{
+      'border border-red-400 ring-2 ring-red-300': registerForm.get('email')?.invalid && registerForm.get('email')?.touched,
+      'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+        !(registerForm.get('email')?.invalid && registerForm.get('email')?.touched)
+    }"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+      [ngClass]="{
+        'text-red-500': registerForm.get('email')?.invalid && registerForm.get('email')?.touched,
+        'text-indigo-500': !(registerForm.get('email')?.invalid && registerForm.get('email')?.touched)
+      }"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15A2.25 2.25 0 0 1 2.25 17.25V6.75m19.5 
+           0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 
+           2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 
+           1.916L12 13.02a2.25 2.25 0 0 1-2.36 
+           0L3.32 8.91A2.25 2.25 0 0 1 2.25 
+           6.993V6.75"
+      />
+    </svg>
+
+    <input
+      id="email"
+      type="email"
+      formControlName="email"
+      placeholder="usuario@empresa.com"
+      class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-3 focus:outline-none transition"
+    />
+  </div>
+
+  <p
+    *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+    class="text-red-500 text-sm mt-1 flex items-center gap-1"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 
+           1.5.217 3.374 1.948 
+           3.374h14.71c1.73 0 2.813-1.874 
+           1.948-3.374L13.949 
+           3.378c-.866-1.5-3.032-1.5-3.898 
+           0L2.697 16.126ZM12 
+           15.75h.007v.008H12v-.008Z"
+      />
+    </svg>
+    Ingrese un correo electrónico válido
+  </p>
+</div>
+      <!-- Contraseña y Confirmar contraseña -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- Contraseña -->
+        <div class="relative">
+          <label
+            for="contrasena"
+            class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1"
+          >
+            Contraseña <span class="text-red-500">*</span>
+          </label>
+
+          <div
+            class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+            [ngClass]="{
+              'border border-red-400 ring-2 ring-red-300': (registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched) || (formularioEnviado && registerForm.get('contrasena')?.invalid),
+              'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+                !((registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched) || (formularioEnviado && registerForm.get('contrasena')?.invalid))
+            }"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+              [ngClass]="{
+                'text-red-500': (registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched) || (formularioEnviado && registerForm.get('contrasena')?.invalid),
+                'text-indigo-500': !((registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched) || (formularioEnviado && registerForm.get('contrasena')?.invalid))
+              }"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+              />
+            </svg>
+
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="contrasena"
+              formControlName="contrasena"
+              placeholder="Mínimo 8 caracteres"
+              (input)="checkPasswordStrength()"
+              class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-10 focus:outline-none transition"
+            />
+
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-indigo-500 focus:outline-none"
+            >
+              <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+
+          <p
+            *ngIf="(registerForm.get('contrasena')?.invalid && registerForm.get('contrasena')?.touched) || (formularioEnviado && registerForm.get('contrasena')?.invalid)"
+            class="text-red-500 text-sm mt-1 flex items-center gap-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-4 h-4"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+              />
+            </svg>
+            Este campo es obligatorio
+          </p>
+
+          <div
+            *ngIf="!allValid && registerForm.get('contrasena')?.value"
+            class="mt-2 border border-gray-300 bg-gray-50 rounded-md p-3 text-sm text-gray-700 shadow-sm"
+          >
+            <p class="font-medium mb-2 text-gray-800">Su contraseña debe contener:</p>
+            <ul class="space-y-1">
+              <li [class.text-green-600]="passwordChecks.length" class="flex items-center gap-2">
+                <span *ngIf="passwordChecks.length" class="text-green-600">✔</span>
+                <span *ngIf="!passwordChecks.length">•</span>
+                Al menos 8 caracteres de largo
+              </li>
+              <li [class.text-green-600]="passwordChecks.lowercase" class="flex items-center gap-2">
+                <span *ngIf="passwordChecks.lowercase" class="text-green-600">✔</span>
+                <span *ngIf="!passwordChecks.lowercase">•</span>
+                Letras minúsculas (a-z)
+              </li>
+              <li [class.text-green-600]="passwordChecks.uppercase" class="flex items-center gap-2">
+                <span *ngIf="passwordChecks.uppercase" class="text-green-600">✔</span>
+                <span *ngIf="!passwordChecks.uppercase">•</span>
+                Letras mayúsculas (A-Z)
+              </li>
+              <li [class.text-green-600]="passwordChecks.number" class="flex items-center gap-2">
+                <span *ngIf="passwordChecks.number" class="text-green-600">✔</span>
+                <span *ngIf="!passwordChecks.number">•</span>
+                Números (0-9)
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Confirmar contraseña -->
+        <div class="relative">
+          <label
+            for="confirmarContrasena"
+            class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1"
+          >
+            Confirmar contraseña <span class="text-red-500">*</span>
+          </label>
+
+          <div
+            class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out"
+            [ngClass]="{
+              'border border-red-400 ring-2 ring-red-300': mostrarErrorConfirmarContrasena(),
+              'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+                !mostrarErrorConfirmarContrasena()
+            }"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+              [ngClass]="{
+                'text-red-500': mostrarErrorConfirmarContrasena(),
+                'text-indigo-500': !mostrarErrorConfirmarContrasena()
+              }"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+              />
+            </svg>
+
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="confirmarContrasena"
+              formControlName="confirmarContrasena"
+              placeholder="Repita su contraseña"
+              class="w-full bg-transparent text-gray-800 font-medium rounded-lg py-2.5 pl-10 pr-3 focus:outline-none transition"
+            />
+          </div>
+
+          <p
+            *ngIf="mostrarErrorConfirmarContrasena()"
+            class="text-red-500 text-sm mt-1 flex items-center gap-1"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-4 h-4"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+              />
+            </svg>
+            {{ obtenerMensajeErrorConfirmar() }}
+          </p>
+        </div>
+      </div>
+<!-- Información adicional -->
+<div class="border-t border-gray-200 pt-6 mt-6">
+  <h3 class="text-lg font-semibold text-gray-700 mb-4">Información adicional (opcional)</h3>
+
+  <!-- Checkbox -->
+  <div class="flex items-center space-x-2 mb-4">
+    <input
+      type="checkbox"
+      id="mostrarVehiculo"
+      (change)="mostrarVehiculo = !mostrarVehiculo"
+      class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+    />
+    <label for="mostrarVehiculo" class="text-gray-700 text-sm">Puede conducir un vehículo</label>
+  </div>
+
+  <!-- Contenedor animado -->
+  <div
+    *ngIf="mostrarVehiculo"
+    class="grid grid-cols-1 sm:grid-cols-2 gap-6 transition-all duration-500 ease-in-out transform"
+  >
+    <!-- Tipo de Transmisión -->
+    
+<div class="mb-4">
+  <label class="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+    Tipo de transmisión <span class="text-red-500">*</span>
+  </label>
+
+  <div class="relative">
+    <div
+      (click)="toggleTransmision()"
+      class="relative bg-white rounded-xl shadow-sm transition-all duration-300 ease-in-out cursor-pointer"
+      [ngClass]="{
+        'border border-red-400 ring-2 ring-red-300': (registerForm.get('transmisionHabilitada')?.invalid && registerForm.get('transmisionHabilitada')?.touched) || (formularioEnviado && registerForm.get('transmisionHabilitada')?.invalid),
+        'border border-indigo-300 hover:shadow-md focus-within:ring-2 focus-within:ring-indigo-400 focus-within:border-indigo-400':
+          !((registerForm.get('transmisionHabilitada')?.invalid && registerForm.get('transmisionHabilitada')?.touched) || (formularioEnviado && registerForm.get('transmisionHabilitada')?.invalid))
+      }"
+    >
+      <!-- Icono engranaje -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute left-3 top-3 w-5 h-5 pointer-events-none transition-all duration-200"
+        [ngClass]="{
+          'text-red-500': (registerForm.get('transmisionHabilitada')?.invalid && registerForm.get('transmisionHabilitada')?.touched) || (formularioEnviado && registerForm.get('transmisionHabilitada')?.invalid),
+          'text-indigo-500': !((registerForm.get('transmisionHabilitada')?.invalid && registerForm.get('transmisionHabilitada')?.touched) || (formularioEnviado && registerForm.get('transmisionHabilitada')?.invalid))
+        }"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      </svg>
+
+      <!-- Texto seleccionado o placeholder -->
+      <div 
+        class="w-full bg-transparent font-medium rounded-lg py-2.5 pl-10 pr-10"
+        [ngClass]="{
+          'text-gray-400': !registerForm.get('transmisionHabilitada')?.value,
+          'text-gray-800': registerForm.get('transmisionHabilitada')?.value
+        }"
+      >
+        {{ registerForm.get('transmisionHabilitada')?.value || 'Seleccione un tipo' }}
+      </div>
+
+      <!-- Flecha -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="absolute right-3 top-3 w-5 h-5 pointer-events-none transition-transform duration-200"
+        [ngClass]="{ 'rotate-180': transmisionAbierto }"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </div>
+
+    <!-- Dropdown -->
+    <div
+      *ngIf="transmisionAbierto"
+      class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto"
+    >
+      <!-- Placeholder deshabilitado -->
+      <div class="px-4 py-2.5 text-gray-400 bg-gray-100 cursor-not-allowed font-medium border-b border-gray-200">
+        Seleccione un tipo
+      </div>
+
+      <!-- Opciones reales -->
+      <div
+        *ngFor="let transmision of transmisiones"
+        (click)="seleccionarTransmision(transmision)"
+        class="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer transition-colors duration-150 text-gray-800 font-medium"
+        [ngClass]="{ 'bg-indigo-100': registerForm.get('transmisionHabilitada')?.value === transmision }"
+      >
+        {{ transmision }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <p
+    *ngIf="(registerForm.get('transmisionHabilitada')?.invalid && registerForm.get('transmisionHabilitada')?.touched) || (formularioEnviado && registerForm.get('transmisionHabilitada')?.invalid)"
+    class="text-red-500 text-sm mt-1 flex items-center gap-1"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-4 h-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+      />
+    </svg>
+    Debe seleccionar uno 
+  </p>
+</div>
+  </div>
+
+
+  <!-- Botón -->
+  <div class="flex justify-center mt-8">
+    <button
+      type="submit"
+      class="w-full sm:w-2/3 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2.5 px-6 rounded-md shadow-md hover:from-blue-600 hover:to-blue-800 hover:shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:ring-offset-2"
+    >
+      <span *ngIf="isLoading" class="mr-2 inline-block">
+        <svg class="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+      </span>
+      {{ isLoading ? 'Creando cuenta...' : 'Crear cuenta' }}
+    </button>
+  </div>
+
+  <!-- Enlace login -->
+  <div class="text-center mt-4">
+    <small class="text-gray-600">
+      ¿Ya tienes una cuenta?
+      <a routerLink="/auth/login" class="font-medium text-blue-500 hover:text-blue-700">Inicia sesión aquí</a>
+    </small>
+  </div>
+</div>

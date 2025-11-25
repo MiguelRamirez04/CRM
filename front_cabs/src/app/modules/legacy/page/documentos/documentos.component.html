@@ -1,0 +1,208 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Cotizaciones Legacy</h1>
+        <p class="text-gray-600 mt-1">Gestión de cotizaciones desde Adminpaq</p>
+      </div>
+      <button 
+        (click)="abrirModalCrear()" 
+        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+        + Nueva Cotización
+      </button>
+    </div>
+
+    <!-- Widget de Resumen -->
+    <div class="bg-gradient-to-r from-blue-700 to-blue-500 rounded-lg shadow-xl p-6 mb-6 text-white">
+      <div class="flex flex-col sm:flex-row items-center justify-center">
+        <div class="text-center">
+          <p class="text-blue-100 text-sm font-medium mb-1">Total Cotizaciones (último mes)</p>
+          <p class="text-4xl font-bold">{{ resumenTotal() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-gray-900">Filtros de Búsqueda</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+          <input 
+            type="date" 
+            [(ngModel)]="filtros.fechaInicio"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+          <input 
+            type="date" 
+            [(ngModel)]="filtros.fechaFin"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Folio</label>
+          <input 
+            type="number" 
+            [(ngModel)]="filtros.folio"
+            placeholder="Número de folio"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Razón Social</label>
+          <input 
+            type="text" 
+            [(ngModel)]="filtros.razonSocial"
+            placeholder="Buscar por cliente"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors">
+        </div>
+        <div class="md:col-span-2 flex items-end">
+          <label class="flex items-center">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filtros.incluirMovimientos"
+              class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all duration-200 ease-in-out">
+            <span class="text-sm text-gray-700">Incluir movimientos</span>
+          </label>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button 
+          (click)="aplicarFiltros()" 
+          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Buscar
+        </button>
+        <button 
+          (click)="limpiarFiltros()" 
+          class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Tabla de Cotizaciones -->
+    @if (!loading() && cotizaciones().length > 0) {
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Folio</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">IVA</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @for (cot of cotizaciones(); track cot.idDocumento) {
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="text-sm font-medium text-gray-900">{{ cot.serieDocumento }}-{{ cot.folio }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {{ formatDate(cot.fecha) }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  {{ cot.razonSocial }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  {{ formatCurrency(cot.subtotal || 0) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                  {{ formatCurrency(cot.iva || 0) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold text-gray-900">
+                  {{ formatCurrency(cot.total) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <span 
+                    [class]="cot.estado === 'Cancelada' ? 'px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800' : 'px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800'">
+                    {{ cot.estado }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                  <button 
+                    (click)="verDetalle(cot)"
+                    class="text-blue-600 hover:text-blue-900 font-medium mr-3">
+                    Ver Detalle
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="flex justify-between items-center mt-6">
+        <div class="text-sm text-gray-700">
+          Mostrando {{ (currentPage() - 1) * pageSize() + 1 }} a {{ Math.min(currentPage() * pageSize(), totalRecords()) }} de {{ totalRecords() }} resultados
+        </div>
+        <div class="flex gap-2">
+          <button 
+            (click)="cambiarPagina(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Anterior
+          </button>
+          <span class="px-4 py-2 text-gray-700">
+            Página {{ currentPage() }} de {{ totalPages() }}
+          </span>
+          <button 
+            (click)="cambiarPagina(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && cotizaciones().length === 0) {
+      <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No hay cotizaciones</h3>
+        <p class="mt-2 text-sm text-gray-500">Comienza creando una nueva cotización</p>
+        <button 
+          (click)="abrirModalCrear()" 
+          class="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          + Nueva Cotización
+        </button>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- Dialog de Vista/Detalle -->
+@if (showDetailModal()) {
+  <app-dialog-vista-documentos
+    [idDocumento]="idDocumentoSeleccionado()"
+    (cerrar)="cerrarModalDetalle()"
+    (solicitudCancelacion)="cancelarCotizacion($event)"
+    (solicitudEliminacion)="eliminarCotizacion($event)">
+  </app-dialog-vista-documentos>
+}
+

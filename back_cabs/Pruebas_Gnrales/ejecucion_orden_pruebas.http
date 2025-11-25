@@ -1,0 +1,278 @@
+### ============================================
+### PRUEBAS API EJECUCIÓN DE ÓRDENES
+### ============================================
+### Asegúrate de tener:
+### - Orden existente (OrdenId válido)
+### - Usuario con rol SOPORTE (TecnicoId válido)
+### - Vehículo activo (VehiculoId válido para tipo CAMPO)
+### ============================================
+
+@baseUrl = http://localhost:5176
+@token = Bearer TU_TOKEN_JWT_AQUI
+
+### ============================================
+### 1. CREAR EJECUCIÓN TIPO REMOTO (Sin vehículo)
+### ============================================
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "REMOTO",
+  "tecnicoId": 3,
+  "hrInicio": "2025-10-18T08:30:00",
+  "comentarios": "Sesión remota para actualización de software",
+  "herramientas": "AnyDesk, TeamViewer",
+  "codigoSesion": "123-456-789",
+  "contrasenaSesion": "TempPass2024!"
+}
+
+### ============================================
+### 2. CREAR EJECUCIÓN TIPO CAMPO (Con vehículo OBLIGATORIO)
+### ============================================
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "CAMPO",
+  "tecnicoId": 3,
+  "vehiculoId": 1,
+  "kmInicial": 45320,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "Visita a cliente para instalación de equipo"
+}
+
+### ============================================
+### 3. OBTENER EJECUCIÓN POR ID
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden/1
+Authorization: {{token}}
+
+### ============================================
+### 4. LISTAR TODAS LAS EJECUCIONES
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden
+Authorization: {{token}}
+
+### ============================================
+### 5. LISTAR EJECUCIONES POR ORDEN
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden?ordenId=16
+Authorization: {{token}}
+
+### ============================================
+### 6. LISTAR EJECUCIONES POR TÉCNICO
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden?tecnicoId=3
+Authorization: {{token}}
+
+### ============================================
+### 7. LISTAR EJECUCIONES POR TIPO
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden?tipoEjecucion=CAMPO
+Authorization: {{token}}
+
+### ============================================
+### 8. LISTAR EJECUCIONES POR RANGO DE FECHAS
+### ============================================
+GET {{baseUrl}}/api/EjecucionOrden?fechaDesde=2025-10-01&fechaHasta=2025-10-31
+Authorization: {{token}}
+
+### ============================================
+### 9. ACTUALIZAR EJECUCIÓN (FINALIZAR - Tipo CAMPO)
+### ============================================
+### Solo el técnico asignado puede actualizar
+PATCH {{baseUrl}}/api/EjecucionOrden/1
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "hrFin": "2025-10-18T14:30:00",
+  "kmFinal": 45382,
+  "comentarios": "Trabajo completado exitosamente. Cliente satisfecho."
+}
+
+### ============================================
+### 10. ACTUALIZAR EJECUCIÓN (FINALIZAR - Tipo REMOTO)
+### ============================================
+PATCH {{baseUrl}}/api/EjecucionOrden/2
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "hrFin": "2025-10-18T11:15:00",
+  "comentarios": "Sesión remota finalizada. Software actualizado correctamente."
+}
+
+### ============================================
+### 11. DELEGAR EJECUCIÓN A OTRO TÉCNICO
+### ============================================
+PATCH {{baseUrl}}/api/EjecucionOrden/1/delegate
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "nuevoTecnicoId": 5,
+  "motivo": "Técnico original no disponible por emergencia familiar"
+}
+
+### ============================================
+### 12. AGREGAR COMENTARIO A EJECUCIÓN FINALIZADA (Corrección)
+### ============================================
+PATCH {{baseUrl}}/api/EjecucionOrden/1
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "comentarios": "[CORRECCIÓN] Se olvidó mencionar que se reemplazó cable de red"
+}
+
+### ============================================
+### CASOS DE ERROR - VALIDACIONES
+### ============================================
+
+### ERROR 1: Crear CAMPO sin VehiculoId (400 Bad Request)
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "CAMPO",
+  "tecnicoId": 3,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "Falta vehiculoId - Debe fallar"
+}
+
+### ERROR 2: Crear REMOTO con VehiculoId (400 Bad Request)
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "REMOTO",
+  "tecnicoId": 3,
+  "vehiculoId": 1,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "REMOTO no debe tener vehiculoId - Debe fallar"
+}
+
+### ERROR 3: VehiculoId inexistente (400 Bad Request)
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "CAMPO",
+  "tecnicoId": 3,
+  "vehiculoId": 99999,
+  "kmInicial": 45320,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "VehiculoId no existe - Debe fallar"
+}
+
+### ERROR 4: OrdenId inexistente (400 Bad Request)
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 99999,
+  "tipoEjecucion": "CAMPO",
+  "tecnicoId": 3,
+  "vehiculoId": 1,
+  "kmInicial": 45320,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "OrdenId no existe - Debe fallar"
+}
+
+### ERROR 5: TecnicoId sin rol SOPORTE (400 Bad Request)
+POST {{baseUrl}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "ordenId": 16,
+  "tipoEjecucion": "CAMPO",
+  "tecnicoId": 1,
+  "vehiculoId": 1,
+  "kmInicial": 45320,
+  "hrInicio": "2025-10-18T09:00:00",
+  "comentarios": "Usuario no es SOPORTE - Debe fallar"
+}
+
+### ERROR 6: KmFinal < KmInicial (400 Bad Request)
+PATCH {{baseUrl}}/api/EjecucionOrden/1
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "hrFin": "2025-10-18T14:30:00",
+  "kmFinal": 45000,
+  "comentarios": "KmFinal menor que inicial - Debe fallar"
+}
+
+### ERROR 7: HrFin < HrInicio (400 Bad Request)
+PATCH {{baseUrl}}/api/EjecucionOrden/1
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "hrFin": "2025-10-18T08:00:00",
+  "comentarios": "HrFin anterior a HrInicio - Debe fallar"
+}
+
+### ============================================
+### RESPUESTAS ESPERADAS
+### ============================================
+
+### POST exitoso (201 Created):
+# {
+#   "id": 1,
+#   "ordenId": 16,
+#   "tipoEjecucion": "CAMPO",
+#   "tecnicoId": 3,
+#   "tecnicoNombre": "Juan Pérez",
+#   "hrInicio": "2025-10-18T09:00:00",
+#   "hrFin": null,
+#   "duracionMinutos": null,
+#   "estadoEjecucion": "EN_CURSO",
+#   "comentarios": "Visita a cliente para instalación de equipo",
+#   "vehiculoId": 1,
+#   "vehiculoPlacas": "ABC-123",
+#   "kmInicial": 45320,
+#   "kmFinal": null,
+#   "kmRecorridos": null,
+#   "herramientas": null,
+#   "codigoSesion": null,
+#   "contrasenaSesion": null
+# }
+
+### PATCH exitoso (204 No Content)
+
+### GET exitoso con ejecución finalizada (200 OK):
+# {
+#   "id": 1,
+#   "ordenId": 16,
+#   "tipoEjecucion": "CAMPO",
+#   "tecnicoId": 3,
+#   "tecnicoNombre": "Juan Pérez",
+#   "hrInicio": "2025-10-18T09:00:00",
+#   "hrFin": "2025-10-18T14:30:00",
+#   "duracionMinutos": 330,
+#   "estadoEjecucion": "FINALIZADA",
+#   "comentarios": "Visita a cliente para instalación de equipo\n[2025-10-18 14:30] Trabajo completado exitosamente. Cliente satisfecho.",
+#   "vehiculoId": 1,
+#   "vehiculoPlacas": "ABC-123",
+#   "kmInicial": 45320,
+#   "kmFinal": 45382,
+#   "kmRecorridos": 62,
+#   "herramientas": null,
+#   "codigoSesion": null,
+#   "contrasenaSesion": null
+# }

@@ -1,0 +1,341 @@
+/* Tailwind v4 */
+@import 'tailwindcss';
+
+
+/* Configuración de Tailwind v4 */
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+  /* Colores principales */
+  --color-primary: #667eea;
+  --color-primary-dark: #764ba2;
+  --color-secondary: #6c757d;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-info: #17a2b8;
+  --color-light: #f8f9fa;
+  --color-dark: #343a40;
+
+  /* Paleta completa de azules */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Paleta de grises */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Paleta de rojos */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  /* Paleta de verdes */
+  --color-green-100: #dcfce7;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-slide-in-left: slideInLeft 0.5s ease-out;
+  --animate-pulse-custom: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+:root {
+  /* Color de la lineas separadora y contorno  */
+    --color-linea: rgb(217,217,217);
+
+  /* Tamaño de texto */
+    --font-text-xxxs: 8px;
+    --font-text-xs: 12px;
+    --font-text-sm: 14px;
+    --font-text-lg: 16px;
+    --font-text-xl: 18px;
+    --font-text-2xl: 20px;
+    --font-text-3xl: 24px;
+
+  /* Grosor de texto */
+    --peso-text-light: 300;
+    --peso-text-normal: 400;
+    --peso-text-medium: 500;
+    --peso-text-semibold: 600;
+    --peso-text-bold: 700;
+    --peso-text-extrabold: 800;
+
+  /* Colores de texto */
+    --color-text-black: #000000;
+    --color-text-tabnavegation: #000000;
+    --color-text-enlace: #1447E6;
+    --color-text-primario: #FFFFFF;
+
+ /* COLORES molecula de TABLA BASE*/
+    --color-primario: #34428F;
+    --elemento-seleccionado: #1D4ED8;
+    --fondo-principal: #FAFAFA;
+    --color-blanco: #ffffff;
+    --texto-body: #333333;
+    --texto-body-secundario: #666666;
+    --color-borde: #D9D9D9;
+    --fondo-tarjeta: #F3F4F6;
+    
+
+  /* COLORES etiquetas de ESTATUS*/
+    --color-sin-seguimiento-bg: #BBF7D0;
+    --color-sin-seguimiento-text: #166534;
+
+    --color-requiere-seguimiento-bg: #FED7AA;
+    --color-requiere-seguimiento-text: #9A3412;
+
+    --color-nuevo-bg: #BAE6FD;
+    --color-nuevo-text: #075985;
+
+    --color-revision-bg: #FEF08A;
+    --color-revision-text: #854D0E;
+
+    --color-rechazado-bg: #FECACA;
+    --color-rechazado-text: #991B1B;
+
+    --color-enviada-bg: #C7D2FE;
+    --color-enviada-text: #3730A3;
+
+    --color-aprobado-bg: #BBF7D0;
+    --color-aprobado-text: #166534;
+
+    --color-venta-realizada-bg: #BBF7D0;
+    --color-venta-realizada-text: #166534;
+
+    --color-sin-bg: #f3f4f6;
+    --color-sin-text: #4b5563;
+
+  /* 💠 Personalizado */
+  --color-personalizado-borde: #aaa;
+
+  /* Espaciado */
+    --padding--xs: 4px;
+    --padding--sm: 8px;
+    --padding--lg: 16px;
+    --padding--xl: 24px;
+    --padding--2xl: 32px;
+    --padding--3xl: 48px;
+}
+
+
+/* Minimal Global Styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #9ca3af;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Loading States */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.spinner-custom {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   Angular Material Dialog Custom Styles
+   ============================================ */
+
+@layer components {
+  /* Dialog Container */
+  .custom-dialog-container {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  /* Dialog Overlay/Backdrop */
+  .cdk-overlay-dark-backdrop {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  /* Animation for dialog entrance */
+  .cdk-overlay-pane {
+    animation: dialogFadeIn 0.3s ease-out;
+  }
+
+  @keyframes dialogFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Responsive dialog sizing */
+  @media (max-width: 768px) {
+    .custom-dialog-container {
+      width: 95vw !important;
+      max-width: 95vw !important;
+      margin: 16px !important;
+    }
+  }
+
+  /* Dialog form inputs focus states */
+  .custom-dialog-container input:focus,
+  .custom-dialog-container select:focus,
+  .custom-dialog-container textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Smooth transitions for dialog buttons */
+  .custom-dialog-container button {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .custom-dialog-container button:hover {
+    transform: translateY(-1px);
+  }
+
+  .custom-dialog-container button:active {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   Dashboard Recepción Custom Styles
+   ============================================ */
+
+@layer components {
+  /* --- Animaciones --- */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  .animate-fade-in-up-delayed-1 { animation: fade-in-up 0.6s ease-out 0.1s forwards; }
+  .animate-fade-in-up-delayed-2 { animation: fade-in-up 0.6s ease-out 0.2s forwards; }
+  .animate-fade-in-up-delayed-3 { animation: fade-in-up 0.6s ease-out 0.3s forwards; }
+}
+
+/* Estilos para snackbars de notificaciones */
+.snackbar-success {
+  background-color: #10b981 !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.snackbar-error {
+  background-color: #ef4444 !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.snackbar-info {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.snackbar-warning {
+  background-color: #f59e0b !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Personalizar el botón de cerrar del snackbar */
+.mat-mdc-snack-bar-container .mdc-snackbar__action {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500;
+}
+
+.mat-mdc-snack-bar-container .mdc-snackbar__action:hover {
+  color: white !important;
+}

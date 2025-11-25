@@ -1,0 +1,180 @@
+# =====================================================================================
+# VARIABLES DE ENTORNO
+# =====================================================================================
+@back_cabs_HostAddress = http://localhost:5176
+# ⚠️ IMPORTANTE: Reemplaza este token por uno válido y vigente antes de ejecutar.
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwiZW1haWwiOiJhZG1pbkBnbWFpw7EuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiBhZG1pbiIsInJvbGUiOiJBRE1JTklTVFJBQ0lPTiIsIm5iZiI6MTc2MDcyMDgyOSwiZXhwIjoxNzYwNzIyNjI5LCJpYXQiOjE3NjA3MjA4MjksImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.5Wfg7_cXZAja9VzEpmYvOqNxrO1o2eemwktaXwoJ4Ss
+
+# IDs para pruebas
+@ejecucionOrdenId = 1
+@ejecucionOrdenIdInexistente = 9999
+
+
+# =====================================================================================
+# PRUEBAS DE API - MÓDULO DE EJECUCIÓN DE ÓRDENES
+# =====================================================================================
+#
+# BASE URL: {{back_cabs_HostAddress}}/api/EjecucionOrden
+#
+# ENDPOINTS DISPONIBLES:
+# ┌────────────────────────────────────────────────────────────────────────────────────────┐
+# │ VERBO  | RUTA                                  | DESCRIPCIÓN                            │
+# ├────────────────────────────────────────────────────────────────────────────────────────┤
+# │ POST   | /api/EjecucionOrden                   | Crear una nueva ejecución de orden.    │
+# │ GET    | /api/EjecucionOrden                   | Obtener todas las ejecuciones.         │
+# │ GET    | /api/EjecucionOrden/{id}              | Obtener una ejecución por su ID.       │
+# │ PATCH  | /api/EjecucionOrden/{id}              | Finalizar una ejecución de orden.      │
+# │ PATCH  | /api/EjecucionOrden/{id}/delegate     | Reasignar (delegar) una ejecución.     │
+# └────────────────────────────────────────────────────────────────────────────────────────┘
+# =====================================================================================
+
+###
+# ============================================================================
+# 1. POST - CREAR UNA NUEVA EJECUCIÓN DE ORDEN
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1.1 Prueba de Éxito: Crear una ejecución con datos válidos
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 201 Created
+# ----------------------------------------------------------------------------
+POST {{back_cabs_HostAddress}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "ordenId": 1,
+    "tipoEjecucion": 1,
+    "tecnicoId": 1,
+    "hrInicio": "2025-10-17T14:30:00",
+    "comentarios": "Iniciando servicio de mantenimiento preventivo.",
+    "vehiculoId": 5,
+    "kmInicial": 150200,
+    "herramientas": "Kit de llaves, multímetro.",
+    "codigoSesion": "CS123",
+    "contrasenaSesion": "pass456"
+}
+
+# ----------------------------------------------------------------------------
+# 1.2 Prueba de Error: Intento de crear con datos inválidos (Bad Request)
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 400 Bad Request
+# ----------------------------------------------------------------------------
+POST {{back_cabs_HostAddress}}/api/EjecucionOrden
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "ordenId": 0, # Un ID de orden inválido podría causar un error
+    "tipoEjecucion": 1,
+    "tecnicoId": 1
+}
+
+
+###
+# ============================================================================
+# 2. GET - OBTENER TODAS LAS EJECUCIONES DE ÓRDENES
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 2.1 Prueba de Éxito: Obtener la lista de ejecuciones
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/EjecucionOrden
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
+###
+# ============================================================================
+# 3. GET - OBTENER EJECUCIÓN POR ID
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 3.1 Prueba de Éxito: Obtener una ejecución con un ID existente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenId}}
+Accept: application/json
+Authorization: Bearer {{token}}
+
+# ----------------------------------------------------------------------------
+# 3.2 Prueba de Error: Intento de obtener una ejecución con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenIdInexistente}}
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
+###
+# ============================================================================
+# 4. PATCH - FINALIZAR UNA EJECUCIÓN
+# Endpoint: /api/EjecucionOrden/{id}
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 4.1 Prueba de Éxito: Finalizar una ejecución existente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 204 No Content (o 200 OK)
+# ----------------------------------------------------------------------------
+PATCH {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "hrFin": "2025-10-17T16:00:00",
+    "kmFinal": 150250,
+    "comentarios": "Mantenimiento completado sin incidentes."
+}
+
+# ----------------------------------------------------------------------------
+# 4.2 Prueba de Error: Intento de finalizar una ejecución con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+PATCH {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenIdInexistente}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "hrFin": "2025-10-17T17:00:00"
+}
+
+
+###
+# ============================================================================
+# 5. PATCH - DELEGAR/REASIGNAR UNA EJECUCIÓN
+# Endpoint: /api/EjecucionOrden/{id}/delegate
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 5.1 Prueba de Éxito: Reasignar una ejecución a otro técnico
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 204 No Content (o 200 OK)
+# ----------------------------------------------------------------------------
+PATCH {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenId}}/delegate
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nuevoTecnicoId": 2,
+    "motivo": "El técnico asignado originalmente tuvo una emergencia."
+}
+
+# ----------------------------------------------------------------------------
+# 5.2 Prueba de Error: Intento de reasignar una ejecución con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+PATCH {{back_cabs_HostAddress}}/api/EjecucionOrden/{{ejecucionOrdenIdInexistente}}/delegate
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nuevoTecnicoId": 3,
+    "motivo": "Esto no debería funcionar."
+}

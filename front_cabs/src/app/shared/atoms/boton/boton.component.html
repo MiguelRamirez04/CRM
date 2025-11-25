@@ -1,0 +1,35 @@
+<button
+  [type]="tipo"
+  [ngClass]="obtenerClasesTailwind()"
+  [disabled]="estaInactivo()"
+  (click)="manejarClick($event)"
+>
+  <!-- ESTADO: CARGANDO -->
+  @if (estaCargando) {
+    <app-ui-icono
+      name="arrow-path"
+      size="w-5 h-5 animate-spin"
+    ></app-ui-icono>
+
+    @if (visualizarTexto && textoAlCargar) {
+      <span>{{ textoAlCargar }}</span>
+    }
+  }
+
+  <!-- ESTADO NORMAL -->
+  @if (!estaCargando) {
+
+    <!-- SOLO ÍCONO / ÍCONO + TEXTO -->
+    @if (mostrarIcono && nombreIcono) {
+      <app-ui-icono
+        [name]="nombreIcono"
+        size="w-5 h-5"
+      ></app-ui-icono>
+    }
+
+    <!-- SOLO TEXTO o TEXTO + ÍCONO -->
+    @if (visualizarTexto) {
+      <span>{{ obtenerTexto() }}</span>
+    }
+  }
+</button>

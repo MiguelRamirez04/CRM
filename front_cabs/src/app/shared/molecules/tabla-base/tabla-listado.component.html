@@ -1,0 +1,86 @@
+<div class="contenedor-tabla" [ngClass]="clasePersonalizada">
+  <!-- Indicador de carga -->
+  <div *ngIf="cargando" class="estado-tabla">
+    <p>{{ mensajeCargando }}</p>
+  </div>
+
+  <!-- Tabla -->
+  <table class="tabla-listado" *ngIf="!cargando">
+    <thead class="encabezado-tabla">
+      <tr>
+        <th *ngIf="mostrarIndice" class="celda-encabezado" style="text-align: center;">
+          #
+        </th>
+
+        <th
+          *ngFor="let columna of columnas"
+          class="celda-encabezado"
+          [style.width]="columna.ancho"
+          [style.text-align]="columna.alineacion || 'center'">
+          <app-table-header-cell
+            [encabezado]="columna.encabezado"
+            [ancho]="columna.ancho"
+            [alineacion]="columna.alineacion || 'center'">
+          </app-table-header-cell>
+        </th>
+
+        <th *ngIf="acciones.length > 0" class="celda-encabezado" style="text-align: center;">
+          Acciones
+        </th>
+      </tr>
+    </thead>
+
+    <tbody class="cuerpo-tabla">
+      <!-- Mensaje sin datos -->
+      <tr *ngIf="datos.length === 0">
+        <td [attr.colspan]="columnas.length + (mostrarIndice ? 1 : 0) + (acciones.length > 0 ? 1 : 0)" 
+            class="celda-sin-datos">
+          {{ mensajeSinDatos }}
+        </td>
+      </tr>
+
+      <!-- Filas de datos -->
+      <tr 
+        *ngFor="let item of datos; let i = index" 
+        class="fila-datos"
+        (click)="alManejarFilaClick(item)"
+        (dblclick)="alManejarFilaDobleClick(item)">
+        
+        <td *ngIf="mostrarIndice" class="celda-dato" style="text-align: center;">
+          {{ i + 1 }}
+        </td>
+
+        <td
+          *ngFor="let columna of columnas"
+          class="celda-dato"
+          [style.text-align]="columna.alineacion || 'center'">
+          <app-table-cell
+            [valor]="obtenerValorCelda(item, columna.campo!)"
+            [dato]="item"
+            [plantilla]="columna.plantilla"
+            [alineacion]="columna.alineacion || 'center'">
+          </app-table-cell>
+        </td>
+
+        <!-- Columna de acciones -->
+        <td *ngIf="acciones.length > 0" class="celda-dato">
+          <div class="contenedor-acciones">
+            <button 
+              *ngFor="let accion of acciones"
+              [hidden]="!mostrarAccion(accion, item)"
+              class="boton-accion"
+              [ngClass]="accion.clase"
+              (click)="ejecutarAccion(accion, item, $event)">
+              
+              <ng-container *ngIf="accion.icono">
+                <ng-container *ngTemplateOutlet="accion.icono"></ng-container>
+              </ng-container>
+              
+              {{ accion.etiqueta }}
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

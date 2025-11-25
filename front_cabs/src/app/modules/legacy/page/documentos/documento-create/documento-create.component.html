@@ -1,0 +1,287 @@
+  <div class="layout-container">
+  
+  <!-- Loading Overlay -->
+  @if (loading()) {
+    <div class="loading-overlay">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <p>Procesando...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <header class="top-bar">
+    <div class="breadcrumb">
+      <span class="text-muted">Documentos</span>
+      <span class="separator">/</span>
+      <span class="current">Nueva Cotización</span>
+    </div>
+    <button (click)="cancelar()" class="btn-icon-text">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      Cancelar
+    </button>
+  </header>
+
+  <div class="main-grid">
+    
+    <!-- Left Column: Operations -->
+    <div class="left-column">
+      
+      <!-- 1. Client Selection Card -->
+      <section class="card client-card">
+        <div class="card-header">
+          <div class="icon-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <h3>Cliente</h3>
+        </div>
+
+        <div class="card-body">
+          @if (!clienteSeleccionado) {
+            <div class="search-wrapper">
+              <input 
+                type="text" 
+                [(ngModel)]="busquedaCliente"
+                (input)="buscarClientes()"
+                placeholder="Buscar por Razón Social o RFC..."
+                class="modern-input search-input">
+              <div class="search-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </div>
+              
+              @if (clientes().length > 0) {
+                <div class="dropdown-results">
+                  @for (cliente of clientes(); track cliente.idCliente) {
+                    <div (click)="seleccionarCliente(cliente)" class="result-item">
+                      <div class="result-main">{{ cliente.razonSocial }}</div>
+                      <div class="result-sub">{{ cliente.rfc }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="selected-client-display">
+              <div class="client-info">
+                <span class="client-name">{{ clienteSeleccionado.razonSocial }}</span>
+                <span class="client-rfc">{{ clienteSeleccionado.rfc }}</span>
+              </div>
+              <button (click)="clienteSeleccionado = null; busquedaCliente = ''; formulario.idCliente = 0" class="btn-change">
+                Cambiar
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- 2. Products Section -->
+      <section class="card products-card">
+        <div class="card-header">
+          <div class="icon-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+          </div>
+          <h3>Productos</h3>
+        </div>
+
+        <div class="card-body">
+          <!-- Product Search -->
+          <div class="search-wrapper mb-6">
+            <input 
+              type="text" 
+              [(ngModel)]="busquedaProducto"
+              (input)="buscarProductos()"
+              placeholder="Buscar producto por código o nombre..."
+              class="modern-input search-input">
+            <div class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+
+            @if (productos().length > 0) {
+              <div class="dropdown-results">
+                @for (producto of productos(); track producto.idProducto) {
+                  <div (click)="seleccionarProducto(producto)" class="result-item">
+                    <div class="result-main">{{ producto.nombreProducto }}</div>
+                    <div class="result-sub">
+                      <span class="code">{{ producto.codigoProducto }}</span>
+                      <span class="price">{{ formatCurrency(producto.precio) }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Active Product Form -->
+          @if (productoTemporal.idProducto > 0) {
+            <div class="active-product-panel">
+              <div class="panel-header">
+                <h4>{{ productoTemporal.nombreProducto }}</h4>
+                <span class="badge">{{ productoTemporal.codigoProducto }}</span>
+              </div>
+              
+              <div class="panel-grid">
+                <div class="input-group">
+                  <label>Cantidad</label>
+                  <input type="number" [(ngModel)]="productoTemporal.unidades" (input)="calcularSubtotalProducto()" min="1" class="modern-input">
+                </div>
+                <div class="input-group">
+                  <label>Precio Unitario</label>
+                  <input type="number" [(ngModel)]="productoTemporal.precio" (input)="calcularSubtotalProducto()" min="0" class="modern-input">
+                </div>
+                <div class="input-group">
+                  <label>Descuento ($)</label>
+                  <input type="number" [(ngModel)]="productoTemporal.descuentoImporte" (input)="calcularSubtotalProducto()" min="0" class="modern-input">
+                </div>
+                <div class="total-display">
+                  <label>Subtotal</label>
+                  <div class="amount">{{ formatCurrency(productoTemporal.subtotal) }}</div>
+                </div>
+              </div>
+
+              <div class="panel-actions">
+                <button (click)="agregarProducto()" class="btn-add">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  Agregar a la lista
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Products List -->
+          @if (productosSeleccionados().length > 0) {
+            <div class="table-responsive">
+              <table class="modern-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="text-center">Cant.</th>
+                    <th class="text-right">Precio</th>
+                    <th class="text-right">Desc.</th>
+                    <th class="text-right">Total</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of productosSeleccionados(); track $index) {
+                    <tr>
+                      <td>
+                        <div class="cell-product">
+                          <span class="cell-name">{{ item.nombreProducto }}</span>
+                          <span class="cell-code">{{ item.codigoProducto }}</span>
+                        </div>
+                      </td>
+                      <td class="text-center font-medium">{{ item.unidades }}</td>
+                      <td class="text-right text-muted">{{ formatCurrency(item.precio) }}</td>
+                      <td class="text-right text-danger">{{ item.descuentoImporte > 0 ? '-' + formatCurrency(item.descuentoImporte) : '-' }}</td>
+                      <td class="text-right font-bold">{{ formatCurrency(item.subtotal) }}</td>
+                      <td class="text-center">
+                        <button (click)="eliminarProducto($index)" class="btn-trash">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <p>No hay productos agregados aún.</p>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Summary Sidebar -->
+    <div class="right-column">
+      <div class="summary-card sticky-card">
+        <div class="summary-header">
+          <h3>Resumen</h3>
+        </div>
+        
+        <div class="summary-body">
+          <!-- Observations -->
+          <div class="form-group mb-4">
+            <label class="label-sm">Observaciones</label>
+            <textarea 
+              [(ngModel)]="formulario.observaciones"
+              rows="3" 
+              class="modern-textarea"
+              placeholder="Notas para la cotización..."></textarea>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Financial Inputs -->
+          <div class="financial-row highlight-row">
+            <label>Subtotal (CTOTAL) *</label>
+            <input 
+              type="number" 
+              [(ngModel)]="formulario.cTotal"
+              (input)="calcularTotalConIVA()"
+              placeholder="0.00"
+              class="financial-input">
+          </div>
+
+          <div class="discounts-section">
+            <label class="label-sm">Descuentos Adicionales</label>
+            <div class="discount-grid">
+              <input type="number" [(ngModel)]="formulario.descuentoDoc1" (input)="calcularTotalConIVA()" placeholder="$ D1" class="mini-input">
+              <input type="number" [(ngModel)]="formulario.descuentoDoc2" (input)="calcularTotalConIVA()" placeholder="$ D2" class="mini-input">
+              <input type="number" [(ngModel)]="formulario.descuentoDoc3" (input)="calcularTotalConIVA()" placeholder="$ D3" class="mini-input">
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Calculations -->
+          <div class="calc-row">
+            <span>Suma Productos</span>
+            <span>{{ formatCurrency(calcularSubtotalGeneral()) }}</span>
+          </div>
+          
+          @if (calcularTotalDescuentos() > 0) {
+            <div class="calc-row text-danger">
+              <span>Descuentos</span>
+              <span>-{{ formatCurrency(calcularTotalDescuentos()) }}</span>
+            </div>
+          }
+
+          <div class="calc-row">
+            <span>Neto</span>
+            <span>{{ formatCurrency(calcularNetoConDescuentos()) }}</span>
+          </div>
+
+          <div class="calc-row checkbox-row">
+            <label class="checkbox-container">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="formulario.aplicarIVA" 
+                (change)="calcularTotalConIVA()">
+              <span class="checkmark"></span>
+              IVA ({{ formulario.porcentajeIVA }}%)
+            </label>
+            <span>{{ formatCurrency(calcularIVA()) }}</span>
+          </div>
+
+          <div class="total-final">
+            <span class="label">TOTAL</span>
+            <span class="amount">{{ formatCurrency(calcularTotalConIVA()) }}</span>
+          </div>
+
+          <button 
+            (click)="crearCotizacion()" 
+            [disabled]="loading() || !clienteSeleccionado || productosSeleccionados().length === 0 || formulario.cTotal <= 0"
+            class="btn-primary-block">
+            Generar Cotización
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

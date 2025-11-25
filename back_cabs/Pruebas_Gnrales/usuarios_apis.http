@@ -1,0 +1,201 @@
+### ==================================================
+### PRUEBAS DE APIS DE USUARIOS
+### AuthController - Endpoints de consulta de usuarios
+### ==================================================
+
+### VARIABLES GLOBALES
+@baseUrl = http://localhost:5176
+@token = @token
+
+### ==================================================
+### 1. Login como ADMINISTRADOR (prerequisito)
+### ==================================================
+
+# @name login-admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@cabs.com",
+  "password": "Admin123!"
+}
+
+###
+
+# @name login-admin-new
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "administrador@gmail.com",
+  "password": "AdminPass123!"
+}
+
+### ==================================================
+### 2. GET /api/auth/usuarios - Todos los usuarios
+### Requiere rol: ADMINISTRACION
+### ==================================================
+
+### 2.1 Obtener todos los usuarios activos (default)
+GET {{baseUrl}}/api/auth/usuarios
+Authorization: Bearer {{token}}
+
+### 2.2 Obtener todos los usuarios (incluyendo inactivos)
+GET {{baseUrl}}/api/auth/usuarios?incluirInactivos=true
+Authorization: Bearer {{token}}
+
+### ==================================================
+### 3. GET /api/auth/usuarios/rol/{rol} - Usuarios por rol
+### Requiere rol: ADMINISTRACION, RECEPCION, SOPORTE
+### ==================================================
+
+### 3.1 Obtener usuarios con rol SOPORTE (activos)
+GET {{baseUrl}}/api/auth/usuarios/rol/SOPORTE
+Authorization: Bearer {{token}}
+
+### 3.2 Obtener usuarios con rol SOPORTE (incluyendo inactivos)
+GET {{baseUrl}}/api/auth/usuarios/rol/SOPORTE?incluirInactivos=true
+Authorization: Bearer {{token}}
+
+### 3.3 Obtener usuarios con rol ADMINISTRACION (activos)
+GET {{baseUrl}}/api/auth/usuarios/rol/ADMINISTRACION
+Authorization: Bearer {{token}}
+
+### 3.4 Obtener usuarios con rol RECEPCION (activos)
+GET {{baseUrl}}/api/auth/usuarios/rol/RECEPCION
+Authorization: Bearer {{token}}
+
+### 3.5 Intentar con rol inválido (debe retornar 400 Bad Request)
+GET {{baseUrl}}/api/auth/usuarios/rol/INVALIDO
+Authorization: Bearer {{token}}
+
+### ==================================================
+### 4. GET /api/auth/tecnicos - Técnicos disponibles
+### Endpoint simplificado para selectores (SOPORTE + ADMINISTRACION)
+### Requiere rol: ADMINISTRACION, RECEPCION, SOPORTE
+### ==================================================
+
+### 4.1 Obtener todos los técnicos disponibles (SOPORTE + ADMINISTRACION activos)
+GET {{baseUrl}}/api/auth/tecnicos
+Authorization: Bearer {{token}}
+
+### ==================================================
+### 5. CASOS DE USO REALES
+### ==================================================
+
+### 5.1 Flujo: Cargar técnicos para dropdown de ejecuciones
+# Paso 1: Login como RECEPCION
+# @name login-recepcion
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "recepcion@cabs.com",
+  "password": "Recepcion123!"
+}
+
+###
+@recepcionToken = @token
+
+### Paso 2: Obtener técnicos disponibles
+GET {{baseUrl}}/api/auth/tecnicos
+Authorization: Bearer {{recepcionToken}}
+
+### ==================================================
+### 6. PRUEBAS DE AUTORIZACIÓN
+### ==================================================
+
+### 6.1 Intentar acceder sin token (debe retornar 401)
+GET {{baseUrl}}/api/auth/usuarios
+
+### 6.2 Login como SOPORTE (no debería poder obtener todos los usuarios)
+# @name login-soporte
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "soporte@cabs.com",
+  "password": "Soporte123!"
+}
+
+###
+@soporteToken = @token
+### 6.3 SOPORTE intenta GET /usuarios (debe retornar 403 Forbidden)
+GET {{baseUrl}}/api/auth/usuarios
+Authorization: Bearer {{soporteToken}}
+
+### 6.4 SOPORTE puede acceder a /tecnicos (debe retornar 200 OK)
+GET {{baseUrl}}/api/auth/tecnicos
+Authorization: Bearer {{soporteToken}}
+
+### ==================================================
+### 7. VALIDACIONES Y CASOS ESPECIALES
+### ==================================================
+
+### 7.1 Verificar que solo retorna usuarios activos por defecto
+GET {{baseUrl}}/api/auth/usuarios/rol/SOPORTE
+Authorization: Bearer {{token}}
+
+### 7.2 Verificar que incluye inactivos cuando se solicita
+GET {{baseUrl}}/api/auth/usuarios/rol/SOPORTE?incluirInactivos=true
+Authorization: Bearer {{token}}
+
+### 7.3 Verificar ordenamiento alfabético (Nombre, luego Apellido)
+GET {{baseUrl}}/api/auth/tecnicos
+Authorization: Bearer {{token}}
+
+### ==================================================
+### RESPUESTAS ESPERADAS
+### ==================================================
+
+### GET /usuarios
+# {
+#   "success": true,
+#   "data": [
+#     {
+#       "id": 1,
+#       "nombre": "Juan",
+#       "apellido": "Pérez",
+#       "nombreCompleto": "Juan Pérez",
+#       "telefono": 1234567890,
+#       "email": "juan@example.com",
+#       "rol": "ADMINISTRACION",
+#       "activo": true,
+#       "creadoEn": "2024-01-01T00:00:00",
+#       "transmisionHabilitada": "Manual",
+#       "puedeUsarVehiculo": true
+#     }
+#   ],
+#   "count": 5
+# }
+
+### GET /usuarios/rol/{rol}
+# {
+#   "success": true,
+#   "data": [...],
+#   "count": 3,
+#   "rol": "SOPORTE"
+# }
+
+### GET /tecnicos
+# {
+#   "success": true,
+#   "data": [...], // SOPORTE + ADMINISTRACION
+#   "count": 8
+# }
+
+### Error 400 (Rol inválido)
+# {
+#   "success": false,
+#   "message": "Rol inválido. Roles válidos: SOPORTE, ADMINISTRACION, RECEPCION"
+# }
+
+### Error 401 (No autorizado)
+# {
+#   "message": "Token de acceso inválido o no proporcionado"
+# }
+
+### Error 403 (Forbidden - sin permisos)
+# {
+#   "message": "Forbidden"
+# }

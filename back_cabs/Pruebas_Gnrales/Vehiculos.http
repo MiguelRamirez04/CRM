@@ -1,0 +1,172 @@
+# =====================================================================================
+# VARIABLES DE ENTORNO
+# =====================================================================================
+@back_cabs_HostAddress = http://localhost:5176
+# ⚠️ IMPORTANTE: Reemplaza este token por uno válido y vigente antes de ejecutar.
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwiZW1haWwiOiJhZG1pbkBnbWFpw7EuY29tIiwidW5pcXVlX25hbWUiOiJhZG1pbiBhZG1pbiIsInJvbGUiOiJBRE1JTklTVFJBQ-lPTiIsIm5iZiI6MTc2MDcyMDgyOSwiZXhwIjoxNzYwNzIyNjI5LCJpYXQiOjE3NjA3MjA4MjksImlzcyI6IkNSTS1BUEktREVWIiwiYXVkIjoiQ1JNLUNsaWVudC1ERVYifQ.5Wfg73cXZAja9VzEpmYvOqNxrO1o2eemwktaXwoJ4Ss
+
+# IDs para pruebas
+@vehiculoId = 1
+@vehiculoIdInexistente = 9999
+
+
+# =====================================================================================
+# PRUEBAS DE API - MÓDULO DE VEHÍCULOS
+# =====================================================================================
+#
+# BASE URL: {{back_cabs_HostAddress}}/api/Vehiculos
+#
+# ENDPOINTS DISPONIBLES:
+# ┌────────────────────────────────────────────────────────────────────────────────────────┐
+# │ VERBO  | RUTA                         | DESCRIPCIÓN                                │
+# ├────────────────────────────────────────────────────────────────────────────────────────┤
+# │ POST   | /api/Vehiculos               | Crear un nuevo vehículo.                   │
+# │ GET    | /api/Vehiculos               | Obtener todos los vehículos.               │
+# │ GET    | /api/Vehiculos/{id}          | Obtener un vehículo por su ID.             │
+# │ PUT    | /api/Vehiculos/{id}          | Actualizar un vehículo existente.          │
+# │ DELETE | /api/Vehiculos/{id}          | Eliminar un vehículo por su ID.            │
+# └────────────────────────────────────────────────────────────────────────────────────────┘
+# =====================================================================================
+
+###
+# ============================================================================
+# 1. POST - CREAR UN NUEVO VEHÍCULO
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1.1 Prueba de Éxito: Crear un vehículo con datos válidos
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 201 Created
+# ----------------------------------------------------------------------------
+POST {{back_cabs_HostAddress}}/api/Vehiculos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "tipoVehiculo": "Sedán",
+    "transmision": "Automática",
+    "esDeEmpresa": true,
+    "placas": "GKU-123-A",
+    "activo": true,
+    "observaciones": "Vehículo asignado al departamento de ventas."
+}
+
+# ----------------------------------------------------------------------------
+# 1.2 Prueba de Error: Intento de crear sin un campo requerido (Bad Request)
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 400 Bad Request
+# ----------------------------------------------------------------------------
+POST {{back_cabs_HostAddress}}/api/Vehiculos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "tipoVehiculo": "Camioneta"
+    // Faltan las placas, lo que debería provocar un error de validación
+}
+
+
+###
+# ============================================================================
+# 2. GET - OBTENER TODOS LOS VEHÍCULOS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 2.1 Prueba de Éxito: Obtener la lista de vehículos
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/Vehiculos
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
+###
+# ============================================================================
+# 3. GET - OBTENER VEHÍCULO POR ID
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 3.1 Prueba de Éxito: Obtener un vehículo con un ID existente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 200 OK
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoId}}
+Accept: application/json
+Authorization: Bearer {{token}}
+
+# ----------------------------------------------------------------------------
+# 3.2 Prueba de Error: Intento de obtener un vehículo con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoIdInexistente}}
+Accept: application/json
+Authorization: Bearer {{token}}
+
+
+###
+# ============================================================================
+# 4. PUT - ACTUALIZAR UN VEHÍCULO EXISTENTE
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 4.1 Prueba de Éxito: Actualizar un vehículo con datos válidos
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 204 No Content (o 200 OK)
+# ----------------------------------------------------------------------------
+PUT {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "tipoVehiculo": "Sedán",
+    "transmision": "Automática",
+    "esDeEmpresa": true,
+    "placas": "GKU-123-A",
+    "activo": false,
+    "observaciones": "Vehículo en mantenimiento. No disponible."
+}
+
+# ----------------------------------------------------------------------------
+# 4.2 Prueba de Error: Intento de actualizar un vehículo con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+PUT {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoIdInexistente}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "activo": false,
+    "observaciones": "Esto no se guardará."
+}
+
+
+###
+# ============================================================================
+# 5. DELETE - ELIMINAR UN VEHÍCULO
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 5.1 Prueba de Éxito: Eliminar un vehículo con un ID existente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 204 No Content
+# ----------------------------------------------------------------------------
+DELETE {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoId}}
+Authorization: Bearer {{token}}
+
+# ----------------------------------------------------------------------------
+# 5.2 Prueba de Error: Intento de eliminar un vehículo con ID inexistente
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 404 Not Found
+# ----------------------------------------------------------------------------
+DELETE {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoIdInexistente}}
+Authorization: Bearer {{token}}
+
+# ----------------------------------------------------------------------------
+# 5.3 Prueba de Error: Intento de eliminar sin autenticación
+# ----------------------------------------------------------------------------
+# Respuesta esperada: 401 Unauthorized
+# ----------------------------------------------------------------------------
+DELETE {{back_cabs_HostAddress}}/api/Vehiculos/{{vehiculoId}}

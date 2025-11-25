@@ -1,0 +1,112 @@
+<!-- Panel lateral deslizante -->
+<div class="panel-overlay" [class.visible]="visible()" (click)="cerrarPanel()"></div>
+
+<div class="panel-lateral" [class.visible]="visible()">
+  <!-- Header -->
+  <div class="panel-header">
+    <h2 class="panel-title">
+      <span class="tipo-icon">{{ ejecucion() ? getIconoTipo(ejecucion()!.tipoEjecucion) : '' }}</span>
+      Detalles de Ejecución
+    </h2>
+    <button class="btn-cerrar" (click)="cerrarPanel()" aria-label="Cerrar panel">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Contenido -->
+  <div class="panel-content" *ngIf="ejecucion() as ejec">
+    <!-- Información básica -->
+    <div class="seccion">
+      <h3 class="seccion-title">Información General</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">ID:</span>
+          <span class="info-value">#{{ ejec.id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Tipo:</span>
+          <span class="info-value" [class]="getColorTipo(ejec.tipoEjecucion)">
+            {{ ejec.tipoEjecucion }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Estado:</span>
+          <span class="info-value" [class]="ejec.hrFin ? 'text-green-600' : 'text-blue-600'">
+            {{ ejec.hrFin ? 'Finalizada' : 'En curso' }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Técnico:</span>
+          <span class="info-value">{{ ejec.tecnicoNombre }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de tiempo -->
+    <div class="seccion">
+      <h3 class="seccion-title">Información de Tiempo</h3>
+      <div class="tiempo-grid">
+        <div class="tiempo-item">
+          <span class="tiempo-label">Inicio:</span>
+          <span class="tiempo-value">{{ formatearFecha(ejec.hrInicio) }}</span>
+        </div>
+        <div class="tiempo-item" *ngIf="ejec.hrFin">
+          <span class="tiempo-label">Fin:</span>
+          <span class="tiempo-value">{{ formatearFecha(ejec.hrFin) }}</span>
+        </div>
+        <div class="tiempo-item">
+          <span class="tiempo-label">Duración:</span>
+          <span class="tiempo-value">{{ calcularDuracion(ejec) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información específica por tipo -->
+    <div class="seccion" *ngIf="ejec.tipoEjecucion === TipoEjecucion.CAMPO">
+      <h3 class="seccion-title">Información de Campo</h3>
+      <div class="info-grid">
+        <div class="info-item" *ngIf="ejec.kmInicial !== undefined">
+          <span class="info-label">KM Inicial:</span>
+          <span class="info-value">{{ ejec.kmInicial }} km</span>
+        </div>
+        <div class="info-item" *ngIf="ejec.kmFinal !== undefined">
+          <span class="info-label">KM Final:</span>
+          <span class="info-value">{{ ejec.kmFinal }} km</span>
+        </div>
+        <div class="info-item" *ngIf="ejec.kmInicial !== undefined && ejec.kmFinal !== undefined">
+          <span class="info-label">KM Recorridos:</span>
+          <span class="info-value">{{ ejec.kmFinal - ejec.kmInicial }} km</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comentarios -->
+    <div class="seccion" *ngIf="ejec.comentarios">
+      <h3 class="seccion-title">Comentarios</h3>
+      <div class="comentarios-box">
+        <p class="comentarios-text">{{ ejec.comentarios }}</p>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="seccion">
+      <h3 class="seccion-title">Información Adicional</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Orden ID:</span>
+          <span class="info-value">#{{ ejec.ordenId }}</span>
+        </div>
+        <div class="info-item" *ngIf="ejec.vehiculoId">
+          <span class="info-label">Vehículo ID:</span>
+          <span class="info-value">#{{ ejec.vehiculoId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Creado:</span>
+          <span class="info-value">{{ formatearFecha(ejec.hrInicio) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

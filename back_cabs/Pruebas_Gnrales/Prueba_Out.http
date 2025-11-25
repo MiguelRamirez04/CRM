@@ -1,0 +1,200 @@
+@back_cabs_HostAddress = http://localhost:5176
+
+# =====================================================================================
+# PRUEBAS DE AUTENTICACIÓN - CRM API
+# =====================================================================================
+
+### 1. REGISTRO DE USUARIO - ADMINISTRADOR
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Juan Pérez Administrador",
+  "email": "juan.perez@empresa.com",
+  "contrasena": "AdminPass123!",
+  "confirmarContrasena" : ""
+  "rol": "Administrador",
+  "licenciaConducir": true,
+  "transmisionHabilitada": "Ambas"
+}
+
+# =====================================================================================
+#la respuesta que me da es la siguiente :
+#{
+#  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+#  "title": "One or more validation errors occurred.",
+#  "status": 400,
+#  "errors": {
+#    "$": [
+#      "'\"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 5 | BytePositionInLine: 2."
+#    ],
+#    "request": [
+#      "The request field is required."
+#    ]
+#  },
+#  "traceId": "00-4d17c3949c09d1a8952d8a153286dab4-94249974f4a5b6fb-00"
+#}
+# La funcion de las reuqest incorrecta es el stattus 400 en la cual nos regresara lo que esperamos
+# por lo que cumple con la prueba que querimaso hacer (ᵕ—ᴗ—)
+# =====================================================================================
+###
+
+### 2. REGISTRO DE USUARIO - RECEPCIÓN
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Ana Martínez Recepcionista",
+  "email": "ana.martinez@empresa.com",
+  "contrasena": "RecepcionPass123!",
+  "confirmarContrasena" : ""
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+# =====================================================================================
+#{
+#  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+#  "title": "One or more validation errors occurred.",
+#  "status": 400,
+#  "errors": {
+#    "$": [
+#      "'\"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 5 | BytePositionInLine: 2."
+#    ],
+#    "request": [
+#      "The request field is required."
+#    ]
+#  },
+#  "traceId": "00-d63c6f26c535a4867ae74a79c84566e7-2931757cbbf31819-00"
+# Por lo que podemos observar los campos requeridos obligatorios son funcionales
+# en caso de que sea requerido y no este cumpliendo este le mandara el mensaje de que le hace falta un campo
+# cumple con lo esperado ദ്ദി ˉ͈̀꒳ˉ͈́ )✧
+# =====================================================================================
+###
+
+
+### 3. REGISTRO DE USUARIO - SOPORTE/TÉCNICO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Marta López Técnico",
+  "email": "marta.lopez@empresa.com",
+  "contrasena": "TecnicoPass123!",
+  "confirmarContrasena" : ""
+  "rol": "Soporte",
+  "licenciaConducir": true,
+  "transmisionHabilitada": "Manual"
+}
+
+# =====================================================================================
+#{
+#  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+#  "title": "One or more validation errors occurred.",
+#  "status": 400,
+#  "errors": {
+#    "$": [
+#      "'\"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 5 | BytePositionInLine: 2."
+#    ],
+#    "request": [
+#      "The request field is required."
+#    ]
+#  },
+#  "traceId": "00-93e2356f3fb028cc16b2125e55cc0b5c-33c78eab2fef1421-00"
+#}
+#en este caso la contraeña esta sin confirmar por lo que este campo requerido es el que falta
+#cumple las expecctativas de la exepcion de esta, si cumple ദ്ദി ˉ͈̀꒳ˉ͈́ )✧
+# =====================================================================================
+###
+
+### 4. LOGIN - PRUEBA CON USUARIO REGISTRADO
+POST {{back_cabs_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "marta.lopez@empresa.com",
+  "contrasena": "TecnicoPass123!"
+} 
+
+# =====================================================================================
+#
+# =====================================================================================
+
+###
+
+### 5. CASO DE ERROR - EMAIL DUPLICADO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Duplicado",
+  "email": "marta.lopez@empresa.com",
+  "contrasena": "Password123!",
+  "confirmarContrasena" : ""
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 6. CASO DE ERROR - CONTRASEÑA DÉBIL
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Contraseña Débil",
+  "email": "usuario.debil@empresa.com",
+  "contrasena": "123",
+  "confirmarContrasena" : ""
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 7. CASO DE ERROR - EMAIL INVÁLIDO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Email Inválido",
+  "email": "email-invalido",
+  "contrasena": "ValidPass123!",
+  "confirmarContrasena" : ""
+  "rol": "Recepcion",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 8. CASO DE ERROR - ROL INVÁLIDO
+POST {{back_cabs_HostAddress}}/api/Auth/registro
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Rol Inválido",
+  "email": "usuario.rol@empresa.com",
+  "contrasena": "ValidPass123!",
+  "confirmarContrasena" : ""  
+  "rol": "RolQueNoExiste",
+  "licenciaConducir": false,
+  "transmisionHabilitada": "Ninguna"
+}
+
+###
+
+### 9. OBTENER ROLES DISPONIBLES
+GET {{back_cabs_HostAddress}}/api/Auth/roles
+Accept: application/json
+
+###
+
+### 10. OBTENER TIPOS DE TRANSMISIÓN
+GET {{back_cabs_HostAddress}}/api/Auth/transmisiones
+Accept: application/json
+
+###

@@ -1,0 +1,351 @@
+@import 'tailwindcss' reference;
+
+/* Modal Overlay - Slide from Right */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: flex-end; /* anclar a la derecha */
+  align-items: stretch;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+/* Panel lateral derecho */
+.modal-content {
+  background: white;
+  border-radius: 0 0 0.75rem 0.75rem; /* bordes redondeados en la izquierda */
+  box-shadow: -20px 0 30px -10px rgba(0, 0, 0, 0.12);
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  overflow-y: auto;
+  transform: translateX(100%);
+  animation: slideInRight 0.25s ease-out forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading State */
+.loading-container {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.spinner {
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #34428F;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error-container {
+  padding: 3rem;
+  text-align: center;
+  color: #dc2626;
+}
+
+.error-container svg {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  color: #dc2626;
+}
+
+.error-container p {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #6b7280;
+  transition: all 0.2s;
+  border-radius: 0.375rem;
+}
+
+.btn-close:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.btn-close svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Detail Sections */
+.detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.detail-section h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #34428F;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Detail Grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: #111827;
+}
+
+/* Full Width Detail */
+.detail-full {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #34428F;
+}
+
+.detail-full p {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  width: fit-content;
+}
+
+.badge-pendiente {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-aprobada {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-rechazada {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-expirada {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* Totals */
+.detail-totals {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin-top: 1.5rem;
+  border: 2px solid #e5e7eb;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.total-row span {
+  color: #6b7280;
+}
+
+.total-row strong {
+  color: #111827;
+  font-size: 1.125rem;
+}
+
+.total-row.total-final {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.total-row.total-final span {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.total-row.total-final strong {
+  font-size: 1.5rem;
+  color: #34428F;
+}
+
+.detail-totals hr {
+  border: none;
+  border-top: 2px solid #d1d5db;
+  margin: 0.75rem 0;
+}
+
+.text-red {
+  color: #dc2626 !important;
+}
+
+/* Footer */
+.detail-footer {
+  display: flex;
+  gap: 2rem;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Buttons */
+.btn-primary {
+  padding: 0.625rem 1.5rem;
+  border: none;
+  background-color: #34428F;
+  color: white;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:hover {
+  background-color: #2a3675;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(52, 66, 143, 0.3);
+}
+
+.btn-primary svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.btn-secondary {
+  padding: 0.625rem 1.5rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #374151;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+}
+

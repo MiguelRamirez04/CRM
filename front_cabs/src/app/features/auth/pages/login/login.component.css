@@ -1,0 +1,45 @@
+@import 'tailwindcss' reference;
+
+.separator span::after {
+  content: "";
+  display: block;
+  margin-top: 6px;
+  width: 100px;
+  height: 2px;
+  background-color: #93c5fd;
+  border-radius: 1px;
+}
+
+@keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes progress {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s ease-out;
+  }
+
+  .animate-progress {
+    animation: progress linear forwards;
+  }
+
+  /* Efecto de desvanecimiento suave al cerrar */
+  [role="alert"] {
+    transition: all 0.3s ease-out;
+  }
+

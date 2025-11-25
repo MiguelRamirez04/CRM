@@ -1,0 +1,130 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace back_cabs.CRM.models.Sales
+{
+    /// <summary>
+    /// Entidad que representa una cotización de servicios.
+    /// Mapea a la tabla sales_cotizaciones en SQL Server.
+    /// </summary>
+    [Table("sales_cotizaciones")]  
+    public class Cotizacion
+    {
+        // --- Llave Primaria ---
+        [Key]
+        [Column("id")]
+        public int Id { get; set; }
+
+        [Column("orden_id")]
+        public int? OrdenId { get; set; }
+
+        [Column("intake_legacy_id")]
+        public int? IntakeLegacyId { get; set; }
+
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal Subtotal { get; set; } = 0;
+
+        [Column("impuestos_total", TypeName = "decimal(12,2)")]
+        public decimal ImpuestosTotal { get; set; } = 0;
+
+        /// <summary>
+        /// Total calculado: Subtotal + Impuestos (en BD como columna calculada PERSISTED)
+        /// IMPORTANTE: En BD es [subtotal]+[impuestos_total], NO incluye descuento
+        /// </summary>
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal Total { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
+        public string Estado { get; set; } = "NUEVA";
+
+        [Column(TypeName = "varchar(500)")]
+        [StringLength(500)]
+        public string? Observaciones { get; set; }
+
+        [Column("actualizado_en")]
+        public DateTime? ActualizadoEn { get; set; }
+
+        [Column("creado_en")]
+        public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+
+        [Column("validez_dias")]
+        public int? ValidezDias { get; set; }
+
+        // ===================================================================
+        // CAMPOS DE CAPACITACIÓN
+        // ===================================================================
+
+        [Column("horas_capacitacion")]
+        public int? HorasCapacitacion { get; set; }
+
+        [Column("paquetes_capacitacion")]
+        public int? PaquetesCapacitacion { get; set; }
+
+        [Column("costo_capacitacion", TypeName = "decimal(12,2)")]
+        public decimal? CostoCapacitacion { get; set; }
+
+        // ===================================================================
+        // CAMPOS DE INFORMACIÓN DEL CLIENTE
+        // ===================================================================
+
+        [Column(TypeName = "varchar(255)")]
+        [StringLength(255)]
+        public string? Cliente { get; set; }
+
+        [Column(TypeName = "varchar(13)")]
+        [StringLength(13)]
+        public string? Rfc { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
+        public string? Folio { get; set; }
+
+        // ===================================================================
+        // CAMPOS ADICIONALES
+        // ===================================================================
+
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal? Descuento { get; set; }
+
+        /// <summary>
+        /// Descripción del servicio.
+        /// NOTA: En BD el campo se llama "descrpcion_servicio" (typo en BD)
+        /// </summary>
+        [Column("descrpcion_servicio", TypeName = "varchar(1000)")]
+        [StringLength(1000)]
+        public string? DescripcionServicio { get; set; }
+
+        // ===================================================================
+        // CAMPOS DE CONTACTO
+        // ===================================================================
+
+        /// <summary>
+        /// Teléfono de contacto del cliente.
+        /// Rango: 5 a 15 dígitos (10-12 dígitos típico México, permite internacionales)
+        /// Ejemplo: 6178907616
+        /// </summary>
+        [Column(TypeName = "bigint")]
+        public long? Telefono { get; set; }
+
+        /// <summary>
+        /// Correo electrónico de contacto del cliente.
+        /// Máximo 150 caracteres.
+        /// </summary>
+        [Column(TypeName = "varchar(150)")]
+        [StringLength(150)]
+        [EmailAddress]
+        public string? Correo { get; set; }
+
+        // ===================================================================
+        // PROPIEDADES CALCULADAS (NO MAPEADAS)
+        // ===================================================================
+
+        /// <summary>
+        /// Total final considerando descuento: Total - Descuento
+        /// Esta es una propiedad calculada en C#, NO existe en la BD
+        /// </summary>
+        [NotMapped]
+        public decimal TotalFinal => Total - (Descuento ?? 0);
+        }
+}

@@ -1,0 +1,157 @@
+@if (productoId) {
+  <!-- Backdrop con blur -->
+  <div class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-40" (click)="onCerrar()"></div>
+
+  <!-- Dialog lateral derecho -->
+  <div class="fixed inset-y-0 right-0 w-full sm:w-[600px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-y-auto">
+    
+    <!-- Header -->
+    <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+      <h2 class="text-xl font-bold text-gray-900">Detalles del Producto</h2>
+      <button 
+        (click)="onCerrar()"
+        class="text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenido -->
+    <div class="p-6">
+      @if (loading()) {
+        <div class="flex justify-center items-center py-20">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      } @else if (error()) {
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="ml-3">
+              <p class="text-sm text-red-800">{{ error() }}</p>
+            </div>
+          </div>
+        </div>
+      } @else if (producto()) {
+        <div class="space-y-6">
+          
+          <!-- Información Principal -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Información General</h3>
+            <dl class="grid grid-cols-1 gap-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Código</dt>
+                <dd class="mt-1 text-sm text-gray-900 font-mono">{{ producto()!.codigoProducto }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Nombre</dt>
+                <dd class="mt-1 text-sm text-gray-900 font-semibold">{{ producto()!.nombreProducto }}</dd>
+              </div>
+              @if (producto()!.descripcion) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Descripción</dt>
+                  <dd class="mt-1 text-sm text-gray-700">{{ producto()!.descripcion }}</dd>
+                </div>
+              }
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Estado</dt>
+                <dd class="mt-1">
+                  <span [class]="producto()!.status === 1 ? 'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800' : 'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800'">
+                    {{ producto()!.status === 1 ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Precios -->
+          <div class="bg-blue-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Precios</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-600">Lista 1</dt>
+                <dd class="mt-1 text-lg font-bold text-blue-900">{{ formatCurrency(producto()!.precio1) }}</dd>
+              </div>
+              @if (producto()!.precio2 > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-600">Lista 2</dt>
+                  <dd class="mt-1 text-lg font-semibold text-gray-900">{{ formatCurrency(producto()!.precio2) }}</dd>
+                </div>
+              }
+              @if (producto()!.precio3 > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-600">Lista 3</dt>
+                  <dd class="mt-1 text-lg font-semibold text-gray-900">{{ formatCurrency(producto()!.precio3) }}</dd>
+                </div>
+              }
+              @if (producto()!.precio4 > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-600">Lista 4</dt>
+                  <dd class="mt-1 text-lg font-semibold text-gray-900">{{ formatCurrency(producto()!.precio4) }}</dd>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Costos e Impuestos -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Costos e Impuestos</h3>
+            <dl class="grid grid-cols-2 gap-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Costo Estándar</dt>
+                <dd class="mt-1 text-sm font-semibold text-gray-900">{{ formatCurrency(producto()!.costoEstandar) }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Margen Utilidad</dt>
+                <dd class="mt-1 text-sm font-semibold text-gray-900">{{ producto()!.margenUtilidad }}%</dd>
+              </div>
+              @if (producto()!.impuesto1 > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Impuesto 1</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ producto()!.impuesto1 }}%</dd>
+                </div>
+              }
+              @if (producto()!.impuesto2 > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Impuesto 2</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ producto()!.impuesto2 }}%</dd>
+                </div>
+              }
+            </dl>
+          </div>
+
+          <!-- Información Adicional -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Información Adicional</h3>
+            <dl class="grid grid-cols-2 gap-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Control Existencia</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ producto()!.controlExistencia ? 'Sí' : 'No' }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Tipo Producto</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ producto()!.tipoProducto }}</dd>
+              </div>
+              @if (producto()!.peso > 0) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Peso</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ producto()!.peso }} kg</dd>
+                </div>
+              }
+              @if (producto()!.claveSat) {
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Clave SAT</dt>
+                  <dd class="mt-1 text-sm text-gray-900 font-mono">{{ producto()!.claveSat }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+
+        </div>
+      }
+    </div>
+
+  </div>
+}

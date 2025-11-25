@@ -1,0 +1,58 @@
+::ng-deep .cdk-overlay-pane.orden-detalle-dialog {
+  max-width: 600px !important;
+  width: 600px !important;
+  height: 100vh !important;
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  margin: 0 !important;
+}
+
+::ng-deep .orden-detalle-dialog .mat-mdc-dialog-container {
+  padding: 0 !important;
+  border-radius: 0 !important;
+  max-height: 100vh !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+::ng-deep .orden-detalle-dialog .mat-mdc-dialog-surface {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Animación de entrada desde la derecha */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+::ng-deep .cdk-overlay-pane.orden-detalle-dialog {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

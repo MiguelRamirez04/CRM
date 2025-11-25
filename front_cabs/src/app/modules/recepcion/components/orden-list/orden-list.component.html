@@ -1,0 +1,137 @@
+<div class="overflow-x-auto">
+  <table class="min-w-full divide-y divide-blue-200">
+    <thead class="bg-blue-50">
+      <tr>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-hashtag mr-2"></i>ID
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-user mr-2"></i>Cliente
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-tags mr-2"></i>Tipo
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-info-circle mr-2"></i>Estado
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Prioridad
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-calendar mr-2"></i>Fecha Cita
+        </th>
+        <th scope="col" class="px-6 py-4 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">
+          <i class="fas fa-cogs mr-2"></i>Acciones
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-blue-100">
+      <!-- Estado de carga -->
+      <tr *ngIf="loading">
+        <td colspan="7" class="px-6 py-12 text-center">
+          <div class="flex flex-col items-center">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-300 border-t-blue-600 mb-4"></div>
+            <p class="text-blue-600 font-medium">Cargando órdenes de trabajo...</p>
+          </div>
+        </td>
+      </tr>
+      
+      <!-- Estado vacío -->
+      <tr *ngIf="!loading && ordenes.length === 0">
+        <td colspan="7" class="px-6 py-12 text-center">
+          <div class="flex flex-col items-center">
+            <i class="fas fa-clipboard-list text-4xl text-blue-300 mb-4"></i>
+            <p class="text-lg font-medium text-blue-600">No hay órdenes para mostrar</p>
+            <p class="text-sm text-gray-500">Las nuevas órdenes aparecerán aquí automáticamente</p>
+          </div>
+        </td>
+      </tr>
+      <!-- Filas de datos -->
+      <tr *ngFor="let orden of ordenes; trackBy: trackByOrdenId" 
+          class="hover:bg-blue-50 transition-colors duration-200 border-b border-blue-100">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-900">
+          #{{ orden.id }}
+        </td>
+        <td class="px-6 py-4 text-sm text-gray-900">
+          <div class="font-medium text-gray-900">{{ orden.nombreCliente }}</div>
+          <div class="text-xs text-blue-600" *ngIf="orden.clienteId">
+            <i class="fas fa-user mr-1"></i>Cliente ID: {{ orden.clienteId }}
+          </div>
+          <div class="text-xs text-green-600 flex items-center mt-1" *ngIf="orden.nuevoCliente && orden.clienteTelefono">
+            <i class="fas fa-phone mr-1"></i>{{ orden.clienteTelefono }}
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300">
+            <i class="fas fa-tag mr-1"></i>
+            {{ orden.tipoOrden }}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border"
+                [ngClass]="{
+                  'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300': orden.estado === 'CAPTURADA',
+                  'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300': orden.estado === 'ASIGNADA',
+                  'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300': orden.estado === 'EN_PROCESO',
+                  'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300': orden.estado === 'COMPLETADA',
+                  'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300': orden.estado === 'CANCELADA'
+                }">
+            <i class="fas fa-circle mr-1 text-xs"></i>
+            {{ orden.estado }}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border"
+                [ngClass]="{
+                  'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300': orden.prioridad === 1,
+                  'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300': orden.prioridad === 2,
+                  'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300': orden.prioridad === 3,
+                  'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300': orden.prioridad === 4,
+                  'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300': orden.prioridad === 5
+                }">
+            <i class="fas" 
+               [ngClass]="{
+                 'fa-exclamation-triangle': orden.prioridad <= 2,
+                 'fa-clock': orden.prioridad === 3,
+                 'fa-minus': orden.prioridad >= 4
+               }" 
+               class="mr-1 text-xs"></i>
+            Nivel {{ orden.prioridad }}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          <div class="font-medium">{{ orden.citaProgramadaInicio | date:'short' }}</div>
+          <div class="text-xs text-gray-500">{{ orden.citaProgramadaInicio | date:'EEEE' }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <div class="flex space-x-2">
+            <!-- Botón Crear Ejecución (Nuevo - Destaca más) -->
+            <button type="button"
+                    class="inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    (click)="onCrearEjecucion(orden)"
+                    title="Crear nueva ejecución para esta orden">
+              <i class="fas fa-play-circle mr-2"></i>
+              Crear Ejecución
+            </button>
+
+            <!-- Botón Ver Detalles -->
+            <button type="button"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    (click)="onVerDetalles(orden.id)"
+                    title="Ver detalles completos">
+              <i class="fas fa-eye"></i>
+            </button>
+            
+            <!-- Botón Editar -->
+            <button type="button"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm transition-all duration-200 hover:shadow-md"
+                    (click)="onEditar(orden.id)"
+                    title="Editar orden de trabajo">
+              <i class="fas fa-edit"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

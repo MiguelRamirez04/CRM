@@ -1,0 +1,292 @@
+# =====================================================================================
+# PRUEBAS DE OPTIMIZACIÓN REDIS - API CLIENTES COMPLETOS
+# =====================================================================================
+#
+# 🎯 OBJETIVO: Verificar que Redis está mejorando el rendimiento de las consultas
+#
+# 📊 MÉTRICAS A OBSERVAR:
+#   - Primera consulta: ~300-500ms (Cache MISS)
+#   - Segunda consulta: ~10-30ms (Cache HIT) ⚡
+#   - Mejora esperada: 10-15x más rápido
+#
+# =====================================================================================
+
+@back_cabs_HostAddress = http://localhost:5176
+@token = TU_TOKEN_AQUI
+
+# =====================================================================================
+# PRUEBA 1: PAGINACIÓN BÁSICA
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 1.1 Primera consulta - Página 1 (Cache MISS - Debe tardar ~300-500ms)
+# Verifica en logs: "❌ Cache MISS - Consultando BD"
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 1.2 Segunda consulta - Página 1 (Cache HIT - Debe tardar ~10-30ms ⚡)
+# Verifica en logs: "✅ Cache HIT - Clientes obtenidos desde Redis"
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 1.3 Tercera consulta - Mismos parámetros (Cache HIT - Súper rápido)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 1.4 Consulta con diferente página (Cache MISS - Nueva clave)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=2&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 1.5 Repetir página 2 (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=2&porPagina=20
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# PRUEBA 2: BÚSQUEDA POR NOMBRE
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 2.1 Primera búsqueda por nombre (Cache MISS)
+# Clave generada: "clientes:paginados:nombre:empresa:page:1:size:20"
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-nombre?nombre=Empresa&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 2.2 Repetir búsqueda (Cache HIT - Rápido)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-nombre?nombre=Empresa&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 2.3 Búsqueda diferente (Cache MISS - Nueva búsqueda)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-nombre?nombre=Transportes&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 2.4 Repetir Transportes (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-nombre?nombre=Transportes&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# PRUEBA 3: BÚSQUEDA POR RFC
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 3.1 Primera búsqueda por RFC (Cache MISS)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-rfc?rfc=ABC123456&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 3.2 Repetir RFC (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/por-rfc?rfc=ABC123456&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# PRUEBA 4: BÚSQUEDA AVANZADA (NOMBRE + RFC)
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 4.1 Búsqueda combinada (Cache MISS)
+# Clave: "clientes:paginados:nombre:empresa:rfc:abc:page:1:size:20"
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-avanzada?nombre=Empresa&rfc=ABC&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 4.2 Repetir búsqueda combinada (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-avanzada?nombre=Empresa&rfc=ABC&pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# PRUEBA 5: AUTOCOMPLETADO (TTL = 15 minutos)
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 5.1 Autocompletado - "E" (Cache MISS)
+# Clave: "clientes:autocompletado:e:limit:10"
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=E&limite=10
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 5.2 Autocompletado - "E" repetido (Cache HIT - Instantáneo)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=E&limite=10
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 5.3 Autocompletado - "Em" (Cache MISS - Nueva búsqueda)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=Em&limite=10
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 5.4 Autocompletado - "Em" repetido (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=Em&limite=10
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 5.5 Autocompletado - "Emp" (Cache MISS)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=Emp&limite=10
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 5.6 Autocompletado - "Emp" repetido (Cache HIT)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos/busqueda-rapida?termino=Emp&limite=10
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# PRUEBA 6: COMPARACIÓN DE RENDIMIENTO
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 6.1 BENCHMARK: Ejecutar esta consulta 5 veces y medir tiempos
+# Primera vez: ~300-500ms
+# Siguientes: ~10-30ms
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=50
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# COMANDOS REDIS PARA VERIFICAR CACHÉ
+# =====================================================================================
+#
+# Ejecuta estos comandos en redis-cli:
+#
+# 1. Ver todas las claves almacenadas:
+#    > KEYS CABS_*
+#
+# 2. Ver contenido de una clave específica:
+#    > GET "CABS_clientes:paginados:page:1:size:20"
+#
+# 3. Ver tiempo de expiración (TTL):
+#    > TTL "CABS_clientes:paginados:page:1:size:20"
+#    Resultado en segundos (300 = 5 minutos)
+#
+# 4. Eliminar una clave específica:
+#    > DEL "CABS_clientes:paginados:page:1:size:20"
+#
+# 5. Limpiar TODA la caché (CUIDADO - Solo desarrollo):
+#    > FLUSHALL
+#
+# 6. Ver estadísticas de Redis:
+#    > INFO stats
+#
+# 7. Monitoreo en tiempo real:
+#    > MONITOR
+#
+# =====================================================================================
+
+
+# =====================================================================================
+# INTERPRETACIÓN DE RESULTADOS
+# =====================================================================================
+#
+# ✅ ÉXITO - La optimización está funcionando si ves:
+#
+# 1. En los logs de tu API:
+#    [INF] ❌ Cache MISS - Consultando BD (primera vez)
+#    [INF] ✅ Cache HIT - Clientes obtenidos desde Redis (segunda vez)
+#    [INF] 💾 Resultado guardado en Redis
+#
+# 2. En Redis CLI (comando KEYS CABS_*):
+#    "CABS_clientes:paginados:page:1:size:20"
+#    "CABS_clientes:autocompletado:emp:limit:10"
+#
+# 3. Tiempos de respuesta:
+#    Primera consulta: 300-500ms
+#    Segunda consulta: 10-30ms (10-15x más rápido)
+#
+# ❌ PROBLEMA - Si no funciona:
+#
+# 1. Redis no está corriendo:
+#    Ejecutar: redis-server
+#    Verificar: redis-cli ping (debe responder PONG)
+#
+# 2. Configuración incorrecta:
+#    Verificar appsettings.json:
+#    "RedisConnection": "localhost:6379,abortConnect=false"
+#
+# 3. No se guardó en caché:
+#    Verificar que ICacheService esté registrado en Program.cs
+#
+# =====================================================================================
+
+
+# =====================================================================================
+# PRUEBA 7: INVALIDACIÓN DE CACHÉ (CUANDO IMPLEMENTES)
+# =====================================================================================
+
+### ----------------------------------------------------------------------------
+# 7.1 Consultar datos (se guardan en caché)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+### ----------------------------------------------------------------------------
+# 7.2 Crear/Actualizar un cliente (esto debería invalidar el caché)
+# Implementar: await _clientesCompletosService.InvalidarCacheClientesAsync();
+# ----------------------------------------------------------------------------
+# POST {{back_cabs_HostAddress}}/api/Clientes
+# Content-Type: application/json
+# Authorization: Bearer {{token}}
+#
+# {
+#     "nombreComercial": "Cliente Nuevo",
+#     "rfc": "NUE123456789"
+# }
+
+### ----------------------------------------------------------------------------
+# 7.3 Volver a consultar (debería ser Cache MISS porque invalidamos)
+# ----------------------------------------------------------------------------
+GET {{back_cabs_HostAddress}}/api/ClientesCompletos?pagina=1&porPagina=20
+Authorization: Bearer {{token}}
+
+
+# =====================================================================================
+# NOTAS FINALES
+# =====================================================================================
+#
+# 🎯 MÉTRICAS CLAVE:
+# - Hit Rate objetivo: > 70% (70% de consultas desde caché)
+# - Reducción de tiempo: 10-15x en consultas repetidas
+# - Reducción de carga en BD: ~80%
+#
+# ⏱️ TIEMPOS DE CACHÉ:
+# - Paginación: 5 minutos
+# - Autocompletado: 15 minutos
+#
+# 🔄 INVALIDACIÓN:
+# - Manual: Llamar InvalidarCacheClientesAsync() después de cambios
+# - Automática: Implementar eventos/triggers (futuro)
+#
+# 📊 MONITOREO:
+# - Revisar logs para ratio HIT/MISS
+# - Usar redis-cli INFO stats
+# - Medir tiempos de respuesta en producción
+#
+# =====================================================================================

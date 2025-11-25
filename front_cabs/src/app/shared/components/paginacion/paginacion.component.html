@@ -1,0 +1,42 @@
+<div class="contenedor-paginacion" *ngIf="totalPaginas > 0">
+  <!-- Información de registros -->
+  <div class="info-registros" *ngIf="mostrarInfoRegistros">
+    {{ textoMostrandoRegistros }} {{ elementoInicio }}-{{ elementoFin }} {{ textoDeRegistros }} {{ totalElementos }} entradas
+  </div>
+
+  <!-- Controles de paginación -->
+  <div class="controles-paginacion" *ngIf="mostrarBotonesPagina">
+    <!-- Botón Anterior -->
+    <button 
+      class="boton-pagina boton-navegacion" 
+      (click)="paginaAnterior()" 
+      [disabled]="!habilitarBotonAnterior"
+      [attr.aria-label]="'Ir a página anterior'">
+      {{ textoAnterior }}
+    </button>
+
+    <!-- Botones de páginas -->
+    <button 
+      *ngFor="let pagina of paginasVisibles" 
+      class="boton-pagina" 
+      [ngClass]="{
+        'activo': pagina === paginaActual, 
+        'puntos': esPuntosSuspensivos(pagina)
+      }"
+      (click)="irAPagina(pagina)"
+      [disabled]="esPuntosSuspensivos(pagina)"
+      [attr.aria-label]="esPuntosSuspensivos(pagina) ? null : 'Ir a página ' + pagina"
+      [attr.aria-current]="pagina === paginaActual ? 'page' : null">
+      {{ pagina }}
+    </button>
+
+    <!-- Botón Siguiente -->
+    <button 
+      class="boton-pagina boton-navegacion" 
+      (click)="paginaSiguiente()" 
+      [disabled]="!habilitarBotonSiguiente"
+      [attr.aria-label]="'Ir a página siguiente'">
+      {{ textoSiguiente }}
+    </button>
+  </div>
+</div>

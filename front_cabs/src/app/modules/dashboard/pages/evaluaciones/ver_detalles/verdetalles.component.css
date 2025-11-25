@@ -1,0 +1,228 @@
+@import 'tailwindcss' reference;
+
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  background-color: var(--fondo-principal, #FAFAFA);
+  padding: 20px;
+}
+
+:host-context(:root) {
+  --fondo-principal: #FAFAFA;
+  --color-blanco: white;
+  --fondo-input: #F4F4F5;
+  --color-texto-principal: #000000;
+  --color-texto-secundario: #000000;
+  --color-texto-gris: #666666;
+  --color-texto-gris-claro: #666666;
+  --color-borde: #D9D9D9;
+  --color-verde: #22C55E;
+  --color-verde-claro: #BBF7D0;
+  --color-verde-oscuro: #22C55E;
+  --color-naranja-claro: #FED7AA;
+  --color-naranja: #9A3412;
+  --color-primario: #34428F;
+}
+
+.contenedor {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.titulo-principal {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--color-texto-principal);
+}
+
+.tarjeta {
+  background-color: var(--color-blanco);
+  border-radius: 8px;
+  border: 1px solid var(--color-borde);
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.titulo-seccion {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--color-texto-principal);
+}
+
+.grid-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.campo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background-color: var(--fondo-input);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-borde);
+}
+
+.etiqueta-campo {
+  font-size: 12px;
+  color: var(--color-texto-gris);
+  font-weight: 500;
+}
+
+.valor-campo {
+  font-size: 14px;
+  color: var(--color-texto-principal);
+}
+
+.bloque-texto {
+  margin-top: 15px;
+}
+
+.campo-texto-completo {
+  background-color: var(--fondo-input);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-borde);
+}
+
+.texto-completo {
+  font-size: 13px;
+  color: var(--color-texto-secundario);
+  line-height: 1.6;
+  margin-top: 6px;
+}
+
+.contenedor-score {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.score-numero {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-verde);
+}
+
+.barra-progreso-contenedor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barra-progreso {
+  width: 100%;
+  height: 12px;
+  background-color: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barra-progreso-relleno {
+  height: 100%;
+  background-color: var(--color-verde);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.texto-score {
+  font-size: 24px;
+  color: var(--color-primario);
+}
+
+.alerta-seguimiento {
+  background-color: var(--color-naranja-claro);
+  border-left: 4px solid var(--color-naranja);
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+}
+
+.alerta-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.icono-alerta {
+  font-size: 16px;
+  height: 24px;
+  width: 24px;
+  padding: 0;
+  color: #92400e;
+}
+
+
+
+
+.titulo-alerta {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.contenido-alerta {
+  font-size: 13px;
+  color: #78350f;
+  margin-left: 24px;
+}
+
+.seccion-fases {
+  margin-top: 25px;
+}
+
+.descripcion-fases {
+  font-size: 13px;
+  color: var(--color-texto-gris);
+  margin-bottom: 15px;
+}
+
+.grid-fases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.tarjeta-fase {
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 25px 20px;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  background-color: var(--fondo-input);
+}
+
+.tarjeta-fase:hover {
+  border-color: var(--color-primario);
+}
+
+.tarjeta-fase.completada {
+  background-color: var(--color-verde-claro);
+  border-color: var(--color-verde);
+}
+
+.titulo-fase {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+  margin-bottom: 8px;
+}
+
+.estatus-fase {
+  font-size: 13px;
+  color: var(--color-verde-oscuro);
+  font-weight: 500;
+}
+
+.tarjeta-fase:not(.completada) .estatus-fase {
+  color: var(--color-texto-gris-claro);
+}

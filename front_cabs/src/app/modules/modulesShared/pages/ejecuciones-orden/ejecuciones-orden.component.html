@@ -1,0 +1,210 @@
+﻿<div class="page-container">
+  <!-- Contexto de navegación -->
+  <div *ngIf="vieneDeOrden()" class="context-banner">
+    <button class="context-back" (click)="volverAOrdenes()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L6.414 9H16a1 1 0 110 2H6.414l3.293 3.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      Volver a Órdenes
+    </button>
+    <div class="context-info">
+      <span class="context-label">Creando ejecución para:</span>
+      <span class="context-value">{{ ordenContexto()?.clienteNombre }} · Orden #{{ ordenContexto()?.id }}</span>
+    </div>
+  </div>
+
+  <!-- Encabezado principal -->
+  <div class="header-section">
+    <div class="header-text">
+      <h1>Gestión de Ejecuciones</h1>
+      <p>Administra las ejecuciones de órdenes de trabajo, filtra por técnico o tipo y revisa los detalles en un clic.</p>
+    </div>
+    <button class="btn-primary" (click)="abrirModalCrear()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+      </svg>
+      Nueva Ejecución
+    </button>
+  </div>
+
+  <!-- Alertas -->
+  <div *ngIf="error()" class="alert alert-error">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+    </svg>
+    <span>{{ error() }}</span>
+    <button type="button" (click)="error.set(null)" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <!-- Panel de filtros y métricas -->
+  <div class="dashboard-overview">
+    <section class="filters-card">
+      <header>
+        <h2>Filtros</h2>
+        <p>Refina la búsqueda por orden, técnico o tipo de ejecución.</p>
+      </header>
+
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Orden</span>
+          <select [(ngModel)]="filtroOrdenIdValue" class="field-control">
+            <option [ngValue]="undefined">Todas las órdenes</option>
+            <option *ngFor="let orden of ordenes()" [ngValue]="orden.id">
+              #{{ orden.id }} · {{ orden.clienteNombre }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Técnico</span>
+          <select [(ngModel)]="filtroTecnicoIdValue" class="field-control">
+            <option [ngValue]="undefined">Todos los técnicos</option>
+            <option *ngFor="let tecnico of tecnicos()" [ngValue]="tecnico.id">
+              {{ tecnico.nombreCompleto }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Tipo</span>
+          <select [(ngModel)]="filtroTipoValue" class="field-control">
+            <option [ngValue]="undefined">Todos los tipos</option>
+            <option [ngValue]="TipoEjecucion.CAMPO">Campo</option>
+            <option [ngValue]="TipoEjecucion.REMOTO">Remoto</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Estado</span>
+          <select [(ngModel)]="filtroEstadoValue" class="field-control">
+            <option [ngValue]="undefined">Todos los estados</option>
+            <option value="EN_CURSO">En curso</option>
+            <option value="FINALIZADA">Finalizadas</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="limpiarFiltros()">Limpiar</button>
+        <button class="btn-primary" (click)="aplicarFiltros()">Aplicar filtros</button>
+      </div>
+    </section>
+
+    <section class="stats-card">
+      <div class="stat-item">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ totalEjecuciones() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">En curso</span>
+        <span class="stat-value accent-blue">{{ ejecucionesEnCurso() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Finalizadas</span>
+        <span class="stat-value accent-green">{{ ejecucionesFinalizadas() }}</span>
+      </div>
+    </section>
+  </div>
+
+  <!-- Estados generales -->
+  <section *ngIf="cargando()" class="loading-panel">
+    <div class="spinner"></div>
+    <p>Cargando ejecuciones...</p>
+  </section>
+
+  <section *ngIf="!cargando() && ejecucionesFiltradas().length === 0" class="empty-panel">
+    <div class="empty-icon"></div>
+    <h3>No encontramos ejecuciones</h3>
+    <p>Ajusta los filtros o crea una nueva ejecución para comenzar.</p>
+    <button class="btn-primary" (click)="abrirModalCrear()">Nueva Ejecución</button>
+  </section>
+
+  <!-- Lista de ejecuciones -->
+  <section *ngIf="!cargando() && ejecucionesFiltradas().length > 0" class="executions-list">
+    <div class="list-header">
+      <span class="header-cell">Orden</span>
+      <span class="header-cell">Técnico</span>
+      <span class="header-cell">Tipo</span>
+      <span class="header-cell">Estado</span>
+      <span class="header-cell">Inicio</span>
+      <span class="header-cell">Duración</span>
+      <span class="header-cell">Acciones</span>
+    </div>
+
+    <div *ngFor="let ejecucion of ejecucionesFiltradas()" class="execution-item" [class.finalizada]="ejecucion.hrFin">
+      <div class="item-cell order-cell">
+        <div class="order-info">
+          <span class="order-number">#{{ ejecucion.ordenId }}</span>
+          <span class="client-name">{{ getClienteNombre(ejecucion.ordenId) }}</span>
+        </div>
+      </div>
+
+      <div class="item-cell">
+        <span class="technician-name">{{ ejecucion.tecnicoNombre }}</span>
+      </div>
+
+      <div class="item-cell">
+        <span class="type-badge" [class.campo]="ejecucion.tipoEjecucion === TipoEjecucion.CAMPO" [class.remoto]="ejecucion.tipoEjecucion === TipoEjecucion.REMOTO">
+          {{ ejecucion.tipoEjecucion === TipoEjecucion.CAMPO ? 'Campo' : 'Remoto' }}
+        </span>
+      </div>
+
+      <div class="item-cell">
+        <span class="status-badge" [class.in-progress]="!ejecucion.hrFin" [class.done]="ejecucion.hrFin">
+          {{ ejecucion.hrFin ? 'Finalizada' : 'En curso' }}
+        </span>
+      </div>
+
+      <div class="item-cell">
+        <span class="date-time">{{ formatearFecha(ejecucion.hrInicio) }}</span>
+      </div>
+
+      <div class="item-cell">
+        <span class="duration" *ngIf="ejecucion.duracionMinutos">{{ formatearDuracion(ejecucion.duracionMinutos) }}</span>
+        <span class="duration" *ngIf="!ejecucion.duracionMinutos">-</span>
+      </div>
+
+      <div class="item-cell actions-cell">
+        <button class="btn-link" (click)="verDetalles(ejecucion)">Ver detalles</button>
+        <div class="action-buttons">
+          <button *ngIf="!ejecucion.hrFin" class="icon-button" (click)="abrirModalFinalizar(ejecucion)" title="Finalizar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <button *ngIf="!ejecucion.hrFin" class="icon-button" (click)="abrirModalDelegar(ejecucion)" title="Delegar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+            </svg>
+          </button>
+          <button class="icon-button danger" (click)="eliminarEjecucion(ejecucion.id)" title="Eliminar ejecución">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0013 4.194V3.75A2.75 2.75 0 0010.25 1H8.75zM10 6.5a.75.75 0 01.75.75v7.5a.75.75 0 01-1.5 0v-7.5A.75.75 0 0110 6.5zM7.25 6.25a.75.75 0 00-.75.75v7.5a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75zm5.5 0a.75.75 0 00-.75.75v7.5a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<app-ejecuciones-orden-dialogs
+  [mostrarModalCrear]="mostrarModalCrear()"
+  [mostrarModalFinalizar]="mostrarModalFinalizar()"
+  [mostrarModalDelegar]="mostrarModalDelegar()"
+  [ejecucionSeleccionada]="ejecucionSeleccionada()"
+  [ordenes]="ordenes()"
+  [tecnicos]="tecnicos()"
+  [vehiculos]="vehiculos()"
+  [ordenIdPrefill]="ordenIdPrefill()"
+  (cerrarModal)="cerrarModal($event)"
+  (ejecucionCreada)="onEjecucionCreada()"
+  (ejecucionFinalizada)="onEjecucionFinalizada()"
+  (ejecucionDelegada)="onEjecucionDelegada()">
+</app-ejecuciones-orden-dialogs>
+
+<app-panel-detalles
+  [ejecucion]="ejecucionSeleccionada()"
+  [visible]="mostrarPanelDetalles()"
+  (cerrar)="cerrarPanelDetalles()">
+</app-panel-detalles>

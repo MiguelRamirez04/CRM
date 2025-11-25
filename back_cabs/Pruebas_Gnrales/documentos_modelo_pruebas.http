@@ -1,0 +1,163 @@
+### =====================================================================================
+### PRUEBAS API DOCUMENTOS MODELO CON REDIS CACHE - documentos_modelo_pruebas.http
+### =====================================================================================
+###
+### ENDPOINTS A PROBAR:
+### - GET /api/DocumentoModelo → Obtener todos los documentos modelo activos (Cache 30min)
+### - GET /api/DocumentoModelo/search?q={term} → Buscar por descripción (Cache 60min)
+###
+### VALIDACIONES DE CACHE:
+### - Primera llamada: CACHE MISS → Query BD → Set Cache
+### - Segunda llamada: CACHE HIT → Datos desde Redis (fast path)
+### - Verificar logs para confirmar HIT/MISS
+### - Validar tiempos de respuesta (HIT: ~10-50ms, MISS: ~300-500ms)
+###
+### =====================================================================================
+
+@baseUrl = http://localhost:5176
+@token = YOUR_JWT_TOKEN_HERE
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 1️⃣ OBTENER TODOS LOS DOCUMENTOS MODELO - Primera Llamada (CACHE MISS esperado)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de DocumentoModeloResponseDto
+### - Log: "⚠️ CACHE MISS para documentos_modelo:all - Consultando base de datos"
+### - Log: "💾 Cache SET para documentos_modelo:all con X documentos modelo. TTL: 30 minutos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 2️⃣ OBTENER TODOS LOS DOCUMENTOS MODELO - Segunda Llamada (CACHE HIT esperado)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de DocumentoModeloResponseDto (mismos datos que llamada anterior)
+### - Log: "✅ CACHE HIT para documentos_modelo:all - Retornando X documentos modelo desde Redis"
+### - Tiempo: ~10-50ms (95% mejora vs primera llamada)
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 3️⃣ BÚSQUEDA POR DESCRIPCIÓN - Primera Llamada (CACHE MISS)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo/search?q=factura
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de DocumentoModeloResponseDto filtrados por "factura"
+### - Log: "⚠️ CACHE MISS para búsqueda 'factura' - Consultando base de datos"
+### - Log: "💾 Cache SET para búsqueda 'factura' con X documentos modelo. TTL: 60 minutos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 4️⃣ BÚSQUEDA POR DESCRIPCIÓN - Segunda Llamada (CACHE HIT)
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo/search?q=factura
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de DocumentoModeloResponseDto (mismos datos que llamada anterior)
+### - Log: "✅ CACHE HIT para búsqueda 'factura' - Retornando X documentos modelo desde Redis"
+### - Tiempo: ~10-50ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 5️⃣ BÚSQUEDA CON TÉRMINO DIFERENTE - CACHE MISS
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo/search?q=recibo
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 200 OK
+### - Body: Array de DocumentoModeloResponseDto filtrados por "recibo"
+### - Log: "⚠️ CACHE MISS para búsqueda 'recibo' - Consultando base de datos"
+### - Tiempo: ~300-500ms
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 6️⃣ BÚSQUEDA CON TÉRMINO VACÍO - ERROR 400
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo/search?q=
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 400 Bad Request
+### - Body: Error message sobre parámetro requerido
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 7️⃣ BÚSQUEDA SIN PARÁMETRO Q - ERROR 400
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo/search
+Authorization: Bearer {{token}}
+
+### Resultado esperado:
+### - Status: 400 Bad Request
+### - Body: Error message sobre parámetro requerido
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 8️⃣ ACCESO SIN AUTENTICACIÓN - ERROR 401
+### ─────────────────────────────────────────────────────────────────────────────────
+GET {{baseUrl}}/api/DocumentoModelo
+
+### Resultado esperado:
+### - Status: 401 Unauthorized
+### - Body: Error de autenticación
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 9️⃣ ACCESO CON ROL NO AUTORIZADO - ERROR 403 (si aplica)
+### ─────────────────────────────────────────────────────────────────────────────────
+### Nota: Solo roles ADMINISTRACION y RECEPCION pueden acceder
+### Si el token pertenece a otro rol, debe retornar 403 Forbidden
+
+GET {{baseUrl}}/api/DocumentoModelo
+Authorization: Bearer {{token}}
+
+### Resultado esperado (dependiendo del rol del token):
+### - Status: 403 Forbidden (si rol no autorizado)
+### - Status: 200 OK (si rol autorizado)
+
+###
+
+### ─────────────────────────────────────────────────────────────────────────────────
+### 🔍 PRUEBAS DE PERFORMANCE Y CACHE
+### ─────────────────────────────────────────────────────────────────────────────────
+###
+### Para validar el funcionamiento del cache Redis:
+###
+### 1. Ejecutar primera llamada a /api/DocumentoModelo
+###    - Debe ser CACHE MISS (~300-500ms)
+###    - Verificar log: "CACHE MISS... Consultando base de datos"
+###
+### 2. Ejecutar segunda llamada inmediata a /api/DocumentoModelo
+###    - Debe ser CACHE HIT (~10-50ms)
+###    - Verificar log: "CACHE HIT... desde Redis"
+###
+### 3. Esperar 30+ minutos y repetir
+###    - Debe ser CACHE MISS nuevamente (TTL expirado)
+###
+### 4. Para búsquedas, probar términos diferentes
+###    - Cada término nuevo: CACHE MISS
+###    - Mismo término: CACHE HIT hasta 60min
+###
+### =====================================================================================
