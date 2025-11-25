@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
     selector: 'app-ui-divider',
     standalone: true,
     imports: [CommonModule],
-    template: `<div class=" bg-(---color-linea) h-[1px] w-full"></div>`,
+    template: `<div class=" bg-(--color-linea) h-[1px] w-full"></div>`,
 })
 export class UiDividerComponent {
     
