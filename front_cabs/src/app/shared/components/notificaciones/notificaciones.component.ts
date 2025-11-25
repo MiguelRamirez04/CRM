@@ -22,13 +22,11 @@ import { NotificacionesService } from '../../../core/services/notificaciones.ser
 import { SignalRService } from '../../../core/services/signalr.service';
 import { Notificacion } from '../../../core/models/notificacion.interface';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
-import { UiIconComponent } from '../../atoms/icono/icono.component';
-
 
 @Component({
   selector: 'app-notificaciones',
   standalone: true,
-  imports: [CommonModule, ClickOutsideDirective,UiIconComponent],
+  imports: [CommonModule, ClickOutsideDirective],
   templateUrl: './notificaciones.component.html',
   styleUrls: ['./notificaciones.component.css']
 })

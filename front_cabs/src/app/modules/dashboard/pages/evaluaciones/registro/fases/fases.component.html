@@ -1,53 +1,79 @@
 <div class="contenedor-principal">
-  <!-- Encabezado -->
-  <div class="encabezado-fase">
-    <h1 class="titulo-fase">Fase - {{ tituloFase }}</h1>
 
+  <!-- ======================================================= -->
+  <!-- Encabezado y Badge de Modo (Crear/Editar) -->
+  <!-- ======================================================= -->
+  <div class="encabezado-con-badge">
+    <div class="titulo-badge-wrapper">
+      <h1 class="titulo-fase">Fase - {{ tituloFase }}</h1>
+      <span class="badge-modo" [ngClass]="modoOperacion === 'editar' ? 'badge-editar' : 'badge-crear'">
+        {{ modoOperacion === 'editar' ? 'EDITANDO' : 'NUEVA' }}
+      </span>
+    </div>
+    <p class="descripcion-modo" *ngIf="modoOperacion === 'editar' && evaluacionId">
+      Modificando evaluación #{{ evaluacionId }} - Fase {{ tituloFase }}
+    </p>
+    <p class="descripcion-modo" *ngIf="modoOperacion === 'crear'">
+      Registrando nueva evaluación - Fase {{ tituloFase }}
+    </p>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Sección Principal de Campos de Datos de Fase -->
+  <!-- ======================================================= -->
+  <div class="encabezado-fase">
+    <!-- Fila de campos Lugar, Fecha, Score -->
     <div class="fila-campos">
       <div class="grupo-campo">
         <label class="etiqueta-campo">Lugar</label>
-        <input type="text" class="campo-entrada" [(ngModel)]="lugar" placeholder="Ej: ODSficina central">
+        <input type="text" class="campo-entrada" [(ngModel)]="lugar" (ngModelChange)="onCampoChange()" placeholder="Ej: Oficina central">
       </div>
       <div class="grupo-campo">
         <label class="etiqueta-campo">Fecha de creación</label>
-        <input type="date" class="campo-entrada" [(ngModel)]="fechaCreacion">
+        <input type="date" class="campo-entrada" [(ngModel)]="fechaCreacion" (ngModelChange)="onCampoChange()">
       </div>
       <div class="grupo-campo">
         <label class="etiqueta-campo">Score de fase (0-100)</label>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" class="campo-entrada" [(ngModel)]="scoreFase" min="0" max="100" style="flex: 1;">
+          <input type="number" class="campo-entrada" [(ngModel)]="scoreFase" (ngModelChange)="onCampoChange()" min="0" max="100" style="flex: 1;">
           <span style="color: var(--color-primario); font-size: 14px;">/100</span>
         </div>
       </div>
     </div>
 
+    <!-- Campo Descripción -->
     <div class="grupo-campo">
       <label class="etiqueta-campo">Descripción</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="descripcion"
+      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="descripcion" (ngModelChange)="onCampoChange()"
         placeholder="Describa qué se hizo o encontró..."></textarea>
     </div>
 
     <hr class="separador">
 
+    <!-- Campo Sugerencias/Recomendaciones -->
     <div class="grupo-campo">
       <label class="etiqueta-campo">Sugerencias/Recomendaciones</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="sugerencias"
+      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="sugerencias" (ngModelChange)="onCampoChange()"
         placeholder="Recomendaciones sobre el trabajo..."></textarea>
     </div>
 
     <hr class="separador">
 
+    <!-- Campo Nota General de Evidencia -->
     <div class="grupo-campo">
       <label class="etiqueta-campo">Nota general de evidencia</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="notaGeneral"
+      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="notaGeneral" (ngModelChange)="onCampoChange()"
         placeholder="Acciones o puntos a dar seguimiento..."></textarea>
     </div>
   </div>
 
-  <!-- Sección de Fotos -->
+  <!-- ======================================================= -->
+  <!-- Sección de Fotos de Evidencia -->
+  <!-- ======================================================= -->
   <div class="seccion-contenido">
     <h2 class="titulo-seccion">Fotos de Evidencia - {{ tituloFase }}</h2>
 
+    <!-- Área para subir nueva foto -->
     <div class="area-subir-foto" (click)="abrirSelectorArchivo()">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="icono-camara">
@@ -59,12 +85,16 @@
       <p class="texto-subir">Haga click para subir una foto</p>
     </div>
 
-    <!-- Tarjetas de Fotos -->
+    <!-- Iteración de Tarjetas de Fotos Existentes -->
     <div class="tarjeta-foto" *ngFor="let foto of fotos">
       <div>
         <div class="vista-previa-foto">
-          <img *ngIf="foto.preview" [src]="foto.preview" alt="Preview"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+          <img *ngIf="foto.preview" 
+               [src]="foto.preview" 
+               alt="Preview de foto"
+               (error)="onImageError($event, foto)"
+               style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+          
           <svg *ngIf="!foto.preview" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
             stroke-width="1.5" stroke="currentColor" class="icono-foto-previa">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -79,7 +109,7 @@
         <div class="fila-foto">
           <div class="grupo-campo">
             <label class="etiqueta-campo">Tipo de foto</label>
-            <select class="campo-entrada campo-select" [(ngModel)]="foto.tipo">
+            <select class="campo-entrada campo-select" [(ngModel)]="foto.tipo" (ngModelChange)="onCampoChange()">
               <option>General</option>
               <option>Detalle</option>
               <option>Otro</option>
@@ -87,30 +117,30 @@
           </div>
           <div class="grupo-campo">
             <label class="etiqueta-campo">Fecha de subida</label>
-            <input type="date" class="campo-entrada" [(ngModel)]="foto.fecha">
+            <input type="date" class="campo-entrada" [(ngModel)]="foto.fecha" (ngModelChange)="onCampoChange()">
           </div>
         </div>
 
         <div class="grupo-campo">
           <label class="etiqueta-campo">Descripción</label>
-          <textarea class="campo-entrada" [(ngModel)]="foto.descripcion"
+          <textarea class="campo-entrada" [(ngModel)]="foto.descripcion" (ngModelChange)="onCampoChange()"
             placeholder="Descripción de la imagen..."></textarea>
         </div>
         <button class="boton-eliminar" (click)="eliminarFoto(foto.id)">Eliminar foto</button>
       </div>
     </div>
 
-
+    <!-- Mensaje si no hay fotos -->
+    <div *ngIf="fotos.length === 0" style="text-align: center; padding: 40px; color: #666;">
+      <p>No hay fotos agregadas todavía</p>
+    </div>
   </div>
-
-
-
-
-
 </div>
 
+<!-- ======================================================= -->
+<!-- Botones de Navegación y Acciones (Guardar/Cerrar) -->
+<!-- ======================================================= -->
 <div class="recuadro-botones">
-
   <div class="grupo-fases izquierda">
     <button class="boton-fase" [class.activo]="faseActiva === 'infogeneral'" (click)="cambiarFase('infogeneral')">
       Información general
@@ -124,8 +154,9 @@
   </div>
 
   <div class="grupo-acciones">
-    <button class="btn-guardar" (click)="guardarEvaluacion()">Guardar</button>
-    <button class="btn-cerrar" (click)="cerrarFormulario()">Cerrar</button>
+    <button class="btn-guardar" (click)="guardarEvaluacion()" [disabled]="guardando">
+      {{ guardando ? 'Guardando...' : 'Guardar' }}
+    </button>
+    <button class="btn-cerrar" (click)="cerrarFormulario()" [disabled]="guardando">Cerrar</button>
   </div>
-
 </div>

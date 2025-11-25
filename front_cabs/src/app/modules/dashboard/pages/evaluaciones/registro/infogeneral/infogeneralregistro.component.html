@@ -1,155 +1,432 @@
-<div class="contenedor">
-   
-    <div class="contenedor-2">
-        <div class="seccion">
-            <h2 class="titulo-seccion">Información general</h2>
-
-            <div class="fila-formulario">
-                <div class="grupo-formulario">
-                    <label class="etiqueta">Orden de trabajo*</label>
-                    <select class="selector" [(ngModel)]="formulario.ordenTrabajoId">
-                        <option value="">Seleccione una orden</option>
-                        <option *ngFor="let orden of ordenesTrabajo" [value]="orden.id">
-                            {{ orden.nombre }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="etiqueta">Ejecución (opcional)</label>
-                    <select class="selector" [(ngModel)]="formulario.ejecucionId">
-                        <option value="">Sin ejecución específica</option>
-                        <option *ngFor="let ejecucion of ejecuciones" [value]="ejecucion.id">
-                            {{ ejecucion.nombre }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="etiqueta">Cliente (opcional)</label>
-                    <select class="selector" [(ngModel)]="formulario.clienteId">
-                        <option value="">Sin cliente específico</option>
-                        <option *ngFor="let cliente of clientes" [value]="cliente.id">
-                            {{ cliente.nombre }}
-                        </option>
-                    </select>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="etiqueta">Evaluador*</label>
-                    <select class="selector" [(ngModel)]="formulario.evaluadorId">
-                        <option value="">Seleccione evaluador</option>
-                        <option *ngFor="let evaluador of evaluadores" [value]="evaluador.id">
-                            {{ evaluador.nombre }}
-                        </option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="grupo-formulario">
-                <label class="etiqueta">Objetivo de la evaluación</label>
-                <input type="text" class="entrada-texto" [(ngModel)]="formulario.objetivo"
-                    placeholder="Ej: verificar la calidad del servicio prestado">
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 15px;">
-                <label class="etiqueta descripcion">Describa el propósito principal de esta evaluación</label>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 15px;">
-                <label class="etiqueta">Comentarios generales</label>
-                <textarea class="area-texto" [(ngModel)]="formulario.comentariosGenerales"
-                    placeholder="Observaciones generales sobre la evaluación..."></textarea>
-            </div>
-
-            <div class="fila-puntuacion" style="margin-top: 20px;">
-                <div class="grupo-formulario grupo-puntuacion-centrado">
-                    <label class="etiqueta">Score de calidad total (0-100)</label>
-                    <div class="grupo-entrada-puntuacion">
-                        <input type="text" class="entrada-texto entrada-puntuacion" [value]="formulario.scoreCalidad"
-                            disabled readonly>
-                        <span class="separador-puntuacion">/100</span>
-                    </div>
-                </div>
-
-                <div class="grupo-formulario grupo-interruptor">
-                    <label class="etiqueta">¿Requiere seguimiento?</label>
-                    <div class="contenedor-interruptor">
-                        <div class="interruptor" [class.activo]="formulario.requiereSeguimiento"
-                            (click)="alternarSeguimiento()"></div>
-                    </div>
-                </div>
-                <div class="grupo-formulario grupo-puntuacion-centrado">
-                    <label class="etiqueta">Estatus del seguimiento</label>
-                    <span class="estatus"
-                        [ngClass]="formulario.requiereSeguimiento ? 'estatus-alerta' : 'estatus-exito'">
-                        <svg *ngIf="!formulario.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icono-alerta">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        <svg *ngIf="formulario.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icono-alerta">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                        </svg>
-                        {{ estatusSeguimiento }}
-                    </span>
-                </div>
-
-            </div>
-            <div class="nota-info">
-                <span class="icono-info">i</span>
-                <span class="texto-nota">
-                    La calificación total se generará automáticamente al completar las dos fases de la evaluación
-                </span>
-            </div>
-            <div class="grupo-formulario" style="margin-top: 15px;">
-                <label class="etiqueta">Notas del seguimiento</label>
-                <textarea class="area-texto" [(ngModel)]="formulario.notasSeguimiento"
-                    placeholder="Acciones o puntos a dar seguimiento..."></textarea>
-            </div>
-        </div>
-
-        <div class="seccion seccion-fases">
-            <h2 class="titulo-seccion">Fases de evaluación</h2>
-            <p class="descripcion-fases">Haga clic en cada fase para completar la evaluación correspondiente</p>
-
-            <div class="tarjetas-fase">
-                <div class="tarjeta-fase" (click)="seleccionarFase('antes')">
-                    <div class="titulo-fase">{{ fases.antes.titulo }}</div>
-                    <div class="estatus-fase">{{ fases.antes.estatus }}</div>
-                </div>
-
-                <div class="tarjeta-fase" (click)="seleccionarFase('despues')">
-                    <div class="titulo-fase">{{ fases.despues.titulo }}</div>
-                    <div class="estatus-fase">{{ fases.despues.estatus }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="recuadro-botones">
-
-        <div class="grupo-fases izquierda">
-            <button class="boton-fase" [class.activo]="faseActiva === 'infogeneral'"
-                (click)="cambiarFase('infogeneral')">
-                Información general
-            </button>
-            <button class="boton-fase" [class.activo]="faseActiva === 'antes'" (click)="cambiarFase('antes')">
-                Fase ANTES
-            </button>
-            <button class="boton-fase" [class.activo]="faseActiva === 'despues'" (click)="cambiarFase('despues')">
-                Fase DESPUÉS
-            </button>
-        </div>
-
-        <div class="grupo-acciones">
-            <button class="btn-guardar" (click)="guardarEvaluacion()">Guardar</button>
-            <button class="btn-cerrar" (click)="cerrarFormulario()">Cerrar</button>
-        </div>
-
-    </div>
+<div *ngIf="cargando" class="loading-overlay">
+  <div class="spinner">Cargando evaluación...</div>
 </div>
+
+<div class="contenedor">
+  <div class="contenedor-2">
+    <!-- Encabezado con badge de estado -->
+    <div class="encabezado-estado">
+      <div class="titulo-con-badge">
+        <h2 class="titulo-seccion">{{ tituloFormulario }}</h2>
+        <span class="badge-estado" [ngClass]="badgeEstado.clase">
+          {{ badgeEstado.texto }}
+        </span>
+      </div>
+      <p class="descripcion-estado" *ngIf="modoOperacion === 'editar'">
+        Los campos Orden, Ejecución, Cliente y Evaluador no se pueden modificar
+      </p>
+      <p class="descripcion-estado" *ngIf="modoOperacion === 'crear'">
+        Creando nueva evaluación - Complete todos los campos requeridos
+      </p>
+    </div>
+
+    <div class="seccion">
+      <div class="fila-formulario">
+        
+        <!-- ORDEN DE TRABAJO - MODO CREAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
+          <label class="etiqueta">Orden de trabajo*</label>
+          <select 
+            class="selector" 
+            [(ngModel)]="formulario.ordenTrabajoId"
+            (change)="onOrdenChange()"
+            [disabled]="cargandoCatalogos.ordenes">
+            <option value="">
+              {{ cargandoCatalogos.ordenes ? 'Cargando órdenes...' : 'Seleccione una orden' }}
+            </option>
+            <option *ngFor="let orden of ordenesTrabajo" [value]="orden.id">
+              {{ orden.displayText }}
+            </option>
+          </select>
+          <span class="texto-ayuda" *ngIf="!cargandoCatalogos.ordenes && ordenesTrabajo.length === 0">
+            No hay órdenes disponibles
+          </span>
+        </div>
+
+        <!-- ORDEN DE TRABAJO - MODO EDITAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
+          <label class="etiqueta">Orden de trabajo*</label>
+          <div class="campo-bloqueado">
+            <span class="icono-candado">🔒</span>
+            <span class="texto-bloqueado">{{ textoOrdenBloqueada || 'OT-' + formulario.ordenTrabajoId }}</span>
+          </div>
+          <span class="texto-ayuda texto-bloqueado-info">
+            Este campo no se puede modificar después de crear la evaluación
+          </span>
+        </div>
+
+        <!-- EJECUCIÓN - MODO CREAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
+          <label class="etiqueta">Ejecución (opcional)</label>
+          <select 
+            class="selector" 
+            [(ngModel)]="formulario.ejecucionId"
+            (change)="onFormularioChange()"
+            [disabled]="cargandoCatalogos.ejecuciones || !formulario.ordenTrabajoId">
+            <option value="">
+              {{ cargandoCatalogos.ejecuciones ? 'Cargando ejecuciones...' : 
+                 !formulario.ordenTrabajoId ? 'Seleccione primero una orden' : 
+                 'Sin ejecución específica' }}
+            </option>
+            <option *ngFor="let ejecucion of ejecuciones" [value]="ejecucion.id">
+              {{ ejecucion.displayText }}
+            </option>
+          </select>
+          <span class="texto-ayuda" *ngIf="formulario.ordenTrabajoId && ejecuciones.length === 0 && !cargandoCatalogos.ejecuciones">
+            No hay ejecuciones para esta orden
+          </span>
+        </div>
+
+        <!-- EJECUCIÓN - MODO EDITAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
+          <label class="etiqueta">Ejecución</label>
+          <div class="campo-bloqueado">
+            <span class="icono-candado">🔒</span>
+            <span class="texto-bloqueado">{{ textoEjecucionBloqueada || 'Sin ejecución' }}</span>
+          </div>
+        </div>
+
+        <!-- CLIENTE - MODO CREAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
+          <label class="etiqueta">Cliente (opcional)</label>
+          <select 
+            class="selector" 
+            [(ngModel)]="formulario.clienteId"
+            (change)="onFormularioChange()"
+            [disabled]="cargandoCatalogos.clientes">
+            <option value="">
+              {{ cargandoCatalogos.clientes ? 'Cargando clientes...' : 'Sin cliente específico' }}
+            </option>
+            <option *ngFor="let cliente of clientes" [value]="cliente.id">
+              {{ cliente.displayText }}
+            </option>
+          </select>
+        </div>
+
+        <!-- CLIENTE - MODO EDITAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
+          <label class="etiqueta">Cliente</label>
+          <div class="campo-bloqueado">
+            <span class="icono-candado">🔒</span>
+            <span class="texto-bloqueado">{{ textoClienteBloqueado || 'Sin cliente' }}</span>
+          </div>
+        </div>
+
+        <!-- EVALUADOR - MODO CREAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
+          <label class="etiqueta">Evaluador*</label>
+          <select 
+            class="selector" 
+            [(ngModel)]="formulario.evaluadorId"
+            (change)="onFormularioChange()"
+            [disabled]="cargandoCatalogos.usuario">
+            <option value="">
+              {{ cargandoCatalogos.usuario ? 'Cargando usuario...' : 'Seleccione evaluador' }}
+            </option>
+            <option *ngFor="let evaluador of evaluadores" [value]="evaluador.id">
+              {{ evaluador.displayText }}
+            </option>
+          </select>
+          <span class="texto-ayuda" *ngIf="usuarioActual">
+            Usuario actual: {{ usuarioActual.nombreCompleto }}
+          </span>
+        </div>
+
+        <!-- EVALUADOR - MODO EDITAR -->
+        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
+          <label class="etiqueta">Evaluador*</label>
+          <div class="campo-bloqueado">
+            <span class="icono-candado">🔒</span>
+            <span class="texto-bloqueado">{{ textoEvaluadorBloqueado || 'Evaluador #' + formulario.evaluadorId }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPOS EDITABLES (SIEMPRE) -->
+      
+      <div class="grupo-formulario">
+        <label class="etiqueta">Objetivo de la evaluación</label>
+        <input 
+          type="text" 
+          class="entrada-texto" 
+          [(ngModel)]="formulario.objetivo"
+          (ngModelChange)="onFormularioChange()"
+          placeholder="Ej: verificar la calidad del servicio prestado">
+      </div>
+
+      <div class="grupo-formulario" style="margin-top: 15px;">
+        <label class="etiqueta descripcion">Describa el propósito principal de esta evaluación</label>
+      </div>
+
+      <div class="grupo-formulario" style="margin-top: 15px;">
+        <label class="etiqueta">Comentarios generales</label>
+        <textarea 
+          class="area-texto" 
+          [(ngModel)]="formulario.comentariosGenerales"
+          (ngModelChange)="onFormularioChange()"
+          placeholder="Observaciones generales sobre la evaluación..."></textarea>
+      </div>
+
+      <div class="fila-puntuacion" style="margin-top: 20px;">
+        <div class="grupo-formulario grupo-puntuacion-centrado">
+          <label class="etiqueta">Score de calidad total (0-100)</label>
+          <div class="grupo-entrada-puntuacion">
+            <input 
+              type="text" 
+              class="entrada-texto entrada-puntuacion" 
+              [value]="formulario.scoreCalidad"
+              disabled 
+              readonly>
+            <span class="separador-puntuacion">/100</span>
+          </div>
+        </div>
+
+        <div class="grupo-formulario grupo-interruptor">
+          <label class="etiqueta">¿Requiere seguimiento?</label>
+          <div class="contenedor-interruptor">
+            <div 
+              class="interruptor" 
+              [class.activo]="formulario.requiereSeguimiento"
+              (click)="alternarSeguimiento()">
+            </div>
+          </div>
+        </div>
+
+        <div class="grupo-formulario grupo-puntuacion-centrado">
+          <label class="etiqueta">Estatus del seguimiento</label>
+          <span 
+            class="estatus"
+            [ngClass]="formulario.requiereSeguimiento ? 'estatus-alerta' : 'estatus-exito'">
+            <svg 
+              *ngIf="!formulario.requiereSeguimiento" 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none"
+              viewBox="0 0 24 24" 
+              stroke-width="1.5" 
+              stroke="currentColor" 
+              class="icono-alerta">
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <svg 
+              *ngIf="formulario.requiereSeguimiento" 
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none"
+              viewBox="0 0 24 24" 
+              stroke-width="1.5" 
+              stroke="currentColor" 
+              class="icono-alerta">
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            {{ estatusSeguimiento }}
+          </span>
+        </div>
+      </div>
+
+      <div class="nota-info">
+        <span class="icono-info">i</span>
+        <span class="texto-nota">
+          La calificación total se generará automáticamente al completar las dos fases de la evaluación
+        </span>
+      </div>
+
+      <div class="nota-info nota-edicion" *ngIf="modoOperacion === 'editar'">
+        <span class="icono-info">🔒</span>
+        <span class="texto-nota">
+          <strong>Modo Edición:</strong> Los campos con 🔒 (Orden, Ejecución, Cliente, Evaluador) 
+          no se pueden modificar una vez creada la evaluación. Solo puede editar: Objetivo, 
+          Comentarios, Seguimiento y las fases ANTES/DESPUÉS.
+        </span>
+      </div>
+
+      <div class="grupo-formulario" style="margin-top: 15px;">
+        <label class="etiqueta">Notas del seguimiento</label>
+        <textarea 
+          class="area-texto" 
+          [(ngModel)]="formulario.notasSeguimiento"
+          (ngModelChange)="onFormularioChange()"
+          placeholder="Acciones o puntos a dar seguimiento..."></textarea>
+      </div>
+    </div>
+
+    <!-- Fases -->
+    <div class="seccion seccion-fases">
+      <h2 class="titulo-seccion">Fases de evaluación</h2>
+      <p class="descripcion-fases">Haga clic en cada fase para completar la evaluación correspondiente</p>
+
+      <div class="tarjetas-fase">
+        <div class="tarjeta-fase" (click)="seleccionarFase('antes')">
+          <div class="titulo-fase">{{ fases.antes.titulo }}</div>
+          <div class="estatus-fase">{{ fases.antes.estatus }}</div>
+        </div>
+
+        <div class="tarjeta-fase" (click)="seleccionarFase('despues')">
+          <div class="titulo-fase">{{ fases.despues.titulo }}</div>
+          <div class="estatus-fase">{{ fases.despues.estatus }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de navegación y acciones -->
+  <div class="recuadro-botones">
+    <div class="grupo-fases izquierda">
+      <button 
+        class="boton-fase" 
+        [class.activo]="faseActiva === 'infogeneral'"
+        (click)="cambiarFase('infogeneral')">
+        Información general
+      </button>
+      <button 
+        class="boton-fase" 
+        [class.activo]="faseActiva === 'antes'" 
+        (click)="cambiarFase('antes')">
+        Fase ANTES
+      </button>
+      <button 
+        class="boton-fase" 
+        [class.activo]="faseActiva === 'despues'" 
+        (click)="cambiarFase('despues')">
+        Fase DESPUÉS
+      </button>
+    </div>
+
+    <div class="grupo-acciones">
+      <button 
+        class="btn-guardar" 
+        (click)="guardarEvaluacion()"
+        [disabled]="guardando || algunCatalogoCargando">
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+      <button 
+        class="btn-cerrar" 
+        (click)="cerrarFormulario()"
+        [disabled]="guardando">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Estilos -->
+<style>
+.texto-ayuda {
+  display: block;
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner {
+  font-size: 18px;
+  color: #34428F;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+select:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilos para campos bloqueados */
+.campo-bloqueado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  min-height: 42px;
+  position: relative;
+  cursor: not-allowed;
+}
+
+.campo-bloqueado::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0,0,0,0.02) 10px,
+    rgba(0,0,0,0.02) 20px
+  );
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.icono-candado {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.texto-bloqueado {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.texto-bloqueado-info {
+  color: #6c757d;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.nota-edicion {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  margin-top: 15px;
+}
+
+.nota-edicion .icono-info {
+  background-color: #2196f3;
+  font-size: 10px;
+}
+
+.nota-edicion .texto-nota {
+  color: #1565c0;
+}
+
+.nota-edicion .texto-nota strong {
+  color: #0d47a1;
+}
+</style>

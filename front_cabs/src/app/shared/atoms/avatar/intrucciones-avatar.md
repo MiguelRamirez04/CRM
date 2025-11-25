@@ -15,3 +15,10 @@ import { UiAvatarComponent } from './ruta/atomic/avatar/avatar.component';
   // ...
 })
 ```
+
+# Propiedades (Avatar)
+----------------------------------------------------------------------------------------------------
+| Propiedad           | Tipo      | Valores   | Descripción                                        |
+|---------------------|-----------|-----------|----------------------------------------------------|
+| `user`              | `User \`  | `null `   | Se extraen las iniciales para mostrar en el avatar.|
+----------------------------------------------------------------------------------------------------

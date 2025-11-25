@@ -1,10 +1,7 @@
-@import 'tailwindcss' reference;
-
 :host {
   display: block;
   font-family: 'Montserrat', sans-serif;
 
-  
   /* Variables CSS */
   --radio-borde: 4px;
   --espaciado-pequeno: 8px;
@@ -52,6 +49,87 @@
   --color-verde-oscuro: #065f46;
 }
 
+/* 🔥 NUEVO: Estilos para el encabezado con badge */
+.encabezado-con-badge {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.titulo-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.titulo-badge-wrapper .titulo-fase {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--texto-h1);
+}
+
+.badge-modo {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeInBadge 0.3s ease-in;
+}
+
+.badge-crear {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: 2px solid #059669;
+}
+
+.badge-editar {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: 2px solid #2563eb;
+}
+
+.descripcion-modo {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  padding-left: 4px;
+  line-height: 1.6;
+}
+
+.descripcion-modo::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes fadeInBadge {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos existentes del contenedor */
 .contenedor-principal {
   max-width: 1000px;
   margin: 0 auto;
@@ -265,8 +343,6 @@ svg {
   display: block;
 }
 
-
-
 .boton-fase {
   flex: 1;
   padding: 10px 0;
@@ -322,24 +398,20 @@ svg {
   gap: 15px;
 }
 
-
 .grupo-fases {
   display: flex;
   gap: 8px;
 }
 
-
 .grupo-fases.izquierda {
   justify-content: flex-start;
 }
-
 
 .grupo-acciones {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
 }
-
 
 .btn-guardar,
 .btn-cerrar {
@@ -362,16 +434,29 @@ svg {
   transform: scale(1.02);
 }
 
+.btn-guardar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-cerrar {
   background-color: var(--color-borde);
-  color: var(--color-texto-principal);
+  color: var(--texto-body);
 }
 
 .btn-cerrar:hover {
-  background-color: var(--color-borde-hover);
+  background-color: #c4c4c4;
   transform: scale(1.02);
 }
 
+.btn-cerrar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
 @media (max-width: 880px) {
   .fila-campos {
     grid-template-columns: 1fr;
@@ -379,5 +464,19 @@ svg {
 
   .tarjeta-foto {
     grid-template-columns: 1fr;
+  }
+
+  .titulo-badge-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .badge-modo {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
+
+  .encabezado-con-badge {
+    padding: 16px;
   }
 }

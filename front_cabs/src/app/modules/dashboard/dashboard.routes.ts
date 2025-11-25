@@ -22,42 +22,93 @@ export const dashboardRoutes: Routes = [
         path: 'calendario',
         loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent)
       },
-      //Rutas de EVALUACIONES - COMENTADAS TEMPORALMENTE
-      /*
+       //Rutas de EVALUACIONES - COMENTADAS TEMPORALMENTE
+     // =====================================================================================
+      // RUTAS DE EVALUACIONES
+      // =====================================================================================
+      
       {
         path: 'evaluaciones',
-        loadComponent: () => import('./pages/evaluaciones/listado/evaluaciones.component').then(m => m.EvaluacionesComponent)
+        loadComponent: () => import('./pages/evaluaciones/listado/evaluaciones.component')
+          .then(m => m.EvaluacionesComponent)
       },
+      
       {
-        path: 'evaluacion/:id',
-        loadComponent: () =>
-          import('./pages/evaluaciones/ver_detalles/verdetalles.component').then(m => m.VerdetallesComponent)
+        path: 'evaluaciones/ver/:id',
+        loadComponent: () => import('./pages/evaluaciones/ver_detalles/verdetalles.component')
+          .then(m => m.VerdetallesComponent)
       },
+      
       {
-        path: 'evaluacion/fase-antes/:evaluacionId',
-        loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/faseantes.component').then(m => m.FaseantesComponent)
+        path: 'evaluacion/fase-antes/:id',
+        loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/faseantes.component')
+          .then(m => m.FaseantesComponent)
       },
+      
       {
-        path: 'evaluacion/fase-despues/:evaluacionId',
-        loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/fasedespues.component').then(m => m.FasedespuesComponent)
+        path: 'evaluacion/fase-despues/:id',
+        loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/fasedespues.component')
+          .then(m => m.FasedespuesComponent)
       },
+      
+      // =====================================================================================
+      // 🔥 MODO CREAR - SIN GUARD EN LAS SUB-RUTAS
+      // =====================================================================================
+      
       {
-        path: 'evaluaciones/registro',
-        loadComponent: () => import('./pages/evaluaciones/registro/infogeneral/infogeneralregistro.component').then(m => m.InfogeneralregistroComponent)
+        path: 'evaluaciones/nueva',
+        loadComponent: () => import('./pages/evaluaciones/registro/infogeneral/infogeneralregistro.component')
+          .then(m => m.InfogeneralComponent),
+        data: { modo: 'crear' }
+        // ❌ SIN GUARD - La limpieza se hace en el componente
       },
+      
       {
-        path: 'evaluaciones/registro/fase-antes',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/faseantesregistro.component').then(m => m.FaseAntesRegistroComponent)
+        path: 'evaluaciones/nueva/fase-antes',
+        loadComponent: () => import('./pages/evaluaciones/registro/fases/faseantesregistro.component')
+          .then(m => m.FaseAntesComponent),
+        data: { modo: 'crear' }
+        // ❌ SIN GUARD - Los datos persisten entre secciones
       },
+      
       {
-        path: 'evaluaciones/registro/fase-despues',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/fasedespuesregistro.component').then(m => m.FaseDespuesRegistroComponent)
+        path: 'evaluaciones/nueva/fase-despues',
+        loadComponent: () => import('./pages/evaluaciones/registro/fases/fasedespuesregistro.component')
+          .then(m => m.FaseDespuesComponent),
+        data: { modo: 'crear' }
+        // ❌ SIN GUARD - Los datos persisten entre secciones
       },
+      
+      // =====================================================================================
+      // MODO EDITAR
+      // =====================================================================================
+      
       {
         path: 'evaluaciones/editar/:id',
-        loadComponent: () => import('./pages/evaluaciones/registro/editar-evaluacion.component').then(m => m.EditarEvaluacionComponent)
+        loadComponent: () => import('./pages/evaluaciones/registro/infogeneral/infogeneralregistro.component')
+          .then(m => m.InfogeneralComponent),
+        data: { modo: 'editar' }
       },
-      */
+      
+      {
+        path: 'evaluaciones/editar/:id/fase-antes',
+        loadComponent: () => import('./pages/evaluaciones/registro/fases/faseantesregistro.component')
+          .then(m => m.FaseAntesComponent),
+        data: { modo: 'editar' }
+      },
+      
+      {
+        path: 'evaluaciones/editar/:id/fase-despues',
+        loadComponent: () => import('./pages/evaluaciones/registro/fases/fasedespuesregistro.component')
+          .then(m => m.FaseDespuesComponent),
+        data: { modo: 'editar' }
+      },
+      
+      {
+        path: 'evaluaciones/registro',
+        redirectTo: 'evaluaciones/nueva',
+        pathMatch: 'full'
+      },
       // RUTAS DE COTIZACIONES
       {
         path: 'cotizaciones',

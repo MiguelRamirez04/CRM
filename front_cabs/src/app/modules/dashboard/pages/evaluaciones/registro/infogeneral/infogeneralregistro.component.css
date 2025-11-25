@@ -1,5 +1,3 @@
-@import 'tailwindcss' reference;
-
 :host {
     display: block;
 }
@@ -427,4 +425,293 @@
     .tarjetas-fase {
         grid-template-columns: 1fr;
     }
+}
+
+/* 🔥 NUEVO: Estilos para el encabezado con badge de estado */
+
+.encabezado-estado {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.titulo-con-badge {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.titulo-con-badge .titulo-seccion {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-texto-principal);
+}
+
+.badge-estado {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in;
+}
+
+.badge-crear {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: 2px solid #059669;
+}
+
+.badge-editar {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: 2px solid #2563eb;
+}
+
+.descripcion-estado {
+  font-size: 14px;
+  color: var(--color-texto-gris);
+  margin: 0;
+  padding-left: 4px;
+  line-height: 1.6;
+}
+
+.descripcion-estado::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Variante para móviles */
+@media (max-width: 768px) {
+  .titulo-con-badge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .badge-estado {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
+  
+  .encabezado-estado {
+    padding: 16px;
+  }
+}
+
+/* =====================================================================================
+   🔥 AGREGAR ESTOS ESTILOS AL FINAL DE infogeneralregistro.component.css
+   ===================================================================================== */
+
+/* ==================== CAMPOS BLOQUEADOS (MODO EDICIÓN) ==================== */
+
+.campo-bloqueado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  min-height: 42px;
+  position: relative;
+  cursor: not-allowed;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.campo-bloqueado::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.02) 10px,
+    rgba(0, 0, 0, 0.02) 20px
+  );
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.icono-candado {
+  font-size: 14px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.texto-bloqueado {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.texto-bloqueado-info {
+  color: #6c757d !important;
+  font-size: 11px !important;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ==================== NOTA DE MODO EDICIÓN ==================== */
+
+.nota-edicion {
+  background-color: #e3f2fd !important;
+  border-left: 4px solid #2196f3;
+  margin-top: 15px;
+}
+
+.nota-edicion .icono-info {
+  background-color: #2196f3 !important;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nota-edicion .texto-nota {
+  color: #1565c0 !important;
+}
+
+.nota-edicion .texto-nota strong {
+  color: #0d47a1;
+}
+
+/* ==================== MEJORAS VISUALES GENERALES ==================== */
+
+/* Etiqueta con candado */
+.etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Hover en campos bloqueados */
+.campo-bloqueado:hover {
+  border-color: #adb5bd;
+  background: linear-gradient(135deg, #f1f3f4 0%, #e3e6e9 100%);
+}
+
+/* Tooltip visual en hover */
+.campo-bloqueado:hover::after {
+  content: 'Este campo no se puede modificar';
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeInTooltip 0.3s ease-in forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeInTooltip {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==================== INDICADORES VISUALES DE EDITABILIDAD ==================== */
+
+/* Campos editables tienen un sutil borde verde al hacer hover */
+.entrada-texto:not(:disabled):hover,
+.area-texto:not(:disabled):hover,
+.selector:not(:disabled):hover {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Focus mejorado para campos editables */
+.entrada-texto:not(:disabled):focus,
+.area-texto:not(:disabled):focus,
+.selector:not(:disabled):focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  outline: none;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .campo-bloqueado {
+    padding: 8px 12px;
+    min-height: 38px;
+  }
+  
+  .texto-bloqueado {
+    font-size: 13px;
+  }
+  
+  .campo-bloqueado:hover::after {
+    display: none; /* Ocultar tooltip en móviles */
+  }
+  
+  .nota-edicion {
+    padding: 10px;
+  }
+  
+  .nota-edicion .texto-nota {
+    font-size: 11px;
+  }
+}
+
+/* ==================== DARK MODE SUPPORT (OPCIONAL) ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .campo-bloqueado {
+    background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%);
+    border-color: #4d4d4d;
+  }
+  
+  .texto-bloqueado {
+    color: #e0e0e0;
+  }
+  
+  .nota-edicion {
+    background-color: #1a3a4a !important;
+    border-left-color: #64b5f6;
+  }
+  
+  .nota-edicion .texto-nota {
+    color: #90caf9 !important;
+  }
 }

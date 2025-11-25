@@ -19,26 +19,24 @@
   <button (click)="toggleDropdown()"
           class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none transition-colors duration-200">
     <!-- Icono de campana -->
-    <app-ui-icono
-      name="bell"
-      size="size-5"
-    ></app-ui-icono>
-    
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-5 5v-5zM4.868 12.683A17.925 17.925 0 0112 21c7.962 0 12-1.21 12-2.683m-12 2.683a17.925 17.925 0 01-7.132-8.317M12 21c4.411 0 8-4.03 8-9s-3.589-9-8-9-8 4.03-8 9a9.06 9.06 0 001.832 5.445L4 21l7.868-2.317z"></path>
+    </svg>
 
     <!-- Badge de notificaciones no leídas -->
-    @if (notificacionesNoLeidas > 0) {
-      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-        {{notificacionesNoLeidas}}
-      </span>      
-    }
-
+    <span *ngIf="notificacionesNoLeidas > 0"
+          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+      {{notificacionesNoLeidas}}
+    </span>
   </button>
 
   <!-- Dropdown de notificaciones -->
-  @if (mostrarDropdown) {
-  <div class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden"
-      clickOutside
-      (clickOutside)="mostrarDropdown = false">
+  <div *ngIf="mostrarDropdown"
+       class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden"
+       clickOutside
+       (clickOutside)="mostrarDropdown = false">
+
     <!-- Header del dropdown -->
     <div class="p-4 border-b border-gray-200 bg-gray-50">
       <div class="flex justify-between items-center">
@@ -48,6 +46,7 @@
         </span>
       </div>
     </div>
+
     <!-- Lista de notificaciones -->
     <div class="max-h-80 overflow-y-auto">
       <div *ngFor="let notif of notificaciones"
@@ -81,48 +80,43 @@
               </span>
             </div>
           </div>
+
           <!-- Icono de acción -->
           <div class="flex-shrink-0">
-            <app-ui-icono
-              name="check-circle"
-              size="size-4"
-              color="text-blue-500"
-            ></app-ui-icono>  
+            <svg *ngIf="!notif.leida"
+                 class="w-4 h-4 text-blue-500"
+                 fill="currentColor"
+                 viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
           </div>
         </div>
 
         <!-- Acción sugerida -->
-        @if (notif.accion) {
-          <div class="mt-3">
-            <button class="text-xs text-blue-600 hover:text-blue-800 underline hover:no-underline transition-all duration-150">
-              {{notif.accion}}
-            </button>
-          </div>
-        }
+        <div *ngIf="notif.accion" class="mt-3">
+          <button class="text-xs text-blue-600 hover:text-blue-800 underline hover:no-underline transition-all duration-150">
+            {{notif.accion}}
+          </button>
+        </div>
       </div>
 
       <!-- Estado vacío -->
-      @if(notificaciones.length === 0){
-      <div class="p-8 text-center text-gray-500 flex flex-col justify-center ">
-        <app-ui-icono
-          name="bell"
-          size="w-12 h-12"
-          class="mx-auto text-gray-300 mb-4"
-        ></app-ui-icono>        
+      <div *ngIf="notificaciones.length === 0"
+           class="p-8 text-center text-gray-500">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 17h5l-5 5v-5zM4.868 12.683A17.925 17.925 0 0112 21c7.962 0 12-1.21 12-2.683m-12 2.683a17.925 17.925 0 01-7.132-8.317M12 21c4.411 0 8-4.03 8-9s-3.589-9-8-9-8 4.03-8 9a9.06 9.06 0 001.832 5.445L4 21l7.868-2.317z"></path>
+        </svg>
         <p class="text-sm">No hay notificaciones</p>
         <p class="text-xs text-gray-400 mt-1">Las nuevas notificaciones aparecerán aquí</p>
       </div>
-      }
     </div>
 
     <!-- Footer con acciones -->
-    @if (notificaciones.length > 0) {
-      <div class="p-3 border-t border-gray-200 bg-gray-50">
-        <button class="w-full text-sm text-gray-600 hover:text-gray-900 transition-colors duration-150">
-          Ver todas las notificaciones
-        </button>
-      </div>
-    }
+    <div *ngIf="notificaciones.length > 0" class="p-3 border-t border-gray-200 bg-gray-50">
+      <button class="w-full text-sm text-gray-600 hover:text-gray-900 transition-colors duration-150">
+        Ver todas las notificaciones
+      </button>
+    </div>
   </div>
-  }
 </div>

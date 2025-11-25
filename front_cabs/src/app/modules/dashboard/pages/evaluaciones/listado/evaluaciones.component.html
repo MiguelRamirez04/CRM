@@ -1,0 +1,96 @@
+
+<div class="contenedor-principal">
+  <!-- NUEVO: Header Reutilizable -->
+
+  <app-ui-header titulo="Evaluaciones" descripcion="Gestiona y consulta todas las evaluaciones realizadas"
+    [visualizarDescripcion]="true" [visualizarButton]="false">
+    <app-buscador-filtro [configuracion]="{
+      placeholderBusqueda: 'Buscar por ID o evaluador',
+      mostrarBotonFiltro: true,
+      mostrarBotonNuevo: true,
+      textoBotonNuevo: 'Nueva evaluación',
+      tiempoEsperaBusqueda: 400
+    }" [valorBusqueda]="searchTerm" (cambioBusqueda)="onSearchTermChange($event)" (clicFiltro)="onFilter()"
+      (clicNuevo)="onNuevaEvaluacion()"></app-buscador-filtro>
+  </app-ui-header>
+
+
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="mensaje-error">
+    {{ error }}
+  </div>
+
+  <!-- Tabla reutilizable (Molécula) -->
+  <app-tabla-listado [datos]="evaluaciones" [columnas]="columnas" [acciones]="acciones" [cargando]="cargando"
+    [mensajeSinDatos]="'No se encontraron evaluaciones'" [mensajeCargando]="'Cargando evaluaciones...'"
+    (filaClick)="alClickFila($event)" (filaDobleClick)="alDobleClickFila($event)"></app-tabla-listado>
+
+  <!-- Componente de Paginación Reutilizable -->
+  <app-paginacion *ngIf="!cargando && evaluaciones.length > 0" [totalElementos]="evaluacionesFiltradas.length"
+    [paginaActual]="paginaActual" [configuracion]="{
+      elementosPorPagina: elementosPorPagina,
+      paginasVisiblesMaximas: 6,
+      textoAnterior: 'Atrás',
+      textoSiguiente: 'Siguiente',
+      textoMostrandoRegistros: 'Visualizando',
+      textoDeRegistros: 'de',
+      mostrarInfoRegistros: true,
+      mostrarBotonesPagina: true
+    }" (cambioPagina)="alCambiarPagina($event)" (cambioRangoPagina)="alCambiarRangoPagina($event)"></app-paginacion>
+</div>
+
+<!-- Modal de Filtros -->
+<app-modal-filtros [visible]="mostrarModalFiltros" [configuracion]="configuracionFiltros"
+  [filtrosAplicados]="filtrosAplicados" (cerrar)="onCerrarFiltros()" (aplicarFiltros)="onAplicarFiltros($event)"
+  (limpiarFiltros)="onLimpiarFiltros()"></app-modal-filtros>
+
+<!-- Panel de Detalles Lateral -->
+<app-verdetalles *ngIf="mostrarPanelDetalles" [evaluacionId]="evaluacionIdSeleccionada"
+  [mostrarPanel]="mostrarPanelDetalles" (cerrar)="onCerrarDetalles()"></app-verdetalles>
+
+<!-- Plantillas personalizadas para columnas -->
+
+<!-- TEMPLATE: Objetivo -->
+<ng-template #plantillaObjetivo let-evaluacion="item">
+  <div class="objetivo-cell" [title]="evaluacion.objetivo || 'Sin objetivo'">
+    {{ obtenerObjetivoAbreviado(evaluacion.objetivo, 50) }}
+  </div>
+</ng-template>
+
+<!-- TEMPLATE: Score -->
+<ng-template #plantillaScore let-evaluacion="item">
+  <span class="badge-score" [ngClass]="obtenerClaseScore(evaluacion.scoreCalidadTotal)">
+    {{ evaluacion.scoreCalidadTotal || 0 }}
+  </span>
+</ng-template>
+
+<!-- TEMPLATE: Fecha -->
+<ng-template #plantillaFecha let-evaluacion="item">
+  <div class="fecha-cell">
+    {{ formatearFecha(evaluacion.creadoEn) }}
+  </div>
+</ng-template>
+
+<!-- TEMPLATE: Seguimiento con status-dot -->
+<ng-template #plantillaSeguimiento let-evaluacion="item">
+  <app-status-dot [texto]="obtenerTextoSeguimiento(evaluacion.requiereSeguimiento)"
+    [tipo]="evaluacion.requiereSeguimiento ? 'atencion' : 'completado'"
+    [icono]="evaluacion.requiereSeguimiento ? iconoAlerta : iconoExito"></app-status-dot>
+</ng-template>
+
+<!-- TEMPLATE: Icono Éxito -->
+<ng-template #iconoExito>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+</ng-template>
+
+<!-- TEMPLATE: Icono Alerta -->
+<ng-template #iconoAlerta>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+  </svg>
+</ng-template>

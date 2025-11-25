@@ -1,58 +1,31 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { SecureAuthService, User } from '../../../core/services/secure-auth.service';
+import { User } from '../../../core/services/secure-auth.service';
 
 @Component({
     selector: 'app-ui-avatar',
     standalone: true,
     imports: [CommonModule],
-    template: `
-    <div class="w-full h-full aspect-square rounded-full flex items-center justify-center font-semibold bg-zinc-800 text-white">
-        {{ initials }}
-    </div>
-    `,
+    template: `<div class="w-full h-full aspect-square rounded-full flex items-center justify-center font-semibold uppercase bg-zinc-800 text-white">{{ initials }}</div>`,
 })
-export class UiAvatarComponent implements OnInit, OnDestroy {
-    private auth = inject(SecureAuthService);
-    private cdr = inject(ChangeDetectorRef);
-    private sub?: Subscription;
-
-    initials = 'U';
-
-    ngOnInit(): void {
-        // Inicial
-        this.initials = this.computeInitials(this.auth.getCurrentUser());
-
-        // Reactivo
-        this.sub = this.auth.currentUser$.subscribe((user) => {
-        this.initials = this.computeInitials(user);
-        this.cdr.markForCheck(); // asegura render en OnPush
-        });
+export class UiAvatarComponent {
+    @Input() user: User | null = null;
+    get initials(): string {
+        if (!this.user) return 'U';
+        if (this.user.nombre && this.user.apellido) {
+            return `${this.user.nombre.charAt(0)}${this.user.apellido.charAt(0)}`.toUpperCase();
     }
-
-    ngOnDestroy(): void {
-        this.sub?.unsubscribe();
-    }
-
-    private computeInitials(user: User | null): string {
-        if (!user) return 'U';
-
-        const safe = (s?: string) => (s?.[0] || '').toUpperCase();
-
-        if (user.nombre && user.apellido) return (safe(user.nombre) + safe(user.apellido)) || 'U';
-
-        if (user.nombreCompleto) {
-        const parts = user.nombreCompleto.split(' ').filter(Boolean);
-        if (parts.length >= 2) return (safe(parts[0]) + safe(parts[1])) || 'U';
+    if (this.user.nombreCompleto) {
+        const parts = this.user.nombreCompleto.split(' ');
+        if (parts.length >= 2) {
+            return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+        }
         return parts[0].substring(0, 2).toUpperCase();
-        }
-
-        if (user.name) {
-        const parts = user.name.split(' ').filter(Boolean);
-        return parts.map(p => safe(p)).join('').substring(0, 2) || 'U';
-        }
-
-        return 'U';
+    }
+    if (this.user.name) {
+        const parts = this.user.name.split(' ');
+        return parts.map(p => p.charAt(0)).join('').substring(0, 2).toUpperCase();
+    }
+    return 'U';
     }
 }

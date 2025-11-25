@@ -1,3 +1,4 @@
+
 import { Component, Input, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -6,35 +7,33 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <td 
-      class="celda-dato"
-      [style.text-align]="alineacion">
-      
-      <!-- Si tiene plantilla personalizada -->
-      <ng-container *ngIf="plantilla; else contenidoSimple">
-        <ng-container 
-          *ngTemplateOutlet="plantilla; context: { $implicit: dato, dato: valor }">
+    <div [style.text-align]="alineacion">
+      <!-- Si hay template personalizado, usarlo -->
+      <ng-container *ngIf="plantilla; else valorSimple">
+        <ng-container *ngTemplateOutlet="plantilla; context: { 
+          item: dato,           
+          dato: valor,          
+          $implicit: dato       
+        }">
         </ng-container>
       </ng-container>
 
-      <!-- Contenido simple sin plantilla -->
-      <ng-template #contenidoSimple>
+      <!-- Si no hay template, mostrar valor directo -->
+      <ng-template #valorSimple>
         {{ valor }}
       </ng-template>
-    </td>
+    </div>
   `,
   styles: [`
-    .celda-dato {
-      padding: 20px 16px;
-      font-size: 14px;
-      color: var(--texto-body);
-      font-weight: 500;
+    :host {
+      display: block;
+      width: 100%;
     }
   `]
 })
 export class TableCellComponent {
   @Input() valor: any;
-  @Input() dato: any;
+  @Input() dato: any;  // El item completo
   @Input() plantilla?: TemplateRef<any>;
   @Input() alineacion: 'left' | 'center' | 'right' = 'center';
 }

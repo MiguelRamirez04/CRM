@@ -1,32 +1,28 @@
+// =====================================================================================
+// COMPONENTE INFO GENERAL - infogeneralregistro.component.ts (CORREGIDO - EJECUCIÓN)
+// =====================================================================================
+//
+// 🔥 FIX APLICADO: Cargar y mostrar ejecuciones correctamente en modo EDITAR
+// ✅ Ahora recibe las ejecuciones del servicio
+// ✅ Puede construir el texto de la ejecución bloqueada correctamente
+//
+// =====================================================================================
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { EvaluacionService } from '../../../../../../core/services/evaluaciones-registro.service';
+import {
+  EvaluacionService,
+  OrdenTrabajoSelect,
+  ClienteSelect,
+  EjecucionSelect,
+  UsuarioSelect
+} from '../../../../../../core/services/evaluaciones.service';
 import { SharedEvaluacionService } from '../../../../../../core/services/shared-evaluacion.service';
-import { FormularioInfoGeneral } from '../../../../../../core/models/evaluaciones-listado.interface';
-
-interface OrdenTrabajo {
-  id: string;
-  nombre: string;
-}
-
-interface Ejecucion {
-  id: string;
-  nombre: string;
-}
-
-interface Cliente {
-  id: string;
-  nombre: string;
-}
-
-interface Evaluador {
-  id: string;
-  nombre: string;
-}
+import { FormularioInfoGeneral } from '../../../../../../core/models/evaluaciones.interface';
 
 @Component({
   selector: 'app-infogeneral',
@@ -35,22 +31,38 @@ interface Evaluador {
   templateUrl: './infogeneralregistro.component.html',
   styleUrls: ['./infogeneralregistro.component.css']
 })
-export class InfogeneralregistroComponent implements OnInit, OnDestroy {
+export class InfogeneralComponent implements OnInit, OnDestroy {
   faseActiva: 'antes' | 'despues' | 'infogeneral' = 'infogeneral';
   private destroy$ = new Subject<void>();
   guardando = false;
+  cargando = false;
 
-  // 🆕 Detectar modo de edición
-  modoEdicion = false;
+  // Detectar modo desde la ruta
+  modoOperacion: 'crear' | 'editar' = 'crear';
   evaluacionId: number | null = null;
 
-  // Listas para los selectores
-  ordenesTrabajo: OrdenTrabajo[] = [];
-  ejecuciones: Ejecucion[] = [];
-  clientes: Cliente[] = [];
-  evaluadores: Evaluador[] = [];
+  // Catálogos
+  ordenesTrabajo: OrdenTrabajoSelect[] = [];
+  ejecuciones: EjecucionSelect[] = [];
+  clientes: ClienteSelect[] = [];
+  evaluadores: UsuarioSelect[] = [];
+  usuarioActual: UsuarioSelect | null = null;
 
-  // Modelo del formulario
+  // Textos para campos bloqueados
+  textoOrdenBloqueada: string = '';
+  textoEjecucionBloqueada: string = '';
+  textoClienteBloqueado: string = '';
+  textoEvaluadorBloqueado: string = '';
+
+  // Estados de carga por catálogo
+  cargandoCatalogos = {
+    ordenes: false,
+    clientes: false,
+    ejecuciones: false,
+    usuario: false
+  };
+
+  // Formulario
   formulario: FormularioInfoGeneral = {
     ordenTrabajoId: '',
     ejecucionId: '',
@@ -63,7 +75,7 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
     notasSeguimiento: ''
   };
 
-  // Estado de las fases
+  // Estado de fases
   fases = {
     antes: {
       completada: false,
@@ -72,7 +84,7 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
     },
     despues: {
       completada: false,
-      titulo: 'Evaluación DESPUES',
+      titulo: 'Evaluación DESPUÉS',
       estatus: 'Sin completar'
     }
   };
@@ -80,13 +92,19 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
   constructor(
     private evaluacionService: EvaluacionService,
     private sharedService: SharedEvaluacionService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
-  ngOnInit(): void {
-    this.cargarDatos();
-    this.detectarModoEdicion(); // 🆕 Detectar si estamos editando
-    this.suscribirACambios();
+  async ngOnInit(): Promise<void> {
+    await this.detectarModoDesdeRuta();
+    await this.cargarCatalogosAsync();
+
+    if (this.modoOperacion === 'editar') {
+      this.construirTextosCamposBloqueados();
+    }
+
+    this.suscribirCambios();
   }
 
   ngOnDestroy(): void {
@@ -95,24 +113,267 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🆕 Detecta si estamos en modo edición o creación
+   * Detectar modo desde la ruta y parámetros
    */
-  private detectarModoEdicion(): void {
-    this.evaluacionId = this.sharedService.getEvaluacionId();
-    this.modoEdicion = this.evaluacionId !== null;
+  private async detectarModoDesdeRuta(): Promise<void> {
+    const modoData = this.route.snapshot.data['modo'] as 'crear' | 'editar' | undefined;
+    const idParam = this.route.snapshot.paramMap.get('id');
 
-    if (this.modoEdicion) {
-      console.log('📝 Modo EDICIÓN activado - Evaluación ID:', this.evaluacionId);
+    console.log('Detectando modo:', { modoData, idParam });
+
+    if (modoData === 'editar' && idParam) {
+      this.modoOperacion = 'editar';
+      this.evaluacionId = parseInt(idParam, 10);
+
+      if (isNaN(this.evaluacionId)) {
+        console.error('ID inválido');
+        alert('ID de evaluación inválido');
+        this.router.navigate(['/dashboard/evaluaciones']);
+        return;
+      }
+
+      const yaCargado = this.sharedService.getEvaluacionId() === this.evaluacionId;
+
+      if (yaCargado) {
+        console.log('Ya tenía datos en SharedService, NO recargar BD');
+        const infoGuardada = this.sharedService.getInfoGeneral();
+        if (infoGuardada) {
+          this.formulario = { ...infoGuardada };
+        }
+        return;
+      }
+
+      console.log('Modo EDITAR - Primera entrada, cargando evaluación ID:', this.evaluacionId);
+      await this.cargarEvaluacionExistente(this.evaluacionId);
+
+    } else if (modoData === 'crear') {
+      this.modoOperacion = 'crear';
+      this.evaluacionId = null;
+
+      console.log('Modo CREAR - Nueva evaluación');
+
+      const infoGuardada = this.sharedService.getInfoGeneral();
+      if (infoGuardada) {
+        this.formulario = { ...infoGuardada };
+        console.log('Datos locales cargados');
+      }
+
     } else {
-      console.log('✨ Modo CREACIÓN - Nueva evaluación');
+      const idCompartido = this.sharedService.getEvaluacionId();
+
+      if (idCompartido) {
+        this.modoOperacion = 'editar';
+        this.evaluacionId = idCompartido;
+        console.log('Modo EDITAR detectado desde SharedService');
+      } else {
+        this.modoOperacion = 'crear';
+        console.log('Modo CREAR por defecto');
+      }
     }
   }
 
   /**
-   * Suscribe a cambios en el servicio compartido
+   * 🔥 CORREGIDO: Construir textos para campos bloqueados
+   * Ahora puede encontrar la ejecución porque this.ejecuciones está poblado
    */
-  private suscribirACambios(): void {
-    // Suscribirse a cambios en el score
+  private construirTextosCamposBloqueados(): void {
+    console.log('🔨 Construyendo textos de campos bloqueados...');
+    console.log('📊 Formulario actual:', this.formulario);
+    console.log('📚 Catálogos disponibles:', {
+      ordenes: this.ordenesTrabajo.length,
+      ejecuciones: this.ejecuciones.length,  // 🔥 Ahora debería tener datos
+      clientes: this.clientes.length,
+      evaluadores: this.evaluadores.length,
+      usuarioActual: this.usuarioActual
+    });
+
+    // Orden de trabajo
+    if (this.formulario.ordenTrabajoId) {
+      const ordenId = this.formulario.ordenTrabajoId.toString();
+      const orden = this.ordenesTrabajo.find(o => o.id.toString() === ordenId);
+
+      if (orden) {
+        this.textoOrdenBloqueada = orden.displayText;
+        console.log('✅ Orden encontrada:', this.textoOrdenBloqueada);
+      } else {
+        this.textoOrdenBloqueada = `OT-${this.formulario.ordenTrabajoId}`;
+        console.warn('⚠️ Orden no encontrada en catálogo, usando ID');
+      }
+    } else {
+      this.textoOrdenBloqueada = 'Sin orden asignada';
+    }
+
+    // 🔥 EJECUCIÓN - CORREGIDO
+    if (this.formulario.ejecucionId) {
+      const ejecucionId = this.formulario.ejecucionId.toString();
+      
+      console.log('🔍 Buscando ejecución:', {
+        ejecucionId,
+        ejecucionesDisponibles: this.ejecuciones.length,
+        ejecucionesIds: this.ejecuciones.map(e => e.id)
+      });
+
+      const ejecucion = this.ejecuciones.find(e => e.id.toString() === ejecucionId);
+
+      if (ejecucion) {
+        this.textoEjecucionBloqueada = ejecucion.displayText;
+        console.log('✅ Ejecución encontrada:', this.textoEjecucionBloqueada);
+      } else {
+        // Si no se encuentra, construir texto básico
+        this.textoEjecucionBloqueada = `Ejecución #${this.formulario.ejecucionId}`;
+        console.warn('⚠️ Ejecución no encontrada en catálogo. IDs disponibles:', 
+          this.ejecuciones.map(e => e.id).join(', '));
+      }
+    } else {
+      this.textoEjecucionBloqueada = 'Sin ejecución específica';
+      console.log('ℹ️ No hay ejecución asignada');
+    }
+
+    // Cliente
+    if (this.formulario.clienteId) {
+      const clienteId = this.formulario.clienteId.toString();
+      const cliente = this.clientes.find(c => c.id.toString() === clienteId);
+
+      if (cliente) {
+        this.textoClienteBloqueado = cliente.displayText;
+        console.log('✅ Cliente encontrado:', this.textoClienteBloqueado);
+      } else {
+        this.textoClienteBloqueado = `Cliente #${this.formulario.clienteId}`;
+        console.warn('⚠️ Cliente no encontrado en catálogo');
+      }
+    } else {
+      this.textoClienteBloqueado = 'Sin cliente específico';
+    }
+
+    // Evaluador
+    if (this.formulario.evaluadorId) {
+      const evaluadorId = this.formulario.evaluadorId.toString();
+      let evaluador = this.evaluadores.find(e => e.id.toString() === evaluadorId);
+
+      if (!evaluador && this.usuarioActual && this.usuarioActual.id.toString() === evaluadorId) {
+        evaluador = this.usuarioActual;
+      }
+
+      if (evaluador) {
+        this.textoEvaluadorBloqueado = evaluador.displayText;
+        console.log('✅ Evaluador encontrado:', this.textoEvaluadorBloqueado);
+      } else {
+        this.textoEvaluadorBloqueado = `Evaluador #${this.formulario.evaluadorId}`;
+        console.warn('⚠️ Evaluador no encontrado');
+      }
+    } else {
+      this.textoEvaluadorBloqueado = 'Sin evaluador asignado';
+    }
+
+    console.log('✅ Textos bloqueados construidos:', {
+      orden: this.textoOrdenBloqueada,
+      ejecucion: this.textoEjecucionBloqueada,
+      cliente: this.textoClienteBloqueado,
+      evaluador: this.textoEvaluadorBloqueado
+    });
+  }
+
+  /**
+   * 🔥 CORREGIDO: Cargar evaluación completa desde el backend
+   * Ahora recibe las ejecuciones junto con los datos de la evaluación
+   */
+  private async cargarEvaluacionExistente(id: number): Promise<void> {
+    this.cargando = true;
+
+    try {
+      console.log('📥 Cargando evaluación completa desde BD...');
+
+      const resultado = await this.evaluacionService.cargarEvaluacionCompleta(id).toPromise();
+
+      if (!resultado) {
+        throw new Error('No se pudo cargar la evaluación');
+      }
+
+      console.log('✅ Datos recibidos de BD:', {
+        evaluacionId: resultado.evaluacion.id,
+        ordenId: resultado.evaluacion.ordenId,
+        ejecucionId: resultado.evaluacion.ejecucionId,
+        ejecucionesDisponibles: resultado.ejecuciones?.length || 0  // 🔥 NUEVO
+      });
+
+      // 🔥 NUEVO: Guardar las ejecuciones recibidas
+      if (resultado.ejecuciones) {
+        this.ejecuciones = resultado.ejecuciones;
+        console.log('✅ Ejecuciones cargadas:', this.ejecuciones.length);
+        console.log('📋 IDs de ejecuciones:', this.ejecuciones.map(e => e.id));
+      }
+
+      // Mapear evaluación a formulario
+      const infoGeneral: FormularioInfoGeneral = {
+        ordenTrabajoId: resultado.evaluacion.ordenId?.toString() || '',
+        ejecucionId: resultado.evaluacion.ejecucionId?.toString() || '',
+        clienteId: resultado.evaluacion.clienteId?.toString() || '',
+        evaluadorId: resultado.evaluacion.evaluadorId?.toString() || '',
+        objetivo: resultado.evaluacion.objetivo || '',
+        comentariosGenerales: resultado.evaluacion.comentariosGenerales || '',
+        scoreCalidad: resultado.evaluacion.scoreCalidadTotal || 0,
+        requiereSeguimiento: resultado.evaluacion.requiereSeguimiento || false,
+        notasSeguimiento: resultado.evaluacion.seguimientoNotas || ''
+      };
+
+      console.log('✅ Formulario mapeado:', infoGeneral);
+
+      // Mapear fase ANTES
+      const faseAntes = resultado.detalleAntes ? {
+        detalleId: resultado.detalleAntes.id,
+        lugar: resultado.detalleAntes.lugar || '',
+        fechaCreacion: resultado.detalleAntes.creadoEn?.split('T')[0] || '',
+        scoreFase: resultado.detalleAntes.scoreFase || 0,
+        descripcion: resultado.detalleAntes.descripcion || '',
+        sugerencias: resultado.detalleAntes.sugerencias || '',
+        notaGeneral: resultado.detalleAntes.evidenciasNota || '',
+        fotos: resultado.fotosAntes.map(foto => ({
+          id: foto.id.toString(),
+          fotoIdBD: foto.id,
+          tipo: foto.tipo || 'General',
+          fecha: foto.creadoEn?.split('T')[0] || '',
+          descripcion: foto.descripcion || '',
+          preview: foto.urlDescarga
+        }))
+      } : undefined;
+
+      // Mapear fase DESPUÉS
+      const faseDespues = resultado.detalleDespues ? {
+        detalleId: resultado.detalleDespues.id,
+        lugar: resultado.detalleDespues.lugar || '',
+        fechaCreacion: resultado.detalleDespues.creadoEn?.split('T')[0] || '',
+        scoreFase: resultado.detalleDespues.scoreFase || 0,
+        descripcion: resultado.detalleDespues.descripcion || '',
+        sugerencias: resultado.detalleDespues.sugerencias || '',
+        notaGeneral: resultado.detalleDespues.evidenciasNota || '',
+        fotos: resultado.fotosDespues.map(foto => ({
+          id: foto.id.toString(),
+          fotoIdBD: foto.id,
+          tipo: foto.tipo || 'General',
+          fecha: foto.creadoEn?.split('T')[0] || '',
+          descripcion: foto.descripcion || '',
+          preview: foto.urlDescarga
+        }))
+      } : undefined;
+
+      this.sharedService.cargarEvaluacion(id, infoGeneral, faseAntes, faseDespues);
+      this.formulario = { ...infoGeneral };
+
+      console.log('✅ Evaluación cargada en servicio compartido');
+
+    } catch (error) {
+      console.error('❌ Error al cargar evaluación:', error);
+      alert('Error al cargar la evaluación. Volviendo al listado...');
+      this.router.navigate(['/dashboard/evaluaciones']);
+    } finally {
+      this.cargando = false;
+    }
+  }
+
+  /**
+   * Suscribirse a cambios del servicio compartido
+   */
+  private suscribirCambios(): void {
     this.sharedService.infoGeneral$
       .pipe(takeUntil(this.destroy$))
       .subscribe(info => {
@@ -121,14 +382,12 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Suscribirse al estado de guardado
     this.sharedService.guardando$
       .pipe(takeUntil(this.destroy$))
       .subscribe(guardando => {
         this.guardando = guardando;
       });
 
-    // Suscribirse a cambios en las fases
     this.sharedService.faseAntes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(fase => {
@@ -143,55 +402,106 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
         this.fases.despues.estatus = fase ? 'Completada' : 'Sin completar';
       });
 
-    // 🆕 Suscribirse a cambios en evaluacionId
     this.sharedService.evaluacionId$
       .pipe(takeUntil(this.destroy$))
       .subscribe(id => {
         if (id !== this.evaluacionId) {
           this.evaluacionId = id;
-          this.modoEdicion = id !== null;
         }
       });
   }
 
   /**
-   * Carga los datos iniciales (catálogos)
+   * Cargar catálogos de forma asíncrona
    */
-  cargarDatos(): void {
-    // TODO: Reemplazar con llamadas reales a tus servicios de catálogos
-    this.ordenesTrabajo = [
-      { id: '1', nombre: 'Orden 001 - Instalación' },
-      { id: '2', nombre: 'Orden 002 - Mantenimiento' },
-      { id: '3', nombre: 'Orden 003 - Reparación' }
-    ];
+  private async cargarCatalogosAsync(): Promise<void> {
+    console.log('📚 Cargando catálogos generales...');
 
-    this.ejecuciones = [
-      { id: '1', nombre: 'Ejecución 001' },
-      { id: '2', nombre: 'Ejecución 002' }
-    ];
+    try {
+      const [ordenes, clientes, usuario] = await Promise.all([
+        this.evaluacionService.obtenerOrdenesTrabajo().toPromise(),
+        this.evaluacionService.obtenerClientes().toPromise(),
+        this.evaluacionService.obtenerUsuarioActual().toPromise()
+      ]);
 
-    this.clientes = [
-      { id: '1', nombre: 'Cliente A - Empresa X' },
-      { id: '2', nombre: 'Cliente B - Empresa Y' }
-    ];
+      this.ordenesTrabajo = ordenes || [];
+      this.clientes = clientes || [];
+      this.usuarioActual = usuario || null;
+      this.evaluadores = usuario ? [usuario] : [];
 
-    this.evaluadores = [
-      { id: '1', nombre: 'Juan Pérez' },
-      { id: '2', nombre: 'María González' },
-      { id: '3', nombre: 'Carlos Rodríguez' }
-    ];
+      console.log('✅ Catálogos generales cargados:', {
+        ordenes: this.ordenesTrabajo.length,
+        clientes: this.clientes.length,
+        usuario: this.usuarioActual?.nombreCompleto
+      });
 
-    // Cargar datos guardados si existen
-    const infoGuardada = this.sharedService.getInfoGeneral();
-    if (infoGuardada) {
-      this.formulario = { ...infoGuardada };
-      console.log('✅ Datos cargados del SharedService:', this.formulario);
+      // 🔥 NOTA: En modo EDITAR, las ejecuciones se cargan en cargarEvaluacionExistente()
+      // Solo cargar ejecuciones aquí si estamos en modo CREAR y hay orden seleccionada
+      if (this.modoOperacion === 'crear' && this.formulario.ordenTrabajoId) {
+        const ordenId = parseInt(this.formulario.ordenTrabajoId);
+        if (!isNaN(ordenId)) {
+          const ejecuciones = await this.evaluacionService.obtenerEjecuciones(ordenId).toPromise();
+          this.ejecuciones = ejecuciones || [];
+          console.log('✅ Ejecuciones cargadas (modo CREAR):', this.ejecuciones.length);
+        }
+      }
+
+      // Solo asignar evaluador actual en modo CREAR
+      if (this.modoOperacion === 'crear' && !this.formulario.evaluadorId && this.usuarioActual) {
+        this.formulario.evaluadorId = this.usuarioActual.id.toString();
+        this.onFormularioChange();
+      }
+
+    } catch (error) {
+      console.error('❌ Error al cargar catálogos:', error);
     }
   }
 
+  cargarCatalogos(): void {
+    this.cargarCatalogosAsync();
+  }
+
   /**
-   * Guarda los datos en el servicio compartido cuando cambian
+   * Cuando cambia la orden, cargar sus ejecuciones (solo en modo CREAR)
    */
+  onOrdenChange(): void {
+    if (this.modoOperacion === 'editar') return;
+
+    const ordenId = this.formulario.ordenTrabajoId;
+
+    if (!ordenId) {
+      this.ejecuciones = [];
+      this.formulario.ejecucionId = '';
+      this.onFormularioChange();
+      return;
+    }
+
+    console.log('🔄 Cargando ejecuciones para orden:', ordenId);
+
+    this.cargandoCatalogos.ejecuciones = true;
+    this.evaluacionService.obtenerEjecuciones(parseInt(ordenId)).subscribe({
+      next: (ejecuciones) => {
+        this.ejecuciones = ejecuciones;
+        console.log('✅ Ejecuciones cargadas:', ejecuciones.length);
+
+        if (this.formulario.ejecucionId) {
+          const existe = ejecuciones.some(e => e.id.toString() === this.formulario.ejecucionId);
+          if (!existe) {
+            this.formulario.ejecucionId = '';
+          }
+        }
+
+        this.cargandoCatalogos.ejecuciones = false;
+        this.onFormularioChange();
+      },
+      error: (error) => {
+        console.error('❌ Error al cargar ejecuciones:', error);
+        this.ejecuciones = [];
+        this.cargandoCatalogos.ejecuciones = false;
+      }
+    });
+  }
+
   onFormularioChange(): void {
     this.sharedService.setInfoGeneral({ ...this.formulario });
   }
@@ -205,124 +515,166 @@ export class InfogeneralregistroComponent implements OnInit, OnDestroy {
     this.cambiarFase(tipoFase);
   }
 
+  /**
+   * Cambiar fase con ruta según modo
+   */
   cambiarFase(fase: 'antes' | 'despues' | 'infogeneral'): void {
-    // Guardar datos actuales antes de cambiar
     this.onFormularioChange();
-    
     this.faseActiva = fase;
-    
-    // Navegar a la ruta correspondiente
+
+    const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
+      ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
+      : '/dashboard/evaluaciones/nueva';
+
     if (fase === 'antes') {
-      this.router.navigate(['/dashboard/evaluaciones/registro/fase-antes']);
+      this.router.navigate([`${rutaBase}/fase-antes`]);
     } else if (fase === 'despues') {
-      this.router.navigate(['/dashboard/evaluaciones/registro/fase-despues']);
+      this.router.navigate([`${rutaBase}/fase-despues`]);
+    } else {
+      this.router.navigate([rutaBase]);
     }
+  }
+
+  get tituloFormulario(): string {
+    return this.modoOperacion === 'editar' && this.evaluacionId
+      ? `Editar Evaluación #${this.evaluacionId}`
+      : 'Nueva Evaluación';
+  }
+
+  get badgeEstado(): { texto: string; clase: string } {
+    return this.modoOperacion === 'editar'
+      ? { texto: 'EDITANDO', clase: 'badge-editar' }
+      : { texto: 'NUEVA', clase: 'badge-crear' };
   }
 
   get estatusSeguimiento(): string {
     return this.formulario.requiereSeguimiento ? 'Requiere seguimiento' : 'Sin seguimiento';
   }
 
-  /**
-   * 🆕 Título dinámico según el modo
-   */
-  get tituloFormulario(): string {
-    return this.modoEdicion 
-      ? `Editar Evaluación #${this.evaluacionId}` 
-      : 'Nueva evaluación';
+  get camposPrincipalesBloqueados(): boolean {
+    return this.modoOperacion === 'editar';
   }
 
   /**
-   * Guarda la evaluación completa
+   * Guardar evaluación completa
    */
   async guardarEvaluacion(): Promise<void> {
-    // Validar campos obligatorios
     if (!this.formulario.ordenTrabajoId || !this.formulario.evaluadorId) {
-      alert('Por favor complete los campos obligatorios: Orden de Trabajo y Evaluador');
+      alert('Complete campos obligatorios: Orden de Trabajo y Evaluador');
       return;
     }
 
-    // Guardar datos actuales en el servicio compartido
     this.onFormularioChange();
+    this.sharedService.actualizarScore();
 
-    // Actualizar score antes de guardar
-    this.sharedService.actualizarScoreEnInfoGeneral();
-
-    // Validar datos completos
-    const validacion = this.sharedService.validarDatosCompletos();
+    const validacion = this.sharedService.validar();
     if (!validacion.valido) {
-      const mensaje = 'Errores de validación:\n' + validacion.errores.join('\n');
-      alert(mensaje);
+      alert('Errores:\n' + validacion.errores.join('\n'));
       return;
     }
 
-    // Construir DTO completo
-    const evaluacionCompleta = this.sharedService.construirEvaluacionCompleta();
-    if (!evaluacionCompleta) {
-      alert('Error al preparar los datos para guardar');
+    const dto = this.sharedService.construirDTO();
+    if (!dto) {
+      alert('Error al preparar datos');
       return;
     }
 
-    // 🆕 Mensaje personalizado según el modo
-    const mensajeConfirmacion = this.modoEdicion
-      ? '¿Desea guardar los cambios realizados en la evaluación?'
-      : '¿Desea guardar la evaluación completa?';
+    const mensaje = this.modoOperacion === 'editar'
+      ? '¿Guardar cambios en la evaluación?\n\nNota: Los campos Orden, Ejecución, Cliente y Evaluador no se pueden modificar.'
+      : '¿Guardar la evaluación completa?';
 
-    const confirmar = confirm(mensajeConfirmacion);
-    if (!confirmar) {
-      return;
-    }
+    if (!confirm(mensaje)) return;
 
     try {
       this.sharedService.setGuardando(true);
-      
-      // 🆕 Llamar al servicio para guardar (funciona igual para crear y actualizar)
-      const resultado = await this.evaluacionService.guardarEvaluacionCompleta(evaluacionCompleta);
-      
-      console.log('✅ Evaluación guardada exitosamente:', resultado);
-      
-      const mensajeExito = this.modoEdicion
-        ? `Evaluación #${resultado.id} actualizada exitosamente`
-        : `Evaluación guardada exitosamente con ID: ${resultado.id}`;
-      
+
+      const resultado = await this.evaluacionService.guardarEvaluacionCompleta(dto);
+
+      console.log('✅ Evaluación guardada:', resultado);
+
+      const mensajeExito = this.modoOperacion === 'editar'
+        ? `Evaluación #${resultado.id} actualizada`
+        : `Evaluación guardada con ID: ${resultado.id}`;
+
       alert(mensajeExito);
-      
-      // Actualizar el ID de la evaluación en el servicio compartido
+
       this.sharedService.setEvaluacionId(resultado.id);
-      
-      // Cambiar a modo edición si era creación
-      if (!this.modoEdicion) {
-        this.modoEdicion = true;
+
+      if (this.modoOperacion === 'crear') {
+        this.modoOperacion = 'editar';
         this.evaluacionId = resultado.id;
+        this.router.navigate(['/dashboard/evaluaciones/editar', resultado.id], {
+          replaceUrl: true
+        });
       }
-      
-      // Opcional: Navegar al listado después de guardar
-      const irAListado = confirm('¿Desea volver al listado de evaluaciones?');
+
+      const irAListado = confirm('¿Volver al listado?');
       if (irAListado) {
         this.sharedService.limpiar();
         this.router.navigate(['/dashboard/evaluaciones']);
       }
-      
+
     } catch (error) {
-      console.error('❌ Error al guardar evaluación:', error);
-      alert('Error al guardar la evaluación. Por favor intente nuevamente.');
+      console.error('❌ Error al guardar:', error);
+      alert('Error al guardar la evaluación');
     } finally {
       this.sharedService.setGuardando(false);
     }
   }
 
-  /**
-   * Cierra el formulario
-   */
   cerrarFormulario(): void {
-    const mensaje = this.modoEdicion
-      ? '¿Está seguro de salir sin guardar los cambios?'
-      : '¿Está seguro de cerrar? Los datos no guardados se perderán.';
-    
-    const confirmar = confirm(mensaje);
-    if (confirmar) {
+    const mensaje = this.modoOperacion === 'editar'
+      ? '¿Salir sin guardar cambios?'
+      : '¿Cerrar? Los datos no guardados se perderán';
+
+    if (confirm(mensaje)) {
       this.sharedService.limpiar();
       this.router.navigate(['/dashboard/evaluaciones']);
     }
   }
+
+  get algunCatalogoCargando(): boolean {
+    return Object.values(this.cargandoCatalogos).some(cargando => cargando);
+  }
 }
+
+/* 
+=====================================================================================
+📋 CAMBIOS REALIZADOS EN EL COMPONENTE
+=====================================================================================
+
+🔥 PROBLEMA SOLUCIONADO:
+   - Antes: No se cargaban las ejecuciones al cargar evaluación existente
+   - Resultado: this.ejecuciones estaba vacío []
+   - El método construirTextosCamposBloqueados() no encontraba la ejecución
+   - Mostraba: "Sin ejecución específica" aunque tuviera una
+
+✅ SOLUCIÓN IMPLEMENTADA:
+
+1. cargarEvaluacionExistente():
+   - Ahora el servicio retorna { ..., ejecuciones: EjecucionSelect[] }
+   - El componente guarda: this.ejecuciones = resultado.ejecuciones
+   - Logs agregados para debugging
+
+2. construirTextosCamposBloqueados():
+   - Logs mejorados para detectar el problema
+   - Ahora puede encontrar la ejecución porque this.ejecuciones tiene datos
+
+3. cargarCatalogosAsync():
+   - Comentario agregado explicando que en modo EDITAR
+   - Las ejecuciones se cargan en cargarEvaluacionExistente()
+
+🔄 FLUJO CORREGIDO (modo EDITAR):
+   1. Detectar modo EDITAR desde ruta
+   2. Llamar cargarEvaluacionExistente(id)
+   3. Servicio carga evaluación + ejecuciones de esa orden
+   4. Componente recibe y guarda ejecuciones
+   5. construirTextosCamposBloqueados() encuentra la ejecución
+   6. ✅ Muestra: "Ejecución #123 - Técnico XYZ (01/01/2025 10:00)"
+
+📝 ARCHIVOS QUE DEBEN ACTUALIZARSE:
+   ✅ evaluacion.service.ts (ya corregido)
+   ✅ infogeneralregistro.component.ts (este archivo)
+   ⚠️ NO tocar: shared-evaluacion.service.ts
+   ⚠️ NO tocar: evaluaciones.interface.ts
+*/

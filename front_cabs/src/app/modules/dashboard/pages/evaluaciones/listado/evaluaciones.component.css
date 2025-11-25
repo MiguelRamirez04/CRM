@@ -1,0 +1,45 @@
+/*
+<!-- ===================================================================================== -->
+<!-- ESTILOS CSS PARA LOS TEMPLATES -->
+<!-- ===================================================================================== -->
+
+
+/* Badge Score */
+.badge-score {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+
+
+/* Clases de color para scores */
+.bg-green-500 {
+  background-color: #22C55E;
+  color: white;
+}
+
+.bg-blue-500 {
+  background-color: #0092B8;
+  color: white;
+}
+
+.bg-yellow-500 {
+  background-color: #ffc20c;
+  color: #ffffff;
+}
+
+.bg-red-500 {
+  background-color: #EF4444;
+  color: white;
+}
+
+.bg-gray-300 {
+  background-color: #D1D5DB;
+  color: #374151;
+}
+
