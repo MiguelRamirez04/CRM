@@ -7,7 +7,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   justify-content: space-between;
+=======
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
   height: 100%;
   max-width: 280px;
   background-color: white;
@@ -73,10 +76,15 @@
   padding: 0 1.5rem 1rem;
   flex: 1;
   overflow-y: auto;
+<<<<<<< HEAD
 }
 
 .sidebar-nav-secondary {
   padding: 1rem 1.5rem 1rem;
+=======
+  display: flex;
+  flex-direction: column;
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }
 
 /* Sección title */
@@ -144,10 +152,16 @@
 
 /* Ajuste cuando el sidebar está colapsado */
 .nav-link.has-children.collapsed {
+<<<<<<< HEAD
   padding-right: 0; /* o 0 si prefieres eliminarlo completamente */
 }
 
 
+=======
+  padding-right: 0;
+}
+
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 /* Icon wrapper */
 .nav-icon-wrapper {
   position: relative;
@@ -160,7 +174,10 @@
 
 .nav-icon-wrapper.active {
   color: #4F46E5;
+<<<<<<< HEAD
   
+=======
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }
 
 .nav-icon {
@@ -260,6 +277,7 @@
   background-color: #4F46E5;
 }
 
+<<<<<<< HEAD
 /* Divider */
 .sidebar-divider {
   width: 100%;
@@ -339,6 +357,8 @@
   height: 0.875rem;
 }
 
+=======
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 /* Scrollbar personalizado */
 .sidebar-nav-container::-webkit-scrollbar {
   width: 4px;

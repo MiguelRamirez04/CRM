@@ -48,9 +48,12 @@ namespace back_cabs.CRM.DTOs.Soporte
         // OPCIONAL: Nombres para facilitar la lectura al cliente
         public string NombreTecnico { get; set; } = string.Empty;
         public string FolioOrden { get; set; } = string.Empty;
+<<<<<<< HEAD
 
         public string? NombreCliente { get; set; }
         public long Telefono { get; set; }
+=======
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
     }
 
     // =====================================================================================
@@ -69,7 +72,13 @@ namespace back_cabs.CRM.DTOs.Soporte
         public decimal? CostoUnitarioPublico { get; init; }
         public decimal SubtotalCompra { get; init; }
         public decimal SubtotalPublico { get; init; }
+<<<<<<< HEAD
         public string? Notas { get; init; }
 
     }
+=======
+        public string? Notas { get; init; }
+
+    }
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 }

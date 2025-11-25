@@ -105,6 +105,7 @@
             {{ item.label }}
           </span>
           }
+<<<<<<< HEAD
   <!-- Flecha solo si el sidebar está expandido y el item tiene hijos -->
   @if (!isCollapsed && hasChildren(item)) {
     <button type="button" (click)="toggleSubmenu(item, $event)" class="submenu-toggle"
@@ -129,6 +130,32 @@
     }
   </div>
 }
+=======
+          <!-- Flecha solo si el sidebar está expandido y el item tiene hijos -->
+          @if (!isCollapsed && hasChildren(item)) {
+            <button type="button" (click)="toggleSubmenu(item, $event)" class="submenu-toggle"
+              [class.expanded]="item.expanded">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icon-xs">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          }
+        </a>
+
+        <!-- Submenu solo si el sidebar está expandido y el item está expandido -->
+        @if (!isCollapsed && hasChildren(item) && item.expanded) {
+          <div class="submenu-container">
+            @for (child of item.children; track $index) {
+              <a [routerLink]="child.link" routerLinkActive="nav-link-active" class="nav-link submenu-link"
+                [class.active]="isActive(child.link)">
+                <span class="submenu-indicator"></span>
+                <span class="nav-label">{{ child.label }}</span>
+              </a>
+            }
+          </div>
+        }
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
       </div>
       }
     </nav>
@@ -183,6 +210,7 @@
       }
     </nav>
   </div>
+<<<<<<< HEAD
   <!-- Footer usuario -->
   <div class="sidebar-footer">
     <button (click)="toggleBandejaPerfil()" class="user-button">
@@ -213,4 +241,6 @@
       }
     </button>
   </div>
+=======
+>>>>>>> 3a6bacfee886888ba16e7a8430bc6b20ed889301
 </aside>
