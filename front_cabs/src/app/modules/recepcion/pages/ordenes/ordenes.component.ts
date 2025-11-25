@@ -11,7 +11,6 @@ import {
 import { RecepcionService } from '../../services/recepcion.service';
 import { DialogService } from '../../services/dialog.service';
 import { OrdenListComponent } from '../../components/orden-list/orden-list.component';
-import { HeaderComponent } from '../../../../layout/header/header.component';
 import { OrdenDetalleDialogComponent } from '../../components/orden-detalle-dialog/orden-detalle-dialog.component';
 // import { SecureAuthService } from '../../../../core/services/secure-auth.service'; // Ya no es necesario
 
@@ -23,7 +22,7 @@ type EstadoOrden = 'CAPTURADA' | 'ASIGNADA' | 'EN_PROCESO' | 'COMPLETADA' | 'CAN
   templateUrl: './ordenes.component.html',
   styleUrls: ['./ordenes.component.css'],
   standalone: true,
-  imports: [CommonModule, HeaderComponent, DecimalPipe, OrdenListComponent]
+  imports: [CommonModule, DecimalPipe, OrdenListComponent]
 })
 export class RecepcionDashboardComponent implements OnInit {
   private recepcionService = inject(RecepcionService);
