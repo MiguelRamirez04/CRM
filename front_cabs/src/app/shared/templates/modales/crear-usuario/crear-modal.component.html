@@ -1,0 +1,28 @@
+<div class=" flex flex-col gap-4 py-4 rounded-2xl  w-[900px]">
+  <app-ui-header-modal></app-ui-header-modal>
+  <!-- Texto -->
+  <app-ui-input-field label="Nombre" placeholder="Escribe tu nombre" variant="text" [labelObligatorio]="true"></app-ui-input-field>
+
+  <!-- Email -->
+  <app-ui-input-field label="Correo" placeholder="ejemplo@correo.com" variant="email" [labelObligatorio]="true"> </app-ui-input-field>
+
+  <!-- Password -->
+  <app-ui-input-field label="Contraseña" placeholder="hola" variant="password"></app-ui-input-field>
+
+  <!-- Teléfono -->
+  <app-ui-input-field label="Teléfono" placeholder="618..." variant="tel"></app-ui-input-field>
+
+<app-ui-input-field
+  label="Tipo de rol"
+  placeholder="Elige el rol"
+  variant="select"
+  [labelObligatorio]="true"
+  [options]="roles"
+  [(value)]="rolesSeleccionado"
+  nombreIcono="tag"
+  >
+</app-ui-input-field>
+
+
+  <button (click)="cerrar()">Cerrar</button>
+</div>

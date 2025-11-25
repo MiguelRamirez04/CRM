@@ -72,7 +72,7 @@
 
 :root {
   /* Color de la lineas separadora y contorno  */
-    ---color-linea: rgb(217,217,217);
+    --color-linea: rgb(217,217,217);
 
   /* Tamaño de texto */
     --font-text-xxxs: 8px;

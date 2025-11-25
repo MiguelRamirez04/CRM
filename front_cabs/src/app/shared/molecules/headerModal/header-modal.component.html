@@ -1,0 +1,30 @@
+<div class="flex flex-col gap-4">
+    <div class="flex flex-row justify-between px-4  items-center">
+        <!-- Titulo y texto descripción-->
+        <div class="flex flex-col gap-1 ">
+        <app-ui-tipografia
+            texto="Creando un usuario"
+            variante="h6"
+        ></app-ui-tipografia>
+        <app-ui-tipografia
+            variante="caption"
+            texto="Crea y asigna un rol"
+            color="texto-zing-500"
+        ></app-ui-tipografia>
+        </div>
+        <!-- Boton icono -->
+
+        <app-ui-boton
+        variante="terciario"
+        texto="Buscar"
+        [mostrarIcono]="true"
+        iconoNombre="x-mark"
+        [visualizarTexto]="false"
+        [anchoCompleto]="false"
+        >
+        </app-ui-boton>
+    </div>
+    <app-ui-divider></app-ui-divider>
+
+</div>
+
