@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, forkJoin, of, throwError } from 'rxjs';
@@ -17,7 +16,7 @@ import {
 } from '../models/evaluaciones.interface';
 
 // =====================================================================================
-// INTERFACES PARA CATÁLOGOS
+// INTERFACES PARA CATÁLOGOS (CLIENTES ELIMINADO)
 // =====================================================================================
 
 /** Orden de trabajo para el select */
@@ -26,14 +25,6 @@ export interface OrdenTrabajoSelect {
   folio?: string;
   nombreCliente: string;
   estado: string;
-  displayText: string;
-}
-
-/** Cliente para el select */
-export interface ClienteSelect {
-  id: number;
-  nombreComercial: string;
-  rfc: string;
   displayText: string;
 }
 
@@ -75,7 +66,7 @@ export class EvaluacionService {
   constructor(private http: HttpClient) { }
 
   // =====================================================================================
-  // CATÁLOGOS PARA FORMULARIOS (SIN CAMBIOS)
+  // CATÁLOGOS PARA FORMULARIOS (CLIENTES ELIMINADO)
   // =====================================================================================
 
   /**
@@ -98,92 +89,6 @@ export class EvaluacionService {
       }))),
       catchError(error => {
         console.error('Error al obtener órdenes:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Obtener clientes con paginación obligatoria
-   * GET /api/ClientesCompletos?pagina=1&porPagina=100
-   */
-  obtenerClientes(
-    busqueda?: string,
-    pagina: number = 1,
-    porPagina: number = 100
-  ): Observable<ClienteSelect[]> {
-    let params = new HttpParams()
-      .set('pagina', pagina.toString())
-      .set('porPagina', porPagina.toString());
-
-    if (busqueda) {
-      params = params.set('busqueda', busqueda);
-    }
-
-    return this.http.get<any>(`${this.API}/ClientesCompletos`, { params }).pipe(
-      map(response => {
-        let items: any[];
-
-        if (Array.isArray(response)) {
-          items = response;
-        } else if (response?.items && Array.isArray(response.items)) {
-          items = response.items;
-        } else {
-          console.warn('Respuesta de clientes en formato inesperado:', response);
-          items = [];
-        }
-
-        return items.map((cliente: any) => ({
-          id: cliente.clienteId || cliente.id,
-          nombreComercial: cliente.nombreComercial || 'Sin nombre',
-          rfc: cliente.rfc || 'Sin RFC',
-          displayText: `${cliente.nombreComercial || 'Sin nombre'} - ${cliente.rfc || 'Sin RFC'}`
-        }));
-      }),
-      retry(2),
-      catchError(error => {
-        console.error('Error al obtener clientes:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Buscar clientes por nombre
-   */
-  buscarClientesPorNombre(nombre: string): Observable<ClienteSelect[]> {
-    if (!nombre || nombre.trim() === '') {
-      return of([]);
-    }
-    return this.obtenerClientes(nombre, 1, 50);
-  }
-
-  /**
-   * Buscar clientes por RFC
-   * GET /api/ClientesCompletos/por-rfc
-   */
-  buscarClientesPorRFC(rfc: string): Observable<ClienteSelect[]> {
-    if (!rfc || rfc.trim() === '') {
-      return of([]);
-    }
-
-    const params = new HttpParams()
-      .set('rfc', rfc)
-      .set('pagina', '1')
-      .set('porPagina', '20');
-
-    return this.http.get<any>(`${this.API}/ClientesCompletos/por-rfc`, { params }).pipe(
-      map(response => {
-        const items = Array.isArray(response) ? response : (response?.items || []);
-        return items.map((cliente: any) => ({
-          id: cliente.clienteId || cliente.id,
-          nombreComercial: cliente.nombreComercial || 'Sin nombre',
-          rfc: cliente.rfc || 'Sin RFC',
-          displayText: `${cliente.nombreComercial} - ${cliente.rfc}`
-        }));
-      }),
-      catchError(error => {
-        console.error('Error al buscar por RFC:', error);
         return of([]);
       })
     );
@@ -256,17 +161,15 @@ export class EvaluacionService {
   }
 
   /**
-   * Cargar todos los catálogos
+   * Cargar todos los catálogos (SIN CLIENTES)
    */
   cargarCatalogosFormulario(ordenId?: number): Observable<{
     ordenes: OrdenTrabajoSelect[];
-    clientes: ClienteSelect[];
     ejecuciones: EjecucionSelect[];
     usuarioActual: UsuarioSelect;
   }> {
     return forkJoin({
       ordenes: this.obtenerOrdenesTrabajo(),
-      clientes: this.obtenerClientes(),
       ejecuciones: ordenId ? this.obtenerEjecuciones(ordenId) : of([]),
       usuarioActual: this.obtenerUsuarioActual()
     }).pipe(
@@ -274,7 +177,6 @@ export class EvaluacionService {
         console.error('Error al cargar catálogos:', error);
         return of({
           ordenes: [],
-          clientes: [],
           ejecuciones: [],
           usuarioActual: {
             id: 0,
@@ -288,7 +190,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // EVALUACIONES - CRUD COMPLETO (SIN CAMBIOS)
+  // EVALUACIONES - CRUD COMPLETO
   // =====================================================================================
 
   obtenerTodas(): Observable<EvaluacionResponse[]> {
@@ -322,7 +224,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // DETALLES DE EVALUACIÓN (SIN CAMBIOS)
+  // DETALLES DE EVALUACIÓN
   // =====================================================================================
 
   obtenerDetallePorId(id: number): Observable<EvaluacionDetalleResponse> {
@@ -364,7 +266,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // FOTOS DE EVALUACIÓN (SIN CAMBIOS)
+  // FOTOS DE EVALUACIÓN
   // =====================================================================================
 
   obtenerTodasFotos(): Observable<FotoEvaluacionResponse[]> {
@@ -444,7 +346,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // OPERACIONES COMPLEJAS (SIN CAMBIOS)
+  // OPERACIONES COMPLEJAS
   // =====================================================================================
 
   async guardarEvaluacionCompleta(dto: EvaluacionCompletaDTO): Promise<EvaluacionResponse> {
@@ -559,37 +461,22 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // FIX PRINCIPAL: CARGAR EVALUACIÓN COMPLETA CON EJECUCIONES
+  // CARGAR EVALUACIÓN COMPLETA CON EJECUCIONES
   // =====================================================================================
 
-  /**
-   * CORREGIDO: Cargar evaluación completa CON ejecuciones
-   * 
-   * PROBLEMA ANTERIOR:
-   * - Se cargaba la evaluación con su ejecucionId
-   * - Pero NO se cargaban las ejecuciones disponibles para la orden
-   * - El componente no podía mostrar el texto de la ejecución seleccionada
-   * 
-   * SOLUCIÓN:
-   * - Primero cargar evaluación, detalles y fotos
-   * - Luego cargar ejecuciones basándose en el ordenId
-   * - Retornar todo junto con switchMap
-   */
   cargarEvaluacionCompleta(id: number): Observable<{
     evaluacion: EvaluacionResponse;
     detalleAntes?: EvaluacionDetalleResponse;
     detalleDespues?: EvaluacionDetalleResponse;
     fotosAntes: FotoEvaluacionResponse[];
     fotosDespues: FotoEvaluacionResponse[];
-    ejecuciones: EjecucionSelect[];  // AGREGADO
+    ejecuciones: EjecucionSelect[];
   }> {
-    // Paso 1: Cargar evaluación, detalles y fotos
     return forkJoin({
       evaluacion: this.obtenerPorId(id),
       detalles: this.obtenerDetallesPorEvaluacion(id),
       todasFotos: this.obtenerTodasFotos()
     }).pipe(
-      // Paso 2: Procesar los datos básicos
       map(({ evaluacion, detalles, todasFotos }) => {
         const detalleAntes = detalles.find(d => d.fase === 'ANTES');
         const detalleDespues = detalles.find(d => d.fase === 'DESPUES');
@@ -610,7 +497,6 @@ export class EvaluacionService {
           fotosDespues
         };
       }),
-      // Paso 3: Cargar ejecuciones basándose en ordenId
       switchMap(datosBasicos => {
         console.log(' Cargando ejecuciones para orden:', datosBasicos.evaluacion.ordenId);
         
@@ -620,12 +506,11 @@ export class EvaluacionService {
             
             return {
               ...datosBasicos,
-              ejecuciones: ejecuciones  // Agregar ejecuciones al resultado
+              ejecuciones: ejecuciones
             };
           }),
           catchError(error => {
             console.error(' Error al cargar ejecuciones, continuando sin ellas:', error);
-            // Si falla la carga de ejecuciones, continuar sin ellas
             return of({
               ...datosBasicos,
               ejecuciones: []
@@ -641,7 +526,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // MÉTODOS HELPER (SIN CAMBIOS)
+  // MÉTODOS HELPER
   // =====================================================================================
 
   obtenerClaseScore(score: number | null | undefined): string {
@@ -695,7 +580,7 @@ export class EvaluacionService {
   }
 
   // =====================================================================================
-  // UTILIDADES (SIN CAMBIOS)
+  // UTILIDADES
   // =====================================================================================
 
   formatearFecha(fechaISO: string): string {

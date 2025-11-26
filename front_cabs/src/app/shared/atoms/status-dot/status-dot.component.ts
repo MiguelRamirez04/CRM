@@ -1,6 +1,7 @@
-import { Component, Input, TemplateRef } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { UiIconComponent } from '../icono/icono.component';
 
 export type StatusType =
   | 'completado'
@@ -17,15 +18,14 @@ export type StatusType =
 @Component({
   selector: 'app-status-dot',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UiIconComponent],
   templateUrl: './status-dot.component.html',
   styleUrls: ['./status-dot.component.css'],
 })
 export class StatusDotComponent {
   @Input() texto: string = '';
   @Input() tipo: StatusType = 'personalizado';
-  @Input() icono?: TemplateRef<any>;
-  @Input() mostrarIcono: boolean = true; // propiedad para controlar visibilidad
+  @Input() mostrarIcono: boolean = true;
 
   // Personalización (solo para tipo personalizado)
   @Input() colorTexto?: string;

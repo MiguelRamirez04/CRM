@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 
-
 export const dashboardRoutes: Routes = [
   {
     path: '',
@@ -22,29 +21,33 @@ export const dashboardRoutes: Routes = [
         path: 'calendario',
         loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent)
       },
-       //Rutas de EVALUACIONES - COMENTADAS TEMPORALMENTE
-     // =====================================================================================
-      // RUTAS DE EVALUACIONES
+      
+      // =====================================================================================
+      // RUTAS DE EVALUACIONES - OPTIMIZADAS CON MODALES
       // =====================================================================================
       
+      // Listado de evaluaciones
       {
         path: 'evaluaciones',
         loadComponent: () => import('./pages/evaluaciones/listado/evaluaciones.component')
           .then(m => m.EvaluacionesComponent)
       },
       
+      // Ver detalle de evaluación (readonly)
       {
         path: 'evaluaciones/ver/:id',
         loadComponent: () => import('./pages/evaluaciones/ver_detalles/verdetalles.component')
           .then(m => m.VerdetallesComponent)
       },
       
+      // Ver fase ANTES en detalle (readonly)
       {
         path: 'evaluacion/fase-antes/:id',
         loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/faseantes.component')
           .then(m => m.FaseantesComponent)
       },
       
+      // Ver fase DESPUÉS en detalle (readonly)
       {
         path: 'evaluacion/fase-despues/:id',
         loadComponent: () => import('./pages/evaluaciones/ver_detalles/fases/fasedespues.component')
@@ -52,7 +55,7 @@ export const dashboardRoutes: Routes = [
       },
       
       // =====================================================================================
-      // 🔥 MODO CREAR - SIN GUARD EN LAS SUB-RUTAS
+      // MODO CREAR - SOLO INFO GENERAL (FASES SON MODALES)
       // =====================================================================================
       
       {
@@ -60,27 +63,12 @@ export const dashboardRoutes: Routes = [
         loadComponent: () => import('./pages/evaluaciones/registro/infogeneral/infogeneralregistro.component')
           .then(m => m.InfogeneralComponent),
         data: { modo: 'crear' }
-        // ❌ SIN GUARD - La limpieza se hace en el componente
       },
       
-      {
-        path: 'evaluaciones/nueva/fase-antes',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/faseantesregistro.component')
-          .then(m => m.FaseAntesComponent),
-        data: { modo: 'crear' }
-        // ❌ SIN GUARD - Los datos persisten entre secciones
-      },
-      
-      {
-        path: 'evaluaciones/nueva/fase-despues',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/fasedespuesregistro.component')
-          .then(m => m.FaseDespuesComponent),
-        data: { modo: 'crear' }
-        // ❌ SIN GUARD - Los datos persisten entre secciones
-      },
+    
       
       // =====================================================================================
-      // MODO EDITAR
+      //  MODO EDITAR - SOLO INFO GENERAL (FASES SON MODALES)
       // =====================================================================================
       
       {
@@ -90,26 +78,19 @@ export const dashboardRoutes: Routes = [
         data: { modo: 'editar' }
       },
       
-      {
-        path: 'evaluaciones/editar/:id/fase-antes',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/faseantesregistro.component')
-          .then(m => m.FaseAntesComponent),
-        data: { modo: 'editar' }
-      },
+  
       
-      {
-        path: 'evaluaciones/editar/:id/fase-despues',
-        loadComponent: () => import('./pages/evaluaciones/registro/fases/fasedespuesregistro.component')
-          .then(m => m.FaseDespuesComponent),
-        data: { modo: 'editar' }
-      },
-      
+      // Redirect legacy
       {
         path: 'evaluaciones/registro',
         redirectTo: 'evaluaciones/nueva',
         pathMatch: 'full'
       },
+      
+      // =====================================================================================
       // RUTAS DE COTIZACIONES
+      // =====================================================================================
+      
       {
         path: 'cotizaciones',
         children: [
@@ -132,7 +113,11 @@ export const dashboardRoutes: Routes = [
           }
         ]
       },
-      // RUTAS DE CENTROAYUDA
+      
+      // =====================================================================================
+      // RUTAS DE CENTRO DE AYUDA
+      // =====================================================================================
+      
       {
         path: 'centrodeayuda',
         loadComponent: () => import('./pages/centroayuda/centroayuda.component').then(m => m.CentroayudaComponent)
@@ -140,3 +125,4 @@ export const dashboardRoutes: Routes = [
     ]
   }
 ];
+

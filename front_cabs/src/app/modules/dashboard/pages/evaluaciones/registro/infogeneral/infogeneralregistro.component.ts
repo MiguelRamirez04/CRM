@@ -1,63 +1,69 @@
-// =====================================================================================
-// COMPONENTE INFO GENERAL - infogeneralregistro.component.ts (CORREGIDO - EJECUCIÓN)
-// =====================================================================================
-//
-// 🔥 FIX APLICADO: Cargar y mostrar ejecuciones correctamente en modo EDITAR
-// ✅ Ahora recibe las ejecuciones del servicio
-// ✅ Puede construir el texto de la ejecución bloqueada correctamente
-//
-// =====================================================================================
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { environment } from '../../../../../../../environments/environment';
 import {
   EvaluacionService,
   OrdenTrabajoSelect,
-  ClienteSelect,
   EjecucionSelect,
   UsuarioSelect
 } from '../../../../../../core/services/evaluaciones.service';
 import { SharedEvaluacionService } from '../../../../../../core/services/shared-evaluacion.service';
-import { FormularioInfoGeneral } from '../../../../../../core/models/evaluaciones.interface';
+import { 
+  FormularioInfoGeneral,
+  mapResponseToFormulario,
+  mapDetalleResponseToDatos,
+  UsuarioResponseDto
+} from '../../../../../../core/models/evaluaciones.interface';
+import { FaseAntesModalComponent } from '../fases/faseantesregistro.component';
+import { FaseDespuesModalComponent } from '../fases/fasedespuesregistro.component';
 
 @Component({
   selector: 'app-infogeneral',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    FaseAntesModalComponent,
+    FaseDespuesModalComponent
+  ],
   templateUrl: './infogeneralregistro.component.html',
   styleUrls: ['./infogeneralregistro.component.css']
 })
 export class InfogeneralComponent implements OnInit, OnDestroy {
-  faseActiva: 'antes' | 'despues' | 'infogeneral' = 'infogeneral';
   private destroy$ = new Subject<void>();
   guardando = false;
   cargando = false;
+
+  // Control de modales
+  modalAntesAbierto = false;
+  modalDespuesAbierto = false;
 
   // Detectar modo desde la ruta
   modoOperacion: 'crear' | 'editar' = 'crear';
   evaluacionId: number | null = null;
 
-  // Catálogos
+  // Catálogos (se cargan UNA SOLA VEZ)
   ordenesTrabajo: OrdenTrabajoSelect[] = [];
   ejecuciones: EjecucionSelect[] = [];
-  clientes: ClienteSelect[] = [];
-  evaluadores: UsuarioSelect[] = [];
+  evaluadores: UsuarioSelect[] = [];  // CAMBIADO: Ahora es array completo de usuarios
   usuarioActual: UsuarioSelect | null = null;
+
+  // Flags para controlar carga única
+  private catalogosCargados = false;
 
   // Textos para campos bloqueados
   textoOrdenBloqueada: string = '';
   textoEjecucionBloqueada: string = '';
-  textoClienteBloqueado: string = '';
   textoEvaluadorBloqueado: string = '';
 
   // Estados de carga por catálogo
   cargandoCatalogos = {
     ordenes: false,
-    clientes: false,
     ejecuciones: false,
     usuario: false
   };
@@ -66,7 +72,7 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
   formulario: FormularioInfoGeneral = {
     ordenTrabajoId: '',
     ejecucionId: '',
-    clienteId: '',
+    clienteId: '',  // Mantener por compatibilidad con backend, pero no se usa en UI
     evaluadorId: '',
     objetivo: '',
     comentariosGenerales: '',
@@ -93,33 +99,43 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
     private evaluacionService: EvaluacionService,
     private sharedService: SharedEvaluacionService,
     private router: Router,
-    private route: ActivatedRoute
-  ) { }
+    private route: ActivatedRoute,
+    private http: HttpClient  // AGREGADO: HttpClient para cargar usuarios
+  ) {}
 
   async ngOnInit(): Promise<void> {
+    console.log('InfoGeneral ngOnInit - Componente montado');
+    
     await this.detectarModoDesdeRuta();
-    await this.cargarCatalogosAsync();
+    
+    // OPTIMIZACIÓN: Cargar catálogos solo UNA VEZ
+    if (!this.catalogosCargados) {
+      await this.cargarCatalogosAsync();
+      this.catalogosCargados = true;
+      console.log('Catálogos cargados y cacheados');
+    } else {
+      console.log('Usando catálogos en caché');
+    }
 
     if (this.modoOperacion === 'editar') {
       this.construirTextosCamposBloqueados();
     }
 
     this.suscribirCambios();
+    this.actualizarEstadoFases();
   }
 
   ngOnDestroy(): void {
+    console.log(' InfoGeneral ngOnDestroy');
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  /**
-   * Detectar modo desde la ruta y parámetros
-   */
   private async detectarModoDesdeRuta(): Promise<void> {
     const modoData = this.route.snapshot.data['modo'] as 'crear' | 'editar' | undefined;
     const idParam = this.route.snapshot.paramMap.get('id');
 
-    console.log('Detectando modo:', { modoData, idParam });
+    console.log(' Detectando modo:', { modoData, idParam });
 
     if (modoData === 'editar' && idParam) {
       this.modoOperacion = 'editar';
@@ -135,7 +151,7 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
       const yaCargado = this.sharedService.getEvaluacionId() === this.evaluacionId;
 
       if (yaCargado) {
-        console.log('Ya tenía datos en SharedService, NO recargar BD');
+        console.log('Datos ya en SharedService');
         const infoGuardada = this.sharedService.getInfoGeneral();
         if (infoGuardada) {
           this.formulario = { ...infoGuardada };
@@ -143,19 +159,18 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
         return;
       }
 
-      console.log('Modo EDITAR - Primera entrada, cargando evaluación ID:', this.evaluacionId);
+      console.log('📥 Cargando evaluación ID:', this.evaluacionId);
       await this.cargarEvaluacionExistente(this.evaluacionId);
 
     } else if (modoData === 'crear') {
       this.modoOperacion = 'crear';
       this.evaluacionId = null;
-
-      console.log('Modo CREAR - Nueva evaluación');
+      console.log('✨ Modo CREAR - Nueva evaluación');
 
       const infoGuardada = this.sharedService.getInfoGeneral();
       if (infoGuardada) {
         this.formulario = { ...infoGuardada };
-        console.log('Datos locales cargados');
+        console.log('Datos locales restaurados');
       }
 
     } else {
@@ -172,298 +187,234 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 🔥 CORREGIDO: Construir textos para campos bloqueados
-   * Ahora puede encontrar la ejecución porque this.ejecuciones está poblado
-   */
-  private construirTextosCamposBloqueados(): void {
-    console.log('🔨 Construyendo textos de campos bloqueados...');
-    console.log('📊 Formulario actual:', this.formulario);
-    console.log('📚 Catálogos disponibles:', {
-      ordenes: this.ordenesTrabajo.length,
-      ejecuciones: this.ejecuciones.length,  // 🔥 Ahora debería tener datos
-      clientes: this.clientes.length,
-      evaluadores: this.evaluadores.length,
-      usuarioActual: this.usuarioActual
-    });
-
-    // Orden de trabajo
-    if (this.formulario.ordenTrabajoId) {
-      const ordenId = this.formulario.ordenTrabajoId.toString();
-      const orden = this.ordenesTrabajo.find(o => o.id.toString() === ordenId);
-
-      if (orden) {
-        this.textoOrdenBloqueada = orden.displayText;
-        console.log('✅ Orden encontrada:', this.textoOrdenBloqueada);
-      } else {
-        this.textoOrdenBloqueada = `OT-${this.formulario.ordenTrabajoId}`;
-        console.warn('⚠️ Orden no encontrada en catálogo, usando ID');
-      }
-    } else {
-      this.textoOrdenBloqueada = 'Sin orden asignada';
-    }
-
-    // 🔥 EJECUCIÓN - CORREGIDO
-    if (this.formulario.ejecucionId) {
-      const ejecucionId = this.formulario.ejecucionId.toString();
-      
-      console.log('🔍 Buscando ejecución:', {
-        ejecucionId,
-        ejecucionesDisponibles: this.ejecuciones.length,
-        ejecucionesIds: this.ejecuciones.map(e => e.id)
-      });
-
-      const ejecucion = this.ejecuciones.find(e => e.id.toString() === ejecucionId);
-
-      if (ejecucion) {
-        this.textoEjecucionBloqueada = ejecucion.displayText;
-        console.log('✅ Ejecución encontrada:', this.textoEjecucionBloqueada);
-      } else {
-        // Si no se encuentra, construir texto básico
-        this.textoEjecucionBloqueada = `Ejecución #${this.formulario.ejecucionId}`;
-        console.warn('⚠️ Ejecución no encontrada en catálogo. IDs disponibles:', 
-          this.ejecuciones.map(e => e.id).join(', '));
-      }
-    } else {
-      this.textoEjecucionBloqueada = 'Sin ejecución específica';
-      console.log('ℹ️ No hay ejecución asignada');
-    }
-
-    // Cliente
-    if (this.formulario.clienteId) {
-      const clienteId = this.formulario.clienteId.toString();
-      const cliente = this.clientes.find(c => c.id.toString() === clienteId);
-
-      if (cliente) {
-        this.textoClienteBloqueado = cliente.displayText;
-        console.log('✅ Cliente encontrado:', this.textoClienteBloqueado);
-      } else {
-        this.textoClienteBloqueado = `Cliente #${this.formulario.clienteId}`;
-        console.warn('⚠️ Cliente no encontrado en catálogo');
-      }
-    } else {
-      this.textoClienteBloqueado = 'Sin cliente específico';
-    }
-
-    // Evaluador
-    if (this.formulario.evaluadorId) {
-      const evaluadorId = this.formulario.evaluadorId.toString();
-      let evaluador = this.evaluadores.find(e => e.id.toString() === evaluadorId);
-
-      if (!evaluador && this.usuarioActual && this.usuarioActual.id.toString() === evaluadorId) {
-        evaluador = this.usuarioActual;
-      }
-
-      if (evaluador) {
-        this.textoEvaluadorBloqueado = evaluador.displayText;
-        console.log('✅ Evaluador encontrado:', this.textoEvaluadorBloqueado);
-      } else {
-        this.textoEvaluadorBloqueado = `Evaluador #${this.formulario.evaluadorId}`;
-        console.warn('⚠️ Evaluador no encontrado');
-      }
-    } else {
-      this.textoEvaluadorBloqueado = 'Sin evaluador asignado';
-    }
-
-    console.log('✅ Textos bloqueados construidos:', {
-      orden: this.textoOrdenBloqueada,
-      ejecucion: this.textoEjecucionBloqueada,
-      cliente: this.textoClienteBloqueado,
-      evaluador: this.textoEvaluadorBloqueado
-    });
-  }
-
-  /**
-   * 🔥 CORREGIDO: Cargar evaluación completa desde el backend
-   * Ahora recibe las ejecuciones junto con los datos de la evaluación
-   */
   private async cargarEvaluacionExistente(id: number): Promise<void> {
-    this.cargando = true;
-
     try {
-      console.log('📥 Cargando evaluación completa desde BD...');
+      this.cargando = true;
+      console.log('📡 Cargando evaluación completa ID:', id);
 
-      const resultado = await this.evaluacionService.cargarEvaluacionCompleta(id).toPromise();
+      this.evaluacionService.cargarEvaluacionCompleta(id).subscribe({
+        next: async (data) => {
+          console.log('Datos recibidos:', data);
 
-      if (!resultado) {
-        throw new Error('No se pudo cargar la evaluación');
-      }
+          const infoGeneral = mapResponseToFormulario(data.evaluacion);
+          
+          const datosAntes = data.detalleAntes 
+            ? mapDetalleResponseToDatos(data.detalleAntes, data.fotosAntes)
+            : undefined;
 
-      console.log('✅ Datos recibidos de BD:', {
-        evaluacionId: resultado.evaluacion.id,
-        ordenId: resultado.evaluacion.ordenId,
-        ejecucionId: resultado.evaluacion.ejecucionId,
-        ejecucionesDisponibles: resultado.ejecuciones?.length || 0  // 🔥 NUEVO
+          const datosDespues = data.detalleDespues
+            ? mapDetalleResponseToDatos(data.detalleDespues, data.fotosDespues)
+            : undefined;
+
+          this.formulario = { ...infoGeneral };
+
+          if (infoGeneral.ordenTrabajoId) {
+            const ordenId = parseInt(infoGeneral.ordenTrabajoId);
+            if (!isNaN(ordenId)) {
+              try {
+                this.ejecuciones = await this.evaluacionService.obtenerEjecuciones(ordenId).toPromise() || [];
+                console.log('Ejecuciones cargadas:', this.ejecuciones.length);
+                this.construirTextosCamposBloqueados();
+              } catch (error) {
+                console.error('Error al cargar ejecuciones:', error);
+                this.ejecuciones = [];
+              }
+            }
+          }
+
+          this.sharedService.cargarEvaluacion(
+            id,
+            infoGeneral,
+            datosAntes,
+            datosDespues
+          );
+
+          console.log('Evaluación cargada en SharedService');
+          this.cargando = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar evaluación:', error);
+          alert('Error al cargar la evaluación');
+          this.router.navigate(['/dashboard/evaluaciones']);
+          this.cargando = false;
+        }
       });
-
-      // 🔥 NUEVO: Guardar las ejecuciones recibidas
-      if (resultado.ejecuciones) {
-        this.ejecuciones = resultado.ejecuciones;
-        console.log('✅ Ejecuciones cargadas:', this.ejecuciones.length);
-        console.log('📋 IDs de ejecuciones:', this.ejecuciones.map(e => e.id));
-      }
-
-      // Mapear evaluación a formulario
-      const infoGeneral: FormularioInfoGeneral = {
-        ordenTrabajoId: resultado.evaluacion.ordenId?.toString() || '',
-        ejecucionId: resultado.evaluacion.ejecucionId?.toString() || '',
-        clienteId: resultado.evaluacion.clienteId?.toString() || '',
-        evaluadorId: resultado.evaluacion.evaluadorId?.toString() || '',
-        objetivo: resultado.evaluacion.objetivo || '',
-        comentariosGenerales: resultado.evaluacion.comentariosGenerales || '',
-        scoreCalidad: resultado.evaluacion.scoreCalidadTotal || 0,
-        requiereSeguimiento: resultado.evaluacion.requiereSeguimiento || false,
-        notasSeguimiento: resultado.evaluacion.seguimientoNotas || ''
-      };
-
-      console.log('✅ Formulario mapeado:', infoGeneral);
-
-      // Mapear fase ANTES
-      const faseAntes = resultado.detalleAntes ? {
-        detalleId: resultado.detalleAntes.id,
-        lugar: resultado.detalleAntes.lugar || '',
-        fechaCreacion: resultado.detalleAntes.creadoEn?.split('T')[0] || '',
-        scoreFase: resultado.detalleAntes.scoreFase || 0,
-        descripcion: resultado.detalleAntes.descripcion || '',
-        sugerencias: resultado.detalleAntes.sugerencias || '',
-        notaGeneral: resultado.detalleAntes.evidenciasNota || '',
-        fotos: resultado.fotosAntes.map(foto => ({
-          id: foto.id.toString(),
-          fotoIdBD: foto.id,
-          tipo: foto.tipo || 'General',
-          fecha: foto.creadoEn?.split('T')[0] || '',
-          descripcion: foto.descripcion || '',
-          preview: foto.urlDescarga
-        }))
-      } : undefined;
-
-      // Mapear fase DESPUÉS
-      const faseDespues = resultado.detalleDespues ? {
-        detalleId: resultado.detalleDespues.id,
-        lugar: resultado.detalleDespues.lugar || '',
-        fechaCreacion: resultado.detalleDespues.creadoEn?.split('T')[0] || '',
-        scoreFase: resultado.detalleDespues.scoreFase || 0,
-        descripcion: resultado.detalleDespues.descripcion || '',
-        sugerencias: resultado.detalleDespues.sugerencias || '',
-        notaGeneral: resultado.detalleDespues.evidenciasNota || '',
-        fotos: resultado.fotosDespues.map(foto => ({
-          id: foto.id.toString(),
-          fotoIdBD: foto.id,
-          tipo: foto.tipo || 'General',
-          fecha: foto.creadoEn?.split('T')[0] || '',
-          descripcion: foto.descripcion || '',
-          preview: foto.urlDescarga
-        }))
-      } : undefined;
-
-      this.sharedService.cargarEvaluacion(id, infoGeneral, faseAntes, faseDespues);
-      this.formulario = { ...infoGeneral };
-
-      console.log('✅ Evaluación cargada en servicio compartido');
 
     } catch (error) {
-      console.error('❌ Error al cargar evaluación:', error);
-      alert('Error al cargar la evaluación. Volviendo al listado...');
+      console.error('Error al cargar evaluación:', error);
+      alert('Error al cargar la evaluación');
       this.router.navigate(['/dashboard/evaluaciones']);
-    } finally {
       this.cargando = false;
     }
   }
 
   /**
-   * Suscribirse a cambios del servicio compartido
+   * CORREGIDO: Ahora busca el evaluador en el array completo de usuarios
    */
-  private suscribirCambios(): void {
-    this.sharedService.infoGeneral$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(info => {
-        if (info && info.scoreCalidad !== this.formulario.scoreCalidad) {
-          this.formulario.scoreCalidad = info.scoreCalidad;
-        }
-      });
+  private construirTextosCamposBloqueados(): void {
+    console.log('🔨 Construyendo textos bloqueados');
 
+    // Orden
+    if (this.formulario.ordenTrabajoId) {
+      const orden = this.ordenesTrabajo.find(o => o.id.toString() === this.formulario.ordenTrabajoId.toString());
+      this.textoOrdenBloqueada = orden ? orden.displayText : `OT-${this.formulario.ordenTrabajoId}`;
+    } else {
+      this.textoOrdenBloqueada = 'Sin orden asignada';
+    }
+
+    // Ejecución
+    if (this.formulario.ejecucionId) {
+      const ejecucion = this.ejecuciones.find(e => e.id.toString() === this.formulario.ejecucionId.toString());
+      this.textoEjecucionBloqueada = ejecucion ? ejecucion.displayText : `Ejecución #${this.formulario.ejecucionId}`;
+    } else {
+      this.textoEjecucionBloqueada = 'Sin ejecución específica';
+    }
+
+    // EVALUADOR - AHORA BUSCA EN EL ARRAY COMPLETO
+    if (this.formulario.evaluadorId) {
+      const evaluador = this.evaluadores.find(e => e.id.toString() === this.formulario.evaluadorId.toString());
+      
+      if (evaluador) {
+        this.textoEvaluadorBloqueado = evaluador.displayText;
+        console.log('Evaluador encontrado:', this.textoEvaluadorBloqueado);
+      } else {
+        this.textoEvaluadorBloqueado = `Evaluador #${this.formulario.evaluadorId}`;
+        console.warn(' Evaluador no encontrado en array:', this.formulario.evaluadorId);
+      }
+    } else {
+      this.textoEvaluadorBloqueado = 'Sin evaluador asignado';
+    }
+
+    console.log('Textos bloqueados construidos:', {
+      orden: this.textoOrdenBloqueada,
+      ejecucion: this.textoEjecucionBloqueada,
+      evaluador: this.textoEvaluadorBloqueado
+    });
+  }
+
+  private suscribirCambios(): void {
     this.sharedService.guardando$
       .pipe(takeUntil(this.destroy$))
       .subscribe(guardando => {
         this.guardando = guardando;
       });
+  }
 
-    this.sharedService.faseAntes$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(fase => {
-        this.fases.antes.completada = fase !== null;
-        this.fases.antes.estatus = fase ? 'Completada' : 'Sin completar';
-      });
+  private actualizarEstadoFases(): void {
+    const datosAntes = this.sharedService.getFaseAntes();
+    const datosDespues = this.sharedService.getFaseDespues();
 
-    this.sharedService.faseDespues$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(fase => {
-        this.fases.despues.completada = fase !== null;
-        this.fases.despues.estatus = fase ? 'Completada' : 'Sin completar';
-      });
+    this.fases.antes.completada = !!datosAntes && !!datosAntes.lugar;
+    this.fases.antes.estatus = this.fases.antes.completada ? 'Completada' : 'Sin completar';
 
-    this.sharedService.evaluacionId$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(id => {
-        if (id !== this.evaluacionId) {
-          this.evaluacionId = id;
-        }
-      });
+    this.fases.despues.completada = !!datosDespues && !!datosDespues.lugar;
+    this.fases.despues.estatus = this.fases.despues.completada ? 'Completada' : 'Sin completar';
+    
+    this.sharedService.actualizarScore();
+    const infoActual = this.sharedService.getInfoGeneral();
+    if (infoActual) {
+      this.formulario.scoreCalidad = infoActual.scoreCalidad;
+    }
   }
 
   /**
-   * Cargar catálogos de forma asíncrona
+   * CORREGIDO: Ahora carga todos los usuarios, no solo el actual
    */
   private async cargarCatalogosAsync(): Promise<void> {
-    console.log('📚 Cargando catálogos generales...');
-
     try {
-      const [ordenes, clientes, usuario] = await Promise.all([
-        this.evaluacionService.obtenerOrdenesTrabajo().toPromise(),
-        this.evaluacionService.obtenerClientes().toPromise(),
-        this.evaluacionService.obtenerUsuarioActual().toPromise()
-      ]);
+      console.log('📥 Iniciando carga de catálogos...');
 
-      this.ordenesTrabajo = ordenes || [];
-      this.clientes = clientes || [];
-      this.usuarioActual = usuario || null;
-      this.evaluadores = usuario ? [usuario] : [];
+      this.cargandoCatalogos.usuario = true;
 
-      console.log('✅ Catálogos generales cargados:', {
-        ordenes: this.ordenesTrabajo.length,
-        clientes: this.clientes.length,
-        usuario: this.usuarioActual?.nombreCompleto
+      // CARGAR USUARIO ACTUAL Y TODOS LOS USUARIOS EN PARALELO
+      forkJoin({
+        usuarioActual: this.evaluacionService.obtenerUsuarioActual(),
+        todosUsuarios: this.http.get(`${environment.apiUrl}/api/Auth/usuarios`, {
+          responseType: 'text'
+        })
+      }).subscribe({
+        next: ({ usuarioActual, todosUsuarios }) => {
+          // Usuario actual
+          this.usuarioActual = usuarioActual;
+          console.log('Usuario actual:', this.usuarioActual?.nombreCompleto);
+
+          // PARSEAR TODOS LOS USUARIOS
+          let usuariosArray: UsuarioResponseDto[] = [];
+          try {
+            const parsed = typeof todosUsuarios === 'string' 
+              ? JSON.parse(todosUsuarios) 
+              : todosUsuarios;
+            
+            if (Array.isArray(parsed)) {
+              usuariosArray = parsed;
+            } else if (parsed && typeof parsed === 'object') {
+              usuariosArray = parsed.data || parsed.items || parsed.usuarios || [];
+            }
+          } catch (error) {
+            console.error('Error al parsear usuarios:', error);
+            usuariosArray = [];
+          }
+
+          // CONVERTIR A UsuarioSelect[]
+          this.evaluadores = usuariosArray.map((u: UsuarioResponseDto) => ({
+            id: u.id,
+            nombreCompleto: u.nombreCompleto || `${u.nombre} ${u.apellido}`,
+            rol: u.rol || 'Desconocido',
+            displayText: `${u.nombreCompleto || u.nombre} ${u.apellido} (${u.rol || 'Sin rol'})`
+          }));
+
+          console.log('Total de usuarios cargados:', this.evaluadores.length);
+
+          this.cargandoCatalogos.usuario = false;
+
+          // En modo CREAR, asignar usuario actual
+          if (this.modoOperacion === 'crear' && !this.formulario.evaluadorId && this.usuarioActual) {
+            this.formulario.evaluadorId = this.usuarioActual.id.toString();
+            this.onFormularioChange();
+          }
+
+          // Si estamos en modo EDITAR, construir textos
+          if (this.modoOperacion === 'editar') {
+            this.construirTextosCamposBloqueados();
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar usuarios:', error);
+          this.usuarioActual = null;
+          this.evaluadores = [];
+          this.cargandoCatalogos.usuario = false;
+        }
       });
 
-      // 🔥 NOTA: En modo EDITAR, las ejecuciones se cargan en cargarEvaluacionExistente()
-      // Solo cargar ejecuciones aquí si estamos en modo CREAR y hay orden seleccionada
+      // Cargar órdenes
+      this.cargandoCatalogos.ordenes = true;
+      try {
+        this.ordenesTrabajo = await this.evaluacionService.obtenerOrdenesTrabajo().toPromise() || [];
+        console.log('Órdenes cargadas:', this.ordenesTrabajo.length);
+      } catch (error) {
+        console.error('Error al cargar órdenes:', error);
+        this.ordenesTrabajo = [];
+      } finally {
+        this.cargandoCatalogos.ordenes = false;
+      }
+
+      // En modo CREAR, cargar ejecuciones si ya hay orden seleccionada
       if (this.modoOperacion === 'crear' && this.formulario.ordenTrabajoId) {
         const ordenId = parseInt(this.formulario.ordenTrabajoId);
         if (!isNaN(ordenId)) {
           const ejecuciones = await this.evaluacionService.obtenerEjecuciones(ordenId).toPromise();
           this.ejecuciones = ejecuciones || [];
-          console.log('✅ Ejecuciones cargadas (modo CREAR):', this.ejecuciones.length);
+          console.log('Ejecuciones cargadas:', this.ejecuciones.length);
         }
       }
 
-      // Solo asignar evaluador actual en modo CREAR
-      if (this.modoOperacion === 'crear' && !this.formulario.evaluadorId && this.usuarioActual) {
-        this.formulario.evaluadorId = this.usuarioActual.id.toString();
-        this.onFormularioChange();
-      }
+      console.log('Todos los catálogos cargados');
 
     } catch (error) {
-      console.error('❌ Error al cargar catálogos:', error);
+      console.error('Error general al cargar catálogos:', error);
     }
   }
 
-  cargarCatalogos(): void {
-    this.cargarCatalogosAsync();
-  }
-
-  /**
-   * Cuando cambia la orden, cargar sus ejecuciones (solo en modo CREAR)
-   */
   onOrdenChange(): void {
     if (this.modoOperacion === 'editar') return;
 
@@ -476,13 +427,13 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('🔄 Cargando ejecuciones para orden:', ordenId);
+    console.log('Cargando ejecuciones para orden:', ordenId);
 
     this.cargandoCatalogos.ejecuciones = true;
     this.evaluacionService.obtenerEjecuciones(parseInt(ordenId)).subscribe({
       next: (ejecuciones) => {
         this.ejecuciones = ejecuciones;
-        console.log('✅ Ejecuciones cargadas:', ejecuciones.length);
+        console.log('Ejecuciones cargadas:', ejecuciones.length);
 
         if (this.formulario.ejecucionId) {
           const existe = ejecuciones.some(e => e.id.toString() === this.formulario.ejecucionId);
@@ -495,7 +446,7 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
         this.onFormularioChange();
       },
       error: (error) => {
-        console.error('❌ Error al cargar ejecuciones:', error);
+        console.error('Error al cargar ejecuciones:', error);
         this.ejecuciones = [];
         this.cargandoCatalogos.ejecuciones = false;
       }
@@ -511,29 +462,43 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
     this.onFormularioChange();
   }
 
-  seleccionarFase(tipoFase: 'antes' | 'despues'): void {
-    this.cambiarFase(tipoFase);
+  // =====================================================================
+  // 🎯 MÉTODOS PARA ABRIR/CERRAR MODALES
+  // =====================================================================
+
+  abrirModalAntes(): void {
+    console.log(' Abriendo modal ANTES');
+    this.modalAntesAbierto = true;
   }
 
-  /**
-   * Cambiar fase con ruta según modo
-   */
-  cambiarFase(fase: 'antes' | 'despues' | 'infogeneral'): void {
-    this.onFormularioChange();
-    this.faseActiva = fase;
+  cerrarModalAntes(): void {
+    console.log('Cerrando modal ANTES');
+    this.modalAntesAbierto = false;
+    this.actualizarEstadoFases();
+  }
 
-    const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
-      ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
-      : '/dashboard/evaluaciones/nueva';
+  abrirModalDespues(): void {
+    console.log(' Abriendo modal DESPUÉS');
+    this.modalDespuesAbierto = true;
+  }
 
-    if (fase === 'antes') {
-      this.router.navigate([`${rutaBase}/fase-antes`]);
-    } else if (fase === 'despues') {
-      this.router.navigate([`${rutaBase}/fase-despues`]);
+  cerrarModalDespues(): void {
+    console.log('Cerrando modal DESPUÉS');
+    this.modalDespuesAbierto = false;
+    this.actualizarEstadoFases();
+  }
+
+  seleccionarFase(tipoFase: 'antes' | 'despues'): void {
+    if (tipoFase === 'antes') {
+      this.abrirModalAntes();
     } else {
-      this.router.navigate([rutaBase]);
+      this.abrirModalDespues();
     }
   }
+
+  // =====================================================================
+  // GETTERS Y HELPERS
+  // =====================================================================
 
   get tituloFormulario(): string {
     return this.modoOperacion === 'editar' && this.evaluacionId
@@ -555,9 +520,14 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
     return this.modoOperacion === 'editar';
   }
 
-  /**
-   * Guardar evaluación completa
-   */
+  get algunCatalogoCargando(): boolean {
+    return Object.values(this.cargandoCatalogos).some(cargando => cargando);
+  }
+
+  // =====================================================================
+  // GUARDAR Y CERRAR
+  // =====================================================================
+
   async guardarEvaluacion(): Promise<void> {
     if (!this.formulario.ordenTrabajoId || !this.formulario.evaluadorId) {
       alert('Complete campos obligatorios: Orden de Trabajo y Evaluador');
@@ -580,7 +550,7 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
     }
 
     const mensaje = this.modoOperacion === 'editar'
-      ? '¿Guardar cambios en la evaluación?\n\nNota: Los campos Orden, Ejecución, Cliente y Evaluador no se pueden modificar.'
+      ? '¿Guardar cambios en la evaluación?\n\nNota: Los campos Orden, Ejecución y Evaluador no se pueden modificar.'
       : '¿Guardar la evaluación completa?';
 
     if (!confirm(mensaje)) return;
@@ -590,7 +560,7 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
 
       const resultado = await this.evaluacionService.guardarEvaluacionCompleta(dto);
 
-      console.log('✅ Evaluación guardada:', resultado);
+      console.log('Evaluación guardada:', resultado);
 
       const mensajeExito = this.modoOperacion === 'editar'
         ? `Evaluación #${resultado.id} actualizada`
@@ -603,19 +573,17 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
       if (this.modoOperacion === 'crear') {
         this.modoOperacion = 'editar';
         this.evaluacionId = resultado.id;
-        this.router.navigate(['/dashboard/evaluaciones/editar', resultado.id], {
-          replaceUrl: true
-        });
       }
 
       const irAListado = confirm('¿Volver al listado?');
       if (irAListado) {
         this.sharedService.limpiar();
+        this.catalogosCargados = false;
         this.router.navigate(['/dashboard/evaluaciones']);
       }
 
     } catch (error) {
-      console.error('❌ Error al guardar:', error);
+      console.error('Error al guardar:', error);
       alert('Error al guardar la evaluación');
     } finally {
       this.sharedService.setGuardando(false);
@@ -629,52 +597,9 @@ export class InfogeneralComponent implements OnInit, OnDestroy {
 
     if (confirm(mensaje)) {
       this.sharedService.limpiar();
+      this.catalogosCargados = false;
       this.router.navigate(['/dashboard/evaluaciones']);
     }
   }
-
-  get algunCatalogoCargando(): boolean {
-    return Object.values(this.cargandoCatalogos).some(cargando => cargando);
-  }
 }
 
-/* 
-=====================================================================================
-📋 CAMBIOS REALIZADOS EN EL COMPONENTE
-=====================================================================================
-
-🔥 PROBLEMA SOLUCIONADO:
-   - Antes: No se cargaban las ejecuciones al cargar evaluación existente
-   - Resultado: this.ejecuciones estaba vacío []
-   - El método construirTextosCamposBloqueados() no encontraba la ejecución
-   - Mostraba: "Sin ejecución específica" aunque tuviera una
-
-✅ SOLUCIÓN IMPLEMENTADA:
-
-1. cargarEvaluacionExistente():
-   - Ahora el servicio retorna { ..., ejecuciones: EjecucionSelect[] }
-   - El componente guarda: this.ejecuciones = resultado.ejecuciones
-   - Logs agregados para debugging
-
-2. construirTextosCamposBloqueados():
-   - Logs mejorados para detectar el problema
-   - Ahora puede encontrar la ejecución porque this.ejecuciones tiene datos
-
-3. cargarCatalogosAsync():
-   - Comentario agregado explicando que en modo EDITAR
-   - Las ejecuciones se cargan en cargarEvaluacionExistente()
-
-🔄 FLUJO CORREGIDO (modo EDITAR):
-   1. Detectar modo EDITAR desde ruta
-   2. Llamar cargarEvaluacionExistente(id)
-   3. Servicio carga evaluación + ejecuciones de esa orden
-   4. Componente recibe y guarda ejecuciones
-   5. construirTextosCamposBloqueados() encuentra la ejecución
-   6. ✅ Muestra: "Ejecución #123 - Técnico XYZ (01/01/2025 10:00)"
-
-📝 ARCHIVOS QUE DEBEN ACTUALIZARSE:
-   ✅ evaluacion.service.ts (ya corregido)
-   ✅ infogeneralregistro.component.ts (este archivo)
-   ⚠️ NO tocar: shared-evaluacion.service.ts
-   ⚠️ NO tocar: evaluaciones.interface.ts
-*/

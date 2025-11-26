@@ -1,21 +1,28 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// =====================================================================================
+// COMPONENTE MODAL - FASE DESPUÉS
+// =====================================================================================
+
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, from } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { EvaluacionService } from '../../../../../../core/services/evaluaciones.service';
 import { SharedEvaluacionService } from '../../../../../../core/services/shared-evaluacion.service';
-import { DatosFase, FotoLocal, EvaluacionResponse } from '../../../../../../core/models/evaluaciones.interface';
+import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones.interface';
 
 @Component({
-  selector: 'app-fase-despues',
+  selector: 'app-fase-despues-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './fases.component.html',
   styleUrls: ['./fases.component.css']
 })
-export class FaseDespuesComponent implements OnInit, OnDestroy {
+export class FaseDespuesModalComponent implements OnInit, OnDestroy {
+  @Input() modoOperacion: 'crear' | 'editar' = 'crear';
+  @Input() evaluacionId: number | null = null;
+  @Output() cerrar = new EventEmitter<void>();
+
   lugar: string = '';
   fechaCreacion: string = '';
   scoreFase: number = 0;
@@ -23,50 +30,40 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
   sugerencias: string = '';
   notaGeneral: string = '';
   fotos: FotoLocal[] = [];
-  faseActiva: 'antes' | 'despues' | 'infogeneral' = 'despues';
   tituloFase: string = 'DESPUÉS';
   guardando = false;
   detalleId?: number;
-  modoOperacion: 'crear' | 'editar' = 'crear';
-  evaluacionId: number | null = null;
 
   private blobUrls: Map<number, string> = new Map();
-
   private destroy$ = new Subject<void>();
 
   constructor(
     private evaluacionService: EvaluacionService,
-    private sharedService: SharedEvaluacionService,
-    private router: Router,
-    private route: ActivatedRoute
+    private sharedService: SharedEvaluacionService
   ) {
     this.fechaCreacion = this.obtenerFechaActual();
   }
 
   ngOnInit(): void {
-    this.detectarModoDesdeRuta();
+    console.log('🔓 Modal DESPUÉS abierto');
     this.cargarDatosGuardados();
     this.suscribirCambios();
   }
 
   ngOnDestroy(): void {
+    console.log('🔒 Modal DESPUÉS cerrado - guardando datos');
     this.guardarDatosEnServicio();
     this.destroy$.next();
     this.destroy$.complete();
     this.limpiarBlobUrls();
   }
 
-  /**
-   * Cargar imagen desde el servidor con autenticación JWT
-   */
   private async cargarImagenAutenticada(fotoIdBD: number): Promise<string> {
     try {
       if (this.blobUrls.has(fotoIdBD)) {
         return this.blobUrls.get(fotoIdBD)!;
       }
 
-      console.log(`Cargando imagen autenticada: ${fotoIdBD}`);
-      
       const blob = await this.evaluacionService.descargarFoto(fotoIdBD).toPromise();
       
       if (!blob) {
@@ -76,7 +73,6 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
       const blobUrl = URL.createObjectURL(blob);
       this.blobUrls.set(fotoIdBD, blobUrl);
       
-      console.log(`Imagen ${fotoIdBD} cargada correctamente`);
       return blobUrl;
       
     } catch (error) {
@@ -85,61 +81,23 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Cargar previews de todas las fotos que vienen de BD
-   */
   private async cargarPreviewsFotos(): Promise<void> {
     const fotosConIdBD = this.fotos.filter(f => f.fotoIdBD && !f.preview?.startsWith('data:'));
     
     if (fotosConIdBD.length === 0) return;
-    
-    console.log(`Cargando ${fotosConIdBD.length} imágenes desde servidor...`);
     
     for (const foto of fotosConIdBD) {
       if (foto.fotoIdBD) {
         foto.preview = await this.cargarImagenAutenticada(foto.fotoIdBD);
       }
     }
-    
-    console.log('Todas las imágenes cargadas');
   }
 
-  /**
-   * Limpiar blob URLs para evitar memory leaks
-   */
   private limpiarBlobUrls(): void {
     this.blobUrls.forEach((url) => {
       URL.revokeObjectURL(url);
     });
     this.blobUrls.clear();
-    console.log('Blob URLs limpiadas');
-  }
-
-  private detectarModoDesdeRuta(): void {
-    const modoData = this.route.snapshot.data['modo'] as 'crear' | 'editar' | undefined;
-    const idParam = this.route.snapshot.paramMap.get('id');
-    
-    if (modoData === 'editar' && idParam) {
-      this.modoOperacion = 'editar';
-      this.evaluacionId = parseInt(idParam, 10);
-      console.log('Fase DESPUÉS - Modo EDITAR - ID:', this.evaluacionId);
-    } else if (modoData === 'crear') {
-      this.modoOperacion = 'crear';
-      this.evaluacionId = null;
-      console.log('Fase DESPUÉS - Modo CREAR');
-    } else {
-      const idCompartido = this.sharedService.getEvaluacionId();
-      this.modoOperacion = idCompartido ? 'editar' : 'crear';
-      this.evaluacionId = idCompartido;
-    }
-  }
-
-  private suscribirCambios(): void {
-    this.sharedService.guardando$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(guardando => {
-        this.guardando = guardando;
-      });
   }
 
   private cargarDatosGuardados(): void {
@@ -156,8 +114,32 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
       
       this.cargarPreviewsFotos();
       
-      console.log('Datos DESPUÉS cargados');
+      console.log('Datos DESPUÉS cargados en modal');
     }
+  }
+
+  async onImageError(event: Event, foto: FotoLocal): Promise<void> {
+    const imgElement = event.target as HTMLImageElement;
+    
+    if (foto.fotoIdBD) {
+      try {
+        const blobUrl = await this.cargarImagenAutenticada(foto.fotoIdBD);
+        foto.preview = blobUrl;
+        imgElement.src = blobUrl;
+      } catch (error) {
+        imgElement.src = '/assets/images/placeholder-image.png';
+      }
+    } else {
+      imgElement.src = '/assets/images/placeholder-image.png';
+    }
+  }
+
+  private suscribirCambios(): void {
+    this.sharedService.guardando$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(guardando => {
+        this.guardando = guardando;
+      });
   }
 
   private guardarDatosEnServicio(): void {
@@ -174,6 +156,7 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
 
     this.sharedService.setFaseDespues(datos);
     this.sharedService.actualizarScore();
+    console.log('Datos DESPUÉS guardados en SharedService');
   }
 
   onCampoChange(): void {
@@ -226,32 +209,6 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Manejo de error de imagen con autenticación
-   */
-  async onImageError(event: Event, foto: FotoLocal): Promise<void> {
-    const imgElement = event.target as HTMLImageElement;
-    
-    console.error('Error al cargar imagen:', {
-      fotoId: foto.id,
-      fotoIdBD: foto.fotoIdBD
-    });
-    
-    if (foto.fotoIdBD) {
-      try {
-        console.log('Reintentando con autenticación...');
-        const blobUrl = await this.cargarImagenAutenticada(foto.fotoIdBD);
-        foto.preview = blobUrl;
-        imgElement.src = blobUrl;
-      } catch (error) {
-        console.error('Falló el reintento:', error);
-        imgElement.src = '/assets/images/placeholder-image.png';
-      }
-    } else {
-      imgElement.src = '/assets/images/placeholder-image.png';
-    }
-  }
-
   eliminarFoto(id: string | undefined): void {
     if (!id) {
       console.warn('ID de foto inválido');
@@ -301,113 +258,18 @@ export class FaseDespuesComponent implements OnInit, OnDestroy {
     input.click();
   }
 
-  cambiarFase(fase: 'antes' | 'despues' | 'infogeneral'): void {
-    this.guardarDatosEnServicio();
-    this.faseActiva = fase;
-    
-    const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
-      ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
-      : '/dashboard/evaluaciones/nueva';
-    
-    if (fase === 'infogeneral') {
-      this.router.navigate([rutaBase]);
-    } else if (fase === 'antes') {
-      this.router.navigate([`${rutaBase}/fase-antes`]);
-    }
-  }
-
   private generarId(): string {
     return Date.now().toString() + Math.random().toString(36).substring(2, 9);
   }
 
-  guardarEvaluacion(): void {
-    if (!this.lugar.trim()) {
-      alert('Por favor, ingrese el lugar de la evaluación en esta fase');
-      return;
-    }
-
+  cerrarModal(): void {
     this.guardarDatosEnServicio();
-
-    const infoGeneral = this.sharedService.getInfoGeneral();
-    if (!infoGeneral) {
-      alert('No hay información general. Complete primero la pestaña "Información general"');
-      const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
-        ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
-        : '/dashboard/evaluaciones/nueva';
-      this.router.navigate([rutaBase]);
-      return;
-    }
-
-    if (!infoGeneral.ordenTrabajoId || !infoGeneral.evaluadorId) {
-      alert('Faltan campos obligatorios en Información General:\n\n- Orden de Trabajo\n- Evaluador\n\nComplete estos campos primero.');
-      const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
-        ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
-        : '/dashboard/evaluaciones/nueva';
-      this.router.navigate([rutaBase]);
-      return;
-    }
-
-    const validacion = this.sharedService.validar();
-    if (!validacion.valido) {
-      const erroresFormateados = validacion.errores
-        .map((error, index) => `${index + 1}. ${error}`)
-        .join('\n');
-      alert(`Por favor, corrija los siguientes errores:\n\n${erroresFormateados}`);
-      return;
-    }
-
-    const dto = this.sharedService.construirDTO();
-    if (!dto) {
-      alert('Error al preparar los datos. Intente nuevamente.');
-      return;
-    }
-
-    const mensaje = this.modoOperacion === 'editar' && this.evaluacionId
-      ? `¿Actualizar la evaluación #${this.evaluacionId}?`
-      : '¿Guardar la evaluación completa?';
-
-    if (!confirm(mensaje)) return;
-
-    this.sharedService.setGuardando(true);
-
-    from(this.evaluacionService.guardarEvaluacionCompleta(dto))
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.sharedService.setGuardando(false))
-      )
-      .subscribe({
-        next: (resultado: EvaluacionResponse) => {
-          console.log('Evaluación guardada exitosamente:', resultado);
-          
-          const mensajeExito = this.modoOperacion === 'editar' && this.evaluacionId
-            ? `Evaluación #${resultado.id} actualizada correctamente`
-            : `Evaluación creada exitosamente\nID: ${resultado.id}`;
-          
-          alert(mensajeExito);
-          
-          if (!this.evaluacionId) {
-            this.sharedService.setEvaluacionId(resultado.id);
-          }
-          
-          this.sharedService.limpiar();
-          this.router.navigate(['/dashboard/evaluaciones']);
-        },
-        error: (error: any) => {
-          console.error('Error al guardar evaluación:', error);
-          const mensaje = error?.error?.message || 'Error desconocido al guardar';
-          alert(`Error al guardar la evaluación:\n${mensaje}\n\nIntente nuevamente.`);
-        }
-      });
+    this.cerrar.emit();
   }
 
-  cerrarFormulario(): void {
-    const mensaje = this.modoOperacion === 'editar'
-      ? '¿Salir sin guardar los cambios?'
-      : '¿Cerrar? Los datos no guardados se perderán';
-    
-    if (confirm(mensaje)) {
-      this.sharedService.limpiar();
-      this.router.navigate(['/dashboard/evaluaciones']);
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.cerrarModal();
     }
   }
 
