@@ -1,7 +1,17 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// =====================================================================================
+// COMPONENTE MODAL - FASE ANTES
+// =====================================================================================
+//
+// 🎯 Este componente se abre como un MODAL desde Info General
+// No hay navegación de rutas
+// No se destruye el componente padre
+// Los datos persisten automáticamente
+//
+// =====================================================================================
+
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { EvaluacionService } from '../../../../../../core/services/evaluaciones.service';
@@ -9,13 +19,17 @@ import { SharedEvaluacionService } from '../../../../../../core/services/shared-
 import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones.interface';
 
 @Component({
-  selector: 'app-fase-antes',
+  selector: 'app-fase-antes-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './fases.component.html',
   styleUrls: ['./fases.component.css']
 })
-export class FaseAntesComponent implements OnInit, OnDestroy {
+export class FaseAntesModalComponent implements OnInit, OnDestroy {
+  @Input() modoOperacion: 'crear' | 'editar' = 'crear';
+  @Input() evaluacionId: number | null = null;
+  @Output() cerrar = new EventEmitter<void>();
+
   lugar: string = '';
   fechaCreacion: string = '';
   scoreFase: number = 0;
@@ -23,33 +37,28 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
   sugerencias: string = '';
   notaGeneral: string = '';
   fotos: FotoLocal[] = [];
-  faseActiva: 'antes' | 'despues' | 'infogeneral' = 'antes';
   tituloFase: string = 'ANTES';
   guardando = false;
   detalleId?: number;
-  modoOperacion: 'crear' | 'editar' = 'crear';
-  evaluacionId: number | null = null;
 
   private blobUrls: Map<number, string> = new Map();
-
   private destroy$ = new Subject<void>();
 
   constructor(
     private evaluacionService: EvaluacionService,
-    private sharedService: SharedEvaluacionService,
-    private router: Router,
-    private route: ActivatedRoute
+    private sharedService: SharedEvaluacionService
   ) {
     this.fechaCreacion = this.obtenerFechaActual();
   }
 
   ngOnInit(): void {
-    this.detectarModoDesdeRuta();
+    console.log('🔓 Modal ANTES abierto');
     this.cargarDatosGuardados();
     this.suscribirCambios();
   }
 
   ngOnDestroy(): void {
+    console.log('🔒 Modal ANTES cerrado - guardando datos');
     this.guardarDatosEnServicio();
     this.destroy$.next();
     this.destroy$.complete();
@@ -57,8 +66,7 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cargar imagen desde el servidor con autenticación JWT
-   * Convierte el blob a Object URL para mostrar en <img>
+   * Cargar imagen autenticada
    */
   private async cargarImagenAutenticada(fotoIdBD: number): Promise<string> {
     try {
@@ -66,8 +74,6 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
         return this.blobUrls.get(fotoIdBD)!;
       }
 
-      console.log(`Cargando imagen autenticada: ${fotoIdBD}`);
-      
       const blob = await this.evaluacionService.descargarFoto(fotoIdBD).toPromise();
       
       if (!blob) {
@@ -75,10 +81,8 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
       }
 
       const blobUrl = URL.createObjectURL(blob);
-      
       this.blobUrls.set(fotoIdBD, blobUrl);
       
-      console.log(`Imagen ${fotoIdBD} cargada correctamente`);
       return blobUrl;
       
     } catch (error) {
@@ -88,33 +92,28 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cargar previews de todas las fotos que vienen de BD
+   * Cargar previews de fotos
    */
   private async cargarPreviewsFotos(): Promise<void> {
     const fotosConIdBD = this.fotos.filter(f => f.fotoIdBD && !f.preview?.startsWith('data:'));
     
     if (fotosConIdBD.length === 0) return;
     
-    console.log(`Cargando ${fotosConIdBD.length} imágenes desde servidor...`);
-    
     for (const foto of fotosConIdBD) {
       if (foto.fotoIdBD) {
         foto.preview = await this.cargarImagenAutenticada(foto.fotoIdBD);
       }
     }
-    
-    console.log('Todas las imágenes cargadas');
   }
 
   /**
-   * Limpiar blob URLs para evitar memory leaks
+   * Limpiar blob URLs
    */
   private limpiarBlobUrls(): void {
     this.blobUrls.forEach((url) => {
       URL.revokeObjectURL(url);
     });
     this.blobUrls.clear();
-    console.log('Blob URLs limpiadas');
   }
 
   private cargarDatosGuardados(): void {
@@ -131,47 +130,23 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
       
       this.cargarPreviewsFotos();
       
-      console.log('Datos ANTES cargados');
+      console.log('Datos ANTES cargados en modal');
     }
   }
 
   async onImageError(event: Event, foto: FotoLocal): Promise<void> {
     const imgElement = event.target as HTMLImageElement;
     
-    console.error('Error al cargar imagen:', {
-      fotoId: foto.id,
-      fotoIdBD: foto.fotoIdBD
-    });
-    
     if (foto.fotoIdBD) {
       try {
-        console.log('Reintentando con autenticación...');
         const blobUrl = await this.cargarImagenAutenticada(foto.fotoIdBD);
         foto.preview = blobUrl;
         imgElement.src = blobUrl;
       } catch (error) {
-        console.error('Falló el reintento:', error);
         imgElement.src = '/assets/images/placeholder-image.png';
       }
     } else {
       imgElement.src = '/assets/images/placeholder-image.png';
-    }
-  }
-
-  private detectarModoDesdeRuta(): void {
-    const modoData = this.route.snapshot.data['modo'] as 'crear' | 'editar' | undefined;
-    const idParam = this.route.snapshot.paramMap.get('id');
-    
-    if (modoData === 'editar' && idParam) {
-      this.modoOperacion = 'editar';
-      this.evaluacionId = parseInt(idParam, 10);
-    } else if (modoData === 'crear') {
-      this.modoOperacion = 'crear';
-      this.evaluacionId = null;
-    } else {
-      const idCompartido = this.sharedService.getEvaluacionId();
-      this.modoOperacion = idCompartido ? 'editar' : 'crear';
-      this.evaluacionId = idCompartido;
     }
   }
 
@@ -196,6 +171,7 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
     };
     this.sharedService.setFaseAntes(datos);
     this.sharedService.actualizarScore();
+    console.log('Datos ANTES guardados en SharedService');
   }
 
   onCampoChange(): void {
@@ -213,14 +189,12 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
       const file = input.files[0];
       
       if (file.size > 10 * 1024 * 1024) {
-        // En un entorno de aplicación real, se usaría un modal o toast en lugar de alert.
         alert('Archivo demasiado grande. Máximo: 10MB');
         return;
       }
 
       const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
-        // En un entorno de aplicación real, se usaría un modal o toast en lugar de alert.
         alert('Tipo no permitido. Use: JPG, PNG, WebP o GIF');
         return;
       }
@@ -265,7 +239,6 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al eliminar:', err);
-          // En un entorno de aplicación real, se usaría un modal o toast en lugar de alert.
           alert('Error al eliminar la foto');
         }
       });
@@ -283,33 +256,24 @@ export class FaseAntesComponent implements OnInit, OnDestroy {
     input.click();
   }
 
-  cambiarFase(fase: 'antes' | 'despues' | 'infogeneral'): void {
-    this.guardarDatosEnServicio();
-    this.faseActiva = fase;
-    
-    const rutaBase = this.modoOperacion === 'editar' && this.evaluacionId
-      ? `/dashboard/evaluaciones/editar/${this.evaluacionId}`
-      : '/dashboard/evaluaciones/nueva';
-    
-    if (fase === 'infogeneral') {
-      this.router.navigate([rutaBase]);
-    } else if (fase === 'despues') {
-      this.router.navigate([`${rutaBase}/fase-despues`]);
-    }
-  }
-
   private generarId(): string {
     return Date.now().toString() + Math.random().toString(36).substring(2, 9);
   }
 
-  guardarEvaluacion(): void {
-    
+  /**
+   * Cerrar modal
+   */
+  cerrarModal(): void {
+    this.guardarDatosEnServicio();
+    this.cerrar.emit();
   }
 
-  cerrarFormulario(): void {
-    if (confirm(this.modoOperacion === 'editar' ? '¿Salir sin guardar?' : '¿Cerrar?')) {
-      this.sharedService.limpiar();
-      this.router.navigate(['/dashboard/evaluaciones']);
+  /**
+   * Cerrar con ESC
+   */
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      this.cerrarModal();
     }
   }
 

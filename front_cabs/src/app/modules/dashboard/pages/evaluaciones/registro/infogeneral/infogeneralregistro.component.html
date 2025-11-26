@@ -13,7 +13,7 @@
         </span>
       </div>
       <p class="descripcion-estado" *ngIf="modoOperacion === 'editar'">
-        Los campos Orden, Ejecución, Cliente y Evaluador no se pueden modificar
+        Los campos Orden, Ejecución y Evaluador no se pueden modificar
       </p>
       <p class="descripcion-estado" *ngIf="modoOperacion === 'crear'">
         Creando nueva evaluación - Complete todos los campos requeridos
@@ -21,7 +21,8 @@
     </div>
 
     <div class="seccion">
-      <div class="fila-formulario">
+      <!-- ❌ GRID DE 3 COLUMNAS CAMBIADO A 2 COLUMNAS (sin cliente) -->
+      <div class="fila-formulario-dos-columnas">
         
         <!-- ORDEN DE TRABAJO - MODO CREAR -->
         <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
@@ -86,31 +87,7 @@
           </div>
         </div>
 
-        <!-- CLIENTE - MODO CREAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
-          <label class="etiqueta">Cliente (opcional)</label>
-          <select 
-            class="selector" 
-            [(ngModel)]="formulario.clienteId"
-            (change)="onFormularioChange()"
-            [disabled]="cargandoCatalogos.clientes">
-            <option value="">
-              {{ cargandoCatalogos.clientes ? 'Cargando clientes...' : 'Sin cliente específico' }}
-            </option>
-            <option *ngFor="let cliente of clientes" [value]="cliente.id">
-              {{ cliente.displayText }}
-            </option>
-          </select>
-        </div>
-
-        <!-- CLIENTE - MODO EDITAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
-          <label class="etiqueta">Cliente</label>
-          <div class="campo-bloqueado">
-            <span class="icono-candado">🔒</span>
-            <span class="texto-bloqueado">{{ textoClienteBloqueado || 'Sin cliente' }}</span>
-          </div>
-        </div>
+        <!-- ❌ ELIMINADO: Campo Cliente (completo) -->
 
         <!-- EVALUADOR - MODO CREAR -->
         <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
@@ -238,7 +215,7 @@
       <div class="nota-info nota-edicion" *ngIf="modoOperacion === 'editar'">
         <span class="icono-info">🔒</span>
         <span class="texto-nota">
-          <strong>Modo Edición:</strong> Los campos con 🔒 (Orden, Ejecución, Cliente, Evaluador) 
+          <strong>Modo Edición:</strong> Los campos con 🔒 (Orden, Ejecución y Evaluador) 
           no se pueden modificar una vez creada la evaluación. Solo puede editar: Objetivo, 
           Comentarios, Seguimiento y las fases ANTES/DESPUÉS.
         </span>
@@ -254,48 +231,45 @@
       </div>
     </div>
 
-    <!-- Fases -->
+    <!-- ========================================================= -->
+    <!-- 🎯 FASES - AHORA ABREN MODALES EN VEZ DE NAVEGAR -->
+    <!-- ========================================================= -->
     <div class="seccion seccion-fases">
       <h2 class="titulo-seccion">Fases de evaluación</h2>
       <p class="descripcion-fases">Haga clic en cada fase para completar la evaluación correspondiente</p>
 
       <div class="tarjetas-fase">
-        <div class="tarjeta-fase" (click)="seleccionarFase('antes')">
+        <!-- Tarjeta ANTES - Abre modal -->
+        <div class="tarjeta-fase" (click)="abrirModalAntes()">
           <div class="titulo-fase">{{ fases.antes.titulo }}</div>
-          <div class="estatus-fase">{{ fases.antes.estatus }}</div>
+          <div class="estatus-fase" [class.completada]="fases.antes.completada">
+            {{ fases.antes.estatus }}
+          </div>
+          <div class="icono-fase">
+            <svg *ngIf="fases.antes.completada" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px; color: #10b981;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
 
-        <div class="tarjeta-fase" (click)="seleccionarFase('despues')">
+        <!-- Tarjeta DESPUÉS - Abre modal -->
+        <div class="tarjeta-fase" (click)="abrirModalDespues()">
           <div class="titulo-fase">{{ fases.despues.titulo }}</div>
-          <div class="estatus-fase">{{ fases.despues.estatus }}</div>
+          <div class="estatus-fase" [class.completada]="fases.despues.completada">
+            {{ fases.despues.estatus }}
+          </div>
+          <div class="icono-fase">
+            <svg *ngIf="fases.despues.completada" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px; color: #10b981;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Botones de navegación y acciones -->
+  <!-- Botones de acciones -->
   <div class="recuadro-botones">
-    <div class="grupo-fases izquierda">
-      <button 
-        class="boton-fase" 
-        [class.activo]="faseActiva === 'infogeneral'"
-        (click)="cambiarFase('infogeneral')">
-        Información general
-      </button>
-      <button 
-        class="boton-fase" 
-        [class.activo]="faseActiva === 'antes'" 
-        (click)="cambiarFase('antes')">
-        Fase ANTES
-      </button>
-      <button 
-        class="boton-fase" 
-        [class.activo]="faseActiva === 'despues'" 
-        (click)="cambiarFase('despues')">
-        Fase DESPUÉS
-      </button>
-    </div>
-
     <div class="grupo-acciones">
       <button 
         class="btn-guardar" 
@@ -313,8 +287,48 @@
   </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- 🎯 MODALES DE FASES -->
+<!-- ============================================================ -->
+
+<!-- Modal Fase ANTES -->
+<app-fase-antes-modal
+  *ngIf="modalAntesAbierto"
+  [modoOperacion]="modoOperacion"
+  [evaluacionId]="evaluacionId"
+  (cerrar)="cerrarModalAntes()">
+</app-fase-antes-modal>
+
+<!-- Modal Fase DESPUÉS -->
+<app-fase-despues-modal
+  *ngIf="modalDespuesAbierto"
+  [modoOperacion]="modoOperacion"
+  [evaluacionId]="evaluacionId"
+  (cerrar)="cerrarModalDespues()">
+</app-fase-despues-modal>
+
 <!-- Estilos -->
 <style>
+/* ❌ NUEVO: Grid de 2 columnas en vez de 3 (sin cliente) */
+.fila-formulario-dos-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Que el evaluador ocupe ambas columnas para mejor layout */
+.fila-formulario-dos-columnas .grupo-formulario:nth-child(3),
+.fila-formulario-dos-columnas .grupo-formulario:nth-child(4) {
+  grid-column: span 1;
+}
+
+@media (max-width: 768px) {
+  .fila-formulario-dos-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
 .texto-ayuda {
   display: block;
   font-size: 12px;
@@ -358,75 +372,64 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Estilos para campos bloqueados */
-.campo-bloqueado {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  min-height: 42px;
+/* Estilos para indicar fase completada */
+.estatus-fase.completada {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.tarjeta-fase {
   position: relative;
-  cursor: not-allowed;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.campo-bloqueado::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(0,0,0,0.02) 10px,
-    rgba(0,0,0,0.02) 20px
-  );
+.tarjeta-fase:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.icono-fase {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.grupo-acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.btn-guardar,
+.btn-cerrar {
+  padding: 10px 20px;
   border-radius: 6px;
-  pointer-events: none;
-}
-
-.icono-candado {
   font-size: 14px;
-  opacity: 0.7;
-}
-
-.texto-bloqueado {
-  font-size: 14px;
-  color: #495057;
   font-weight: 500;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s, transform 0.1s;
 }
 
-.texto-bloqueado-info {
-  color: #6c757d;
-  font-size: 11px;
-  margin-top: 4px;
+.btn-guardar {
+  background-color: var(--color-verde, #10b981);
+  color: white;
 }
 
-.nota-edicion {
-  background-color: #e3f2fd;
-  border-left: 4px solid #2196f3;
-  margin-top: 15px;
+.btn-guardar:hover:not(:disabled) {
+  background-color: var(--color-verde-oscuro, #065f46);
+  transform: scale(1.02);
 }
 
-.nota-edicion .icono-info {
-  background-color: #2196f3;
-  font-size: 10px;
+.btn-cerrar {
+  background-color: var(--color-borde, #d1d5db);
+  color: var(--color-texto-principal, #1a1a1a);
 }
 
-.nota-edicion .texto-nota {
-  color: #1565c0;
-}
-
-.nota-edicion .texto-nota strong {
-  color: #0d47a1;
+.btn-cerrar:hover:not(:disabled) {
+  background-color: var(--color-borde-hover, #e5e7eb);
+  transform: scale(1.02);
 }
 </style>

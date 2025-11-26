@@ -74,9 +74,10 @@
 
 <!-- TEMPLATE: Seguimiento con status-dot -->
 <ng-template #plantillaSeguimiento let-evaluacion="item">
-  <app-status-dot [texto]="obtenerTextoSeguimiento(evaluacion.requiereSeguimiento)"
-    [tipo]="evaluacion.requiereSeguimiento ? 'atencion' : 'completado'"
-    [icono]="evaluacion.requiereSeguimiento ? iconoAlerta : iconoExito"></app-status-dot>
+  <app-status-dot 
+    [texto]="obtenerTextoSeguimiento(evaluacion.requiereSeguimiento)"
+    [tipo]="evaluacion.requiereSeguimiento ? 'atencion' : 'completado'">
+  </app-status-dot>
 </ng-template>
 
 <!-- TEMPLATE: Icono Éxito -->

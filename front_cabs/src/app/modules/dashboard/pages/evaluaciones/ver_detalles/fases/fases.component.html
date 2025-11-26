@@ -1,35 +1,23 @@
 <!-- ============================================== -->
-<!-- TEMPLATE COMPARTIDO PARA FASES ANTES Y DESPUÉS -->
-<!-- Modo 1: Con side-panel (standalone) -->
-<!-- Modo 2: Solo contenido (embebido) -->
+<!-- TEMPLATE COMPARTIDO ACTUALIZADO PARA FASES -->
+<!-- 100% CON app-ui-icono - SIN PROPIEDAD ICONOS -->
 <!-- ============================================== -->
 
 <!-- MODO STANDALONE: Con su propio side-panel -->
 <ng-container *ngIf="!soloContenido">
-  <app-side-panel 
-    [mostrar]="mostrarPanel" 
-    [titulo]="'Evaluación Fase ' + labelFase" 
-    [ancho]="'lg'"
+  <app-side-panel [mostrar]="mostrarPanel" [titulo]="'Evaluación Fase ' + labelFase" [ancho]="'lg'"
     (cerrar)="cerrarPanel()">
-    
+
     <ng-container *ngTemplateOutlet="contenidoFase"></ng-container>
 
     <!-- FOOTER -->
     <div footer class="flex space-x-3">
-      <app-ui-boton
-        [variante]="'terciario'"
-        [texto]="'Volver a detalles'"
-        [anchoCompleto]="true"
+      <app-ui-boton [variante]="'terciario'" [texto]="'Volver a detalles'" [anchoCompleto]="true"
         (alClickear)="volverADetalles()">
       </app-ui-boton>
 
-      <app-ui-boton
-        *ngIf="error"
-        [variante]="'primario'"
-        [texto]="'Reintentar'"
-        [anchoCompleto]="true"
-        [estaCargando]="cargando"
-        (alClickear)="reintentar()">
+      <app-ui-boton *ngIf="error" [variante]="'primario'" [texto]="'Reintentar'" [anchoCompleto]="true"
+        [estaCargando]="cargando" (alClickear)="reintentar()">
       </app-ui-boton>
     </div>
   </app-side-panel>
@@ -44,11 +32,9 @@
 <!-- TEMPLATE DEL CONTENIDO (COMPARTIDO) -->
 <!-- ============================================== -->
 <ng-template #contenidoFase>
-  
+
   <!-- ESTADO DE CARGA -->
-  <app-loading-spinner 
-    *ngIf="cargando" 
-    [mensaje]="'Cargando datos de la fase...'">
+  <app-loading-spinner *ngIf="cargando" [mensaje]="'Cargando datos de la fase...'">
   </app-loading-spinner>
 
   <!-- ESTADO DE ERROR -->
@@ -59,61 +45,42 @@
   <!-- CONTENIDO PRINCIPAL -->
   <ng-container *ngIf="datosFase && !cargando && !error">
 
-    <!-- Badge de fase -->
-    <div class="mb-6">
-      <app-badge 
-        [tipo]="tipoBadgeFase" 
-        [mostrarIcono]="true">
-        {{ labelFase }}
-      </app-badge>
-    </div>
-
     <!-- SECCIÓN: INFORMACIÓN GENERAL -->
-    <app-detail-section 
-      [titulo]="'Información General'" 
-      [icono]="ICONOS.info"
-      [colorIcono]="'text-blue-600'">
-      
-      <div class="space-y-3">
+    <app-detail-section [titulo]="'Información General'" [icono]="'information-circle'" [colorIcono]="'text-blue-600'">
+
+      <div class="space-y-4">
         <!-- Lugar -->
-        <app-detail-field [label]="'Lugar'" [layout]="'horizontal'">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.mapPin"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            <span class="font-medium text-gray-900">{{ datosFase.lugar || 'N/A' }}</span>
+        <div class="flex items-start pb-4 border-b border-gray-200">
+          <div class="flex items-center space-x-3 w-40 flex-shrink-0">
+            <app-ui-icono [name]="'map-pin'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+            <app-ui-tipografia [variante]="'caption'" [texto]="'Lugar:'" [color]="'text-gray-600'"></app-ui-tipografia>
           </div>
-        </app-detail-field>
+          <div class="flex-1">
+            <app-ui-tipografia [variante]="'p'" [texto]="datosFase.lugar || 'N/A'"
+              [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+          </div>
+        </div>
 
         <!-- Fecha de creación -->
-        <app-detail-field [label]="'Fecha de creación'" [layout]="'horizontal'">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.calendar"></path>
-            </svg>
-            <span class="text-gray-700">{{ formatearFecha(datosFase.creadoEn) }}</span>
+        <div class="flex items-start pb-4">
+          <div class="flex items-center space-x-3 w-40 flex-shrink-0">
+            <app-ui-icono [name]="'calendar'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+            <app-ui-tipografia [variante]="'caption'" [texto]="'Fecha de creación:'"
+              [color]="'text-gray-600'"></app-ui-tipografia>
           </div>
-        </app-detail-field>
+          <div class="flex-1">
+            <app-ui-tipografia [variante]="'p'" [texto]="formatearFecha(datosFase.creadoEn)"
+              [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+          </div>
+        </div>
 
-        <!-- ID del detalle -->
-        <app-detail-field [label]="'ID de detalle'" [layout]="'horizontal'">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-            </svg>
-            <span class="font-medium text-gray-900">#{{ datosFase.id }}</span>
-          </div>
-        </app-detail-field>
       </div>
     </app-detail-section>
 
     <!-- SECCIÓN: SCORE DE CALIDAD -->
-    <app-detail-section 
-      [titulo]="'Score de Calidad de Fase'" 
-      [icono]="ICONOS.chart"
+    <app-detail-section [titulo]="'Score de Calidad de Fase'" [icono]="'chart-bar-square'"
       [colorIcono]="'text-green-600'">
-      
+
       <div class="space-y-4">
         <!-- Score visual -->
         <div class="flex items-center justify-between">
@@ -123,21 +90,17 @@
             </span>
             <span class="text-2xl text-gray-400">/100</span>
           </div>
-          
-          <app-badge 
-            [tipo]="obtenerTipoBadgeScore(datosFase.scoreFase)"
-            [mostrarIcono]="true">
-            {{ (datosFase.scoreFase ?? 0) >= 80 ? 'Excelente' : 
-               (datosFase.scoreFase ?? 0) >= 60 ? 'Bueno' :
-               (datosFase.scoreFase ?? 0) >= 40 ? 'Regular' : 'Bajo' }}
+
+          <app-badge [tipo]="obtenerTipoBadgeScore(datosFase.scoreFase)" [mostrarIcono]="true">
+            {{ (datosFase.scoreFase ?? 0) >= 80 ? 'Excelente' :
+            (datosFase.scoreFase ?? 0) >= 60 ? 'Bueno' :
+            (datosFase.scoreFase ?? 0) >= 40 ? 'Regular' : 'Bajo' }}
           </app-badge>
         </div>
 
         <!-- Barra de progreso -->
         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div 
-            class="h-full rounded-full transition-all duration-500"
-            [ngClass]="claseScore"
+          <div class="h-full rounded-full transition-all duration-500" [ngClass]="claseScore"
             [style.width]="scoreWidth">
           </div>
         </div>
@@ -145,59 +108,53 @@
     </app-detail-section>
 
     <!-- SECCIÓN: DESCRIPCIÓN -->
-    <app-detail-section 
-      *ngIf="datosFase.descripcion"
-      [titulo]="'Descripción'" 
-      [icono]="ICONOS.documento"
+    <app-detail-section *ngIf="datosFase.descripcion" [titulo]="'Descripción'" [icono]="'document'"
       [colorIcono]="'text-purple-600'">
-      
-      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-        {{ datosFase.descripcion }}
-      </p>
+
+      <app-ui-tipografia [variante]="'p'" [texto]="datosFase.descripcion"
+        [color]="'text-gray-700 leading-relaxed whitespace-pre-wrap'">
+      </app-ui-tipografia>
     </app-detail-section>
 
-    <app-alert *ngIf="!datosFase.descripcion" [tipo]="'info'">
-      Sin descripción disponible
-    </app-alert>
+    <div class="mb-6">
+      <app-alert *ngIf="!datosFase.descripcion" [tipo]="'info'">
+        Sin descripción disponible
+      </app-alert>
+    </div>
 
     <!-- SECCIÓN: SUGERENCIAS -->
-    <app-detail-section 
-      *ngIf="datosFase.sugerencias"
-      [titulo]="'Sugerencias/Recomendaciones'" 
-      [icono]="ICONOS.lightbulb"
+    <app-detail-section *ngIf="datosFase.sugerencias" [titulo]="'Sugerencias/Recomendaciones'" [icono]="'sparkles'"
       [colorIcono]="'text-yellow-600'">
-      
-      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-        {{ datosFase.sugerencias }}
-      </p>
+
+      <app-ui-tipografia [variante]="'p'" [texto]="datosFase.sugerencias"
+        [color]="'text-gray-700 leading-relaxed whitespace-pre-wrap'">
+      </app-ui-tipografia>
     </app-detail-section>
 
-    <app-alert *ngIf="!datosFase.sugerencias" [tipo]="'info'">
-      Sin sugerencias disponibles
-    </app-alert>
+    <div class="mb-6">
+      <app-alert *ngIf="!datosFase.sugerencias" [tipo]="'info'">
+        Sin sugerencias disponibles
+      </app-alert>
+    </div>
 
     <!-- SECCIÓN: NOTAS DE EVIDENCIA -->
-    <app-detail-section 
-      *ngIf="datosFase.evidenciasNota"
-      [titulo]="'Nota General de Evidencia'" 
-      [icono]="ICONOS.clipboard"
+    <app-detail-section *ngIf="datosFase.evidenciasNota" [titulo]="'Nota General de Evidencia'" [icono]="'clipboard'"
       [colorIcono]="'text-indigo-600'">
-      
-      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-        {{ datosFase.evidenciasNota }}
-      </p>
+
+      <app-ui-tipografia [variante]="'p'" [texto]="datosFase.evidenciasNota"
+        [color]="'text-gray-700 leading-relaxed whitespace-pre-wrap'">
+      </app-ui-tipografia>
     </app-detail-section>
 
-    <app-alert *ngIf="!datosFase.evidenciasNota" [tipo]="'info'">
-      Sin notas de evidencia
-    </app-alert>
+    <div class="mb-6">
+      <app-alert *ngIf="!datosFase.evidenciasNota" [tipo]="'info'">
+        Sin notas de evidencia
+      </app-alert>
+    </div>
 
     <!-- SECCIÓN: FOTOS DE EVIDENCIA -->
-    <app-detail-section 
-      [titulo]="'Fotos de Evidencia'" 
-      [icono]="ICONOS.photo"
-      [colorIcono]="'text-orange-600'">
-      
+    <app-detail-section [titulo]="'Fotos de Evidencia'" [icono]="'camera'" [colorIcono]="'text-orange-600'">
+
       <div class="mb-4">
         <app-badge [tipo]="tieneFotos ? 'success' : 'default'" [mostrarIcono]="false">
           {{ cantidadFotos }} {{ cantidadFotos === 1 ? 'foto' : 'fotos' }}
@@ -205,24 +162,23 @@
       </div>
 
       <!-- Sin fotos -->
-      <app-alert *ngIf="!tieneFotos" [tipo]="'info'">
+      <app-alert *ngIf="!tieneFotos" [tipo]="'info'" [mostrarIcono]="false">
         <div class="flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.photo"></path>
-          </svg>
-          <span>No hay fotos de evidencia para esta fase</span>
+          <app-ui-icono [name]="'photo'" [size]="'w-5 h-5'" [color]="'text-blue-500'"></app-ui-icono>
+          <app-ui-tipografia [variante]="'p'" [texto]="'No hay fotos de evidencia para esta fase'"
+            [color]="'text-gray-700'"></app-ui-tipografia>
         </div>
       </app-alert>
 
       <!-- Grid de fotos -->
       <div *ngIf="tieneFotos" class="space-y-4">
-        <div 
-          *ngFor="let foto of fotos; let i = index"
+        <div *ngFor="let foto of fotos; let i = index"
           class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-          
+
           <!-- Encabezado de foto -->
           <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-semibold text-gray-900">Foto #{{ i + 1 }}</span>
+            <app-ui-tipografia [variante]="'h6'" [texto]="'Foto #' + (i + 1)"
+              [color]="'text-gray-900'"></app-ui-tipografia>
             <app-badge [tipo]="'default'" [mostrarIcono]="false">
               {{ foto.tipo || 'General' }}
             </app-badge>
@@ -230,52 +186,52 @@
 
           <!-- Imagen -->
           <div class="mb-3 rounded-lg overflow-hidden bg-gray-100">
-            <img 
-              *ngIf="foto.urlImagen"
-              [src]="foto.urlImagen"
-              [alt]="foto.descripcion || 'Foto de evidencia'"
-              class="w-full h-64 object-cover"
-              loading="lazy">
-            
+            <img *ngIf="foto.urlImagen" [src]="foto.urlImagen" [alt]="foto.descripcion || 'Foto de evidencia'"
+              class="w-full h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity" loading="lazy"
+              (click)="abrirImagenEnNuevoTab(foto.urlImagen)">
+
             <div *ngIf="!foto.urlImagen" class="w-full h-64 flex items-center justify-center">
               <div class="text-center text-gray-400">
-                <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="ICONOS.photo"></path>
-                </svg>
-                <span class="text-sm">Sin imagen</span>
+                <app-ui-icono [name]="'video-camera'" [size]="'w-16 h-16 mx-auto mb-2'"
+                  [color]="'text-gray-300'"></app-ui-icono>
+                <app-ui-tipografia [variante]="'caption'" [texto]="'Sin imagen'"
+                  [color]="'text-gray-400'"></app-ui-tipografia>
               </div>
             </div>
           </div>
 
           <!-- Detalles de la foto -->
-          <div class="space-y-2">
-            <app-detail-field 
-              *ngIf="foto.nombreArchivo" 
-              [label]="'Archivo'" 
-              [layout]="'vertical'">
-              <span class="text-xs font-mono text-gray-600 break-all">{{ foto.nombreArchivo }}</span>
-            </app-detail-field>
+          <div class="space-y-3">
+            <!-- Fecha -->
+            <div class="flex items-start pb-3 border-b border-gray-100">
+              <div class="flex items-center space-x-2 w-24 flex-shrink-0">
+                <app-ui-icono [name]="'calendar'" [size]="'w-4 h-4'" [color]="'text-gray-500'"></app-ui-icono>
+                <app-ui-tipografia [variante]="'caption'" [texto]="'Fecha:'"
+                  [color]="'text-gray-600'"></app-ui-tipografia>
+              </div>
+              <div class="flex-1">
+                <app-ui-tipografia [variante]="'caption'" [texto]="formatearFecha(foto.creadoEn)"
+                  [color]="'text-gray-700'"></app-ui-tipografia>
+              </div>
+            </div>
 
-            <app-detail-field [label]="'Fecha'" [layout]="'vertical'">
-              <span class="text-sm text-gray-700">{{ formatearFecha(foto.creadoEn) }}</span>
-            </app-detail-field>
+            <!-- Descripción -->
+            <div *ngIf="foto.descripcion">
+              
+              <div class="flex items-center space-x-2 mb-2">
+                <app-ui-icono [name]="'document-text'" [size]="'w-4 h-4'" [color]="'text-gray-500'">
+                </app-ui-icono>
+                <app-ui-tipografia [variante]="'caption'" [texto]="'Descripción:'" [color]="'text-gray-600'">
+                </app-ui-tipografia>
+              </div>
+              <app-ui-tipografia [variante]="'p'" [texto]="foto.descripcion"
+                [color]="'text-gray-700 leading-relaxed whitespace-pre-wrap'">
+              </app-ui-tipografia>
+            </div>
 
-            <app-detail-field 
-              *ngIf="foto.tamanoBytes" 
-              [label]="'Tamaño'" 
-              [layout]="'vertical'">
-              <span class="text-sm text-gray-700">{{ (foto.tamanoBytes / 1024).toFixed(2) }} KB</span>
-            </app-detail-field>
-
-            <app-detail-field 
-              *ngIf="foto.descripcion" 
-              [label]="'Descripción'" 
-              [layout]="'vertical'">
-              <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ foto.descripcion }}</p>
-            </app-detail-field>
-
-            <div *ngIf="!foto.descripcion" class="text-sm text-gray-400 italic text-center py-2">
-              Sin descripción
+            <div *ngIf="!foto.descripcion" class="text-center py-2">
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Sin descripción'"
+                [color]="'text-gray-400 italic'"></app-ui-tipografia>
             </div>
           </div>
         </div>

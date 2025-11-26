@@ -1,240 +1,272 @@
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-  <!-- Contexto de navegación -->
-  <div class="bg-white rounded-xl p-6 mb-6 shadow-lg flex justify-between items-center">
-    <div class="flex flex-col gap-1">
-      <div class="text-sm font-medium text-gray-600 uppercase tracking-wider">Módulo</div>
-      <div class="text-xl font-semibold text-gray-900">Gestión de Vehículos</div>
+
+<div class="contenedor-principal">
+  <!-- Header con Título -->
+  <app-ui-header 
+    titulo="Vehículos de Flota" 
+    descripcion="Gestión completa de vehículos de la empresa"
+    [visualizarDescripcion]="true" 
+    [visualizarButton]="false">
+    
+    <!-- Estadísticas en el lado derecho del header -->
+    <div headerRight class="flex gap-6">
+      <div class="text-center">
+        <app-ui-tipografia
+          variante="caption"
+          texto="TOTAL"
+          color="text-gray-600">
+        </app-ui-tipografia>
+        <app-ui-tipografia
+          variante="h1"
+          [texto]="vehiculos().length.toString()"
+          color="text-blue-600">
+        </app-ui-tipografia>
+      </div>
+      <div class="text-center">
+        <app-ui-tipografia
+          variante="caption"
+          texto="ACTIVOS"
+          color="text-gray-600">
+        </app-ui-tipografia>
+        <app-ui-tipografia
+          variante="h1"
+          [texto]="vehiculosActivos().toString()"
+          color="text-green-600">
+        </app-ui-tipografia>
+      </div>
     </div>
-    <button class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors" (click)="$event.preventDefault()">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-      </svg>
-      Volver
-    </button>
+
+    <!-- Buscador y filtros -->
+    <app-buscador-filtro
+      [configuracion]="configuracionBuscador"
+      [valorBusqueda]="filtroTermino()"
+      (cambioBusqueda)="onCambioBusqueda($event)"
+      (clicFiltro)="onAbrirFiltros()"
+      (clicNuevo)="abrirModalCrear()">
+    </app-buscador-filtro>
+  </app-ui-header>
+
+  <!-- Error global usando componente Alert -->
+  <div *ngIf="error() && !mostrarModal()">
+    <app-alert [tipo]="'error'">
+      {{ error() }}
+    </app-alert>
   </div>
 
-  <!-- Encabezado -->
-  <div class="bg-white rounded-xl p-6 mb-6 shadow-lg flex justify-between items-center">
+  <!-- Estado de carga usando LoadingSpinner -->
+  <div *ngIf="cargando() && vehiculos().length === 0">
+    <app-loading-spinner mensaje="Cargando vehículos..."></app-loading-spinner>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!cargando() && vehiculos().length === 0">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Vehículos de Flota</h1>
-      <p class="text-gray-600">Gestión completa de vehículos de la empresa</p>
-    </div>
-    <button class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all shadow-md" (click)="abrirModalCrear()">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-      </svg>
-      Nuevo Vehículo
-    </button>
-  </div>
-
-  <!-- Error global -->
-  <div *ngIf="error() && !mostrarModal()" class="flex items-center gap-3 p-4 mb-6 bg-red-50 border border-red-200 rounded-lg text-red-800">
-    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-    </svg>
-    <div class="flex-1">{{ error() }}</div>
-    <button class="text-red-600 hover:text-red-800 font-bold text-lg" (click)="error.set(null)">×</button>
-  </div>
-
-  <!-- Panel de filtros y métricas -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Filtros -->
-    <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
-      <header class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Filtros</h2>
-        <p class="text-gray-600 text-sm">Busca y filtra vehículos por diferentes criterios</p>
-      </header>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-gray-700">Buscar vehículo</label>
-          <input
-          type="text"
-          placeholder="Placas, nombre, tipo..."
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          [value]="filtroTermino()"
-          (input)="filtroTermino.set($any($event.target).value)"
-          (keyup.enter)="cargarVehiculos()"
-        />
-        </div>
-      </div>
-      <div class="mt-6 flex justify-end">
-        <button class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors" (click)="cargarVehiculos()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-          Buscar
-        </button>
-      </div>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-      <div class="space-y-4">
-        <div class="flex flex-col gap-1">
-          <div class="text-sm font-medium text-gray-600 uppercase tracking-wider">Total Vehículos</div>
-          <div class="text-3xl font-bold text-blue-600">{{ vehiculos().length }}</div>
-        </div>
-        <div class="flex flex-col gap-1">
-          <div class="text-sm font-medium text-gray-600 uppercase tracking-wider">Vehículos Activos</div>
-          <div class="text-3xl font-bold text-green-600">{{ vehiculosActivos() }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Estados de carga y vacío -->
-  <div *ngIf="cargando() && vehiculos().length === 0" class="bg-white rounded-xl shadow-lg p-8 text-center">
-    <div class="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-4"></div>
-    <h3 class="text-lg font-semibold text-gray-900 mb-2">Cargando vehículos...</h3>
-  </div>
-
-  <div *ngIf="!cargando() && vehiculos().length === 0" class="bg-white rounded-xl shadow-lg p-8 text-center">
-    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 01-2 2h-2a2 2 0 01-2-2"></path>
       </svg>
     </div>
-    <h3 class="text-lg font-semibold text-gray-900 mb-2">No se encontraron vehículos</h3>
-    <p class="text-gray-600 mb-4">Comienza creando tu primer vehículo de flota</p>
-    <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all shadow-md" (click)="abrirModalCrear()">Crear Vehículo</button>
+    <app-ui-tipografia
+      variante="h3"
+      texto="No se encontraron vehículos">
+    </app-ui-tipografia>
+    <app-ui-tipografia
+      variante="p"
+      texto="Comienza creando tu primer vehículo de flota"
+      color="text-gray-600">
+    </app-ui-tipografia>
+    <app-ui-boton
+      variante="primario"
+      texto="Crear Vehículo"
+      [anchoCompleto]="false"
+      (alClickear)="abrirModalCrear()">
+    </app-ui-boton>
   </div>
 
-  <!-- Lista de vehículos -->
-  <div *ngIf="!cargando() && vehiculos().length > 0" class="bg-white rounded-xl shadow-lg overflow-hidden">
-    <!-- Items de la lista -->
-    <div
-      *ngFor="let vehiculo of vehiculos()"
-      class="grid grid-cols-5 gap-4 p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
-      [class.bg-red-50]="!vehiculo.activo"
-      (click)="seleccionarVehiculo(vehiculo)"
-    >
-      <div class="flex flex-col gap-1">
-        <div class="font-semibold text-gray-900">{{ vehiculo.nombreVehiculo }}</div>
-        <div class="text-sm text-gray-600">{{ vehiculo.placas }}</div>
-      </div>
-
-      <div class="flex items-center">
-        <span class="px-2 py-1 text-xs font-medium rounded-full"
-              [class]="vehiculo.transmision?.toLowerCase() === 'automatica' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'">
-          {{ vehiculo.transmision || 'Manual' }}
-        </span>
-      </div>
-
-      <div class="flex items-center">
-        <div class="font-medium text-gray-900">{{ vehiculo.kilometraje ? vehiculo.kilometraje.toLocaleString() + ' km' : 'N/A' }}</div>
-      </div>
-
-      <div class="flex items-center">
-        <span class="px-2 py-1 text-xs font-medium rounded-full"
-              [class]="vehiculo.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-          {{ vehiculo.activo ? 'Activo' : 'Inactivo' }}
-        </span>
-      </div>
-
-      <div class="flex items-center justify-end gap-2">
-        <button class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" (click)="verDetalles(vehiculo); $event.stopPropagation()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-          </svg>
-        </button>
-        <button class="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" (click)="verHistorial(vehiculo); $event.stopPropagation()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </button>
-        <button class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" (click)="onEliminar(vehiculo); $event.stopPropagation()">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Panel lateral de detalles -->
-<div *ngIf="vehiculoSeleccionado() && mostrarPanelDetalles()" class="fixed inset-0 z-50 flex justify-end">
-  <!-- Backdrop -->
-  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="cerrarPanelDetalles()"></div>
-  
-  <!-- Panel -->
-  <div class="relative w-96 h-full bg-white/95 backdrop-blur-md border-l border-gray-200 shadow-2xl overflow-y-auto">
-    <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0 z-10">
-    <h3 class="text-xl font-semibold">Detalles del Vehículo</h3>
-    <button class="p-2 hover:bg-white/20 rounded-lg transition-colors" (click)="cerrarPanelDetalles()">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+  <!-- Sin resultados de búsqueda -->
+  <div *ngIf="!cargando() && vehiculos().length > 0 && vehiculosFiltrados().length === 0">
+    <div>
+      <svg>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
       </svg>
-    </button>
+    </div>
+    <app-ui-tipografia
+      variante="h3"
+      texto="No se encontraron resultados">
+    </app-ui-tipografia>
+    <app-ui-tipografia
+      variante="p"
+      texto="Intenta ajustar tus filtros o criterios de búsqueda"
+      color="text-gray-600">
+    </app-ui-tipografia>
+    <app-ui-boton
+      variante="terciario"
+      texto="Limpiar Filtros"
+      [anchoCompleto]="false"
+      (alClickear)="onLimpiarFiltros(); filtroTermino.set('')">
+    </app-ui-boton>
   </div>
 
-  <div class="p-6 max-h-[calc(100vh-80px)] overflow-y-auto">
-    <div *ngIf="vehiculoSeleccionado() as vehiculo" class="space-y-6">
-      <div class="border-b border-gray-100 pb-4">
-        <h4 class="text-lg font-semibold text-gray-900 mb-4">Información General</h4>
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Nombre:</label>
-            <span class="text-sm text-gray-900">{{ vehiculo.nombreVehiculo }}</span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Placas:</label>
-            <span class="text-sm text-gray-900">{{ vehiculo.placas }}</span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Tipo:</label>
-            <span class="text-sm text-gray-900">{{ vehiculo.tipoVehiculo || 'N/A' }}</span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Transmisión:</label>
-            <span class="text-sm text-gray-900">{{ vehiculo.transmision || 'Manual' }}</span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Kilometraje:</label>
-            <span class="text-sm text-gray-900">{{ vehiculo.kilometraje ? vehiculo.kilometraje.toLocaleString() + ' km' : 'N/A' }}</span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Estado:</label>
-            <span class="px-2 py-1 text-xs font-medium rounded-full"
-                  [class]="vehiculo.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-              {{ vehiculo.activo ? 'Activo' : 'Inactivo' }}
-            </span>
-          </div>
-          <div class="space-y-1">
-            <label class="text-sm font-medium text-gray-600 uppercase tracking-wider">Empresa:</label>
-            <span class="px-2 py-1 text-xs font-medium rounded-full"
-                  [class]="vehiculo.esDeEmpresa ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'">
-              {{ vehiculo.esDeEmpresa ? 'Empresa' : 'Propio' }}
-            </span>
-          </div>
-        </div>
-      </div>
+  <!-- Tabla de vehículos -->
+  <div *ngIf="!cargando() && vehiculosPaginados().length > 0">
+    <!-- Templates personalizados para columnas -->
+    <ng-template #transmisionTemplate let-vehiculo="dato">
+      <app-status-dot
+        [texto]="vehiculo.transmision || 'Manual'"
+        [tipo]="vehiculo.transmision?.toLowerCase() === 'automatica' ? 'personalizado' : 'neutral'"
+        [colorFondo]="vehiculo.transmision?.toLowerCase() === 'automatica' ? '#f3e8ff' : '#dbeafe'"
+        [colorTexto]="vehiculo.transmision?.toLowerCase() === 'automatica' ? '#7e22ce' : '#1e40af'"
+        [mostrarIcono]="false">
+      </app-status-dot>
+    </ng-template>
 
-      <div class="border-b border-gray-100 pb-4" *ngIf="vehiculo.observaciones">
-        <h4 class="text-lg font-semibold text-gray-900 mb-2">Observaciones</h4>
-        <p class="text-sm text-gray-700">{{ vehiculo.observaciones }}</p>
-      </div>
+    <ng-template #kilometrajeTemplate let-vehiculo="dato">
+      <app-ui-tipografia
+        variante="p"
+        [texto]="formatearKilometraje(vehiculo)">
+      </app-ui-tipografia>
+    </ng-template>
 
-      <div class="flex flex-col gap-3 pt-4 border-t border-gray-100">
-        <button class="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors" (click)="verHistorial(vehiculo)">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          Ver Historial
-        </button>
-        <button class="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all shadow-md" (click)="abrirModalEditar(vehiculo)">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-          Editar
-        </button>
-      </div>
-    </div>
+    <ng-template #estadoTemplate let-vehiculo="dato">
+      <app-status-dot
+        [texto]="obtenerTextoEstado(vehiculo)"
+        [tipo]="obtenerTipoEstado(vehiculo)"
+        [mostrarIcono]="true">
+      </app-status-dot>
+    </ng-template>
+
+    <!-- Componente de tabla -->
+    <app-tabla-listado
+      [datos]="vehiculosPaginados()"
+      [columnas]="columnasTabla"
+      [acciones]="accionesTabla"
+      [cargando]="cargando()"
+      [mensajeSinDatos]="'No se encontraron vehículos'"
+      [mensajeCargando]="'Cargando vehículos...'"
+      (filaClick)="seleccionarVehiculo($event)">
+    </app-tabla-listado>
+  </div>
+
+  <!-- Paginación -->
+  <div *ngIf="!cargando() && vehiculosFiltrados().length > 0">
+    <app-paginacion
+      [totalElementos]="totalElementos()"
+      [paginaActual]="paginaActual()"
+      [configuracion]="configuracionPaginacion"
+      (cambioPagina)="onCambioPagina($event)">
+    </app-paginacion>
   </div>
 </div>
 
-<!-- Modal Crear/Editar Vehículo -->
+<!-- Modal de Filtros -->
+<app-modal-filtros
+  [visible]="mostrarModalFiltros()"
+  [configuracion]="configuracionModalFiltros"
+  [filtrosAplicados]="filtrosActivos() ?? undefined"
+  (cerrar)="onCerrarModalFiltros()"
+  (aplicarFiltros)="onAplicarFiltros($event)"
+  (limpiarFiltros)="onLimpiarFiltros()">
+</app-modal-filtros>
+
+<!-- Panel lateral de detalles usando SidePanel -->
+<app-side-panel
+  [mostrar]="mostrarPanelDetalles()"
+  [titulo]="'Detalles del Vehículo'"
+  [ancho]="'md'"
+  (cerrar)="cerrarPanelDetalles()">
+  
+  <!-- LOADING STATE -->
+  <app-loading-spinner 
+    *ngIf="cargandoDetalles()" 
+    mensaje="Cargando detalles del vehículo...">
+  </app-loading-spinner>
+
+  <!-- ERROR STATE -->
+  <app-alert 
+    *ngIf="error() && !cargandoDetalles()" 
+    tipo="error">
+    {{ error() }}
+  </app-alert>
+
+  <!-- CONTENIDO (solo se muestra si no está cargando y hay datos) -->
+  <div *ngIf="vehiculoSeleccionado() as vehiculo">
+    <div *ngIf="!cargandoDetalles()">
+      <!-- Información General -->
+      <app-detail-section
+        titulo="Información General"
+        [icono]="'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'"
+        colorIcono="text-blue-600">
+        <app-detail-field label="Nombre">
+          {{ vehiculo.nombreVehiculo }}
+        </app-detail-field>
+        <app-detail-field label="Placas">
+          {{ vehiculo.placas }}
+        </app-detail-field>
+        <app-detail-field label="Tipo">
+          {{ vehiculo.tipoVehiculo || 'N/A' }}
+        </app-detail-field>
+        <app-detail-field label="Transmisión">
+          {{ vehiculo.transmision || 'Manual' }}
+        </app-detail-field>
+      </app-detail-section>
+
+      <!-- Detalles Operativos -->
+      <app-detail-section
+        titulo="Detalles Operativos"
+        [icono]="'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z'"
+        colorIcono="text-green-600">
+        <app-detail-field label="Kilometraje">
+          {{ formatearKilometraje(vehiculo) }}
+        </app-detail-field>
+        <app-detail-field label="Estado">
+          <app-badge
+            [tipo]="vehiculo.activo ? 'success' : 'error'"
+            [mostrarIcono]="true">
+            {{ obtenerTextoEstado(vehiculo) }}
+          </app-badge>
+        </app-detail-field>
+        <app-detail-field label="Propiedad">
+          <app-badge
+            [tipo]="vehiculo.esDeEmpresa ? 'info' : 'default'">
+            {{ vehiculo.esDeEmpresa ? 'Empresa' : 'Externo' }}
+          </app-badge>
+        </app-detail-field>
+      </app-detail-section>
+
+      <!-- Observaciones -->
+      <app-detail-section
+        *ngIf="vehiculo.observaciones"
+        titulo="Observaciones"
+        [icono]="'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'"
+        colorIcono="text-gray-600">
+        <app-ui-tipografia
+          variante="p"
+          [texto]="vehiculo.observaciones"
+          color="text-gray-700">
+        </app-ui-tipografia>
+      </app-detail-section>
+    </div>
+  </div>
+
+  <!-- Footer con botones de acción -->
+  <div footer>
+    <app-ui-boton
+      *ngIf="vehiculoSeleccionado() && !cargandoDetalles()"
+      variante="buscar"
+      texto="Ver Historial"
+      [mostrarIcono]="true"
+      [iconoPersonalizado]="'<svg class=&quot;w-4 h-4&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;><path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; stroke-width=&quot;2&quot; d=&quot;M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z&quot;></path></svg>'"
+      (alClickear)="verHistorial(vehiculoSeleccionado()!)">
+    </app-ui-boton>
+    <app-ui-boton
+      *ngIf="vehiculoSeleccionado() && !cargandoDetalles()"
+      variante="editar"
+      texto="Editar Vehículo"
+      [mostrarIcono]="true"
+      (alClickear)="abrirModalEditar(vehiculoSeleccionado()!)">
+    </app-ui-boton>
+  </div>
+</app-side-panel>
+
+<!-- Modal Crear/Editar Vehículo - ORIGINAL -->
 <div *ngIf="mostrarModal()" class="fixed inset-0 z-50 flex items-center justify-center">
   <!-- Backdrop -->
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="cerrarModal()"></div>
@@ -264,8 +296,8 @@
 
       <!-- Loading -->
       <div *ngIf="cargando()" class="flex flex-col items-center justify-center py-12">
-        <div class="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-4"></div>
-        <p class="text-gray-600 font-medium">{{ modoModal() === 'crear' ? 'Creando vehículo...' : 'Actualizando vehículo...' }}</p>
+        <div class="animate-spin w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full mb-4"></div>
+        <p class="text-gray-600 font-medium">{{ modoModal() === 'crear' ? 'Preparando formulario...' : 'Cargando datos del vehículo...' }}</p>
       </div>
 
       <!-- Form -->

@@ -1,16 +1,22 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { UiIconComponent } from '../../atoms/icono/icono.component'; 
 
 @Component({
   selector: 'app-detail-section',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UiIconComponent], 
   template: `
     <div class="bg-gray-50 rounded-lg p-4 mb-4">
       <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-        <svg *ngIf="icono" class="w-5 h-5 mr-2" [ngClass]="colorIcono" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="icono"></path>
-        </svg>
+        <!--  USAR app-ui-icono EN LUGAR DE SVG -->
+        <app-ui-icono 
+          *ngIf="icono" 
+          [name]="icono" 
+          [size]="'w-5 h-5'" 
+          [color]="colorIcono"
+          class="mr-2">
+        </app-ui-icono>
         {{ titulo }}
       </h3>
       <ng-content></ng-content>
@@ -19,6 +25,6 @@ import { CommonModule } from '@angular/common';
 })
 export class DetailSectionComponent {
   @Input() titulo = '';
-  @Input() icono?: string;
+  @Input() icono?: string; 
   @Input() colorIcono = 'text-blue-600';
 }

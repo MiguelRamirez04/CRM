@@ -1,162 +1,185 @@
-<div class="contenedor-principal">
+<!-- ============================================================ -->
+<!-- MODAL DE FASE (usado por ANTES y DESPUÉS) -->
+<!-- ============================================================ -->
 
-  <!-- ======================================================= -->
-  <!-- Encabezado y Badge de Modo (Crear/Editar) -->
-  <!-- ======================================================= -->
-  <div class="encabezado-con-badge">
-    <div class="titulo-badge-wrapper">
-      <h1 class="titulo-fase">Fase - {{ tituloFase }}</h1>
-      <span class="badge-modo" [ngClass]="modoOperacion === 'editar' ? 'badge-editar' : 'badge-crear'">
-        {{ modoOperacion === 'editar' ? 'EDITANDO' : 'NUEVA' }}
-      </span>
+<!-- Overlay del modal -->
+<div class="modal-overlay" (click)="cerrarModal()" (keydown)="onKeyDown($event)" tabindex="0">
+  
+  <!-- Contenedor del modal -->
+  <div class="modal-contenedor" (click)="$event.stopPropagation()">
+    
+    <!-- Encabezado del modal -->
+    <div class="modal-encabezado">
+      <div class="titulo-badge-wrapper">
+        <h2 class="titulo-modal">Fase - {{ tituloFase }}</h2>
+        <span class="badge-modo" [ngClass]="modoOperacion === 'editar' ? 'badge-editar' : 'badge-crear'">
+          {{ modoOperacion === 'editar' ? 'EDITANDO' : 'NUEVA' }}
+        </span>
+      </div>
+      
+      <!-- Botón cerrar -->
+      <button class="btn-cerrar-modal" (click)="cerrarModal()" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
-    <p class="descripcion-modo" *ngIf="modoOperacion === 'editar' && evaluacionId">
-      Modificando evaluación #{{ evaluacionId }} - Fase {{ tituloFase }}
-    </p>
-    <p class="descripcion-modo" *ngIf="modoOperacion === 'crear'">
-      Registrando nueva evaluación - Fase {{ tituloFase }}
-    </p>
-  </div>
 
-  <!-- ======================================================= -->
-  <!-- Sección Principal de Campos de Datos de Fase -->
-  <!-- ======================================================= -->
-  <div class="encabezado-fase">
-    <!-- Fila de campos Lugar, Fecha, Score -->
-    <div class="fila-campos">
-      <div class="grupo-campo">
-        <label class="etiqueta-campo">Lugar</label>
-        <input type="text" class="campo-entrada" [(ngModel)]="lugar" (ngModelChange)="onCampoChange()" placeholder="Ej: Oficina central">
-      </div>
-      <div class="grupo-campo">
-        <label class="etiqueta-campo">Fecha de creación</label>
-        <input type="date" class="campo-entrada" [(ngModel)]="fechaCreacion" (ngModelChange)="onCampoChange()">
-      </div>
-      <div class="grupo-campo">
-        <label class="etiqueta-campo">Score de fase (0-100)</label>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" class="campo-entrada" [(ngModel)]="scoreFase" (ngModelChange)="onCampoChange()" min="0" max="100" style="flex: 1;">
-          <span style="color: var(--color-primario); font-size: 14px;">/100</span>
+    <!-- Contenido del modal (scrolleable) -->
+    <div class="modal-contenido">
+      
+      <!-- Fila de campos -->
+      <div class="fila-campos">
+        <div class="grupo-campo">
+          <label class="etiqueta-campo">Lugar</label>
+          <input 
+            type="text" 
+            class="campo-entrada" 
+            [(ngModel)]="lugar" 
+            (ngModelChange)="onCampoChange()" 
+            placeholder="Ej: Oficina central">
+        </div>
+        
+        <div class="grupo-campo">
+          <label class="etiqueta-campo">Fecha de creación</label>
+          <input 
+            type="date" 
+            class="campo-entrada" 
+            [(ngModel)]="fechaCreacion" 
+            (ngModelChange)="onCampoChange()">
+        </div>
+        
+        <div class="grupo-campo">
+          <label class="etiqueta-campo">Score de fase (0-100)</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input 
+              type="number" 
+              class="campo-entrada" 
+              [(ngModel)]="scoreFase" 
+              (ngModelChange)="onCampoChange()" 
+              min="0" 
+              max="100" 
+              style="flex: 1;">
+            <span style="color: #34428F; font-size: 14px;">/100</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Campo Descripción -->
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Descripción</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="descripcion" (ngModelChange)="onCampoChange()"
-        placeholder="Describa qué se hizo o encontró..."></textarea>
-    </div>
+      <!-- Descripción -->
+      <div class="grupo-campo">
+        <label class="etiqueta-campo">Descripción</label>
+        <textarea 
+          class="campo-entrada campo-texto-area" 
+          [(ngModel)]="descripcion" 
+          (ngModelChange)="onCampoChange()"
+          placeholder="Describa qué se hizo o encontró..."></textarea>
+      </div>
 
-    <hr class="separador">
+      <hr class="separador">
 
-    <!-- Campo Sugerencias/Recomendaciones -->
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Sugerencias/Recomendaciones</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="sugerencias" (ngModelChange)="onCampoChange()"
-        placeholder="Recomendaciones sobre el trabajo..."></textarea>
-    </div>
+      <!-- Sugerencias -->
+      <div class="grupo-campo">
+        <label class="etiqueta-campo">Sugerencias/Recomendaciones</label>
+        <textarea 
+          class="campo-entrada campo-texto-area" 
+          [(ngModel)]="sugerencias" 
+          (ngModelChange)="onCampoChange()"
+          placeholder="Recomendaciones sobre el trabajo..."></textarea>
+      </div>
 
-    <hr class="separador">
+      <hr class="separador">
 
-    <!-- Campo Nota General de Evidencia -->
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Nota general de evidencia</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="notaGeneral" (ngModelChange)="onCampoChange()"
-        placeholder="Acciones o puntos a dar seguimiento..."></textarea>
-    </div>
-  </div>
+      <!-- Nota General -->
+      <div class="grupo-campo">
+        <label class="etiqueta-campo">Nota general de evidencia</label>
+        <textarea 
+          class="campo-entrada campo-texto-area" 
+          [(ngModel)]="notaGeneral" 
+          (ngModelChange)="onCampoChange()"
+          placeholder="Acciones o puntos a dar seguimiento..."></textarea>
+      </div>
 
-  <!-- ======================================================= -->
-  <!-- Sección de Fotos de Evidencia -->
-  <!-- ======================================================= -->
-  <div class="seccion-contenido">
-    <h2 class="titulo-seccion">Fotos de Evidencia - {{ tituloFase }}</h2>
+      <hr class="separador">
 
-    <!-- Área para subir nueva foto -->
-    <div class="area-subir-foto" (click)="abrirSelectorArchivo()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="icono-camara">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-      </svg>
-      <p class="texto-subir">Haga click para subir una foto</p>
-    </div>
+      <!-- Sección de Fotos -->
+      <div class="seccion-fotos">
+        <h3 class="titulo-seccion-fotos">Fotos de Evidencia - {{ tituloFase }}</h3>
 
-    <!-- Iteración de Tarjetas de Fotos Existentes -->
-    <div class="tarjeta-foto" *ngFor="let foto of fotos">
-      <div>
-        <div class="vista-previa-foto">
-          <img *ngIf="foto.preview" 
-               [src]="foto.preview" 
-               alt="Preview de foto"
-               (error)="onImageError($event, foto)"
-               style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-          
-          <svg *ngIf="!foto.preview" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke-width="1.5" stroke="currentColor" class="icono-foto-previa">
+        <!-- Área para subir foto -->
+        <div class="area-subir-foto" (click)="abrirSelectorArchivo()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+            class="icono-camara">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
           </svg>
+          <p class="texto-subir">Haga click para subir una foto</p>
         </div>
-        <p class="texto-foto">FOTO</p>
-      </div>
-      <div class="detalles-foto">
-        <div class="fila-foto">
-          <div class="grupo-campo">
-            <label class="etiqueta-campo">Tipo de foto</label>
-            <select class="campo-entrada campo-select" [(ngModel)]="foto.tipo" (ngModelChange)="onCampoChange()">
-              <option>General</option>
-              <option>Detalle</option>
-              <option>Otro</option>
-            </select>
+
+        <!-- Tarjetas de fotos -->
+        <div class="tarjeta-foto" *ngFor="let foto of fotos">
+          <div>
+            <div class="vista-previa-foto">
+              <img *ngIf="foto.preview" 
+                   [src]="foto.preview" 
+                   alt="Preview de foto"
+                   (error)="onImageError($event, foto)"
+                   style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+              
+              <svg *ngIf="!foto.preview" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icono-foto-previa">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+              </svg>
+            </div>
+            <p class="texto-foto">FOTO</p>
           </div>
-          <div class="grupo-campo">
-            <label class="etiqueta-campo">Fecha de subida</label>
-            <input type="date" class="campo-entrada" [(ngModel)]="foto.fecha" (ngModelChange)="onCampoChange()">
+          
+          <div class="detalles-foto">
+            <div class="fila-foto">
+              <div class="grupo-campo">
+                <label class="etiqueta-campo">Tipo de foto</label>
+                <select class="campo-entrada campo-select" [(ngModel)]="foto.tipo" (ngModelChange)="onCampoChange()">
+                  <option>General</option>
+                  <option>Detalle</option>
+                  <option>Otro</option>
+                </select>
+              </div>
+              <div class="grupo-campo">
+                <label class="etiqueta-campo">Fecha de subida</label>
+                <input type="date" class="campo-entrada" [(ngModel)]="foto.fecha" (ngModelChange)="onCampoChange()">
+              </div>
+            </div>
+
+            <div class="grupo-campo">
+              <label class="etiqueta-campo">Descripción</label>
+              <textarea class="campo-entrada" [(ngModel)]="foto.descripcion" (ngModelChange)="onCampoChange()"
+                placeholder="Descripción de la imagen..."></textarea>
+            </div>
+            
+            <button class="boton-eliminar" (click)="eliminarFoto(foto.id)" type="button">
+              Eliminar foto
+            </button>
           </div>
         </div>
 
-        <div class="grupo-campo">
-          <label class="etiqueta-campo">Descripción</label>
-          <textarea class="campo-entrada" [(ngModel)]="foto.descripcion" (ngModelChange)="onCampoChange()"
-            placeholder="Descripción de la imagen..."></textarea>
+        <!-- Mensaje si no hay fotos -->
+        <div *ngIf="fotos.length === 0" class="sin-fotos">
+          <p>No hay fotos agregadas todavía</p>
         </div>
-        <button class="boton-eliminar" (click)="eliminarFoto(foto.id)">Eliminar foto</button>
       </div>
+
     </div>
 
-    <!-- Mensaje si no hay fotos -->
-    <div *ngIf="fotos.length === 0" style="text-align: center; padding: 40px; color: #666;">
-      <p>No hay fotos agregadas todavía</p>
+    <!-- Footer del modal con botón guardar -->
+    <div class="modal-footer">
+      <button class="btn-guardar-modal" (click)="cerrarModal()" type="button" [disabled]="guardando">
+        {{ guardando ? 'Guardando...' : 'Guardar y cerrar' }}
+      </button>
     </div>
-  </div>
-</div>
 
-<!-- ======================================================= -->
-<!-- Botones de Navegación y Acciones (Guardar/Cerrar) -->
-<!-- ======================================================= -->
-<div class="recuadro-botones">
-  <div class="grupo-fases izquierda">
-    <button class="boton-fase" [class.activo]="faseActiva === 'infogeneral'" (click)="cambiarFase('infogeneral')">
-      Información general
-    </button>
-    <button class="boton-fase" [class.activo]="faseActiva === 'antes'" (click)="cambiarFase('antes')">
-      Fase ANTES
-    </button>
-    <button class="boton-fase" [class.activo]="faseActiva === 'despues'" (click)="cambiarFase('despues')">
-      Fase DESPUÉS
-    </button>
-  </div>
-
-  <div class="grupo-acciones">
-    <button class="btn-guardar" (click)="guardarEvaluacion()" [disabled]="guardando">
-      {{ guardando ? 'Guardando...' : 'Guardar' }}
-    </button>
-    <button class="btn-cerrar" (click)="cerrarFormulario()" [disabled]="guardando">Cerrar</button>
   </div>
 </div>
