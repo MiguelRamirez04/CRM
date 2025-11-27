@@ -125,7 +125,7 @@ export class VerdetallesComponent implements OnInit, OnChanges {
   // =====================================================================================
 
   /**
-   * ACTUALIZADO: Determina el estado de una fase con cache
+    Determina el estado de una fase con cache
    * @param fase - Nombre de la fase ('ANTES' o 'DESPUES')
    * @returns Estado de la fase
    */
@@ -433,7 +433,7 @@ export class VerdetallesComponent implements OnInit, OnChanges {
   }
 
   /**
-   *  ACTUALIZADO: Incluye el estado de cada fase
+   *  Incluye el estado de cada fase
    */
   get datosFases(): DatosFase[] {
     return [
@@ -453,7 +453,7 @@ export class VerdetallesComponent implements OnInit, OnChanges {
   }
 
   /**
-   *  ACTUALIZADO: Cuenta solo las fases completadas (con score)
+   * Cuenta solo las fases completadas (con score)
    */
   get fasesCompletadas(): number {
     return this.datosFases.filter(f => f.estado === 'completada').length;
@@ -473,11 +473,11 @@ export class VerdetallesComponent implements OnInit, OnChanges {
   }
 
   obtenerTipoBadgeScore(score: number | null | undefined): 'success' | 'info' | 'warning' | 'error' | 'default' {
-    if (score === null || score === undefined) return 'default';
-    if (score >= 90) return 'success';
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
-    return 'error';
-  }
+  if (score === null || score === undefined) return 'default';
+  if (score >= 90) return 'success';
+  if (score >= 80) return 'info';    
+  if (score >= 60) return 'warning';
+  return 'error';
+}
 }
 

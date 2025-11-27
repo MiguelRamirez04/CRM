@@ -1,32 +1,43 @@
 import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';  // ✅ Agregar
-import { forkJoin } from 'rxjs';  // ✅ Agregar
-import { environment } from '../../../../../../environments/environment';  // ✅ Agregar (ajusta la ruta según tu estructura)
+import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 // Servicios e interfaces
 import { EvaluacionService } from '../../../../../core/services/evaluaciones.service';
-import { EvaluacionResponse, UsuarioResponseDto, EvaluacionResponseExtendida} from '../../../../../core/models/evaluaciones.interface';
+import {
+  EvaluacionResponse,
+  UsuarioResponseDto,
+  EvaluacionResponseExtendida,
+  mapResponseToFormulario,
+  mapDetalleResponseToDatos
+} from '../../../../../core/models/evaluaciones.interface';
 import { SharedEvaluacionService } from '../../../../../core/services/shared-evaluacion.service';
-
 
 // Componentes compartidos
 import { BuscadorFiltroComponent } from '../../../../../shared/components/buscador-filtro/buscador-filtro.component';
 import { TablaListadoComponent, ConfiguracionColumna, AccionTabla } from '../../../../../shared/molecules/tabla-base/tabla-listado.component';
 import { PaginacionComponent } from '../../../../../shared/components/paginacion/paginacion.component';
 import { StatusDotComponent } from '../../../../../shared/atoms/status-dot/status-dot.component';
-import { UiHeaderComponent } from '../../../../../shared/molecules/header/header.component'; 
+import { UiHeaderComponent } from '../../../../../shared/molecules/header/header.component';
 
 // Componente modal de filtros
-import { 
-  ModalFiltrosComponent, 
-  ConfiguracionModalFiltros, 
-  ResultadoFiltros 
+import {
+  ModalFiltrosComponent,
+  ConfiguracionModalFiltros,
+  ResultadoFiltros
 } from '../../../../../shared/components/modal-filtros/modal-filtros.component';
 
-// Componente de detalles
+
 import { VerdetallesComponent } from '../ver_detalles/verdetalles.component';
+
+
+import { InfogeneralComponent } from '../registro/infogeneral/infogeneralregistro.component';
+
+
+import { UiBotonComponent } from '../../../../../shared/atoms/boton/boton.component';
 
 @Component({
   selector: 'app-evaluaciones',
@@ -40,6 +51,8 @@ import { VerdetallesComponent } from '../ver_detalles/verdetalles.component';
     ModalFiltrosComponent,
     VerdetallesComponent,
     UiHeaderComponent,
+    InfogeneralComponent,
+    UiBotonComponent  
   ],
   templateUrl: './evaluaciones.component.html',
   styleUrls: ['./evaluaciones.component.css']
@@ -48,7 +61,7 @@ export class EvaluacionesComponent implements OnInit {
   // =====================================================================================
   // PROPIEDADES EXISTENTES
   // =====================================================================================
-  
+
   searchTerm: string = '';
   paginaActual: number = 1;
   elementosPorPagina: number = 9;
@@ -67,10 +80,12 @@ export class EvaluacionesComponent implements OnInit {
   @ViewChild('plantillaFecha', { static: true }) plantillaFecha!: TemplateRef<any>;
   @ViewChild('iconoExito', { static: true }) iconoExito!: TemplateRef<any>;
   @ViewChild('iconoAlerta', { static: true }) iconoAlerta!: TemplateRef<any>;
-  
 
-  columnas: ConfiguracionColumna<EvaluacionResponseExtendida>[] = [];  // ✅ Cambiar aquí también
-  acciones: AccionTabla<EvaluacionResponseExtendida>[] = [];  // ✅ Y aquí
+  // ViewChild para acceder al componente hijo
+  @ViewChild(InfogeneralComponent) infogeneralComponent!: InfogeneralComponent;
+
+  columnas: ConfiguracionColumna<EvaluacionResponseExtendida>[] = [];
+  acciones: AccionTabla<EvaluacionResponseExtendida>[] = [];
 
   // Iconos como strings de SVG
   private readonly iconoVerSVG = `
@@ -83,6 +98,35 @@ export class EvaluacionesComponent implements OnInit {
   private readonly iconoEditarSVG = `
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+    </svg>
+  `;
+
+  // ICONOS SVG PARA LOS BOTONES UI
+  iconoInfo = `
+    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+    </svg>
+  `;
+
+  iconoCheck = `
+    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  `;
+
+  iconoEditar = `
+    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+    </svg>
+  `;
+
+  iconoCerrar = `
+    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+        d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   `;
 
@@ -101,24 +145,50 @@ export class EvaluacionesComponent implements OnInit {
   mostrarPanelDetalles: boolean = false;
   evaluacionIdSeleccionada: number = 0;
 
+  // =====================================================================================
+  // PROPIEDADES PARA MODAL DE REGISTRO
+  // =====================================================================================
+
+  mostrarModalRegistro: boolean = false;
+  evaluacionIdParaEditar: number | null = null;
+  modoModal: 'crear' | 'editar' = 'crear';
+
+  // =====================================================================================
+  // PROPIEDADES PARA EL FOOTER DEL MODAL
+  // =====================================================================================
+
+  vistaActualModal: 'infoGeneral' | 'faseAntes' | 'faseDespues' = 'infoGeneral';
+  estadoFaseAntes: 'completada' | 'sin-completar' | 'sin-inicializar' = 'sin-inicializar';
+  estadoFaseDespues: 'completada' | 'sin-completar' | 'sin-inicializar' = 'sin-inicializar';
+  guardandoModal: boolean = false;
+
+  get badgeEstadoModal(): { texto: string; clase: string } {
+    return this.modoModal === 'editar'
+      ? { texto: 'EDITANDO', clase: 'badge-editar' }
+      : { texto: 'NUEVA', clase: 'badge-crear' };
+  }
+
   constructor(
     private evaluacionService: EvaluacionService,
     private sharedService: SharedEvaluacionService,
     private router: Router,
     private http: HttpClient
-  ) {}
+  ) { }
 
   // =====================================================================================
   // LIFECYCLE HOOKS
   // =====================================================================================
 
   ngOnInit(): void {
-    console.log('🧹 Limpiando servicio compartido al entrar al listado');
+    console.log('Limpiando servicio compartido al entrar al listado');
     this.sharedService.limpiar();
-    
+
     this.configurarTabla();
     this.configurarFiltros();
     this.cargarEvaluaciones();
+
+    // Suscribirse a cambios en las fases
+    this.suscribirCambiosFases();
   }
 
   // =====================================================================================
@@ -128,31 +198,31 @@ export class EvaluacionesComponent implements OnInit {
   configurarFiltros(): void {
     this.configuracionFiltros = {
       titulo: 'Filtro',
-      
+
       gruposCheckbox: [
         {
           id: 'puntaje',
           titulo: 'Puntaje',
           opciones: [
-            { 
-              valor: { min: 90, max: 100 }, 
-              etiqueta: '90-100', 
-              descripcion: 'Excelente' 
+            {
+              valor: { min: 90, max: 100 },
+              etiqueta: '90-100',
+              descripcion: 'Excelente'
             },
-            { 
-              valor: { min: 80, max: 89 }, 
-              etiqueta: '80 - 89', 
-              descripcion: 'Bueno' 
+            {
+              valor: { min: 80, max: 89 },
+              etiqueta: '80 - 89',
+              descripcion: 'Bueno'
             },
-            { 
-              valor: { min: 60, max: 79 }, 
-              etiqueta: '60 - 79', 
-              descripcion: 'Regular' 
+            {
+              valor: { min: 60, max: 79 },
+              etiqueta: '60 - 79',
+              descripcion: 'Regular'
             },
-            { 
-              valor: { min: 0, max: 59 }, 
-              etiqueta: '0 - 59', 
-              descripcion: 'Deficiente' 
+            {
+              valor: { min: 0, max: 59 },
+              etiqueta: '0 - 59',
+              descripcion: 'Deficiente'
             }
           ]
         }
@@ -191,7 +261,7 @@ export class EvaluacionesComponent implements OnInit {
   // =====================================================================================
 
   onFilter(): void {
-    console.log('🔍 Abriendo modal de filtros');
+    console.log(' Abriendo modal de filtros');
     this.mostrarModalFiltros = true;
   }
 
@@ -202,7 +272,7 @@ export class EvaluacionesComponent implements OnInit {
 
   onAplicarFiltros(resultado: ResultadoFiltros): void {
     console.log('Aplicando filtros:', resultado);
-    
+
     this.filtrosAplicados = resultado;
 
     let evaluacionesFiltradas = [...this.evaluacionesOriginales];
@@ -217,44 +287,45 @@ export class EvaluacionesComponent implements OnInit {
       });
     }
 
-    // FILTRAR POR FECHA
-    if (resultado.fechas['fecha']) {
-      const fechaSeleccionada = new Date(resultado.fechas['fecha']);
-      fechaSeleccionada.setHours(0, 0, 0, 0);
-
-      evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
-        const fechaEvaluacion = new Date(ev.creadoEn);
-        fechaEvaluacion.setHours(0, 0, 0, 0);
-        return fechaEvaluacion.getTime() === fechaSeleccionada.getTime();
-      });
-    }
-
     // FILTRAR POR SEGUIMIENTO
     if (resultado.selects['seguimiento']) {
-      const tipoSeguimiento = resultado.selects['seguimiento'];
-      
+      const valorSeguimiento = resultado.selects['seguimiento'];
       evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
-        if (tipoSeguimiento === 'requiere') {
+        if (valorSeguimiento === 'requiere') {
           return ev.requiereSeguimiento === true;
-        } else if (tipoSeguimiento === 'completado') {
+        } else if (valorSeguimiento === 'completado') {
           return ev.requiereSeguimiento === false;
         }
         return true;
       });
     }
 
+    // FILTRAR POR FECHA
+    if (resultado.fechas['fecha']) {
+      const fechaSeleccionada = new Date(resultado.fechas['fecha']);
+      evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
+        const fechaEv = new Date(ev.creadoEn);
+        return fechaEv.toDateString() === fechaSeleccionada.toDateString();
+      });
+    }
+
     this.evaluacionesFiltradas = evaluacionesFiltradas;
     this.paginaActual = 1;
     this.actualizarPaginacion();
+    this.mostrarModalFiltros = false;
   }
 
   onLimpiarFiltros(): void {
-    console.log('🧹 Limpiando todos los filtros');
+    console.log('Limpiando filtros');
     this.filtrosAplicados = undefined;
     this.evaluacionesFiltradas = [...this.evaluacionesOriginales];
-    this.searchTerm = '';
-    this.paginaActual = 1;
-    this.actualizarPaginacion();
+
+    if (this.searchTerm.trim()) {
+      this.onSearchTermChange(this.searchTerm);
+    } else {
+      this.paginaActual = 1;
+      this.actualizarPaginacion();
+    }
   }
 
   // =====================================================================================
@@ -266,39 +337,40 @@ export class EvaluacionesComponent implements OnInit {
       {
         encabezado: 'ID',
         campo: 'id',
-        ancho: '80px',
+        ancho: '10%',
         alineacion: 'center'
       },
       {
         encabezado: 'Objetivo',
         campo: 'objetivo',
         plantilla: this.plantillaObjetivo,
+        ancho: '15%',
         alineacion: 'left'
       },
       {
         encabezado: 'Evaluador',
         campo: 'evaluadorNombre',
-        ancho: '120px',
+        ancho: '10%',
         alineacion: 'center'
       },
       {
         encabezado: 'Fecha',
         campo: 'creadoEn',
         plantilla: this.plantillaFecha,
-        ancho: '180px',
+        ancho: '10%',
         alineacion: 'center'
       },
       {
         encabezado: 'Score',
         campo: 'scoreCalidadTotal',
         plantilla: this.plantillaScore,
-        ancho: '100px',
+        ancho: '10%',
         alineacion: 'center'
       },
       {
         encabezado: 'Seguimiento',
         plantilla: this.plantillaSeguimiento,
-        ancho: '200px',
+        ancho: '15%',
         alineacion: 'center'
       }
     ];
@@ -307,7 +379,7 @@ export class EvaluacionesComponent implements OnInit {
       {
         etiqueta: 'Ver detalles',
         icono: this.iconoVerSVG,
-        variante: 'azul-2',
+        variante: 'primario',
         accion: (evaluacion: EvaluacionResponse) => this.onVerDetalles(evaluacion)
       },
       {
@@ -323,71 +395,70 @@ export class EvaluacionesComponent implements OnInit {
   // CARGA DE DATOS
   // =====================================================================================
 
-cargarEvaluaciones(): void {
-  this.cargando = true;
-  this.error = '';
+  cargarEvaluaciones(): void {
+    this.cargando = true;
+    this.error = '';
 
-  forkJoin({
-    evaluaciones: this.evaluacionService.obtenerTodas(),
-    usuarios: this.http.get(`${environment.apiUrl}/api/Auth/usuarios`, {
-      responseType: 'text'
-    })
-  }).subscribe({
-    next: ({ evaluaciones, usuarios }) => {
-      let usuariosArray: UsuarioResponseDto[] = [];
-      try {
-        const parsed = typeof usuarios === 'string' 
-          ? JSON.parse(usuarios) 
-          : usuarios;
-        
-        if (Array.isArray(parsed)) {
-          usuariosArray = parsed;
-        } else if (parsed && typeof parsed === 'object') {
-          usuariosArray = parsed.data || parsed.items || parsed.usuarios || [];
+    forkJoin({
+      evaluaciones: this.evaluacionService.obtenerTodas(),
+      usuarios: this.http.get(`${environment.apiUrl}/api/Auth/usuarios`, {
+        responseType: 'text'
+      })
+    }).subscribe({
+      next: ({ evaluaciones, usuarios }) => {
+        let usuariosArray: UsuarioResponseDto[] = [];
+        try {
+          const parsed = typeof usuarios === 'string'
+            ? JSON.parse(usuarios)
+            : usuarios;
+
+          if (Array.isArray(parsed)) {
+            usuariosArray = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            usuariosArray = parsed.data || parsed.items || parsed.usuarios || [];
+          }
+        } catch (error) {
+          console.error('Error al parsear usuarios:', error);
+          usuariosArray = [];
         }
-      } catch (error) {
-        console.error('❌ Error al parsear usuarios:', error);
-        usuariosArray = [];
-      }
 
-      if (!Array.isArray(usuariosArray) || usuariosArray.length === 0) {
-        this.evaluacionesOriginales = evaluaciones.map((ev: any) => ({
-          ...ev,
-          evaluadorNombre: 'Sin datos'
-        }));
-      } else {
-        const mapaUsuarios = new Map(
-          usuariosArray.map((u: UsuarioResponseDto) => [
-            u.id, 
-            u.nombreCompleto || `${u.nombre} ${u.apellido}`
-          ])
-        );
-
-        this.evaluacionesOriginales = evaluaciones.map((ev: any) => {
-          // ✅ Usar evaluadorId (correcto) en lugar de evaluadirId (typo)
-          const evaluadorId = ev.evaluadorId || ev.evaluadirId;
-          const nombreEvaluador = evaluadorId 
-            ? (mapaUsuarios.get(evaluadorId) || 'Desconocido') 
-            : 'Sin evaluador';
-          
-          return {
+        if (!Array.isArray(usuariosArray) || usuariosArray.length === 0) {
+          this.evaluacionesOriginales = evaluaciones.map((ev: any) => ({
             ...ev,
-            evaluadorNombre: nombreEvaluador
-          };
-        });
-      }
+            evaluadorNombre: 'Sin datos'
+          }));
+        } else {
+          const mapaUsuarios = new Map(
+            usuariosArray.map((u: UsuarioResponseDto) => [
+              u.id,
+              u.nombreCompleto || `${u.nombre} ${u.apellido}`
+            ])
+          );
 
-      this.evaluacionesFiltradas = this.evaluacionesOriginales;
-      this.actualizarPaginacion();
-      this.cargando = false;
-    },
-    error: (err: any) => {
-      console.error('❌ Error al cargar datos:', err);
-      this.error = 'Error al cargar las evaluaciones.';
-      this.cargando = false;
-    }
-  });
-}
+          this.evaluacionesOriginales = evaluaciones.map((ev: any) => {
+            const evaluadorId = ev.evaluadorId || ev.evaluadirId;
+            const nombreEvaluador = evaluadorId
+              ? (mapaUsuarios.get(evaluadorId) || 'Desconocido')
+              : 'Sin evaluador';
+
+            return {
+              ...ev,
+              evaluadorNombre: nombreEvaluador
+            };
+          });
+        }
+
+        this.evaluacionesFiltradas = this.evaluacionesOriginales;
+        this.actualizarPaginacion();
+        this.cargando = false;
+      },
+      error: (err: any) => {
+        console.error('Error al cargar datos:', err);
+        this.error = 'Error al cargar las evaluaciones.';
+        this.cargando = false;
+      }
+    });
+  }
 
   reintentar(): void {
     this.cargarEvaluaciones();
@@ -397,60 +468,117 @@ cargarEvaluaciones(): void {
   // BÚSQUEDA Y FILTRADO
   // =====================================================================================
 
-onSearchTermChange(termino: string): void {
-  this.searchTerm = termino.toLowerCase().trim();
+  onSearchTermChange(termino: string): void {
+    this.searchTerm = termino.toLowerCase().trim();
 
-  if (!this.searchTerm) {
-    if (this.filtrosAplicados) {
-      this.onAplicarFiltros(this.filtrosAplicados);
+    if (!this.searchTerm) {
+      if (this.filtrosAplicados) {
+        this.onAplicarFiltros(this.filtrosAplicados);
+      } else {
+        this.evaluacionesFiltradas = [...this.evaluacionesOriginales];
+      }
     } else {
-      this.evaluacionesFiltradas = [...this.evaluacionesOriginales];
+      const baseDatos = this.filtrosAplicados
+        ? this.evaluacionesFiltradas
+        : this.evaluacionesOriginales;
+
+      this.evaluacionesFiltradas = baseDatos.filter(ev =>
+        ev.id?.toString().includes(this.searchTerm) ||
+        ev.evaluadorId?.toString().includes(this.searchTerm) ||
+        ev.clienteId?.toString().includes(this.searchTerm) ||
+        ev.ejecucionId?.toString().includes(this.searchTerm) ||
+        ev.objetivo?.toLowerCase().includes(this.searchTerm)
+      );
     }
-  } else {
-    const baseDatos = this.filtrosAplicados 
-      ? this.evaluacionesFiltradas 
-      : this.evaluacionesOriginales;
 
-    this.evaluacionesFiltradas = baseDatos.filter(ev =>
-      ev.id?.toString().includes(this.searchTerm) ||
-      ev.evaluadorId?.toString().includes(this.searchTerm) ||    // ✅ Cambiar
-      ev.clienteId?.toString().includes(this.searchTerm) ||      // ✅ Cambiar
-      ev.ejecucionId?.toString().includes(this.searchTerm) ||    // ✅ Cambiar
-      ev.objetivo?.toLowerCase().includes(this.searchTerm)
-    );
+    this.paginaActual = 1;
+    this.actualizarPaginacion();
   }
 
-  this.paginaActual = 1;
-  this.actualizarPaginacion();
-}
-
-onSearch(): void {
-  if (!this.searchTerm.trim()) {
-    this.evaluacionesFiltradas = this.evaluacionesOriginales;
-  } else {
-    const termino = this.searchTerm.toLowerCase().trim();
-    this.evaluacionesFiltradas = this.evaluacionesOriginales.filter(ev =>
-      ev.id.toString().includes(termino) ||
-      ev.evaluadorId.toString().includes(termino) ||              // ✅ Cambiar
-      ev.objetivo?.toLowerCase().includes(termino) ||
-      ev.ordenId.toString().includes(termino) ||
-      ev.clienteId?.toString().includes(termino)                  // ✅ Cambiar
-    );
+  onSearch(): void {
+    if (!this.searchTerm.trim()) {
+      this.evaluacionesFiltradas = this.evaluacionesOriginales;
+    } else {
+      const termino = this.searchTerm.toLowerCase().trim();
+      this.evaluacionesFiltradas = this.evaluacionesOriginales.filter(ev =>
+        ev.id.toString().includes(termino) ||
+        ev.evaluadorId.toString().includes(termino) ||
+        ev.objetivo?.toLowerCase().includes(termino) ||
+        ev.clienteId?.toString().includes(termino)
+      );
+    }
+    this.paginaActual = 1;
+    this.actualizarPaginacion();
   }
-  this.paginaActual = 1;
-  this.actualizarPaginacion();
-}
 
-tieneClienteYEjecucion(evaluacion: EvaluacionResponse): boolean {
-  return !!(evaluacion.clienteId && evaluacion.ejecucionId);      // ✅ Cambiar
-}
+  tieneClienteYEjecucion(evaluacion: EvaluacionResponse): boolean {
+    return !!(evaluacion.clienteId && evaluacion.ejecucionId);
+  }
 
   // =====================================================================================
   // ACCIONES
   // =====================================================================================
 
   onNuevaEvaluacion(): void {
-    this.router.navigate(['/dashboard/evaluaciones/registro']);
+    console.log('🆕 Abriendo modal de nueva evaluación');
+    this.modoModal = 'crear';
+    this.evaluacionIdParaEditar = null;
+
+    // Inicializar estados del footer
+    this.vistaActualModal = 'infoGeneral';
+    this.estadoFaseAntes = 'sin-inicializar';
+    this.estadoFaseDespues = 'sin-inicializar';
+
+    this.sharedService.limpiar();
+    this.mostrarModalRegistro = true;
+  }
+
+  onCerrarModalRegistro(): void {
+    console.log('Cerrando modal de registro');
+    this.mostrarModalRegistro = false;
+    this.evaluacionIdParaEditar = null;
+    this.modoModal = 'crear';
+
+    // Resetear estados
+    this.vistaActualModal = 'infoGeneral';
+    this.estadoFaseAntes = 'sin-inicializar';
+    this.estadoFaseDespues = 'sin-inicializar';
+
+    // Recargar las evaluaciones para reflejar cambios
+    this.cargarEvaluaciones();
+  }
+
+  confirmarCerrarModal(): void {
+    const mensaje = this.modoModal === 'editar'
+      ? '¿Cerrar sin guardar los cambios?'
+      : '¿Cerrar? Los datos no guardados se perderán';
+
+    if (confirm(mensaje)) {
+      this.onCerrarModalRegistro();
+    }
+  }
+
+  onEvaluacionGuardada(id: number): void {
+    console.log(' Evaluación guardada con ID:', id);
+    // El modal se cerrará automáticamente
+  }
+
+  get tituloModal(): string {
+    const tituloBase = this.modoModal === 'editar' && this.evaluacionIdParaEditar
+      ? `Editar Evaluación #${this.evaluacionIdParaEditar}`
+      : 'Nueva Evaluación';
+
+    // Agregar el nombre de la sección activa
+    switch (this.vistaActualModal) {
+      case 'infoGeneral':
+        return `${tituloBase} - Información General`;
+      case 'faseAntes':
+        return `${tituloBase} - Fase Antes`;
+      case 'faseDespues':
+        return `${tituloBase} - Fase Después`;
+      default:
+        return tituloBase;
+    }
   }
 
   onVerDetalles(evaluacion: EvaluacionResponse): void {
@@ -466,7 +594,32 @@ tieneClienteYEjecucion(evaluacion: EvaluacionResponse): boolean {
   }
 
   onEditar(evaluacion: EvaluacionResponse): void {
-    this.router.navigate(['/dashboard/evaluaciones/editar', evaluacion.id]);
+    console.log('Abriendo modal de edición para evaluación:', evaluacion.id);
+    this.modoModal = 'editar';
+    this.evaluacionIdParaEditar = evaluacion.id;
+
+    // Inicializar vista
+    this.vistaActualModal = 'infoGeneral';
+
+    // Cargar la evaluación en el servicio compartido antes de abrir el modal
+    this.evaluacionService.cargarEvaluacionCompleta(evaluacion.id).subscribe({
+      next: (data) => {
+        const infoGeneral = mapResponseToFormulario(data.evaluacion);
+        const datosAntes = data.detalleAntes ? mapDetalleResponseToDatos(data.detalleAntes, data.fotosAntes) : undefined;
+        const datosDespues = data.detalleDespues ? mapDetalleResponseToDatos(data.detalleDespues, data.fotosDespues) : undefined;
+
+        this.sharedService.cargarEvaluacion(evaluacion.id, infoGeneral, datosAntes, datosDespues);
+
+        // Actualizar estados de las fases
+        this.actualizarEstadosFases();
+
+        this.mostrarModalRegistro = true;
+      },
+      error: (error) => {
+        console.error('Error al cargar evaluación:', error);
+        alert('Error al cargar la evaluación para editar');
+      }
+    });
   }
 
   alClickFila(evaluacion: EvaluacionResponse): void {
@@ -475,6 +628,320 @@ tieneClienteYEjecucion(evaluacion: EvaluacionResponse): boolean {
 
   alDobleClickFila(evaluacion: EvaluacionResponse): void {
     this.onVerDetalles(evaluacion);
+  }
+
+  // =====================================================================================
+  // MÉTODOS PARA COLORES PERSONALIZADOS DE TABS SEGÚN ESTADO
+  // =====================================================================================
+
+  /**
+   * Obtiene el color del borde según el estado de la fase
+   */
+  obtenerColorBordeFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
+    if (esActivo) {
+      // Cuando el tab está activo, usar colores más intensos
+      switch (estado) {
+        case 'completada':
+          return '#10b981'; // Verde esmeralda
+        case 'sin-completar':
+          return '#f59e0b'; // Amarillo ámbar
+        case 'sin-inicializar':
+          return '#9ca3af'; // Gris medio
+      }
+    } else {
+      // Cuando el tab está inactivo, mismo color pero menos intenso
+      switch (estado) {
+        case 'completada':
+          return '#10b981'; // Verde esmeralda
+        case 'sin-completar':
+          return '#f59e0b'; // Amarillo ámbar
+        case 'sin-inicializar':
+          return '#9ca3af'; // Gris medio
+      }
+    }
+  }
+
+  /**
+   * Obtiene el color del texto según el estado de la fase
+   */
+  obtenerColorTextoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
+    if (esActivo) {
+      // Cuando el tab está activo, usar colores más oscuros para mejor contraste
+      switch (estado) {
+        case 'completada':
+          return '#065f46'; // Verde muy oscuro
+        case 'sin-completar':
+          return '#92400e'; // Marrón oscuro
+        case 'sin-inicializar':
+          return '#374151'; // Gris muy oscuro
+      }
+    } else {
+      // Cuando el tab está inactivo
+      switch (estado) {
+        case 'completada':
+          return '#059669'; // Verde oscuro
+        case 'sin-completar':
+          return '#d97706'; // Naranja
+        case 'sin-inicializar':
+          return '#6b7280'; // Gris oscuro
+      }
+    }
+  }
+
+  /**
+   * Obtiene el color del icono según el estado de la fase
+   */
+  obtenerColorIconoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar'): string {
+    switch (estado) {
+      case 'completada':
+        return '#10b981'; // Verde esmeralda
+      case 'sin-completar':
+        return '#f59e0b'; // Amarillo ámbar
+      case 'sin-inicializar':
+        return '#9ca3af'; // Gris medio
+    }
+  }
+
+  /**
+   * Obtiene el color de fondo según el estado de la fase
+   */
+  obtenerColorFondoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
+    if (esActivo) {
+      // Cuando el tab está activo, usar fondos degradados
+      switch (estado) {
+        case 'completada':
+          return 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'; // Degradado verde
+        case 'sin-completar':
+          return 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'; // Degradado amarillo
+        case 'sin-inicializar':
+          return 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'; // Degradado gris
+      }
+    } else {
+      // Cuando el tab está inactivo, fondo blanco
+      return '#ffffff';
+    }
+  }
+
+  // =====================================================================================
+  // MÉTODOS PARA EL FOOTER DEL MODAL
+  // =====================================================================================
+
+  /**
+   * Cambia la vista activa en el modal
+   */
+  cambiarVistaModal(vista: 'infoGeneral' | 'faseAntes' | 'faseDespues'): void {
+    console.log('Cambiando vista del modal a:', vista);
+
+    this.vistaActualModal = vista;
+
+    // Llamar al método del componente hijo si está disponible
+    if (this.infogeneralComponent) {
+      this.infogeneralComponent.navegarASeccion(vista);
+    }
+
+    // IMPORTANTE: No inicializar las fases automáticamente al navegar
+    // Solo actualizar los estados visuales basados en datos existentes
+    this.actualizarEstadosFases();
+
+    // Si navegamos a una fase que no existe, NO la creamos aquí
+    // El usuario debe llenar al menos un campo para que se cree la fase
+    if (vista === 'faseAntes') {
+      const datosAntes = this.sharedService.getFaseAntes();
+      if (!datosAntes) {
+        console.log(' Fase ANTES aún no inicializada (esperando datos del usuario)');
+      }
+    }
+
+    if (vista === 'faseDespues') {
+      const datosDespues = this.sharedService.getFaseDespues();
+      if (!datosDespues) {
+        console.log(' Fase DESPUÉS aún no inicializada (esperando datos del usuario)');
+      }
+    }
+  }
+
+  /**
+   * Actualiza los estados visuales de las fases desde el SharedService
+   */
+  actualizarEstadosFases(): void {
+    const datosAntes = this.sharedService.getFaseAntes();
+    const datosDespues = this.sharedService.getFaseDespues();
+
+    // FASE ANTES
+    this.estadoFaseAntes = this.determinarEstadoFase(datosAntes);
+
+    // FASE DESPUÉS
+    this.estadoFaseDespues = this.determinarEstadoFase(datosDespues);
+
+    console.log(' Estados actualizados:', {
+      antes: this.estadoFaseAntes,
+      despues: this.estadoFaseDespues
+    });
+  }
+
+  /**
+   * Determina el estado de una fase individual
+   */
+  private determinarEstadoFase(datosFase: any): 'completada' | 'sin-completar' | 'sin-inicializar' {
+    // SIN INICIALIZAR: No hay datos o todos los campos están vacíos
+    if (!datosFase || this.estaFaseVacia(datosFase)) {
+      return 'sin-inicializar';
+    }
+
+    // COMPLETADA: Tiene scoreFase Y es mayor a 0
+    if (datosFase.scoreFase !== null &&
+      datosFase.scoreFase !== undefined &&
+      datosFase.scoreFase > 0) {
+      return 'completada';
+    }
+
+    // SIN COMPLETAR: Tiene al menos un campo lleno pero sin score válido
+    if (this.tieneAlgunCampoLleno(datosFase)) {
+      return 'sin-completar';
+    }
+
+    return 'sin-inicializar';
+  }
+
+  /**
+   * Verifica si una fase está completamente vacía (sin datos)
+   */
+  private estaFaseVacia(datosFase: any): boolean {
+    if (!datosFase) return true;
+
+    const camposVacios = (
+      (!datosFase.lugar || datosFase.lugar.trim() === '') &&
+      (!datosFase.descripcion || datosFase.descripcion.trim() === '') &&
+      (!datosFase.sugerencias || datosFase.sugerencias.trim() === '') &&
+      (!datosFase.evidenciasNota || datosFase.evidenciasNota.trim() === '') &&
+      (!datosFase.fotos || datosFase.fotos.length === 0) &&
+      (datosFase.scoreFase === null || datosFase.scoreFase === undefined || datosFase.scoreFase === 0)
+    );
+
+    return camposVacios;
+  }
+
+  /**
+   * Verifica si la fase tiene al menos un campo con datos (excluyendo score)
+   */
+  private tieneAlgunCampoLleno(datosFase: any): boolean {
+    if (!datosFase) return false;
+
+    return (
+      (datosFase.lugar && datosFase.lugar.trim() !== '') ||
+      (datosFase.descripcion && datosFase.descripcion.trim() !== '') ||
+      (datosFase.sugerencias && datosFase.sugerencias.trim() !== '') ||
+      (datosFase.evidenciasNota && datosFase.evidenciasNota.trim() !== '') ||
+      (datosFase.fotos && datosFase.fotos.length > 0)
+    );
+  }
+
+  /**
+   * Guarda la evaluación desde el modal (llamado por el botón del footer)
+   */
+  async guardarEvaluacionDesdeModal(): Promise<void> {
+    console.log('Guardando evaluación desde modal...');
+
+    // Verificar que exista el componente hijo
+    if (!this.infogeneralComponent) {
+      alert('Error: No se puede acceder al formulario');
+      return;
+    }
+
+    this.guardandoModal = true;
+
+    try {
+      // VALIDACIÓN: Verificar estado de las fases antes de guardar
+      const datosAntes = this.sharedService.getFaseAntes();
+      const datosDespues = this.sharedService.getFaseDespues();
+
+      const faseAntesValida = this.esFaseValidaParaGuardar(datosAntes);
+      const faseDespeusValida = this.esFaseValidaParaGuardar(datosDespues);
+
+      console.log(' Validación de fases:', {
+        faseAntesValida,
+        faseDespeusValida,
+        datosAntes: datosAntes ? 'con datos' : 'null/undefined',
+        datosDespues: datosDespues ? 'con datos' : 'null/undefined'
+      });
+
+      // Advertencias en consola si hay datos inválidos
+      if (!faseAntesValida && datosAntes) {
+        console.warn('Fase ANTES tiene un objeto con campos vacíos');
+      }
+
+      if (!faseDespeusValida && datosDespues) {
+        console.warn('Fase DESPUÉS tiene un objeto con campos vacíos');
+      }
+
+      // Llamar al método de guardar del componente hijo
+      // El componente hijo debe manejar correctamente los datos vacíos
+      await this.infogeneralComponent.guardarEvaluacion();
+
+      // Actualizar estados después de guardar
+      this.actualizarEstadosFases();
+    } catch (error) {
+      console.error('Error al guardar desde modal:', error);
+      alert('Error al guardar la evaluación');
+    } finally {
+      this.guardandoModal = false;
+    }
+  }
+
+  /**
+   * Verifica si una fase es válida para guardar
+   * Una fase es válida si:
+   * 1. Es null/undefined (fase sin inicializar)
+   * 2. Tiene al menos un campo con datos válidos
+   * 
+   * Una fase NO es válida si:
+   * - Tiene un objeto con todos los campos vacíos 
+   * 
+   * NOTA: Este método solo identifica fases inválidas para logging.
+   * La limpieza real debe hacerse en el componente que guarda (infogeneralregistro).
+   */
+  private esFaseValidaParaGuardar(datosFase: any): boolean {
+    // Si la fase es null o undefined, es válida (fase sin inicializar)
+    if (!datosFase) {
+      return true;
+    }
+
+    // Si la fase tiene al menos un campo con datos, es válida
+    if (this.tieneAlgunCampoLleno(datosFase)) {
+      return true;
+    }
+
+    // Si la fase tiene scoreFase válido, es válida
+    if (datosFase.scoreFase !== null && 
+        datosFase.scoreFase !== undefined && 
+        datosFase.scoreFase > 0) {
+      return true;
+    }
+
+    // Si llegamos aquí, la fase tiene un objeto con todos los campos vacíos
+    // Esto puede causar errores en el backend
+    return false;
+  }
+
+  /**
+   * Suscribirse a cambios en el SharedService para actualizar estados
+   */
+  private suscribirCambiosFases(): void {
+    this.sharedService.faseAntes$.subscribe(() => {
+      if (this.mostrarModalRegistro) {
+        this.actualizarEstadosFases();
+      }
+    });
+
+    this.sharedService.faseDespues$.subscribe(() => {
+      if (this.mostrarModalRegistro) {
+        this.actualizarEstadosFases();
+      }
+    });
+
+    this.sharedService.guardando$.subscribe(guardando => {
+      this.guardandoModal = guardando;
+    });
   }
 
   // =====================================================================================
@@ -522,6 +989,4 @@ tieneClienteYEjecucion(evaluacion: EvaluacionResponse): boolean {
     if (objetivo.length <= maxLength) return objetivo;
     return objetivo.substring(0, maxLength) + '...';
   }
-
-
 }

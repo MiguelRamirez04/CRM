@@ -12,54 +12,49 @@ export class SecureAuthInterceptor implements HttpInterceptor {
   constructor(private authService: SecureAuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const token = localStorage.getItem('access_token');
-
-    // 🔥 CRÍTICO: NO agregar Content-Type para FormData
-    // Angular lo maneja automáticamente con boundary correcto
-    let headers: any = {
-      'X-Requested-With': 'XMLHttpRequest'
+    // Asegurar que todas las requests incluyan credentials para cookies HttpOnly
+    const headers: any = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest' // CSRF protection
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    // Para métodos que modifican datos, incluir el token CSRF desde el servicio
+    if (this.requiresCsrfToken(req.method)) {
+      const csrfToken = this.authService.getCsrfToken();
+      if (csrfToken) {
+        headers['X-XSRF-TOKEN'] = csrfToken;
+        console.log(`🔒 CSRF Token incluido para ${req.method} ${req.url}`, csrfToken.substring(0, 20) + '...');
+      } else {
+        console.warn(`⚠️ CSRF Token NO encontrado en servicio para ${req.method} ${req.url}`);
+        console.warn('Asegúrate de llamar obtenerCsrfToken() después del login');
+      }
     }
 
-    // ⚠️ NO agregar Content-Type aquí
-    // Si es FormData, Angular lo configura automáticamente
-
-    const secureReq = req.clone({
+    let secureReq = req.clone({
       setHeaders: headers,
-      withCredentials: false
+      withCredentials: true // CRÍTICO: para cookies HttpOnly
     });
 
-    // 🔥 Log para debugging (remover en producción)
-    if (req.body instanceof FormData) {
-      console.log('🔍 Interceptor detectó FormData');
-      console.log('Headers finales:', secureReq.headers.keys());
-      
-      // ⚠️ NO debes ver 'content-type' aquí para FormData
-      // Angular lo agrega automáticamente en el request final
-    }
-
     return next.handle(secureReq).pipe(
-      catchError(error => {
-        // Error 415: Unsupported Media Type
-        if (error.status === 415) {
-          console.error('❌ Error 415 - Unsupported Media Type');
-          console.error('URL:', req.url);
-          console.error('Método:', req.method);
-          console.error('Body type:', req.body?.constructor.name);
-          console.error('Content-Type enviado:', error.error?.contentType);
-          console.error('Content-Type esperado:', error.error?.expected);
-        }
-        
-        if (error.status === 401) {
+      catchError((error: HttpErrorResponse) => {
+        // Si es error 401 y no es login/refresh, intentar refresh automático
+        if (error.status === 401 && !this.isAuthRoute(req.url)) {
           return this.handle401Error(secureReq, next);
         }
-        
+
+        // Si es error 403, verificar CSRF
+        if (error.status === 403) {
+          console.warn('⚠️ Error 403 - Posible problema con CSRF o permisos insuficientes');
+          console.warn('Verifica que el token CSRF esté configurado correctamente');
+        }
+
         return throwError(() => error);
       })
     );
+  }
+
+  private requiresCsrfToken(method: string): boolean {
+    return ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method.toUpperCase());
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -72,11 +67,13 @@ export class SecureAuthInterceptor implements HttpInterceptor {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(true);
           
-          // Reenviar request original
+          // Reenviar request original con nuevas cookies
           return next.handle(request);
         }),
         catchError((err) => {
           this.isRefreshing = false;
+          
+          // Si falla el refresh, forzar logout inmediato
           this.authService.forceLogout();
           return throwError(() => err);
         })
@@ -90,5 +87,13 @@ export class SecureAuthInterceptor implements HttpInterceptor {
       );
     }
   }
-}
 
+  private isAuthRoute(url: string): boolean {
+    const u = url.toLowerCase();
+    return u.includes('/api/auth/login') || 
+           u.includes('/api/auth/refresh') || 
+           u.includes('/api/auth/register') ||
+           u.includes('/api/auth/registro') ||
+           u.includes('/api/auth/logout');
+  }
+}

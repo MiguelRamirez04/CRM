@@ -1,6 +1,7 @@
 <button 
   [type]="tipo"
   [ngClass]="obtenerClasesTailwind()"
+  [ngStyle]="estilosPersonalizados"
   [disabled]="estaInactivo()"
   (click)="manejarClick($event)">
   
@@ -10,7 +11,8 @@
       class="w-full h-full animate-spin" 
       xmlns="http://www.w3.org/2000/svg" 
       fill="none" 
-      viewBox="0 0 24 24">
+      viewBox="0 0 24 24"
+      [ngStyle]="estilosIcono">
       <circle 
         class="opacity-25" 
         cx="12" 
@@ -31,7 +33,8 @@
   <span 
     *ngIf="!estaCargando && iconoPersonalizado" 
     [innerHTML]="iconoSanitizado"
-    class="inline-flex w-5 h-5 shrink-0 [&>svg]:w-full [&>svg]:h-full">
+    class="inline-flex w-5 h-5 shrink-0 [&>svg]:w-full [&>svg]:h-full"
+    [ngStyle]="estilosIcono">
   </span>
 
   <!-- Icono predeterminado (rayo/acción) -->
@@ -40,7 +43,8 @@
     class="w-5 h-5" 
     fill="none" 
     stroke="currentColor" 
-    viewBox="0 0 24 24">
+    viewBox="0 0 24 24"
+    [ngStyle]="estilosIcono">
     <path 
       stroke-linecap="round" 
       stroke-linejoin="round" 
