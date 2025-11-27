@@ -322,35 +322,55 @@ export class SharedEvaluacionService {
   /**
    * Calcular score total promedio
    */
-  calcularScore(): number {
-    const faseAntes = this.getFaseAntes();
-    const faseDespues = this.getFaseDespues();
+  /**
+ * Calcular score total promedio
+ *  SOLO PROMEDIA FASES COMPLETADAS (con score > 0)
+ * Ignora fases sin completar o sin inicializar
+ */
+calcularScore(): number {
+  const faseAntes = this.getFaseAntes();
+  const faseDespues = this.getFaseDespues();
 
-    let scoreTotal = 0;
-    let fasesCompletadas = 0;
+  let scoreTotal = 0;
+  let fasesCompletadas = 0;
 
-    if (faseAntes?.scoreFase !== undefined && faseAntes.scoreFase !== null) {
-      scoreTotal += faseAntes.scoreFase;
-      fasesCompletadas++;
-    }
-
-    if (faseDespues?.scoreFase !== undefined && faseDespues.scoreFase !== null) {
-      scoreTotal += faseDespues.scoreFase;
-      fasesCompletadas++;
-    }
-
-    const promedio = fasesCompletadas > 0 
-      ? Math.round(scoreTotal / fasesCompletadas) 
-      : 0;
-
-    console.log(' Score calculado:', {
-      scoreAntes: faseAntes?.scoreFase,
-      scoreDespues: faseDespues?.scoreFase,
-      promedio
-    });
-
-    return promedio;
+  //  CAMBIO: Solo contar si scoreFase > 0
+  // Una fase con score = 0 NO se considera completada
+  if (faseAntes?.scoreFase !== undefined && 
+      faseAntes.scoreFase !== null && 
+      faseAntes.scoreFase > 0) {
+    scoreTotal += faseAntes.scoreFase;
+    fasesCompletadas++;
+    console.log('Fase ANTES completada con score:', faseAntes.scoreFase);
+  } else if (faseAntes) {
+    console.log('Fase ANTES existe pero score no es válido:', faseAntes.scoreFase);
   }
+
+  //  CAMBIO: Solo contar si scoreFase > 0
+  if (faseDespues?.scoreFase !== undefined && 
+      faseDespues.scoreFase !== null && 
+      faseDespues.scoreFase > 0) {
+    scoreTotal += faseDespues.scoreFase;
+    fasesCompletadas++;
+    console.log('Fase DESPUÉS completada con score:', faseDespues.scoreFase);
+  } else if (faseDespues) {
+    console.log('Fase DESPUÉS existe pero score no es válido:', faseDespues.scoreFase);
+  }
+
+  const promedio = fasesCompletadas > 0 
+    ? Math.round(scoreTotal / fasesCompletadas) 
+    : 0;
+
+  console.log('Score calculado:', {
+    scoreAntes: faseAntes?.scoreFase ?? 'null',
+    scoreDespues: faseDespues?.scoreFase ?? 'null',
+    fasesCompletadas,
+    scoreTotal,
+    promedio
+  });
+
+  return promedio;
+}
 
   /**
    * Actualizar score en info general

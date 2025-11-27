@@ -1,7 +1,3 @@
-// =====================================================================================
-// COMPONENTE MODAL - FASE DESPUÉS
-// =====================================================================================
-
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +18,7 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   @Input() modoOperacion: 'crear' | 'editar' = 'crear';
   @Input() evaluacionId: number | null = null;
   @Output() cerrar = new EventEmitter<void>();
+  @Input() esVistaEmbebida: boolean = false;
 
   lugar: string = '';
   fechaCreacion: string = '';
@@ -45,13 +42,11 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    console.log('🔓 Modal DESPUÉS abierto');
     this.cargarDatosGuardados();
     this.suscribirCambios();
   }
 
   ngOnDestroy(): void {
-    console.log('🔒 Modal DESPUÉS cerrado - guardando datos');
     this.guardarDatosEnServicio();
     this.destroy$.next();
     this.destroy$.complete();
@@ -113,8 +108,6 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
       this.detalleId = datosGuardados.detalleId;
       
       this.cargarPreviewsFotos();
-      
-      console.log('Datos DESPUÉS cargados en modal');
     }
   }
 
@@ -156,7 +149,6 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
 
     this.sharedService.setFaseDespues(datos);
     this.sharedService.actualizarScore();
-    console.log('Datos DESPUÉS guardados en SharedService');
   }
 
   onCampoChange(): void {
@@ -210,27 +202,19 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   }
 
   eliminarFoto(id: string | undefined): void {
-    if (!id) {
-      console.warn('ID de foto inválido');
-      return;
-    }
+    if (!id) return;
 
     const foto = this.fotos.find(f => f.id === id);
     
-    if (!foto) {
-      console.warn('Foto no encontrada');
-      return;
-    }
+    if (!foto) return;
     
     if (foto.fotoIdBD) {
-      if (!confirm('¿Eliminar esta foto? No se puede deshacer')) {
-        return;
-      }
+      const confirmar = confirm('ADVERTENCIA: Esta foto se eliminará de forma permanente sin necesidad de guardar la evaluación. Esta acción no se puede deshacer.\n\n¿Está seguro de que desea eliminar esta foto?');
+      
+      if (!confirmar) return;
       
       this.evaluacionService.eliminarFoto(foto.fotoIdBD).subscribe({
         next: () => {
-          console.log('Foto eliminada de BD');
-          
           if (this.blobUrls.has(foto.fotoIdBD!)) {
             URL.revokeObjectURL(this.blobUrls.get(foto.fotoIdBD!)!);
             this.blobUrls.delete(foto.fotoIdBD!);
@@ -238,10 +222,11 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
           
           this.fotos = this.fotos.filter(f => f.id !== id);
           this.onCampoChange();
+          alert('Foto eliminada correctamente.');
         },
         error: (error) => {
           console.error('Error al eliminar foto:', error);
-          alert('Error al eliminar la foto de la base de datos');
+          alert('Error al eliminar la foto. Por favor, intente nuevamente.');
         }
       });
     } else {
@@ -270,6 +255,56 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.cerrarModal();
+    }
+  }
+
+  validarEntradaScore(event: KeyboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const tecla = event.key;
+    const valorActual = input.value;
+
+    if (['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(tecla)) {
+      return;
+    }
+
+    if (tecla === '-') {
+      event.preventDefault();
+      return;
+    }
+
+    if (!/^\d$/.test(tecla)) {
+      event.preventDefault();
+      return;
+    }
+
+    const nuevoValor = valorActual + tecla;
+    const numero = parseInt(nuevoValor, 10);
+
+    if (nuevoValor.length > 3) {
+      event.preventDefault();
+      return;
+    }
+
+    if (numero > 100) {
+      event.preventDefault();
+      return;
+    }
+  }
+
+  validarPegadoScore(event: ClipboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const textoPegado = event.clipboardData?.getData('text') || '';
+    
+    if (!/^\d+$/.test(textoPegado)) {
+      event.preventDefault();
+      return;
+    }
+
+    const numero = parseInt(textoPegado, 10);
+    
+    if (numero < 0 || numero > 100) {
+      event.preventDefault();
+      return;
     }
   }
 

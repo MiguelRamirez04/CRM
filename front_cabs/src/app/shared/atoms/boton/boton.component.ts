@@ -6,12 +6,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   selector: 'app-ui-boton',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './boton.component.html'
+  templateUrl: './boton.component.html',
 })
 export class UiBotonComponent {
-  // Propiedades de entrada
-  @Input() variante: string = 'primario'; // ✅ Ahora acepta cualquier string
-
+  // Propiedades de entrada básicas
+  @Input() variante: string = 'primario';
   @Input() texto: string = 'Botón';
   @Input() estaCargando: boolean = false;
   @Input() estaDeshabilitado: boolean = false;
@@ -22,6 +21,14 @@ export class UiBotonComponent {
   @Input() textoAlCargar?: string;
   @Input() clasesAdicionales?: string;
   
+  // NUEVAS PROPIEDADES PARA PERSONALIZACIÓN DE COLORES
+  @Input() colorBorde?: string;        
+  @Input() colorTexto?: string;       
+  @Input() colorIcono?: string;        
+  @Input() colorFondo?: string;        
+  @Input() colorHoverFondo?: string;   
+  @Input() colorHoverBorde?: string;   
+  @Input() anchoBorde?: string;        
 
   // Evento de salida
   @Output() alClickear = new EventEmitter<Event>();
@@ -36,8 +43,6 @@ export class UiBotonComponent {
     return null;
   }
 
-
-
   // Método para manejar el click
   manejarClick(evento: Event): void {
     if (!this.estaDeshabilitado && !this.estaCargando) {
@@ -45,8 +50,46 @@ export class UiBotonComponent {
     }
   }
 
-  // Método para obtener el ícono predeterminado según la variante
+  // Obtener estilos personalizados
+  get estilosPersonalizados(): { [key: string]: string } {
+    const estilos: { [key: string]: string } = {};
 
+    if (this.colorBorde) {
+      estilos['border-color'] = this.colorBorde;
+    }
+    if (this.colorTexto) {
+      estilos['color'] = this.colorTexto;
+    }
+    if (this.colorFondo) {
+      estilos['background'] = this.colorFondo;
+      estilos['background-color'] = this.colorFondo;
+    }
+    if (this.anchoBorde) {
+      estilos['border-width'] = this.anchoBorde;
+    }
+
+    return estilos;
+  }
+
+  // Obtener estilos para el icono
+  get estilosIcono(): { [key: string]: string } {
+    const estilos: { [key: string]: string } = {};
+
+    if (this.colorIcono) {
+      estilos['color'] = this.colorIcono;
+      estilos['stroke'] = this.colorIcono;
+    }
+
+    return estilos;
+  }
+
+  // Obtener clases con hover personalizado
+  get atributosHover(): string {
+    if (this.colorHoverFondo || this.colorHoverBorde) {
+      return 'hover-personalizado';
+    }
+    return '';
+  }
 
   // Método para verificar si debe mostrar ícono predeterminado
   get debeMotrarIconoPredeterminadoVariante(): boolean {
@@ -61,7 +104,7 @@ export class UiBotonComponent {
     const clasesBase = `
       py-3 px-6 rounded-lg 
       transition-all duration-300
-      focus:outline-none focus:ring-3
+      focus:outline-none focus:ring-2 focus:ring-opacity-30
       disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
       flex justify-center items-center gap-2
       cursor-pointer`;
@@ -69,7 +112,24 @@ export class UiBotonComponent {
     // Clases según el ancho
     const clasesAncho = this.anchoCompleto ? 'w-full' : '';
 
-    // Clases según la variante
+    // Si hay colores personalizados, usar clases neutras
+    if (this.tieneColoresPersonalizados()) {
+      const clasesVariante = `
+        border-2 border-solid
+        ${this.atributosHover}
+      `;
+
+      const todasLasClases = `
+        ${clasesBase} 
+        ${clasesAncho} 
+        ${clasesVariante} 
+        ${this.clasesAdicionales || ''}
+      `.replace(/\s+/g, ' ').trim();
+
+      return todasLasClases;
+    }
+
+    // Clases según la variante (código original)
     let clasesVariante = '';
     switch (this.variante) {
       case 'primario':
@@ -103,8 +163,6 @@ export class UiBotonComponent {
           active:scale-[0.98]
           focus:ring-gray-300/50
         `;
-        break;
-
         break;
 
       // BOTONES FUNCIONALES
@@ -462,6 +520,18 @@ export class UiBotonComponent {
     `.replace(/\s+/g, ' ').trim();
 
     return todasLasClases;
+  }
+
+  // Verificar si tiene colores personalizados
+  private tieneColoresPersonalizados(): boolean {
+    return !!(
+      this.colorBorde || 
+      this.colorTexto || 
+      this.colorIcono || 
+      this.colorFondo ||
+      this.colorHoverFondo ||
+      this.colorHoverBorde
+    );
   }
 
   // Método para determinar si el botón debe estar deshabilitado
