@@ -14,6 +14,7 @@ export const modulesSharedRoutes: Routes = [
         path: 'vehiculos',
         loadComponent: () => import('./pages/vehiculos/vehiculos.component').then(m => m.VehiculosComponent)
       },
+
       {
         path: 'vehiculos/historial/:id',
         loadComponent: () => import('./pages/vehiculos/vehiculo-historial/vehiculo-historial.component').then(m => m.VehiculoHistorialComponent)

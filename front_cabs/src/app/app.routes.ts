@@ -59,11 +59,7 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/modulesShared/pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
   },
 
-  // {
-    //path: 'usuarios',
-    //canActivate: [SecureAuthGuard],
-    //loadComponent: () => import('./modules/modulesShared/pages/usuarios/usuarios.component').then(m => m.UsuariosComponent)
-  //},
+
 
   // Páginas de error
   {
