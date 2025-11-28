@@ -12,7 +12,11 @@
       <ng-content select="[headerRight]"></ng-content>
 
       @if (visualizarButton) {
-        <app-ui-boton [texto]="buttonLabel"></app-ui-boton>
+        <app-ui-boton
+          [texto]="buttonLabel"
+          (click)="buttonClicked()">
+        </app-ui-boton>
+
       }
     </div>
   </div>

@@ -1,18 +1,18 @@
-<app-side-panel 
-  [mostrar]="mostrar" 
-  [titulo]="tituloDialog" 
-  [ancho]="'lg'" 
+<app-side-panel
+  [mostrar]="mostrar"
+  [titulo]="tituloDialog"
+  [ancho]="'lg'"
   (cerrar)="onCerrar()">
 
   <!-- ESTADO DE CARGA -->
-  <app-loading-spinner 
-    *ngIf="cargando" 
+  <app-loading-spinner
+    *ngIf="cargando"
     [mensaje]="'Cargando viático...'">
   </app-loading-spinner>
 
   <!-- ESTADO DE ERROR -->
-  <app-alert 
-    *ngIf="error && !cargando" 
+  <app-alert
+    *ngIf="error && !cargando"
     [tipo]="'error'">
     {{ error }}
   </app-alert>
@@ -28,9 +28,9 @@
     </div>
 
     <!-- SECCIÓN: INFORMACIÓN GENERAL -->
-    <app-detail-section 
-      [titulo]="'Información General'" 
-      [icono]="'information-circle'" 
+    <app-detail-section
+      [titulo]="'Información General'"
+      [icono]="'information-circle'"
       [colorIcono]="'text-blue-600'">
 
       <div class="space-y-4">
@@ -38,21 +38,21 @@
         <!-- Fecha -->
         <div class="flex items-start pb-4 border-b border-gray-200">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'calendar'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'calendar'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'Fecha:'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'Fecha:'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-ui-tipografia 
-              [variante]="'p'" 
-              [texto]="(viatico.fecha | date:'dd/MM/yyyy') || 'No especificada'" 
+            <app-ui-tipografia
+              [variante]="'p'"
+              [texto]="(viatico.fecha | date:'dd/MM/yyyy') || 'No especificada'"
               [color]="'text-gray-700 leading-relaxed'">
             </app-ui-tipografia>
           </div>
@@ -61,21 +61,21 @@
         <!-- Orden -->
         <div class="flex items-start pb-4 border-b border-gray-200">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'document'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'document'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'Orden de trabajo:'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'Orden de trabajo:'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-ui-tipografia 
-              [variante]="'p'" 
-              [texto]="'#' + viatico.ordenId" 
+            <app-ui-tipografia
+              [variante]="'p'"
+              [texto]="'#' + viatico.ordenId"
               [color]="'text-gray-700 leading-relaxed'">
             </app-ui-tipografia>
           </div>
@@ -84,21 +84,21 @@
         <!-- Proveedor (si existe) -->
         <div *ngIf="viatico.proveedorNombre" class="flex items-start">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'building-storefront'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'building-storefront'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'Proveedor:'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'Proveedor:'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-ui-tipografia 
-              [variante]="'p'" 
-              [texto]="viatico.proveedorNombre" 
+            <app-ui-tipografia
+              [variante]="'p'"
+              [texto]="viatico.proveedorNombre"
               [color]="'text-gray-700 leading-relaxed'">
             </app-ui-tipografia>
           </div>
@@ -108,9 +108,9 @@
     </app-detail-section>
 
     <!-- SECCIÓN: MONTO TOTAL -->
-    <app-detail-section 
-      [titulo]="'Monto Total'" 
-      [icono]="'banknotes'" 
+    <app-detail-section
+      [titulo]="'Monto Total'"
+      [icono]="'banknotes'"
       [colorIcono]="'text-green-600'">
 
       <div class="flex items-center justify-between">
@@ -124,9 +124,9 @@
     </app-detail-section>
 
     <!-- SECCIÓN: FACTURACIÓN -->
-    <app-detail-section 
-      [titulo]="'Información de Facturación'" 
-      [icono]="'document-text'" 
+    <app-detail-section
+      [titulo]="'Información de Facturación'"
+      [icono]="'document-text'"
       [colorIcono]="'text-purple-600'">
 
       <div class="space-y-4">
@@ -134,20 +134,20 @@
         <!-- ¿Tiene Factura? -->
         <div class="flex items-start pb-4 border-b border-gray-200">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'clipboard-document-check'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'clipboard-document-check'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'¿Tiene Factura?'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'¿Tiene Factura?'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-badge 
-              [tipo]="viatico.tieneFactura ? 'success' : 'warning'" 
+            <app-badge
+              [tipo]="viatico.tieneFactura ? 'success' : 'warning'"
               [mostrarIcono]="true">
               {{ viatico.tieneFactura ? 'Sí' : 'No' }}
             </app-badge>
@@ -158,36 +158,36 @@
     </app-detail-section>
 
     <!-- SECCIÓN: GASTOS -->
-    <app-detail-section 
-      [titulo]="'Detalle de Gastos'" 
-      [icono]="'receipt-percent'" 
+    <app-detail-section
+      [titulo]="'Detalle de Gastos'"
+      [icono]="'receipt-percent'"
       [colorIcono]="'text-orange-600'">
 
-      <app-ui-tipografia 
-        [variante]="'p'" 
-        [texto]="viatico.gastos" 
+      <app-ui-tipografia
+        [variante]="'p'"
+        [texto]="viatico.gastos"
         [color]="'text-gray-700 leading-relaxed'">
       </app-ui-tipografia>
     </app-detail-section>
 
     <!-- SECCIÓN: DESCRIPCIÓN -->
-    <app-detail-section 
+    <app-detail-section
       *ngIf="viatico.descripcion"
-      [titulo]="'Descripción'" 
-      [icono]="'chat-bubble-bottom-center-text'" 
+      [titulo]="'Descripción'"
+      [icono]="'chat-bubble-bottom-center-text'"
       [colorIcono]="'text-indigo-600'">
 
-      <app-ui-tipografia 
-        [variante]="'p'" 
-        [texto]="viatico.descripcion || 'Sin descripción'" 
+      <app-ui-tipografia
+        [variante]="'p'"
+        [texto]="viatico.descripcion || 'Sin descripción'"
         [color]="'text-gray-700 leading-relaxed'">
       </app-ui-tipografia>
     </app-detail-section>
 
     <!-- SECCIÓN: UBICACIÓN Y RECORRIDO -->
-    <app-detail-section 
-      [titulo]="'Ubicación y Recorrido'" 
-      [icono]="'map-pin'" 
+    <app-detail-section
+      [titulo]="'Ubicación y Recorrido'"
+      [icono]="'map-pin'"
       [colorIcono]="'text-red-600'">
 
       <div class="space-y-4">
@@ -195,21 +195,21 @@
         <!-- Lugar de Destino -->
         <div *ngIf="viatico.lugarDestino" class="flex items-start pb-4 border-b border-gray-200">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'map-pin'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'map-pin'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'Destino:'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'Destino:'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-ui-tipografia 
-              [variante]="'p'" 
-              [texto]="viatico.lugarDestino" 
+            <app-ui-tipografia
+              [variante]="'p'"
+              [texto]="viatico.lugarDestino"
               [color]="'text-gray-700 leading-relaxed'">
             </app-ui-tipografia>
           </div>
@@ -218,21 +218,21 @@
         <!-- Kilómetros Recorridos -->
         <div *ngIf="viatico.kmRecorridos" class="flex items-start">
           <div class="flex items-center space-x-3 w-48 flex-shrink-0">
-            <app-ui-icono 
-              [name]="'arrow-trending-up'" 
-              [size]="'w-5 h-5'" 
+            <app-ui-icono
+              [name]="'arrow-trending-up'"
+              [size]="'w-5 h-5'"
               [color]="'text-gray-600'">
             </app-ui-icono>
-            <app-ui-tipografia 
-              [variante]="'caption'" 
-              [texto]="'Kilómetros:'" 
+            <app-ui-tipografia
+              [variante]="'caption'"
+              [texto]="'Kilómetros:'"
               [color]="'text-gray-600'">
             </app-ui-tipografia>
           </div>
           <div class="flex-1">
-            <app-ui-tipografia 
-              [variante]="'p'" 
-              [texto]="(viatico.kmRecorridos | number:'1.0-0') + ' km'" 
+            <app-ui-tipografia
+              [variante]="'p'"
+              [texto]="(viatico.kmRecorridos | number:'1.0-0') + ' km'"
               [color]="'text-gray-700 leading-relaxed'">
             </app-ui-tipografia>
           </div>
@@ -240,9 +240,9 @@
 
         <!-- Sin ubicación especificada -->
         <div *ngIf="!viatico.lugarDestino && !viatico.kmRecorridos">
-          <app-ui-tipografia 
-            [variante]="'p'" 
-            [texto]="'No se especificó ubicación ni recorrido'" 
+          <app-ui-tipografia
+            [variante]="'p'"
+            [texto]="'No se especificó ubicación ni recorrido'"
             [color]="'text-gray-500 italic'">
           </app-ui-tipografia>
         </div>
@@ -254,19 +254,19 @@
 
   <!-- FOOTER CON ACCIONES -->
   <div footer class="">
-    <app-ui-boton 
-      [variante]="'cerrar'" 
-      [texto]="'Cerrar'" 
-      [anchoCompleto]="true" 
+    <app-ui-boton
+      [variante]="'cerrar'"
+      [texto]="'Cerrar'"
+      [anchoCompleto]="true"
       (alClickear)="onCerrar()">
     </app-ui-boton>
 
-    <app-ui-boton 
-      *ngIf="error" 
-      [variante]="'primario'" 
-      [texto]="'Reintentar'" 
-      [anchoCompleto]="true" 
-      [estaCargando]="cargando" 
+    <app-ui-boton
+      *ngIf="error"
+      [variante]="'primario'"
+      [texto]="'Reintentar'"
+      [anchoCompleto]="true"
+      [estaCargando]="cargando"
       (alClickear)="reintentar()">
     </app-ui-boton>
   </div>

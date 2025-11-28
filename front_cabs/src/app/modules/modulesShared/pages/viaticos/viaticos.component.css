@@ -1,7 +1,7 @@
 :host {
   display: block;
   font-family: 'Montserrat', sans-serif;
-  
+
 }
 
 :host-context(:root) {
