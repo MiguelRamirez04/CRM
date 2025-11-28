@@ -1,5 +1,5 @@
 <div class="container mx-auto p-4">
-  
+
   <button (click)="volver()" class="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2 font-medium transition-colors">
     <span class="text-xl">←</span> Volver a Reparaciones
   </button>
@@ -8,9 +8,9 @@
     <h2 class="text-xl font-bold text-gray-800">
       Refacciones - Reparación #{{ reparacionIdPadre }}
     </h2>
-    
+
     <button (click)="abrirModalCrear()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold shadow-sm transition-colors">
-      + Agregar Componente
+      + Agregar Componentee
     </button>
   </div>
 
@@ -62,13 +62,13 @@
 @if (mostrarModal()) {
   <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4 max-h-[90vh] overflow-y-auto">
-      
+
       <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
         {{ modoModal() === 'crear' ? 'Agregar' : 'Editar' }} Refacción
       </h3>
-      
+
       <form [formGroup]="formComponente" (ngSubmit)="guardarComponente()" class="space-y-4">
-        
+
         <div>
           <label class="block text-sm font-medium text-gray-700">Nombre del Componente/Refacción *</label>
           <input formControlName="componente" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:border-blue-500 focus:ring-blue-500">
@@ -100,7 +100,7 @@
             <label class="block text-sm font-medium text-gray-700">Garantía (Meses)</label>
             <input formControlName="garantiaMeses" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
         </div>
-        
+
         <div>
             <label class="block text-sm font-medium text-gray-700">Notas</label>
             <textarea formControlName="notas" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"></textarea>
@@ -110,7 +110,7 @@
           <button type="button" (click)="mostrarModal.set(false)" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md font-medium">
             Cancelar
           </button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-sm disabled:bg-blue-300" 
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium shadow-sm disabled:bg-blue-300"
             [disabled]="formComponente.invalid">
             Guardar Refacción
           </button>

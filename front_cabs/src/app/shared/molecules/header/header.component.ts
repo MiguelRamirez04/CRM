@@ -17,5 +17,11 @@ export class UiHeaderComponent {
 
     @Input() visualizarDescripcion: boolean = true;
     @Input() visualizarButton: boolean = true;
+    @Output() onButtonClick = new EventEmitter<void>();
+
+buttonClicked() {
+  this.onButtonClick.emit();
+}
+
 
 }
