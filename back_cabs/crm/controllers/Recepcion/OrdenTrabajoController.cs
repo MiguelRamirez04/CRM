@@ -86,18 +86,15 @@ namespace back_cabs.CRM.controllers.Recepcion
     public class OrdenTrabajoController : ControllerBase
     {
         private readonly OrdenTrabajoService _ordenTrabajoService;
-        private readonly ClientesCompletosService _clientesCompletosService;
         private readonly ILogger<OrdenTrabajoController> _logger;
         private readonly ICacheService _cacheService; // <-- nuevo
 
         public OrdenTrabajoController(
             OrdenTrabajoService ordenTrabajoService,
-            ClientesCompletosService clientesCompletosService,
             ILogger<OrdenTrabajoController> logger,
             ICacheService cacheService) // <-- inyectar
         {
             _ordenTrabajoService = ordenTrabajoService ?? throw new ArgumentNullException(nameof(ordenTrabajoService));
-            _clientesCompletosService = clientesCompletosService ?? throw new ArgumentNullException(nameof(clientesCompletosService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheService = cacheService;
         }
