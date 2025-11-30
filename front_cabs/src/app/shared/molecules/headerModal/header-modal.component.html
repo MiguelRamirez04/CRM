@@ -13,18 +13,16 @@
         ></app-ui-tipografia>
         </div>
         <!-- Boton icono -->
-
-        <app-ui-boton
-        variante="terciario"
-        texto="Buscar"
-        [mostrarIcono]="true"
-        iconoNombre="x-mark"
-        [visualizarTexto]="false"
-        [anchoCompleto]="false"
-        >
+        <app-ui-boton 
+            variante="terciario"
+            texto="Buscar"
+            [mostrarIcono]="true"
+            nombreIcono="x-mark"
+            [visualizarTexto]="false"
+            [anchoCompleto]="true"
+            (click)="onButtonClick()">
         </app-ui-boton>
     </div>
     <app-ui-divider></app-ui-divider>
-
 </div>
 

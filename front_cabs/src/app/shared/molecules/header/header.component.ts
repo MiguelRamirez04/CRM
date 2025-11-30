@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UitipografiaComponent } from '../../atoms/tipografia/tipografia.component';
 import { UiBotonComponent } from '../../atoms/boton/boton.component';
@@ -17,5 +17,9 @@ export class UiHeaderComponent {
 
     @Input() visualizarDescripcion: boolean = true;
     @Input() visualizarButton: boolean = true;
+    @Output() buttonClick = new EventEmitter<void>();
 
+    onButtonClick(): void {
+        this.buttonClick.emit();
+    }
 }
