@@ -34,8 +34,26 @@ export class TablaListadoComponent<T = any> {
   @Input() mostrarIndice: boolean = false;
   @Input() clasePersonalizada: string = '';
 
+  /* Termino de búsqueda */
+  @Input() terminoBusqueda: string = '';
+
   @Output() filaClick = new EventEmitter<T>();
   @Output() filaDobleClick = new EventEmitter<T>();
+
+  // Get para filtrar
+
+  get datosFiltrados(): T[] {
+    if (!this.terminoBusqueda) return this.datos;
+
+    const lower = this.terminoBusqueda.toLowerCase();
+    return this.datos.filter(item =>
+      this.columnas.some(col => {
+        if (!col.campo) return false;
+        const valor = item[col.campo];
+        return valor && valor.toString().toLowerCase().includes(lower);
+      })
+    );
+  }  
 
   obtenerValorCelda(item: T, campo: keyof T): any {
     return item[campo];
