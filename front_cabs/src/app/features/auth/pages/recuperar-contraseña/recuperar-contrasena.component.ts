@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UitipografiaComponent} from '../../../../shared/atoms/tipografia/tipografia.component'
-import { UiInputComponent } from '../../../../shared/atoms/input/input.component';
+import { UiInputComponent } from '../../../../shared/molecules/input/input.component';
 import { UiDividerComponent } from '../../../../shared/atoms/linea/linea.component';
 
 @Component({

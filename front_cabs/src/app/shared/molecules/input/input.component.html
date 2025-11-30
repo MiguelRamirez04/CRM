@@ -1,0 +1,144 @@
+<div class="flex flex-col gap-2 ">
+  <!-- Label superior solo para inputs normales -->
+  @if (variant !== 'checkbox') {
+    @if (labelObligatorio) {
+      <label class="text-sm font-medium text-zinc-700">
+        {{ label }} <span class="text-red-500">* </span>
+      </label>
+    }
+    @else {
+      <label class="text-sm font-medium text-zinc-700">{{ label }}</label>
+    }
+  }
+
+  <!-- Switch de variantes -->
+  @switch (variant) {
+    @case ('checkbox') {
+      <!-- Bloque checkbox -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2  relative">
+          <input
+            type="checkbox"
+            [checked]="value === 'true'"
+            (change)="onCheckboxChange($event)"
+            class="appearance-none h-4 w-4 border border-[var(--color-borde)] rounded-xs bg-white checked:bg-blue-500 checked:border-blue-500"
+          />       
+          <app-ui-icono
+            name="check"
+            size="size-4"
+            color="text-white"
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  pointer-events-none"
+          ></app-ui-icono>
+        </div>
+        <label class="text-sm font-normal text-zinc-700">
+          {{ label }}
+          @if (labelObligatorio) {
+            <span class="text-red-500">* </span>
+          }
+        </label>
+      </div>
+    }
+    @case ('select') {
+      <!-- Bloque select -->
+      <div class="relative w-full flex ">
+        <button (click)="toggleDropdown()" [class]="obtenerClasesInput() + ' flex flex-row justify-between items-center pl-3 pr-3'">
+          
+          <!-- Contenedor icono + texto -->
+          <div class="flex flex-row gap-2 items-center">
+            <app-ui-icono
+              name="{{nombreIcono}}"
+              size="h-4 w-4"
+              [color]="getColorIcono()">
+            </app-ui-icono>
+            <span>{{ value || 'Seleccione una opción' }}</span>
+          </div>
+          <!-- Contenedor flecha -->
+          <div>
+            @if (dropdownAbierto) {
+              <app-ui-icono
+                name="chevron-up"
+                size="h-4 w-4"
+                class="transition-transform duration-200">
+              </app-ui-icono>
+            }
+            @if (!dropdownAbierto){
+              <app-ui-icono
+                name="chevron-down"
+                size="h-4 w-4"
+                class="transition-transform duration-200">
+              </app-ui-icono>
+            }
+          </div>
+        </button>
+        <!-- Dropdown -->
+        @if (dropdownAbierto) {
+          <ul class="absolute top-full left-0 z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1">
+            @for (opt of options; track $index) {
+              <li
+                (click)="seleccionar(opt.value)"
+                class="px-3 py-2 hover:bg-violet-100 cursor-pointer text-sm text-zinc-700 ">
+                {{ opt.label }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+    @case ('search') {
+      <div class="relative w-full">
+        <!-- Input de búsqueda -->
+        <input
+          type="search"
+          [class]="obtenerClasesInput()" 
+          [placeholder]="placeholder || 'Buscar...'"
+          [value]="value"
+          (input)="onTextChange($event)"
+          (blur)="onBlur()" 
+          (focus)="onFocus()"          
+        />
+
+        <!-- Ícono de lupa a la derecha -->
+        <app-ui-icono
+          name="magnifying-glass"
+          size="size-4"
+          [color]="getColorIcono()"
+          class="absolute left-3 top-1/2 -translate-y-1/2">
+        </app-ui-icono>
+      </div>
+
+
+    }
+    @default {
+      <!-- Bloque input normal -->
+      <div class="relative ">
+        <app-ui-icono
+          name="{{nombreIcono}}"
+          size="size-4"
+          [color]="getColorIcono()"
+          class="absolute left-3 top-1/2 -translate-y-1/2">
+        </app-ui-icono>
+        <input
+          [type]="variant"
+          [class]="obtenerClasesInput()"
+          [placeholder]="placeholder"
+          [value]="value"
+          (input)="onTextChange($event)"
+          (blur)="onBlur()" 
+          (focus)="onFocus()"          
+          />
+      </div>
+    }
+  }
+
+  <!-- Errores -->
+  @if (textoError) {
+    <span class="text-red-500 text-xs mt-1">{{textoError}}</span>
+  }
+  @if (textoErrores.length > 0) {
+    <ul class="text-red-500 text-xs mt-1">
+      @for (error of textoErrores; track $index) {
+        <li>{{ error }}</li>
+      }
+    </ul>
+  }
+</div>

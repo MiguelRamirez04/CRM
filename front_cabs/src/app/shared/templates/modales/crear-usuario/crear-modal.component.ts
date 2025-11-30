@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
 import { UiHeaderModalComponent } from '../../../molecules/headerModal/header-modal.component'; 
-import { UiInputComponent } from '../../../atoms/input/input.component';
+import { UiInputComponent } from '../../../molecules/input/input.component';
 
 
 @Component({
