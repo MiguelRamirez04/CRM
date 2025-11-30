@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-8">
+    <app-ui-header
+        titulo="Usuarios"
+        descripcion="Analice la participación y desempeño de cada usuario registrado."
+        buttonLabel="Crear usuario"
+        (buttonClick)="abrirModalCrearUsuario()">
+    ></app-ui-header>
+
+    <!-- Filtro -->
+    <app-ui-input-field
+        placeholder="Escribe algo para buscar"
+        variant="search"
+        [(value)]="terminoBusqueda"
+    ></app-ui-input-field>
+
+    
+
+    <app-tabla-listado
+        [datos]="usuarios"
+        [columnas]="columnas"
+        [mostrarIndice]="true"
+        [clasePersonalizada]="'tabla-usuarios'"
+        (filaClick)="onFilaClick($event)"
+        [terminoBusqueda]="terminoBusqueda"
+        >
+    </app-tabla-listado>
+
+</div>
