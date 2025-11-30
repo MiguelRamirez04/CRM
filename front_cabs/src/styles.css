@@ -139,6 +139,9 @@
   /* 💠 Personalizado */
   --color-personalizado-borde: #aaa;
 
+    /* Color background input */ 
+  --color-background-input: white;
+
   /* Espaciado */
     --padding--xs: 4px;
     --padding--sm: 8px;

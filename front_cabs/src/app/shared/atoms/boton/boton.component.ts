@@ -21,6 +21,7 @@ export class UiBotonComponent {
   @Input() mostrarIcono: boolean = false;
   @Input() visualizarTexto: boolean = true;
 
+
   @Input() textoAlCargar?: string;
   @Input() clasesAdicionales?: string;
 
@@ -34,7 +35,7 @@ export class UiBotonComponent {
 
   obtenerClasesTailwind(): string {
     const base = `
-      font-semibold py-3 px-6 rounded-lg shadow-md
+      font-semibold py-3 px-6 rounded-lg 
       transition-all duration-300
       focus:outline-none focus:ring-3
       disabled:opacity-50 disabled:cursor-not-allowed
@@ -57,22 +58,21 @@ export class UiBotonComponent {
 
       case 'secundario':
         variante = `
-          bg-[#35D9FD] text-[#34428F]
-          hover:bg-[#2dc4e8]
-          hover:shadow-xl hover:scale-[1.02]
+          bg-white text-blue-600
+          border-2 border-blue-600
+          hover:border-blue-700
+          hover:bg-gray-50
+          hover:shadow-xl          
+          hover:scale-[1.02]
           active:scale-[0.98]
-          focus:ring-[#35D9FD]/50
+          focus:ring-blue-500/50
+          rounded-lg px-6 py-3 font-semibold transition-all duration-300
         `;
         break;
 
       case 'terciario':
         variante = `
-          bg-white text-[#333]
-          border-2 border-gray-300
-          hover:bg-gray-50 hover:border-gray-400
-          hover:shadow-xl hover:scale-[1.02]
-          active:scale-[0.98]
-          focus:ring-gray-300/50
+          text-blue-600 underline underline-offset-4 decoration-blue-600
         `;
         break;
     }
