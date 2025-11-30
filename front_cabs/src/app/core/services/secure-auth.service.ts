@@ -8,6 +8,12 @@ import { environment } from '../../../environments/environment';
 import { RolUsuario } from '../enums/rol-usuario.enum';
 import { TipoTransmision } from '../enums/tipo-transmision.enum';
 
+  interface UsuariosResponse {
+    count: number;
+    data: User[];
+    success: boolean;
+}
+
 export interface User {
   id: number;
   nombre: string;
@@ -15,7 +21,7 @@ export interface User {
   nombreCompleto?: string;
   telefono?: number | null; // Acepta long desde backend (JS number soporta hasta 2^53)
   email: string;
-  rol?: number | null;
+  rol?: string | null | number;
   name?: string; // Mantener para compatibilidad
   role?: string; // Mantener para compatibilidad
   permissions?: string[];
@@ -374,4 +380,10 @@ export class SecureAuthService {
       })
     );
   }
+
+  getUsuarios(incluirInactivos: boolean = false): Observable<UsuariosResponse> {
+    return this.http
+      .get<UsuariosResponse>(`${this.baseUrl}/api/auth/usuarios?incluirInactivos=${incluirInactivos}`)
+      .pipe(catchError(this.handleError));
+  }  
 }
