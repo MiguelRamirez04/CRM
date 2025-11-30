@@ -1,0 +1,119 @@
+<form 
+  [formGroup]="form" 
+  class="flex flex-col gap-4 py-6 rounded-2xl w-[500px] max-w-[900px] mx-auto overflow-hidden overflow-y-auto"
+>
+  <!-- Header -->
+  <app-ui-header-modal (click)="cerrar()"></app-ui-header-modal>
+  <div class="mx-4 flex flex-col gap-4">
+    <app-ui-input-field 
+      label="Nombre" 
+      placeholder="Escribe el nombre" 
+      variant="text" 
+      [labelObligatorio]="true" 
+      formControlName="nombre" 
+      class="flex-1"
+    ></app-ui-input-field>
+
+    <app-ui-input-field 
+      label="Apellido" 
+      placeholder="Escribe el apellido" 
+      variant="text" 
+      [labelObligatorio]="true" 
+      formControlName="apellido" 
+      class="flex-1"
+    ></app-ui-input-field>
+
+    <app-ui-input-field 
+      label="Teléfono" 
+      placeholder="618..." 
+      variant="tel" 
+      [labelObligatorio]="true" 
+      formControlName="telefono" 
+      nombreIcono="phone" 
+      class="flex-1"
+    ></app-ui-input-field>  
+
+    <app-ui-divider></app-ui-divider>
+
+
+    <app-ui-input-field 
+      label="Tipo de rol" 
+      variant="select" 
+      [labelObligatorio]="true" 
+      [options]="roles" 
+      formControlName="rol" 
+      nombreIcono="tag" 
+      class="flex-1"
+    ></app-ui-input-field>
+
+      <!-- Checkbox -->
+    <app-ui-input-field 
+      variant="checkbox" 
+      label="¿Puede conducir un vehículo?" 
+      (checkedChange)="estadoCheckot($event)"
+      class="w-full"
+    ></app-ui-input-field>
+
+      <!-- Transmisión -->
+    @if (visualizarInputTrasmision) {
+      <div class="w-full">
+        <app-ui-input-field 
+          label="Tipo de transmisión" 
+          variant="select" 
+          [labelObligatorio]="true" 
+          [options]="trasmision" 
+          formControlName="transmisionHabilitada" 
+          nombreIcono="truck" 
+          class="w-full"
+        ></app-ui-input-field>
+      </div>    
+    }
+
+    <app-ui-divider></app-ui-divider>  
+
+    <!-- Correo -->
+    <app-ui-input-field 
+      label="Correo" 
+      placeholder="ejemplo@correo.com" 
+      variant="email" 
+      [labelObligatorio]="true" 
+      nombreIcono="envelope" 
+      formControlName="email"
+      class="w-full"
+    ></app-ui-input-field>
+
+    <!-- Contraseña -->
+    <app-ui-input-field 
+      label="Contraseña" 
+      placeholder="Escribe la contraseña" 
+      variant="password" 
+      [labelObligatorio]="true" 
+      formControlName="contrasena" 
+      nombreIcono="lock-closed" 
+      class="w-full"
+    ></app-ui-input-field>
+
+    <!-- Confirmar contraseña -->
+    <app-ui-input-field 
+      label="Confirmar contraseña" 
+      placeholder="Repite la contraseña" 
+      variant="password" 
+      [labelObligatorio]="true" 
+      formControlName="confirmarContrasena" 
+      nombreIcono="lock-closed" 
+      class="w-full"
+    ></app-ui-input-field>
+
+    <!-- Botón -->
+    <div class="flex justify-end">
+      <app-ui-boton 
+        variante="primario" 
+        texto="Crear usuario" 
+        (click)="guardar()" 
+        [anchoCompleto]="false"
+        class= "mr-4"
+      ></app-ui-boton>
+    </div>
+  </div>
+
+</form>
