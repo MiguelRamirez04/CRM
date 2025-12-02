@@ -1,0 +1,51 @@
+.form-row {
+  display: grid;
+  width: 100%;
+}
+
+/* Columnas */
+.grid-1col {
+  grid-template-columns: 1fr;
+}
+
+.grid-2col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Gaps */
+.gap-small {
+  gap: 12px;
+}
+
+.gap-medium {
+  gap: 16px;
+}
+
+.gap-large {
+  gap: 24px;
+}
+
+/* Alineación */
+.align-start {
+  align-items: start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: end;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-2col,
+  .grid-3col {
+    grid-template-columns: 1fr;
+  }
+}

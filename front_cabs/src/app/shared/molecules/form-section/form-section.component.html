@@ -1,0 +1,12 @@
+<div class="form-section" [class]="'spacing-' + spacing">
+  <div *ngIf="title || subtitle" class="section-header">
+    <h3 *ngIf="title" class="section-title">{{ title }}</h3>
+    <p *ngIf="subtitle" class="section-subtitle">{{ subtitle }}</p>
+  </div>
+  
+  <div *ngIf="showDivider && (title || subtitle)" class="section-divider"></div>
+  
+  <div class="section-content">
+    <ng-content></ng-content>
+  </div>
+</div>

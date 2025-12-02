@@ -1,0 +1,22 @@
+<div class="filter-input-wrapper relative">
+  
+  <!-- Icono opcional usando IconoComponent -->
+  <div *ngIf="hasIcon" class="input-icon absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+    <app-ui-icono 
+      [name]="defaultIcon" 
+      [size]="'h-5 w-5'" 
+      [color]="'text-gray-400'">
+    </app-ui-icono>
+  </div>
+
+  <!-- Input -->
+  <input
+    [type]="type"
+    [placeholder]="placeholder"
+    [value]="value"
+    [disabled]="disabled"
+    (input)="onInputChange($event)"
+    [class.has-icon]="hasIcon"
+    class="filter-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+  />
+</div>

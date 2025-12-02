@@ -431,3 +431,31 @@ textarea:disabled {
   cursor: not-allowed;
   opacity: 0.7;
 }
+
+/* Score Input Styles */
+.score-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.score-input {
+  flex: 1;
+}
+
+.score-max-label {
+  color: var(--color-primario);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Ocultar flechas del input number */
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.score-input[type=number] {
+  -moz-appearance: textfield;
+}

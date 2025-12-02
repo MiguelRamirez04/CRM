@@ -36,10 +36,17 @@
     }" (cambioPagina)="alCambiarPagina($event)" (cambioRangoPagina)="alCambiarRangoPagina($event)"></app-paginacion>
 </div>
 
-<!-- Modal de Filtros -->
-<app-modal-filtros [visible]="mostrarModalFiltros" [configuracion]="configuracionFiltros"
-  [filtrosAplicados]="filtrosAplicados" (cerrar)="onCerrarFiltros()" (aplicarFiltros)="onAplicarFiltros($event)"
-  (limpiarFiltros)="onLimpiarFiltros()"></app-modal-filtros>
+<!-- ========================================================================== -->
+<!-- PANEL DE FILTROS ATOMIC DESIGN (REEMPLAZA AL MODAL ANTIGUO) -->
+<!-- ========================================================================== -->
+<app-filter-panel
+  [visible]="mostrarModalFiltros"
+  [configuracion]="configuracionFiltros"
+  [filtrosAplicados]="filtrosAplicados"
+  (cerrar)="onCerrarFiltros()"
+  (aplicarFiltros)="onAplicarFiltros($event)"
+  (limpiarFiltros)="onLimpiarFiltros()">
+</app-filter-panel>
 
 <!-- Panel de Detalles Lateral -->
 <app-verdetalles *ngIf="mostrarPanelDetalles" [evaluacionId]="evaluacionIdSeleccionada"
