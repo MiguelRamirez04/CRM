@@ -7,10 +7,27 @@ import { EvaluacionService } from '../../../../../../core/services/evaluaciones.
 import { SharedEvaluacionService } from '../../../../../../core/services/shared-evaluacion.service';
 import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones.interface';
 
+// ==================== SHARED COMPONENTS ====================
+import {
+  FormInputComponent,
+  FormTextareaComponent,
+  FormRowComponent,
+  FormSectionComponent,
+  FormInfoAlertComponent
+} from '../../../../../../shared/~exports/form-system.index';
+
 @Component({
   selector: 'app-fase-despues-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    FormInputComponent,
+    FormTextareaComponent,
+    FormRowComponent,
+    FormSectionComponent,
+    FormInfoAlertComponent
+  ],
   templateUrl: './fases.component.html',
   styleUrls: ['./fases.component.css']
 })
@@ -30,6 +47,13 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   tituloFase: string = 'DESPUÉS';
   guardando = false;
   detalleId?: number;
+
+  // Opciones para el select de tipo de foto
+  tiposFoto = [
+    { value: 'General', label: 'General' },
+    { value: 'Detalle', label: 'Detalle' },
+    { value: 'Otro', label: 'Otro' }
+  ];
 
   private blobUrls: Map<number, string> = new Map();
   private destroy$ = new Subject<void>();
@@ -258,6 +282,17 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  onScoreChange(value: string | number): void {
+    let numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    
+    if (isNaN(numValue)) numValue = 0;
+    if (numValue < 0) numValue = 0;
+    if (numValue > 100) numValue = 100;
+    
+    this.scoreFase = numValue;
+    this.onCampoChange();
+  }
+
   validarEntradaScore(event: KeyboardEvent): void {
     const input = event.target as HTMLInputElement;
     const tecla = event.key;
@@ -292,7 +327,6 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
   }
 
   validarPegadoScore(event: ClipboardEvent): void {
-    const input = event.target as HTMLInputElement;
     const textoPegado = event.clipboardData?.getData('text') || '';
     
     if (!/^\d+$/.test(textoPegado)) {

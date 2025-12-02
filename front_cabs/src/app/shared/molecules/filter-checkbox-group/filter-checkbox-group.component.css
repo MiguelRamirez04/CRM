@@ -1,0 +1,14 @@
+.filter-checkbox-group {
+  margin-bottom: 1.5rem;
+}
+
+.group-title {
+  margin-bottom: 0.75rem;
+  user-select: none;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

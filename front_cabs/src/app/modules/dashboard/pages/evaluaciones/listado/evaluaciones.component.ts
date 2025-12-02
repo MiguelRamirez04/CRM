@@ -23,20 +23,15 @@ import { PaginacionComponent } from '../../../../../shared/components/paginacion
 import { StatusDotComponent } from '../../../../../shared/atoms/status-dot/status-dot.component';
 import { UiHeaderComponent } from '../../../../../shared/molecules/header/header.component';
 
-// Componente modal de filtros
+// Sistema de filtros Atomic Design
 import {
-  ModalFiltrosComponent,
-  ConfiguracionModalFiltros,
-  ResultadoFiltros
-} from '../../../../../shared/components/modal-filtros/modal-filtros.component';
-
+  FilterPanelComponent,
+  FilterPanelConfig,
+  FilterResult
+} from '../../../../../shared/~exports/filter-system.index';
 
 import { VerdetallesComponent } from '../ver_detalles/verdetalles.component';
-
-
 import { InfogeneralComponent } from '../registro/infogeneral/infogeneralregistro.component';
-
-
 import { UiBotonComponent } from '../../../../../shared/atoms/boton/boton.component';
 
 @Component({
@@ -48,7 +43,7 @@ import { UiBotonComponent } from '../../../../../shared/atoms/boton/boton.compon
     TablaListadoComponent,
     PaginacionComponent,
     StatusDotComponent,
-    ModalFiltrosComponent,
+    FilterPanelComponent,  // ← Componente nuevo
     VerdetallesComponent,
     UiHeaderComponent,
     InfogeneralComponent,
@@ -131,12 +126,12 @@ export class EvaluacionesComponent implements OnInit {
   `;
 
   // =====================================================================================
-  // PROPIEDADES PARA FILTROS
+  // PROPIEDADES PARA FILTROS (ACTUALIZADAS)
   // =====================================================================================
 
   mostrarModalFiltros: boolean = false;
-  configuracionFiltros: ConfiguracionModalFiltros = {};
-  filtrosAplicados?: ResultadoFiltros;
+  configuracionFiltros: FilterPanelConfig = {};  // ← Tipo actualizado
+  filtrosAplicados?: FilterResult;  // ← Tipo actualizado
 
   // =====================================================================================
   // PROPIEDADES PARA PANEL DE DETALLES
@@ -192,13 +187,14 @@ export class EvaluacionesComponent implements OnInit {
   }
 
   // =====================================================================================
-  // CONFIGURACIÓN DE FILTROS
+  // CONFIGURACIÓN DE FILTROS (ACTUALIZADA)
   // =====================================================================================
 
   configurarFiltros(): void {
     this.configuracionFiltros = {
-      titulo: 'Filtro',
+      titulo: 'Filtrar Evaluaciones',
 
+      // Grupos de checkboxes
       gruposCheckbox: [
         {
           id: 'puntaje',
@@ -228,20 +224,19 @@ export class EvaluacionesComponent implements OnInit {
         }
       ],
 
-      filtrosFecha: [
+      // Campos unificados (fecha y select)
+      campos: [
         {
           id: 'fecha',
           titulo: 'Fecha',
-          placeholder: 'año/día/mes',
+          placeholder: 'año/mes/día',
           tipo: 'date'
-        }
-      ],
-
-      filtrosSelect: [
+        },
         {
           id: 'seguimiento',
           titulo: 'Seguimiento',
           placeholder: 'Seleccione un tipo de seguimiento',
+          tipo: 'select',
           opciones: [
             { valor: 'requiere', etiqueta: 'Requiere seguimiento' },
             { valor: 'completado', etiqueta: 'Completado' }
@@ -250,34 +245,34 @@ export class EvaluacionesComponent implements OnInit {
       ],
 
       mostrarBotonLimpiar: true,
-      textoBotonAplicar: 'Aplicar',
-      textoBotonLimpiar: 'Limpiar',
-      textoBotonCerrar: 'Cerrar'
+      textoBotonAplicar: 'Filtrar',
+      textoBotonLimpiar: 'Limpiar Todo',
+      textoBotonCerrar: 'Cancelar'
     };
   }
 
   // =====================================================================================
-  // HANDLERS DE FILTROS
+  // HANDLERS DE FILTROS (ACTUALIZADOS)
   // =====================================================================================
 
   onFilter(): void {
-    console.log(' Abriendo modal de filtros');
+    console.log('🔍 Abriendo panel de filtros');
     this.mostrarModalFiltros = true;
   }
 
   onCerrarFiltros(): void {
-    console.log('Cerrando modal de filtros');
+    console.log('❌ Cerrando panel de filtros');
     this.mostrarModalFiltros = false;
   }
 
-  onAplicarFiltros(resultado: ResultadoFiltros): void {
-    console.log('Aplicando filtros:', resultado);
+  onAplicarFiltros(resultado: FilterResult): void {  // ← Tipo actualizado
+    console.log('✅ Aplicando filtros:', resultado);
 
     this.filtrosAplicados = resultado;
 
     let evaluacionesFiltradas = [...this.evaluacionesOriginales];
 
-    // FILTRAR POR PUNTAJE
+    // FILTRAR POR PUNTAJE (checkboxes)
     if (resultado.checkboxes['puntaje']?.length > 0) {
       evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
         const score = ev.scoreCalidadTotal || 0;
@@ -287,9 +282,9 @@ export class EvaluacionesComponent implements OnInit {
       });
     }
 
-    // FILTRAR POR SEGUIMIENTO
-    if (resultado.selects['seguimiento']) {
-      const valorSeguimiento = resultado.selects['seguimiento'];
+    // FILTRAR POR SEGUIMIENTO (select) - Ahora en campos
+    if (resultado.campos['seguimiento']) {  // ← Cambio: campos en lugar de selects
+      const valorSeguimiento = resultado.campos['seguimiento'];
       evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
         if (valorSeguimiento === 'requiere') {
           return ev.requiereSeguimiento === true;
@@ -300,9 +295,9 @@ export class EvaluacionesComponent implements OnInit {
       });
     }
 
-    // FILTRAR POR FECHA
-    if (resultado.fechas['fecha']) {
-      const fechaSeleccionada = new Date(resultado.fechas['fecha']);
+    // FILTRAR POR FECHA - Ahora en campos
+    if (resultado.campos['fecha']) {  // ← Cambio: campos en lugar de fechas
+      const fechaSeleccionada = new Date(resultado.campos['fecha']);
       evaluacionesFiltradas = evaluacionesFiltradas.filter(ev => {
         const fechaEv = new Date(ev.creadoEn);
         return fechaEv.toDateString() === fechaSeleccionada.toDateString();
@@ -316,7 +311,7 @@ export class EvaluacionesComponent implements OnInit {
   }
 
   onLimpiarFiltros(): void {
-    console.log('Limpiando filtros');
+    console.log('🗑️ Limpiando filtros');
     this.filtrosAplicados = undefined;
     this.evaluacionesFiltradas = [...this.evaluacionesOriginales];
 
@@ -559,7 +554,7 @@ export class EvaluacionesComponent implements OnInit {
   }
 
   onEvaluacionGuardada(id: number): void {
-    console.log(' Evaluación guardada con ID:', id);
+    console.log('✅ Evaluación guardada con ID:', id);
     // El modal se cerrará automáticamente
   }
 
@@ -634,90 +629,72 @@ export class EvaluacionesComponent implements OnInit {
   // MÉTODOS PARA COLORES PERSONALIZADOS DE TABS SEGÚN ESTADO
   // =====================================================================================
 
-  /**
-   * Obtiene el color del borde según el estado de la fase
-   */
   obtenerColorBordeFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
     if (esActivo) {
-      // Cuando el tab está activo, usar colores más intensos
       switch (estado) {
         case 'completada':
-          return '#10b981'; // Verde esmeralda
+          return '#10b981';
         case 'sin-completar':
-          return '#f59e0b'; // Amarillo ámbar
+          return '#f59e0b';
         case 'sin-inicializar':
-          return '#9ca3af'; // Gris medio
+          return '#9ca3af';
       }
     } else {
-      // Cuando el tab está inactivo, mismo color pero menos intenso
       switch (estado) {
         case 'completada':
-          return '#10b981'; // Verde esmeralda
+          return '#10b981';
         case 'sin-completar':
-          return '#f59e0b'; // Amarillo ámbar
+          return '#f59e0b';
         case 'sin-inicializar':
-          return '#9ca3af'; // Gris medio
+          return '#9ca3af';
       }
     }
   }
 
-  /**
-   * Obtiene el color del texto según el estado de la fase
-   */
   obtenerColorTextoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
     if (esActivo) {
-      // Cuando el tab está activo, usar colores más oscuros para mejor contraste
       switch (estado) {
         case 'completada':
-          return '#065f46'; // Verde muy oscuro
+          return '#065f46';
         case 'sin-completar':
-          return '#92400e'; // Marrón oscuro
+          return '#92400e';
         case 'sin-inicializar':
-          return '#374151'; // Gris muy oscuro
+          return '#374151';
       }
     } else {
-      // Cuando el tab está inactivo
       switch (estado) {
         case 'completada':
-          return '#059669'; // Verde oscuro
+          return '#059669';
         case 'sin-completar':
-          return '#d97706'; // Naranja
+          return '#d97706';
         case 'sin-inicializar':
-          return '#6b7280'; // Gris oscuro
+          return '#6b7280';
       }
     }
   }
 
-  /**
-   * Obtiene el color del icono según el estado de la fase
-   */
   obtenerColorIconoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar'): string {
     switch (estado) {
       case 'completada':
-        return '#10b981'; // Verde esmeralda
+        return '#10b981';
       case 'sin-completar':
-        return '#f59e0b'; // Amarillo ámbar
+        return '#f59e0b';
       case 'sin-inicializar':
-        return '#9ca3af'; // Gris medio
+        return '#9ca3af';
     }
   }
 
-  /**
-   * Obtiene el color de fondo según el estado de la fase
-   */
   obtenerColorFondoFase(estado: 'completada' | 'sin-completar' | 'sin-inicializar', esActivo: boolean): string {
     if (esActivo) {
-      // Cuando el tab está activo, usar fondos degradados
       switch (estado) {
         case 'completada':
-          return 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)'; // Degradado verde
+          return 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)';
         case 'sin-completar':
-          return 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'; // Degradado amarillo
+          return 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
         case 'sin-inicializar':
-          return 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)'; // Degradado gris
+          return 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
       }
     } else {
-      // Cuando el tab está inactivo, fondo blanco
       return '#ffffff';
     }
   }
@@ -726,76 +703,56 @@ export class EvaluacionesComponent implements OnInit {
   // MÉTODOS PARA EL FOOTER DEL MODAL
   // =====================================================================================
 
-  /**
-   * Cambia la vista activa en el modal
-   */
   cambiarVistaModal(vista: 'infoGeneral' | 'faseAntes' | 'faseDespues'): void {
     console.log('Cambiando vista del modal a:', vista);
 
     this.vistaActualModal = vista;
 
-    // Llamar al método del componente hijo si está disponible
     if (this.infogeneralComponent) {
       this.infogeneralComponent.navegarASeccion(vista);
     }
 
-    // IMPORTANTE: No inicializar las fases automáticamente al navegar
-    // Solo actualizar los estados visuales basados en datos existentes
     this.actualizarEstadosFases();
 
-    // Si navegamos a una fase que no existe, NO la creamos aquí
-    // El usuario debe llenar al menos un campo para que se cree la fase
     if (vista === 'faseAntes') {
       const datosAntes = this.sharedService.getFaseAntes();
       if (!datosAntes) {
-        console.log(' Fase ANTES aún no inicializada (esperando datos del usuario)');
+        console.log('ℹ️ Fase ANTES aún no inicializada (esperando datos del usuario)');
       }
     }
 
     if (vista === 'faseDespues') {
       const datosDespues = this.sharedService.getFaseDespues();
       if (!datosDespues) {
-        console.log(' Fase DESPUÉS aún no inicializada (esperando datos del usuario)');
+        console.log('ℹ️ Fase DESPUÉS aún no inicializada (esperando datos del usuario)');
       }
     }
   }
 
-  /**
-   * Actualiza los estados visuales de las fases desde el SharedService
-   */
   actualizarEstadosFases(): void {
     const datosAntes = this.sharedService.getFaseAntes();
     const datosDespues = this.sharedService.getFaseDespues();
 
-    // FASE ANTES
     this.estadoFaseAntes = this.determinarEstadoFase(datosAntes);
-
-    // FASE DESPUÉS
     this.estadoFaseDespues = this.determinarEstadoFase(datosDespues);
 
-    console.log(' Estados actualizados:', {
+    console.log('📊 Estados actualizados:', {
       antes: this.estadoFaseAntes,
       despues: this.estadoFaseDespues
     });
   }
 
-  /**
-   * Determina el estado de una fase individual
-   */
   private determinarEstadoFase(datosFase: any): 'completada' | 'sin-completar' | 'sin-inicializar' {
-    // SIN INICIALIZAR: No hay datos o todos los campos están vacíos
     if (!datosFase || this.estaFaseVacia(datosFase)) {
       return 'sin-inicializar';
     }
 
-    // COMPLETADA: Tiene scoreFase Y es mayor a 0
     if (datosFase.scoreFase !== null &&
       datosFase.scoreFase !== undefined &&
       datosFase.scoreFase > 0) {
       return 'completada';
     }
 
-    // SIN COMPLETAR: Tiene al menos un campo lleno pero sin score válido
     if (this.tieneAlgunCampoLleno(datosFase)) {
       return 'sin-completar';
     }
@@ -803,9 +760,6 @@ export class EvaluacionesComponent implements OnInit {
     return 'sin-inicializar';
   }
 
-  /**
-   * Verifica si una fase está completamente vacía (sin datos)
-   */
   private estaFaseVacia(datosFase: any): boolean {
     if (!datosFase) return true;
 
@@ -821,9 +775,6 @@ export class EvaluacionesComponent implements OnInit {
     return camposVacios;
   }
 
-  /**
-   * Verifica si la fase tiene al menos un campo con datos (excluyendo score)
-   */
   private tieneAlgunCampoLleno(datosFase: any): boolean {
     if (!datosFase) return false;
 
@@ -836,13 +787,9 @@ export class EvaluacionesComponent implements OnInit {
     );
   }
 
-  /**
-   * Guarda la evaluación desde el modal (llamado por el botón del footer)
-   */
   async guardarEvaluacionDesdeModal(): Promise<void> {
-    console.log('Guardando evaluación desde modal...');
+    console.log('💾 Guardando evaluación desde modal...');
 
-    // Verificar que exista el componente hijo
     if (!this.infogeneralComponent) {
       alert('Error: No se puede acceder al formulario');
       return;
@@ -851,81 +798,56 @@ export class EvaluacionesComponent implements OnInit {
     this.guardandoModal = true;
 
     try {
-      // VALIDACIÓN: Verificar estado de las fases antes de guardar
       const datosAntes = this.sharedService.getFaseAntes();
       const datosDespues = this.sharedService.getFaseDespues();
 
       const faseAntesValida = this.esFaseValidaParaGuardar(datosAntes);
       const faseDespeusValida = this.esFaseValidaParaGuardar(datosDespues);
 
-      console.log(' Validación de fases:', {
+      console.log('✔️ Validación de fases:', {
         faseAntesValida,
         faseDespeusValida,
         datosAntes: datosAntes ? 'con datos' : 'null/undefined',
         datosDespues: datosDespues ? 'con datos' : 'null/undefined'
       });
 
-      // Advertencias en consola si hay datos inválidos
       if (!faseAntesValida && datosAntes) {
-        console.warn('Fase ANTES tiene un objeto con campos vacíos');
+        console.warn('⚠️ Fase ANTES tiene un objeto con campos vacíos');
       }
 
       if (!faseDespeusValida && datosDespues) {
-        console.warn('Fase DESPUÉS tiene un objeto con campos vacíos');
+        console.warn('⚠️ Fase DESPUÉS tiene un objeto con campos vacíos');
       }
 
-      // Llamar al método de guardar del componente hijo
-      // El componente hijo debe manejar correctamente los datos vacíos
       await this.infogeneralComponent.guardarEvaluacion();
 
-      // Actualizar estados después de guardar
       this.actualizarEstadosFases();
     } catch (error) {
-      console.error('Error al guardar desde modal:', error);
+      console.error('❌ Error al guardar desde modal:', error);
       alert('Error al guardar la evaluación');
     } finally {
       this.guardandoModal = false;
     }
   }
 
-  /**
-   * Verifica si una fase es válida para guardar
-   * Una fase es válida si:
-   * 1. Es null/undefined (fase sin inicializar)
-   * 2. Tiene al menos un campo con datos válidos
-   * 
-   * Una fase NO es válida si:
-   * - Tiene un objeto con todos los campos vacíos 
-   * 
-   * NOTA: Este método solo identifica fases inválidas para logging.
-   * La limpieza real debe hacerse en el componente que guarda (infogeneralregistro).
-   */
   private esFaseValidaParaGuardar(datosFase: any): boolean {
-    // Si la fase es null o undefined, es válida (fase sin inicializar)
     if (!datosFase) {
       return true;
     }
 
-    // Si la fase tiene al menos un campo con datos, es válida
     if (this.tieneAlgunCampoLleno(datosFase)) {
       return true;
     }
 
-    // Si la fase tiene scoreFase válido, es válida
     if (datosFase.scoreFase !== null && 
         datosFase.scoreFase !== undefined && 
         datosFase.scoreFase > 0) {
       return true;
     }
 
-    // Si llegamos aquí, la fase tiene un objeto con todos los campos vacíos
-    // Esto puede causar errores en el backend
     return false;
   }
 
-  /**
-   * Suscribirse a cambios en el SharedService para actualizar estados
-   */
   private suscribirCambiosFases(): void {
     this.sharedService.faseAntes$.subscribe(() => {
       if (this.mostrarModalRegistro) {

@@ -1,0 +1,33 @@
+<div class="form-textarea-wrapper">
+  <div class="label-row">
+    <label *ngIf="label" class="form-label">
+      {{ label }}
+      <span *ngIf="required" class="required-mark">*</span>
+    </label>
+    <span *ngIf="showCharCount && maxLength" class="char-count">
+      {{ charCount }}
+    </span>
+  </div>
+  
+  <textarea
+    class="form-textarea"
+    [class.error]="errorMessage"
+    [class.disabled]="disabled"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [readonly]="readonly"
+    [rows]="rows"
+    [attr.maxlength]="maxLength"
+    [value]="value"
+    (input)="onTextareaChange($any($event.target).value)"
+    (blur)="onBlur()"
+  ></textarea>
+  
+  <span *ngIf="helpText && !errorMessage" class="help-text">
+    {{ helpText }}
+  </span>
+  
+  <span *ngIf="errorMessage" class="error-text">
+    {{ errorMessage }}
+  </span>
+</div>
