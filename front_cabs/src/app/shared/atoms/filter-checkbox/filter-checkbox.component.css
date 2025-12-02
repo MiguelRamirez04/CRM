@@ -1,0 +1,25 @@
+.filter-checkbox-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filter-checkbox-container:not(.disabled):hover {
+  background-color: rgba(249, 250, 251, 1);
+}
+
+.checkbox-input {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.checkbox-input:focus {
+  outline: none;
+}
+
+.checkbox-label {
+  user-select: none;
+}
+
+.checkbox-description {
+  line-height: 1.4;
+}

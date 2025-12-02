@@ -1,0 +1,26 @@
+<div class="filter-field">
+  
+  <!-- Título del campo -->
+  <h4 *ngIf="titulo" class="field-title text-sm font-semibold text-gray-700 mb-3">
+    {{ titulo }}
+  </h4>
+
+  <!-- Input (fecha, mes, año, texto) -->
+  <app-filter-input
+    *ngIf="isInput"
+    [type]="inputType"
+    [placeholder]="placeholder"
+    [iconName]="iconName"
+    [value]="value"
+    (valueChange)="onValueChange($event)"
+  ></app-filter-input>
+
+  <!-- Select -->
+  <app-filter-select
+    *ngIf="isSelect"
+    [options]="options"
+    [placeholder]="placeholder"
+    [value]="value"
+    (valueChange)="onValueChange($event)"
+  ></app-filter-select>
+</div>

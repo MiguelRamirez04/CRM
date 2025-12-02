@@ -194,7 +194,7 @@
       </div>
 
       <!-- ============================================== -->
-      <!-- 🔥 SECCIÓN: FASES CON TRES ESTADOS -->
+      <!-- SECCIÓN: FASES CON TRES ESTADOS -->
       <!-- ============================================== -->
       <app-detail-section 
         [titulo]="'Fases de Evaluación'" 
@@ -219,7 +219,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-3">
 
-                <!-- 🔥 ICONOS SEGÚN ESTADO -->
+                <!-- ICONOS SEGÚN ESTADO -->
                 <div class="flex-shrink-0">
 
                   <!-- Estado: COMPLETADA (verde con check) -->
@@ -253,7 +253,7 @@
                   <app-ui-tipografia [variante]="'p'" [texto]="faseData.titulo"
                     [color]="'text-gray-900 font-semibold'"></app-ui-tipografia>
 
-                  <!-- 🔥 TEXTO SEGÚN ESTADO -->
+                  <!-- TEXTO SEGÚN ESTADO -->
                   <app-ui-tipografia [variante]="'caption'" [texto]="
                       faseData.estado === 'completada' ? 'Completada y calificada' :
                       faseData.estado === 'sin-completar' ? 'Iniciada - Sin completar' :
@@ -266,7 +266,7 @@
                 </div>
               </div>
 
-              <!-- 🔥 BADGES SEGÚN ESTADO -->
+              <!-- BADGES SEGÚN ESTADO -->
               <div class="flex flex-col items-end space-y-1">
 
                 <!-- Score badge (solo si está completada) -->
@@ -302,7 +302,7 @@
                 [color]="'text-gray-600'"></app-ui-tipografia>
             </div>
 
-            <!-- 🔥 INDICADOR VISUAL ADICIONAL -->
+            <!-- INDICADOR VISUAL ADICIONAL -->
             <div *ngIf="faseData.estado !== 'sin-inicializar'" class="mt-3 pt-3 border-t border-gray-200">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-gray-500">

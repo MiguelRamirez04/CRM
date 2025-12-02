@@ -1,170 +1,145 @@
-<div *ngIf="cargando" class="loading-overlay">
-  <div class="spinner">Cargando evaluación...</div>
-</div>
+<app-loading-overlay 
+  [visible]="cargando" 
+  [mensaje]="'Cargando evaluación...'"
+  [fixed]="false">
+</app-loading-overlay>
 
 <div class="contenedor">
-  <!-- CONTENIDO DINÁMICO SEGÚN PESTAÑA ACTIVA -->
-  
   <!-- ===================== VISTA: INFO GENERAL ===================== -->
   <div *ngIf="vistaActual === 'infoGeneral'" class="contenedor-2">
     
-    <!-- Mensaje informativo según el modo -->
-    <div class="mensaje-info-modo">
-      <p *ngIf="modoOperacion === 'editar'">
-        Los campos Orden, Ejecución y Evaluador no se pueden modificar
-      </p>
-      <p *ngIf="modoOperacion === 'crear'">
-        Complete todos los campos requeridos para crear la evaluación
-      </p>
-    </div>
+    <!-- Mensaje informativo -->
+    <app-form-info-alert
+      [type]="modoOperacion === 'editar' ? 'warning' : 'info'"
+      [message]="mensajeInformativo"
+      [showIcon]="true">
+    </app-form-info-alert>
 
-    <div class="seccion">
-      <!-- Grid de 2 columnas -->
-      <div class="fila-formulario-dos-columnas">
+    <!-- FORMULARIO PRINCIPAL -->
+    <app-form-section [title]="''">
+      
+      <!-- FILA 1: Orden y Ejecución -->
+      <app-form-row [columns]="2" [gap]="'medium'">
         
-        <!-- ORDEN DE TRABAJO - MODO CREAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
-          <label class="etiqueta">Orden de trabajo*</label>
-          <select 
-            class="selector" 
-            [(ngModel)]="formulario.ordenTrabajoId"
-            (change)="onOrdenChange()"
-            [disabled]="cargandoCatalogos.ordenes">
-            <option value="">
-              {{ cargandoCatalogos.ordenes ? 'Cargando órdenes...' : 'Seleccione una orden' }}
-            </option>
-            <option *ngFor="let orden of ordenesTrabajo" [value]="orden.id">
-              {{ orden.displayText }}
-            </option>
-          </select>
-          <span class="texto-ayuda" *ngIf="!cargandoCatalogos.ordenes && ordenesTrabajo.length === 0">
-            No hay órdenes disponibles
-          </span>
-        </div>
+        <!-- ORDEN - CREAR -->
+        <app-form-select
+          *ngIf="modoOperacion === 'crear'"
+          [label]="'Orden de trabajo'"
+          [required]="true"
+          [options]="ordenesOptions"
+          [loading]="cargandoCatalogos.ordenes"
+          [loadingText]="'Cargando órdenes...'"
+          [emptyText]="'No hay órdenes disponibles'"
+          [placeholder]="'Seleccione una orden'"
+          [(ngModel)]="formulario.ordenTrabajoId"
+          (valueChange)="onOrdenChange()">
+        </app-form-select>
 
-        <!-- ORDEN DE TRABAJO - MODO EDITAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
-          <label class="etiqueta">Orden de trabajo*</label>
-          <div class="campo-bloqueado">
-            <span class="icono-candado"></span>
-            <span class="texto-bloqueado">{{ textoOrdenBloqueada || 'OT-' + formulario.ordenTrabajoId }}</span>
-          </div>
-          <span class="texto-ayuda texto-bloqueado-info">
-            Este campo no se puede modificar después de crear la evaluación
-          </span>
-        </div>
+        <!-- ORDEN - EDITAR -->
+        <app-locked-field
+          *ngIf="modoOperacion === 'editar'"
+          [label]="'Orden de trabajo'"
+          [required]="true"
+          [value]="textoOrdenBloqueada || 'OT-' + formulario.ordenTrabajoId"
+          [helpText]="'Este campo no se puede modificar después de crear la evaluación'">
+        </app-locked-field>
 
-        <!-- EJECUCIÓN - MODO CREAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
-          <label class="etiqueta">Ejecución (opcional)</label>
-          <select 
-            class="selector" 
-            [(ngModel)]="formulario.ejecucionId"
-            (change)="onFormularioChange()"
-            [disabled]="cargandoCatalogos.ejecuciones || !formulario.ordenTrabajoId">
-            <option value="">
-              {{ cargandoCatalogos.ejecuciones ? 'Cargando ejecuciones...' : 
-                 !formulario.ordenTrabajoId ? 'Seleccione primero una orden' : 
-                 'Sin ejecución específica' }}
-            </option>
-            <option *ngFor="let ejecucion of ejecuciones" [value]="ejecucion.id">
-              {{ ejecucion.displayText }}
-            </option>
-          </select>
-          <span class="texto-ayuda" *ngIf="formulario.ordenTrabajoId && ejecuciones.length === 0 && !cargandoCatalogos.ejecuciones">
-            No hay ejecuciones para esta orden
-          </span>
-        </div>
+        <!-- EJECUCIÓN - CREAR -->
+        <app-form-select
+          *ngIf="modoOperacion === 'crear'"
+          [label]="'Ejecución (opcional)'"
+          [required]="false"
+          [options]="ejecucionesOptions"
+          [loading]="cargandoCatalogos.ejecuciones"
+          [loadingText]="'Cargando ejecuciones...'"
+          [emptyText]="!formulario.ordenTrabajoId ? 'Seleccione primero una orden' : 'No hay ejecuciones para esta orden'"
+          [placeholder]="'Sin ejecución específica'"
+          [disabled]="!formulario.ordenTrabajoId"
+          [(ngModel)]="formulario.ejecucionId"
+          (valueChange)="onFormularioChange()">
+        </app-form-select>
 
-        <!-- EJECUCIÓN - MODO EDITAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
-          <label class="etiqueta">Ejecución</label>
-          <div class="campo-bloqueado">
-            <span class="icono-candado"></span>
-            <span class="texto-bloqueado">{{ textoEjecucionBloqueada || 'Sin ejecución' }}</span>
-          </div>
-        </div>
+        <!-- EJECUCIÓN - EDITAR -->
+        <app-locked-field
+          *ngIf="modoOperacion === 'editar'"
+          [label]="'Ejecución'"
+          [value]="textoEjecucionBloqueada || 'Sin ejecución'">
+        </app-locked-field>
 
-        <!-- EVALUADOR - MODO CREAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'crear'">
-          <label class="etiqueta">Evaluador*</label>
-          <select 
-            class="selector" 
-            [(ngModel)]="formulario.evaluadorId"
-            (change)="onFormularioChange()"
-            [disabled]="cargandoCatalogos.usuario">
-            <option value="">
-              {{ cargandoCatalogos.usuario ? 'Cargando usuario...' : 'Seleccione evaluador' }}
-            </option>
-            <option *ngFor="let evaluador of evaluadores" [value]="evaluador.id">
-              {{ evaluador.displayText }}
-            </option>
-          </select>
-          <span class="texto-ayuda" *ngIf="usuarioActual">
-            Usuario actual: {{ usuarioActual.nombreCompleto }}
-          </span>
-        </div>
+      </app-form-row>
 
-        <!-- EVALUADOR - MODO EDITAR -->
-        <div class="grupo-formulario" *ngIf="modoOperacion === 'editar'">
-          <label class="etiqueta">Evaluador*</label>
-          <div class="campo-bloqueado">
-            <span class="icono-candado"></span>
-            <span class="texto-bloqueado">{{ textoEvaluadorBloqueado || 'Evaluador #' + formulario.evaluadorId }}</span>
-          </div>
-        </div>
-      </div>
+      <!-- FILA 2: Evaluador -->
+      <app-form-row [columns]="2" [gap]="'medium'">
+        
+        <!-- EVALUADOR - CREAR -->
+        <app-form-select
+          *ngIf="modoOperacion === 'crear'"
+          [label]="'Evaluador'"
+          [required]="true"
+          [options]="evaluadoresOptions"
+          [loading]="cargandoCatalogos.usuario"
+          [loadingText]="'Cargando usuario...'"
+          [placeholder]="'Seleccione evaluador'"
+          [helpText]="usuarioActual ? 'Usuario actual: ' + usuarioActual.nombreCompleto : ''"
+          [(ngModel)]="formulario.evaluadorId"
+          (valueChange)="onFormularioChange()">
+        </app-form-select>
 
-      <!-- CAMPOS EDITABLES -->
-      <div class="grupo-formulario">
-        <label class="etiqueta">Objetivo de la evaluación</label>
-        <input 
-          type="text" 
-          class="entrada-texto" 
-          [(ngModel)]="formulario.objetivo"
-          (ngModelChange)="onFormularioChange()"
-          placeholder="Ej: verificar la calidad del servicio prestado">
-      </div>
+        <!-- EVALUADOR - EDITAR -->
+        <app-locked-field
+          *ngIf="modoOperacion === 'editar'"
+          [label]="'Evaluador'"
+          [required]="true"
+          [value]="textoEvaluadorBloqueado || 'Evaluador #' + formulario.evaluadorId">
+        </app-locked-field>
+
+      </app-form-row>
+
+      <!-- OBJETIVO -->
+      <app-form-input
+        [label]="'Objetivo de la evaluación'"
+        [placeholder]="'Ej: verificar la calidad del servicio prestado'"
+        [type]="'text'"
+        [(ngModel)]="formulario.objetivo"
+        (valueChange)="onFormularioChange()">
+      </app-form-input>
 
       <div class="grupo-formulario" style="margin-top: 15px;">
         <label class="etiqueta descripcion">Describa el propósito principal de esta evaluación</label>
       </div>
 
-      <div class="grupo-formulario" style="margin-top: 15px;">
-        <label class="etiqueta">Comentarios generales</label>
-        <textarea 
-          class="area-texto" 
-          [(ngModel)]="formulario.comentariosGenerales"
-          (ngModelChange)="onFormularioChange()"
-          placeholder="Observaciones generales sobre la evaluación..."></textarea>
-      </div>
+      <!-- COMENTARIOS GENERALES -->
+      <app-form-textarea
+        [label]="'Comentarios generales'"
+        [placeholder]="'Observaciones generales sobre la evaluación...'"
+        [rows]="4"
+        [(ngModel)]="formulario.comentariosGenerales"
+        (valueChange)="onFormularioChange()">
+      </app-form-textarea>
 
-      <div class="fila-puntuacion" style="margin-top: 20px;">
-        <div class="grupo-formulario grupo-puntuacion-centrado">
-          <label class="etiqueta">Score de calidad total (0-100)</label>
-          <div class="grupo-entrada-puntuacion">
-            <input 
-              type="text" 
-              class="entrada-texto entrada-puntuacion" 
-              [value]="formulario.scoreCalidad"
-              disabled 
-              readonly>
-            <span class="separador-puntuacion">/100</span>
-          </div>
-        </div>
+      <!-- FILA DE PUNTUACIÓN Y SEGUIMIENTO -->
+      <app-form-row [columns]="3" [gap]="'medium'" [alignItems]="'center'">
+        
+        <!-- SCORE -->
+        <app-score-display
+          [label]="'Score de calidad total'"
+          [score]="formulario.scoreCalidad"
+          [maxScore]="100"
+          [showMaxScore]="true"
+          [size]="'medium'"
+          [readonly]="true">
+        </app-score-display>
 
-        <div class="grupo-formulario grupo-interruptor">
-          <label class="etiqueta">¿Requiere seguimiento?</label>
-          <div class="contenedor-interruptor">
-            <div 
-              class="interruptor" 
-              [class.activo]="formulario.requiereSeguimiento"
-              (click)="alternarSeguimiento()">
-            </div>
-          </div>
-        </div>
+        <!-- TOGGLE SEGUIMIENTO -->
+        <app-form-toggle
+          [label]="'¿Requiere seguimiento?'"
+          [disabled]="false"
+          [(ngModel)]="formulario.requiereSeguimiento"
+          (toggle)="onFormularioChange()">
+        </app-form-toggle>
 
-        <div class="grupo-formulario grupo-puntuacion-centrado">
+        <!-- ESTATUS -->
+        <div class="grupo-formulario">
           <label class="etiqueta">Estatus del seguimiento</label>
           <span 
             class="estatus"
@@ -198,34 +173,35 @@
             {{ estatusSeguimiento }}
           </span>
         </div>
-      </div>
 
-      <div class="nota-info">
-        <span class="icono-info">i</span>
-        <span class="texto-nota">
-          La calificación total se generará automáticamente al completar las dos fases de la evaluación
-        </span>
-      </div>
+      </app-form-row>
 
-      <div class="nota-info nota-edicion" *ngIf="modoOperacion === 'editar'">
-       
-        <span class="texto-nota">
-          <strong>Modo Edición:</strong> Los campos con  (Orden, Ejecución y Evaluador) 
-          no se pueden modificar una vez creada la evaluación. Solo puede editar: Objetivo, 
-          Comentarios, Seguimiento y las fases ANTES/DESPUÉS.
-        </span>
-      </div>
+      <!-- ALERTAS INFORMATIVAS -->
+      <app-form-info-alert
+        type="info"
+        [message]="'La calificación total se generará automáticamente al completar las dos fases de la evaluación'"
+        [showIcon]="true">
+      </app-form-info-alert>
 
-      <div class="grupo-formulario" style="margin-top: 15px;">
-        <label class="etiqueta">Notas del seguimiento</label>
-        <textarea 
-          class="area-texto" 
-          [(ngModel)]="formulario.notasSeguimiento"
-          (ngModelChange)="onFormularioChange()"
-          placeholder="Acciones o puntos a dar seguimiento..."></textarea>
-      </div>
+      <app-form-info-alert
+        *ngIf="modoOperacion === 'editar'"
+        type="warning"
+        [showIcon]="true">
+        <strong>Modo Edición:</strong> Los campos con candado (Orden, Ejecución y Evaluador) 
+        no se pueden modificar una vez creada la evaluación. Solo puede editar: Objetivo, 
+        Comentarios, Seguimiento y las fases ANTES/DESPUÉS.
+      </app-form-info-alert>
 
-    </div>
+      <!-- NOTAS DEL SEGUIMIENTO -->
+      <app-form-textarea
+        [label]="'Notas del seguimiento'"
+        [placeholder]="'Acciones o puntos a dar seguimiento...'"
+        [rows]="4"
+        [(ngModel)]="formulario.notasSeguimiento"
+        (valueChange)="onFormularioChange()">
+      </app-form-textarea>
+
+    </app-form-section>
   </div>
 
   <!-- ===================== VISTA: FASE ANTES ===================== -->
