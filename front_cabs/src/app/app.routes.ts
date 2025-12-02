@@ -8,7 +8,7 @@ export const routes: Routes = [
     canActivate: [GuestGuard],
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },
-  
+
   // Rutas protegidas (requieren autenticación)
   {
     path: 'dashboard',
@@ -21,7 +21,7 @@ export const routes: Routes = [
     canActivate: [SecureAuthGuard],
     loadChildren: () => import('./modules/modulesShared/modulesShared.routes').then(m => m.modulesSharedRoutes)
   },
-  
+
   // Administración (solo admins)
   {
     path: 'administracion',
@@ -29,7 +29,7 @@ export const routes: Routes = [
     data: { permission: 'administracion.read' },
     loadChildren: () => import('./modules/administracion/administracion.routes').then(m => m.administracionRoutes)
   },
-  
+
   // Recepción (usuarios autenticados)
   {
     path: 'recepcion',
@@ -37,7 +37,7 @@ export const routes: Routes = [
     data: { permission: 'recepcion.read' },
     loadChildren: () => import('./modules/recepcion/recepcion.routes').then(m => m.recepcionRoutes)
   },
-  
+
   // Soporte (usuarios autenticados)
   {
     path: 'soporte',
@@ -51,20 +51,22 @@ export const routes: Routes = [
     data: { permission: 'administracion.read' }, // Usamos el mismo permiso que admin
     loadChildren: () => import('./modules/legacy/legacy.routes').then(m => m.legacyRoutes)
   },
-  
+
   // Viáticos (usuarios autenticados)
   {
     path: 'viaticos',
     canActivate: [SecureAuthGuard],
     loadComponent: () => import('./modules/modulesShared/pages/viaticos/viaticos.component').then(m => m.ViaticosComponent)
   },
-  
+
+
+
   // Páginas de error
   {
     path: 'unauthorized',
     loadComponent: () => import('./shared/components/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
   },
-  
+
   // Redirecciones
   { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/auth/login' }

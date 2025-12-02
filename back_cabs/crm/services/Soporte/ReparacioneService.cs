@@ -42,11 +42,6 @@ namespace back_cabs.CRM.services.Soporte
                 _logger.LogInformation("Iniciando creación de reparación para la orden ID: {OrdenId}", request.OrdenId);
 
                 // Validacion de Referencias: DELEGADO AL REPOSITORIO
-                var ordenExistente = await _reparacionRepository.OrdenExisteAsync(request.OrdenId);
-                if (!ordenExistente)
-                {
-                    throw new KeyNotFoundException($"No se encontró la orden de trabajo con ID: {request.OrdenId}");
-                }
                 var tecnicoExistente = await _reparacionRepository.TecnicoExisteAsync(request.TecnicoId);
                 if (!tecnicoExistente)
                 {
@@ -76,7 +71,9 @@ namespace back_cabs.CRM.services.Soporte
                     EntregadoEn = request.EntregadoEn,
                     TipoEntrega = TipoEntrega.RECOGE_CLIENTE.ToString().ToUpper(), // Valor inicial definido por el negocio
                     UbicacionAlmacenamiento = request.UbicacionAlmacenamiento,
-                    Notas = request.Notas
+                    Notas = request.Notas,
+                    NombreCliente = request.NombreCliente,
+                    Telefono = request.Telefono
                     // Los campos calculados (CostoTotalCompra, etc.) no se asignan aquí
                 };
 
@@ -250,7 +247,7 @@ namespace back_cabs.CRM.services.Soporte
 
                 if (componente == null)
                 {
-                     _logger.LogWarning("Componente de reparación no encontrado por ID {Id}", id);
+                    _logger.LogWarning("Componente de reparación no encontrado por ID {Id}", id);
                     // Lanzar excepción es más consistente con otros métodos si se espera que exista
                     throw new KeyNotFoundException($"Componente de reparación no encontrado por ID {id}");
                 }
@@ -262,6 +259,31 @@ namespace back_cabs.CRM.services.Soporte
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener el componente de reparación con ID: {Id}", id);
+                throw;
+            }
+        }
+        public async Task<List<ReparacionComponenteResponseDto>?> ObtenerComponentesporIdReparacionAsync(int repId)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando componentes para la reparacion: {Id}", repId);
+
+                var componentes = await _reparacionRepository.ObtenerComponentePorIdReparacionAsync(repId);
+
+                if (componentes == null)
+                {
+                    _logger.LogWarning("Componentes no encontrados por ID de reparacion {Id}", repId);
+                    // Lanzar excepción es más consistente con otros métodos si se espera que exista
+                    throw new KeyNotFoundException($"Componentes no encontrados por ID de reparacion {repId}");
+
+                }
+
+                return componentes.Select(MapearAResponseComponenteDto).ToList();
+            }
+            catch (KeyNotFoundException) { throw; } // Relanzar
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los componentes con ID de reparacion: {Id}", repId);
                 throw;
             }
         }
@@ -286,7 +308,7 @@ namespace back_cabs.CRM.services.Soporte
                 }
                 if (request.Cantidad <= 0)
                 {
-                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
+                    throw new ArgumentException("La cantidad debe ser mayor que cero.");
                 }
 
                 // Mapeo de DTO a Entidad
@@ -331,10 +353,10 @@ namespace back_cabs.CRM.services.Soporte
                     throw new KeyNotFoundException($"No se encontró el componente de reparación con ID: {id}");
                 }
 
-                 // Lógica de Negocio (Validación de entrada)
+                // Lógica de Negocio (Validación de entrada)
                 if (request.cantidad <= 0) // Asumiendo que 'cantidad' es el nombre en el DTO
                 {
-                     throw new ArgumentException("La cantidad debe ser mayor que cero.");
+                    throw new ArgumentException("La cantidad debe ser mayor que cero.");
                 }
 
                 // Actualizar los campos desde el DTO (Mapeo Parcial)
@@ -409,13 +431,15 @@ namespace back_cabs.CRM.services.Soporte
                 TipoEntrega = reparacion.TipoEntrega,
                 UbicacionAlmacenamiento = reparacion.UbicacionAlmacenamiento,
                 Notas = reparacion.Notas,
-                CostoTotalPublico = reparacion.CostoTotalPublico // Asume que la entidad lo tiene calculado
+                CostoTotalPublico = reparacion.CostoTotalPublico, // Asume que la entidad lo tiene calculado
+                NombreCliente = reparacion.NombreCliente,
+                Telefono = reparacion.Telefono
             };
         }
 
         private ReparacionComponenteResponseDto MapearAResponseComponenteDto(ReparacionComponente componente)
         {
-             if (componente == null) return null!; // Manejo de nulos
+            if (componente == null) return null!; // Manejo de nulos
             // Lógica para mapear de Entidad a DTO de Respuesta
             return new ReparacionComponenteResponseDto
             {

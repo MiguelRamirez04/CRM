@@ -1,0 +1,95 @@
+:host {
+  display: inline-block;
+
+
+}
+
+/* --- Estilo base --- */
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* 🔹 Centra icono y texto horizontalmente */
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 180px;
+  text-align: center; /* 🔹 Centra el texto dentro */
+}
+
+/* --- Iconos --- */
+.icono {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- Variantes --- */
+.etiqueta-completado {
+  background: var(--color-completado-bg);
+  color: var(--color-completado-text);
+}
+
+.etiqueta-atencion {
+  background: var(--color-atencion-bg);
+  color: var(--color-atencion-text);
+}
+
+
+
+
+
+.etiqueta-nuevo {
+  background: var(--color-nuevo-bg);
+  color: var(--color-nuevo-text);
+}
+
+.etiqueta-revision {
+  background: var(--color-revision-bg);
+  color: var(--color-revision-text);
+}
+
+.etiqueta-rechazado {
+  background: var(--color-rechazado-bg);
+  color: var(--color-rechazado-text);
+}
+
+.etiqueta-enviada {
+  background: var(--color-enviada-bg);
+  color: var(--color-enviada-text);
+}
+.etiqueta-venta-realizada {
+  background: var(--color-venta-realizada-bg);
+  color: var(--color-venta-realizada-text);
+}
+
+.etiqueta-aprobado {
+  background: var(--color-aprobado-bg);
+  color: var(--color-aprobado-text);
+}
+
+.etiqueta-neutral {
+  background: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+}
+
+
+
+
+/* --- Personalizado --- */
+.etiqueta-personalizado {
+  border: 1px dashed var(--color-personalizado-borde);
+  background: #fff;
+  color: #333;
+}
+
+.icono-personalizado svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- Ajuste de iconos en tablas u otros lugares --- */
+::ng-deep .etiqueta .icono-tabla {
+  width: 20px;
+  height: 20px;
+}

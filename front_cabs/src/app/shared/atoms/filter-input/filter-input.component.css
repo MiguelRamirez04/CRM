@@ -1,0 +1,23 @@
+.filter-input-wrapper {
+  position: relative;
+}
+
+.filter-input {
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-input.has-icon {
+  padding-left: 2.5rem;
+}
+
+.filter-input:focus {
+  outline: none;
+}
+
+.filter-input::placeholder {
+  color: #9CA3AF;
+}
+
+.input-icon {
+  z-index: 1;
+}

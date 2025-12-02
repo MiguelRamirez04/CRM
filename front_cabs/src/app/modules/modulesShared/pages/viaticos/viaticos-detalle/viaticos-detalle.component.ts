@@ -3,19 +3,37 @@ import { CommonModule } from '@angular/common';
 import { GastoViaticoService } from '../../../../../core/services/gasto-viatico.service';
 import { GastoViaticoResponse } from '../../../../../core/models/gasto-viatico.interface';
 
+import { SidePanelComponent } from '../../../../../shared/organisms/side-panel/side-panel.component';
+import { DetailSectionComponent } from '../../../../../shared/molecules/detail-section/detail-section.component';
+import { LoadingSpinnerComponent } from '../../../../../shared/atoms/loading-spinner/loading-spinner.component';
+import { AlertComponent } from '../../../../../shared/molecules/alert/alert.component';
+import { BadgeComponent } from '../../../../../shared/atoms/bage/badge.component';
+import { UiBotonComponent } from '../../../../../shared/atoms/boton/boton.component';
+import { UiIconComponent } from '../../../../../shared/atoms/icono/icono.component';
+import { UitipografiaComponent } from '../../../../../shared/atoms/tipografia/tipografia.component';
+
 @Component({
   selector: 'app-viaticos-detalle',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './viaticos-detalle.component.html',
-  styleUrl: './viaticos-detalle.component.css'
+  imports: [
+    CommonModule,
+    SidePanelComponent,
+    DetailSectionComponent,
+    LoadingSpinnerComponent,
+    AlertComponent,
+    BadgeComponent,
+    UiBotonComponent,
+    UiIconComponent,
+    UitipografiaComponent
+  ],
+  templateUrl: './viaticos-detalle.component.html'
 })
 export class ViaticosDetalleComponent implements OnChanges {
   private viaticoService = inject(GastoViaticoService);
 
   @Input() viaticoId: number | null = null;
   @Input() mostrar = false;
-  @Output() cerrar = new EventEmitter<void>();
+  @Output() cerrar = new EventEmitter();
 
   viatico: GastoViaticoResponse | null = null;
   cargando = false;
@@ -54,5 +72,9 @@ export class ViaticosDetalleComponent implements OnChanges {
 
   get tituloDialog(): string {
     return this.viatico ? `Viático #${this.viatico.id}` : 'Detalles del Viático';
+  }
+
+  reintentar(): void {
+    this.cargarDetalle();
   }
 }

@@ -228,9 +228,14 @@ namespace back_cabs.CRM.models.Soporte
         [Column("notas", TypeName = "NVARCHAR(MAX)")] // Changed to NVARCHAR(MAX)
         public string? Notas { get; set; }
 
+        [Column("nombre_cliente")]
+        public string? NombreCliente {get; set;}
+
+        [Column("telefono")]
+        public long Telefono {get; set;}
         /// <summary>
         /// Colección de fotos asociadas a esta reparación.
         /// </summary>
-        public virtual ICollection<ReparacionFoto> Fotos { get; set; }
-    }
+        public virtual ICollection<ReparacionFoto> Fotos { get; set; }
+    }
 }

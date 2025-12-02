@@ -1,19 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { EvaluacionEditService } from '../../../../../core/services/evaluacion-edit.service';
+import { EvaluacionService } from '../../../../../core/services/evaluaciones.service';
 import { SharedEvaluacionService } from '../../../../../core/services/shared-evaluacion.service';
-import { EvaluacionService } from '../../../../../core/services/evaluaciones-registro.service';
+import {
+  mapResponseToFormulario,
+  mapDetalleResponseToDatos
+} from '../../../../../core/models/evaluaciones.interface';
 
 /**
- * Componente intermediario que carga la evaluación y redirige al formulario de edición
+ * Componente intermediario que carga la evaluación y redirige al formulario
  * 
  * Flujo:
  * 1. Usuario navega a /evaluaciones/editar/:id
- * 2. Este componente carga los datos de la BD
- * 3. Guarda los datos en SharedEvaluacionService
- * 4. Redirige a /evaluaciones/registro (mismo formulario que para crear)
- * 5. El formulario detecta que ya hay datos y trabaja en modo EDICIÓN
+ * 2. Carga datos completos de la BD
+ * 3. Guarda en SharedService
+ * 4. Redirige a /evaluaciones/registro (mismo formulario)
+ * 5. El formulario detecta que hay datos y trabaja en modo EDICIÓN
  */
 @Component({
   selector: 'app-editar-evaluacion',
@@ -95,13 +98,12 @@ export class EditarEvaluacionComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private editService: EvaluacionEditService,
-    private sharedService: SharedEvaluacionService,
-    private evaluacionService: EvaluacionService
+    private evaluacionService: EvaluacionService,
+    private sharedService: SharedEvaluacionService
   ) {}
 
   async ngOnInit() {
-    // 1. Obtener ID de la ruta
+    // Obtener ID de la ruta
     const idParam = this.route.snapshot.paramMap.get('id');
     
     if (!idParam) {
@@ -116,7 +118,7 @@ export class EditarEvaluacionComponent implements OnInit {
       return;
     }
 
-    // 2. Cargar datos de la evaluación
+    // Cargar datos
     await this.cargarEvaluacion(this.evaluacionId);
   }
 
@@ -125,55 +127,53 @@ export class EditarEvaluacionComponent implements OnInit {
    */
   private async cargarEvaluacion(id: number) {
     try {
-      console.log('🔄 Cargando evaluación ID:', id);
+      console.log('Cargando evaluación ID:', id);
 
-      // Cargar evaluación completa con fotos
-      const evaluacionCompleta = await this.editService.cargarEvaluacionConFotos(id);
+      // Usar el método del servicio único
+      this.evaluacionService.cargarEvaluacionCompleta(id).subscribe({
+        next: (data) => {
+          console.log('Evaluación cargada:', data);
 
-      console.log('✅ Evaluación cargada:', evaluacionCompleta);
+          // Mapear a formato del formulario
+          const infoGeneral = mapResponseToFormulario(data.evaluacion);
 
-      // Mapear a formato del formulario
-      const infoGeneral = this.editService.mapearAFormularioInfoGeneral(evaluacionCompleta.evaluacion);
+          // Preparar datos de fase ANTES
+          const datosAntes = data.detalleAntes 
+            ? mapDetalleResponseToDatos(data.detalleAntes, data.fotosAntes)
+            : undefined;
 
-      // Preparar datos de fase ANTES
-      let datosAntes = undefined;
-      if (evaluacionCompleta.detalleAntes) {
-        datosAntes = this.editService.mapearADatosFase(
-          evaluacionCompleta.detalleAntes,
-          evaluacionCompleta.fotosAntes
-        );
-      }
+          // Preparar datos de fase DESPUÉS
+          const datosDespues = data.detalleDespues
+            ? mapDetalleResponseToDatos(data.detalleDespues, data.fotosDespues)
+            : undefined;
 
-      // Preparar datos de fase DESPUÉS
-      let datosDespues = undefined;
-      if (evaluacionCompleta.detalleDespues) {
-        datosDespues = this.editService.mapearADatosFase(
-          evaluacionCompleta.detalleDespues,
-          evaluacionCompleta.fotosDespues
-        );
-      }
+          // Guardar en el servicio compartido
+          this.sharedService.cargarEvaluacion(
+            id,
+            infoGeneral,
+            datosAntes,
+            datosDespues
+          );
 
-      // 3. Guardar en el servicio compartido
-      this.sharedService.cargarEvaluacion(
-        id,
-        infoGeneral,
-        datosAntes,
-        datosDespues
-      );
+          console.log('Datos cargados en SharedService');
 
-      console.log('✅ Datos cargados en SharedService');
-
-      // 4. Redirigir al formulario de registro (que ahora trabajará en modo EDICIÓN)
-      this.cargando = false;
-      
-      // Pequeña pausa para que el usuario vea que se cargó
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      this.router.navigate(['/dashboard/evaluaciones/registro']);
+          // Redirigir al formulario
+          this.cargando = false;
+          
+          // Pequeña pausa visual
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/evaluaciones/registro']);
+          }, 500);
+        },
+        error: (error) => {
+          console.error('Error al cargar evaluación:', error);
+          this.mostrarError('No se pudo cargar la evaluación');
+        }
+      });
 
     } catch (error) {
-      console.error('❌ Error al cargar evaluación:', error);
-      this.mostrarError('No se pudo cargar la evaluación. Por favor intente nuevamente.');
+      console.error('Error al cargar evaluación:', error);
+      this.mostrarError('No se pudo cargar la evaluación');
     }
   }
 

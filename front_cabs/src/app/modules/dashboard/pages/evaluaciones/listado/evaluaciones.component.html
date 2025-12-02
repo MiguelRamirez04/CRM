@@ -1,0 +1,207 @@
+<div class="contenedor-principal">
+  <!-- Header Reutilizable -->
+  <app-ui-header titulo="Evaluaciones" descripcion="Gestiona y consulta todas las evaluaciones realizadas"
+    [visualizarDescripcion]="true" [visualizarButton]="false">
+    <app-buscador-filtro [configuracion]="{
+      placeholderBusqueda: 'Buscar por ID o evaluador',
+      mostrarBotonFiltro: true,
+      mostrarBotonNuevo: true,
+      textoBotonNuevo: 'Nueva evaluación',
+      tiempoEsperaBusqueda: 400
+    }" [valorBusqueda]="searchTerm" (cambioBusqueda)="onSearchTermChange($event)" (clicFiltro)="onFilter()"
+      (clicNuevo)="onNuevaEvaluacion()"></app-buscador-filtro>
+  </app-ui-header>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="mensaje-error">
+    {{ error }}
+  </div>
+
+  <!-- Tabla reutilizable -->
+  <app-tabla-listado [datos]="evaluaciones" [columnas]="columnas" [acciones]="acciones" [cargando]="cargando"
+    [mensajeSinDatos]="'No se encontraron evaluaciones'" [mensajeCargando]="'Cargando evaluaciones...'"
+    (filaClick)="alClickFila($event)" (filaDobleClick)="alDobleClickFila($event)"></app-tabla-listado>
+
+  <!-- Paginación -->
+  <app-paginacion *ngIf="!cargando && evaluaciones.length > 0" [totalElementos]="evaluacionesFiltradas.length"
+    [paginaActual]="paginaActual" [configuracion]="{
+      elementosPorPagina: elementosPorPagina,
+      paginasVisiblesMaximas: 6,
+      textoAnterior: 'Atrás',
+      textoSiguiente: 'Siguiente',
+      textoMostrandoRegistros: 'Visualizando',
+      textoDeRegistros: 'de',
+      mostrarInfoRegistros: true,
+      mostrarBotonesPagina: true
+    }" (cambioPagina)="alCambiarPagina($event)" (cambioRangoPagina)="alCambiarRangoPagina($event)"></app-paginacion>
+</div>
+
+<!-- ========================================================================== -->
+<!-- PANEL DE FILTROS ATOMIC DESIGN (REEMPLAZA AL MODAL ANTIGUO) -->
+<!-- ========================================================================== -->
+<app-filter-panel
+  [visible]="mostrarModalFiltros"
+  [configuracion]="configuracionFiltros"
+  [filtrosAplicados]="filtrosAplicados"
+  (cerrar)="onCerrarFiltros()"
+  (aplicarFiltros)="onAplicarFiltros($event)"
+  (limpiarFiltros)="onLimpiarFiltros()">
+</app-filter-panel>
+
+<!-- Panel de Detalles Lateral -->
+<app-verdetalles *ngIf="mostrarPanelDetalles" [evaluacionId]="evaluacionIdSeleccionada"
+  [mostrarPanel]="mostrarPanelDetalles" (cerrar)="onCerrarDetalles()"></app-verdetalles>
+
+<!-- ========================================================================== -->
+<!-- MODAL CON FOOTER - TABS Y BOTONES USANDO UI-BOTON -->
+<!-- ========================================================================== -->
+<div *ngIf="mostrarModalRegistro" class="modal-overlay">
+  <div class="modal-contenedor" (click)="$event.stopPropagation()">
+    
+    <!-- HEADER DEL MODAL -->
+    <div class="modal-header">
+      <h2 class="modal-titulo">{{ tituloModal }}</h2>
+      <button class="modal-cerrar" (click)="confirmarCerrarModal()" aria-label="Cerrar modal">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="icono-cerrar">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <!-- CUERPO DEL MODAL (scrolleable) -->
+    <div class="modal-cuerpo">
+      <app-infogeneral 
+        (cerrarModal)="onCerrarModalRegistro()"
+        (evaluacionGuardada)="onEvaluacionGuardada($event)">
+      </app-infogeneral>
+    </div>
+    
+    <!-- ========================================================================== -->
+    <!-- FOOTER DEL MODAL - TABS Y BOTONES CON UI-BOTON -->
+    <!-- ========================================================================== -->
+    <div class="modal-footer">
+      <div class="footer-contenido">
+        
+        <!-- ============================================ -->
+        <!-- TABS DE NAVEGACIÓN USANDO UI-BOTON CON COLORES PERSONALIZADOS -->
+        <!-- ============================================ -->
+        <div class="tabs-footer">
+          
+          <!-- TAB: Info General -->
+          <app-ui-boton
+            [variante]="vistaActualModal === 'infoGeneral' ? 'primario' : 'terciario'"
+            [texto]="'Info General' + (vistaActualModal === 'infoGeneral' ? ' • ' + badgeEstadoModal.texto : '')"
+            [anchoCompleto]="false"
+            [mostrarIcono]="true"
+            [iconoPersonalizado]="iconoInfo"
+            [clasesAdicionales]="'tab-boton-ui'"
+            (alClickear)="cambiarVistaModal('infoGeneral')">
+          </app-ui-boton>
+
+          <!-- TAB: Fase ANTES con colores según estado -->
+          <app-ui-boton
+            [variante]="vistaActualModal === 'faseAntes' ? 'azul-2' : 'terciario'"
+            [texto]="'Fase ANTES'"
+            [anchoCompleto]="false"
+            [mostrarIcono]="true"
+            [iconoPersonalizado]="estadoFaseAntes === 'completada' ? iconoCheck : estadoFaseAntes === 'sin-completar' ? iconoEditar : iconoCerrar"
+            [colorBorde]="obtenerColorBordeFase(estadoFaseAntes, vistaActualModal === 'faseAntes')"
+            [colorTexto]="obtenerColorTextoFase(estadoFaseAntes, vistaActualModal === 'faseAntes')"
+            [colorIcono]="obtenerColorIconoFase(estadoFaseAntes)"
+            [colorFondo]="obtenerColorFondoFase(estadoFaseAntes, vistaActualModal === 'faseAntes')"
+            [anchoBorde]="'2px'"
+            [clasesAdicionales]="'tab-boton-ui'"
+            (alClickear)="cambiarVistaModal('faseAntes')">
+          </app-ui-boton>
+
+          <!-- TAB: Fase DESPUÉS con colores según estado -->
+          <app-ui-boton
+            [variante]="vistaActualModal === 'faseDespues' ? 'azul-2' : 'terciario'"
+            [texto]="'Fase DESPUÉS'"
+            [anchoCompleto]="false"
+            [mostrarIcono]="true"
+            [iconoPersonalizado]="estadoFaseDespues === 'completada' ? iconoCheck : estadoFaseDespues === 'sin-completar' ? iconoEditar : iconoCerrar"
+            [colorBorde]="obtenerColorBordeFase(estadoFaseDespues, vistaActualModal === 'faseDespues')"
+            [colorTexto]="obtenerColorTextoFase(estadoFaseDespues, vistaActualModal === 'faseDespues')"
+            [colorIcono]="obtenerColorIconoFase(estadoFaseDespues)"
+            [colorFondo]="obtenerColorFondoFase(estadoFaseDespues, vistaActualModal === 'faseDespues')"
+            [anchoBorde]="'2px'"
+            [clasesAdicionales]="'tab-boton-ui'"
+            (alClickear)="cambiarVistaModal('faseDespues')">
+          </app-ui-boton>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- BOTONES DE ACCIÓN USANDO UI-BOTON -->
+        <!-- ============================================ -->
+        <div class="acciones-footer">
+          
+          <!-- Botón Cerrar -->
+          <app-ui-boton
+            variante="cancelar"
+            texto="Cerrar"
+            [anchoCompleto]="false"
+            [mostrarIcono]="false"
+            [estaDeshabilitado]="guardandoModal"
+            [clasesAdicionales]="'boton-accion-footer'"
+            (alClickear)="confirmarCerrarModal()">
+          </app-ui-boton>
+
+          <!-- Botón Guardar -->
+          <app-ui-boton
+            variante="guardar"
+            texto="Guardar Evaluación"
+            [anchoCompleto]="false"
+            [mostrarIcono]="false"
+            [estaCargando]="guardandoModal"
+            [textoAlCargar]="'Guardando...'"
+            [clasesAdicionales]="'boton-accion-footer'"
+            (alClickear)="guardarEvaluacionDesdeModal()">
+          </app-ui-boton>
+        </div>
+
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Templates -->
+<ng-template #plantillaObjetivo let-evaluacion="item">
+  <div class="objetivo-cell" [title]="evaluacion.objetivo || 'Sin objetivo'">
+    {{ obtenerObjetivoAbreviado(evaluacion.objetivo, 50) }}
+  </div>
+</ng-template>
+
+<ng-template #plantillaScore let-evaluacion="item">
+  <span class="badge-score" [ngClass]="obtenerClaseScore(evaluacion.scoreCalidadTotal)">
+    {{ evaluacion.scoreCalidadTotal || 0 }}
+  </span>
+</ng-template>
+
+<ng-template #plantillaFecha let-evaluacion="item">
+  <div class="fecha-cell">
+    {{ formatearFecha(evaluacion.creadoEn) }}
+  </div>
+</ng-template>
+
+<ng-template #plantillaSeguimiento let-evaluacion="item">
+  <app-status-dot 
+    [texto]="obtenerTextoSeguimiento(evaluacion.requiereSeguimiento)"
+    [tipo]="evaluacion.requiereSeguimiento ? 'atencion' : 'completado'">
+  </app-status-dot>
+</ng-template>
+
+<ng-template #iconoExito>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+</ng-template>
+
+<ng-template #iconoAlerta>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+  </svg>
+</ng-template>

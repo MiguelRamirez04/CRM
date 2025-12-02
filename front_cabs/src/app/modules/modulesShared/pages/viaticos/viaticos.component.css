@@ -1,1 +1,93 @@
-ÿþ
+:host {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+
+}
+
+:host-context(:root) {
+  --radio-borde: 4px;
+  --espaciado-pequeno: 8px;
+  --espaciado-mediano: 16px;
+  --espaciado-grande: 24px;
+
+}
+
+.contenedor-principal {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.titulo-principal {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: var(--espaciado-mediano);
+}
+
+
+/*
+<!-- ===================================================================================== -->
+<!-- ESTILOS CSS PARA LOS TEMPLATES -->
+<!-- ===================================================================================== -->
+<!-- Agregar a evaluaciones.component.css -->
+
+/* Badge Score */
+.badge-score {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+/* Badge Seguimiento */
+.badge-seguimiento {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.icono-badge {
+  width: 16px;
+  height: 16px;
+}
+
+/* Iconos de acciones */
+.icono-accion {
+  width: 18px;
+  height: 18px;
+}
+
+/* Clases de color para scores */
+.bg-green-500 {
+  background-color: #22C55E;
+  color: white;
+}
+
+.bg-blue-500 {
+  background-color: #0092B8;
+  color: white;
+}
+
+.bg-yellow-500 {
+  background-color: #ffc20c;
+  color: #ffffff;
+}
+
+.bg-red-500 {
+  background-color: #EF4444;
+  color: white;
+}
+
+.bg-gray-300 {
+  background-color: #D1D5DB;
+  color: #374151;
+}
+

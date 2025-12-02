@@ -30,6 +30,12 @@ namespace back_cabs.CRM.Interfaces.Soporte
         Task<Reparacion?> ObtenerReparacionPorIdAsync(int id);
 
         /// <summary>
+        /// Obtiene los componentes específicos por ID de reparacion SIN TRACKING (solo lectura).
+        /// </summary>
+        Task<IEnumerable<ReparacionComponente>> ObtenerComponentePorIdReparacionAsync(int repID);
+
+
+        /// <summary>
         /// Persiste una nueva entidad Reparacion.
         /// </summary>
         /// <returns>La entidad Reparacion creada (con su ID).</returns>

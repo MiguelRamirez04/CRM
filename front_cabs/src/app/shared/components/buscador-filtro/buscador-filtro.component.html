@@ -1,7 +1,7 @@
 <div class="barra-herramientas">
-  <!--Caja de búsqueda -->
+  <!-- Caja de búsqueda -->
   <div class="caja-busqueda">
-    <input 
+    <input
       type="text"
       [placeholder]="configuracion.placeholderBusqueda || 'Buscar...'"
       [(ngModel)]="valorBusqueda"
@@ -14,10 +14,10 @@
     </svg>
   </div>
 
-  <!--Botón de filtro -->
-  <button 
+  <!-- Botón de filtro -->
+  <button
     *ngIf="configuracion.mostrarBotonFiltro"
-    class="boton-filtro"
+    class="boton-filtro "
     (click)="alClicFiltro()">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
          stroke-width="1.5" stroke="currentColor" class="icono-filtro">
@@ -26,4 +26,9 @@
     </svg>
     Filtro
   </button>
+
+  <!-- Botón de nuevo usando el componente atómico -->
+  <div *ngIf="configuracion.mostrarBotonNuevo" class="contenedor-boton-nuevo">
+
+  </div>
 </div>

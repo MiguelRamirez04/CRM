@@ -1,0 +1,59 @@
+<span class="etiqueta" [ngClass]="'etiqueta-' + tipo" [ngStyle]="
+    tipo === 'personalizado'
+      ? { 'background-color': colorFondo, color: colorTexto }
+      : {}
+  ">
+  <ng-container [ngSwitch]="tipo">
+    <!-- Completado -->
+    <ng-container *ngSwitchCase="'completado'">
+      <app-ui-icono *ngIf="mostrarIcono" name="check-circle-outline" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Atención -->
+    <ng-container *ngSwitchCase="'atencion'">
+      <app-ui-icono *ngIf="mostrarIcono" name="exclamation-triangle" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Nuevo -->
+    <ng-container *ngSwitchCase="'nuevo'">
+      <app-ui-icono *ngIf="mostrarIcono" name="sparkles" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Revisión -->
+    <ng-container *ngSwitchCase="'revision'">
+      <app-ui-icono *ngIf="mostrarIcono" name="magnifying-glass" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Rechazado -->
+    <ng-container *ngSwitchCase="'rechazado'">
+      <app-ui-icono *ngIf="mostrarIcono" name="x-mark" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Enviada -->
+    <ng-container *ngSwitchCase="'enviada'">
+      <app-ui-icono *ngIf="mostrarIcono" name="paper-airplane" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Aprobado -->
+    <ng-container *ngSwitchCase="'aprobado'">
+      <app-ui-icono *ngIf="mostrarIcono" name="check" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Venta realizada -->
+    <ng-container *ngSwitchCase="'venta-realizada'">
+      <app-ui-icono *ngIf="mostrarIcono" name="banknotes" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Neutral -->
+    <ng-container *ngSwitchCase="'neutral'">
+      <app-ui-icono *ngIf="mostrarIcono" name="minus" size="h-4 w-4" color="currentColor"></app-ui-icono>
+    </ng-container>
+
+    <!-- Personalizado -->
+    <ng-container *ngSwitchCase="'personalizado'">
+      <span *ngIf="mostrarIcono" class="icono-personalizado" [innerHTML]="svgSeguro"></span>
+    </ng-container>
+  </ng-container>
+
+  {{ texto }}
+</span>

@@ -14,9 +14,14 @@ export class SecureAuthInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Asegurar que todas las requests incluyan credentials para cookies HttpOnly
     const headers: any = {
-      'Content-Type': 'application/json',
       'X-Requested-With': 'XMLHttpRequest' // CSRF protection
     };
+
+    // 🔥 CRÍTICO: SOLO agregar Content-Type si NO es FormData
+    // Angular maneja automáticamente el Content-Type con boundary para FormData
+    if (!(req.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Para métodos que modifican datos, incluir el token CSRF desde el servicio
     if (this.requiresCsrfToken(req.method)) {
@@ -30,6 +35,7 @@ export class SecureAuthInterceptor implements HttpInterceptor {
       }
     }
 
+
     let secureReq = req.clone({
       setHeaders: headers,
       withCredentials: true // CRÍTICO: para cookies HttpOnly
@@ -37,6 +43,15 @@ export class SecureAuthInterceptor implements HttpInterceptor {
 
     return next.handle(secureReq).pipe(
       catchError((error: HttpErrorResponse) => {
+        // Error 415: Unsupported Media Type
+        if (error.status === 415) {
+          console.error('❌ Error 415 - Unsupported Media Type');
+          console.error('URL:', req.url);
+          console.error('Método:', req.method);
+          console.error('Body type:', req.body?.constructor.name);
+          console.error('Verifica que el servidor acepte el Content-Type enviado');
+        }
+
         // Si es error 401 y no es login/refresh, intentar refresh automático
         if (error.status === 401 && !this.isAuthRoute(req.url)) {
           return this.handle401Error(secureReq, next);

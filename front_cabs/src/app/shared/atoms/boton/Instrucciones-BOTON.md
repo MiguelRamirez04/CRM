@@ -1,25 +1,24 @@
 # Componente UI-Boton
 
-Componente reutilizable de botón con soporte para múltiples variantes, iconos personalizados, estados de carga y ancho completo.
+Componente reutilizable de botón  con soporte para múltiples variantes, iconos personalizados y estados de carga.
 
----
-
-## Instalación
+# Instalación
 
 ```typescript
+
 import { UiBotonComponent } from './ruta/atomic/boton/boton.component';
 
 @Component({
   selector: 'app-mi-componente',
   standalone: true,
   imports: [UiBotonComponent],
+  // ...
 })
-export class MiComponente {}
-
 ```
 
 
-# Propiedades(Inputs)
+
+# Propiedades (Inputs)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Propiedad           | Tipo      | Valores                                        |  POR Defecto | Descripción                                          |
 |---------------------|-----------|------------------------------------------------|--------------|------------------------------------------------------|
@@ -29,7 +28,7 @@ export class MiComponente {}
 | `estaCargando`      | `boolean` | `true` \| `false`                              | `false`      | muestra icono cargando y deshabilita el botón        |
 | `estaDeshabilitado` | `boolean` | `true` \| `false`                              | `false`      | deshabilita el botón manualmente                     |
 | `anchoCompleto`     | `boolean` | `true` \| `false`                              | `true`       | si es `true`, el botón ocupa el 100% del ancho       |
-| `mostrarIcono`      | `boolean` | `true` \| `false`                              | `false`      | Muestra un icono predeterminado o personalizado      |
+| `mostrarIcono`      | `boolean` | `true` \| `false`                              | `false`      | muestra un icono (predeterminado o personalizado)    |
 | `iconoPersonalizado`| `string`  | SVG como string                                | `undefined`  | SVG personalizado para mostrar                       |
 | `textoAlCargar`     | `string`  | Cualquier texto                                | `undefined`  | texto alternativo mientras carga                     |
 | `clasesAdicionales` | `string`  | Clases Tailwind                                | `undefined`  | clases CSS adicionales                               |
@@ -42,7 +41,8 @@ export class MiComponente {}
 | `alClickear` | `EventEmitter<Event>` | Se emite cuando se hace clic en el botón |
 -----------------------------------------------------------------------------------
 
-## Variantes Disponibles
+## -> Variantes Disponibles
+
 ### 1 --Primario-- (Azul degradado)
 - **Uso:** Acciones principales (guardar, enviar, confirmar)
 - **Colores:** Degradado azul (`bg-gradient-to-r from-blue-600 to-blue-800`)
@@ -54,8 +54,6 @@ export class MiComponente {}
   texto="Guardar">
 </app-ui-boton>
 ```
-
-
 
 ### 2 --Secundario-- (Cyan vibrante)
 - **Uso:** Acciones secundarias importantes
@@ -107,10 +105,13 @@ export class MiComponente {}
 ```typescript
 // En tu componente
 guardando = false;
-  guardar() {
-    this.guardando = true;
-    setTimeout(() => this.guardando = false, 2000);
-  }
+
+guardar() {
+  this.guardando = true;
+  setTimeout(() => {
+    this.guardando = false;
+  }, 2000);
+}
 ```
 
 ###  Botón Deshabilitado
@@ -140,23 +141,11 @@ guardando = false;
 </app-ui-boton>
 ```
 
-###  Botón con Icono predeterminado
-
-```html
-<app-ui-boton
-  texto="Acción Rápida"
-  [mostrarIcono]="true"
-  (alClickear)="accion()">
-</app-ui-boton>
-```
-
-###  Botón con icono personalizado
-
+###  Botón con Icono Personalizado
 ```typescript
-iconoBuscar = `
-<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+// En tu componente .ts
+iconoBuscar = `<svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
 </svg>`;
 ```
 
@@ -185,6 +174,8 @@ iconoBuscar = `
 ###  Botón de Submit en Formulario
 ```html
 <form [formGroup]="miFormulario" (ngSubmit)="enviar()">
+  <!-- Campos del formulario -->
+  
   <app-ui-boton
     variante="primario"
     tipo="submit"
@@ -205,7 +196,7 @@ iconoBuscar = `
     [anchoCompleto]="false"
     (alClickear)="confirmar()">
   </app-ui-boton>
-
+  
   <app-ui-boton
     variante="terciario"
     texto="Cancelar"
@@ -221,3 +212,6 @@ iconoBuscar = `
 ## Notas de Seguridad
 
 El componente usa `DomSanitizer` para permitir SVGs personalizados de forma segura. Esto permite usar a `iconoPersonalizado`.
+
+---
+
