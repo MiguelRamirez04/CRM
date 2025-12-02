@@ -97,7 +97,7 @@
     --color-text-enlace: #1447E6;
     --color-text-primario: #FFFFFF;
 
- /* COLORES molecula de TABLA BASE*/
+/* COLORES molecula de TABLA BASE*/
     --color-primario: #34428F;
     --elemento-seleccionado: #1D4ED8;
     --fondo-principal: #FAFAFA;
@@ -109,11 +109,11 @@
     
 
   /* COLORES etiquetas de ESTATUS*/
-    --color-sin-seguimiento-bg: #BBF7D0;
-    --color-sin-seguimiento-text: #166534;
+    --color-completado-bg: #BBF7D0;
+    --color-completado-text: #166534;
 
-    --color-requiere-seguimiento-bg: #FED7AA;
-    --color-requiere-seguimiento-text: #9A3412;
+    --color-atencion-bg: #FED7AA;
+    --color-atencion-text: #9A3412;
 
     --color-nuevo-bg: #BAE6FD;
     --color-nuevo-text: #075985;
@@ -132,6 +132,9 @@
 
     --color-venta-realizada-bg: #BBF7D0;
     --color-venta-realizada-text: #166534;
+
+    --color-neutral-bg: #E5E5E5;
+    --color-neutral-text: #0F172A;
 
     --color-sin-bg: #f3f4f6;
     --color-sin-text: #4b5563;
@@ -176,6 +179,12 @@ html, body {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: #6b7280;
+}
+/* estilos para componetes que usan TABLA-LISTADO */
+.contenedor-principal {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 15px 40px; 
 }
 
 /* Loading States */
@@ -342,3 +351,4 @@ html, body {
 .mat-mdc-snack-bar-container .mdc-snackbar__action:hover {
   color: white !important;
 }
+

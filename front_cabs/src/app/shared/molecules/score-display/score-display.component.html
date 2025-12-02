@@ -1,0 +1,24 @@
+<div class="score-display" [class]="'size-' + size">
+  <label class="score-label">{{ label }}</label>
+  
+  <div class="score-container">
+    <input
+      type="text"
+      class="score-input"
+      [class]="'color-' + scoreColor"
+      [value]="score"
+      [readonly]="readonly"
+      disabled
+    />
+    
+    <div class="score-bar">
+      <div 
+        class="score-fill" 
+        [class]="'fill-' + scoreColor"
+        [style.width.%]="scorePercentage"
+      ></div>
+    </div>
+    
+    <span *ngIf="showMaxScore" class="score-max">/ {{ maxScore }}</span>
+  </div>
+</div>

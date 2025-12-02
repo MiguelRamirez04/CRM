@@ -48,6 +48,9 @@ namespace back_cabs.CRM.DTOs.Soporte
         // OPCIONAL: Nombres para facilitar la lectura al cliente
         public string NombreTecnico { get; set; } = string.Empty;
         public string FolioOrden { get; set; } = string.Empty;
+
+        public string? NombreCliente { get; set; }
+        public long Telefono { get; set; }
     }
 
     // =====================================================================================

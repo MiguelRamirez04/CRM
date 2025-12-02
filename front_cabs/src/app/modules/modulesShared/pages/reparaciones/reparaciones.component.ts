@@ -1,22 +1,44 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject,Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ReparacionService } from '../../../../core/services/reparacion.service';
 import { Reparacion, ReparacionDto } from '../../../../core/models/reparacion.interface';
 import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
+import { BuscadorFiltroComponent } from "../../../../shared/components/buscador-filtro/buscador-filtro.component";
 
 @Component({
   selector: 'app-reparaciones',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, UiHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, UiHeaderComponent, BuscadorFiltroComponent],
   templateUrl: './reparaciones.component.html',
   styleUrls: ['./reparaciones.component.css']
 })
 export class ReparacionesComponent implements OnInit {
+onButtonPressed() {
+throw new Error('Method not implemented.');
+}
+buttonLabel: any;
+visualizarButton: any;
+abrirModalFiltros() {
+throw new Error('Method not implemented.');
+
+}
+
+onBuscar: any;
+onFilter() {
+throw new Error('Method not implemented.');
+}
+onSearchTermChange // Inicializa el formulario
+($event: string) {
+throw new Error('Method not implemented.');
+}
+onNuevaEvaluacion() {
+throw new Error('Method not implemented.');
+}
   private readonly reparacionService = inject(ReparacionService);
   private fb = inject(FormBuilder);
-  private router = inject(Router); 
+  private router = inject(Router);
 
   // Signals para estado reactivo
   reparaciones = signal<Reparacion[]>([]);
@@ -33,12 +55,13 @@ export class ReparacionesComponent implements OnInit {
 
   // Formulario Reactivo
   formularioReparacion: FormGroup;
+searchTerm: string | undefined;
 
   constructor() {
     // Inicializa el formulario
     this.formularioReparacion = this.fb.group({
-      ordenId: [8, [Validators.required]], 
-      tecnicoId: [4], 
+      ordenId: [8, [Validators.required]],
+      tecnicoId: [4],
       dispositivoTipo: ['', [Validators.required]],
       marca: ['', [Validators.required]],
       modelo: ['', [Validators.required]],
@@ -49,14 +72,14 @@ export class ReparacionesComponent implements OnInit {
       resultado: [''],
       causaIrreparable: [''],
       respaldoDatosAutorizado: [false],
-      garantiaDias: [30], 
-      tipoEntrega: ['RECOGE_CLIENTE', [Validators.required]], 
+      garantiaDias: [30],
+      tipoEntrega: ['RECOGE_CLIENTE', [Validators.required]],
       ubicacionAlmacenamiento: [''],
       notas: [''],
       costoManoObra: [0],
       costoRefaccionesCompra: [0],
       costoRefaccionesPublico: [0],
-      costoTotalPublico: [0] 
+      costoTotalPublico: [0]
     });
   }
 
@@ -68,7 +91,7 @@ export class ReparacionesComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
     const filtros: { [key: string]: string } = {};
-    
+
     if (this.filtroTermino()) {
       filtros['termino'] = this.filtroTermino();
     }
@@ -90,15 +113,15 @@ export class ReparacionesComponent implements OnInit {
 
   abrirModalCrear(): void {
     this.formularioReparacion.reset({
-      ordenId: 8, 
-      tecnicoId: 4, 
+      ordenId: 8,
+      tecnicoId: 4,
       dispositivoTipo: '',
       marca: '',
       modelo: '',
       respaldoDatosAutorizado: false,
       garantiaDias: 30,
-      tipoEntrega: 'RECOGE_CLIENTE', 
-      resultado: 'Pendiente', 
+      tipoEntrega: 'RECOGE_CLIENTE',
+      resultado: 'Pendiente',
       costoManoObra: 0,
       costoRefaccionesCompra: 0,
       costoRefaccionesPublico: 0,
@@ -142,7 +165,7 @@ export class ReparacionesComponent implements OnInit {
       next: () => {
         this.cargando.set(false);
         this.cerrarModal();
-        this.cargarReparaciones(); 
+        this.cargarReparaciones();
       },
       error: (err) => this.handleError('Error al guardar la reparación.', err, false),
     });
@@ -178,10 +201,10 @@ export class ReparacionesComponent implements OnInit {
         return `${key}: ${validationErrors[key].join(', ')}`;
       });
       apiError = errorMessages.join(' | ');
-    } 
+    }
     else if (error?.error?.message) {
       apiError = error.error.message;
-    } 
+    }
     else if (typeof error?.error === 'string') {
       apiError = error.error;
     }
@@ -190,7 +213,7 @@ export class ReparacionesComponent implements OnInit {
     }
 
     const fullMessage = `${message} Detalles: ${apiError}`;
-    
+
     if (this.mostrarModal()) {
       this.error.set(fullMessage);
     } else {
@@ -198,8 +221,10 @@ export class ReparacionesComponent implements OnInit {
         this.error.set(fullMessage);
       }
     }
-    
+
     this.cargando.set(false);
     console.error(message, error);
   }
+
+
 }

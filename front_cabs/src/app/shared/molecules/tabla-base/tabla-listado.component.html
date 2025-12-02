@@ -62,22 +62,20 @@
           </app-table-cell>
         </td>
 
-        <!-- Columna de acciones -->
+        <!-- Columna de acciones usando componente atómico -->
         <td *ngIf="acciones.length > 0" class="celda-dato">
           <div class="contenedor-acciones">
-            <button 
+            <app-ui-boton
               *ngFor="let accion of acciones"
               [hidden]="!mostrarAccion(accion, item)"
-              class="boton-accion"
-              [ngClass]="accion.clase"
-              (click)="ejecutarAccion(accion, item, $event)">
-              
-              <ng-container *ngIf="accion.icono">
-                <ng-container *ngTemplateOutlet="accion.icono"></ng-container>
-              </ng-container>
-              
-              {{ accion.etiqueta }}
-            </button>
+              [variante]="obtenerVarianteBoton(accion)"
+              [texto]="accion.etiqueta"
+              [anchoCompleto]="false"
+              [mostrarIcono]="!!accion.icono"
+              [iconoPersonalizado]="accion.icono"
+              [clasesAdicionales]="'text-xs py-2 px-3'"
+              (alClickear)="ejecutarAccion(accion, item, $event)">
+            </app-ui-boton>
           </div>
         </td>
       </tr>

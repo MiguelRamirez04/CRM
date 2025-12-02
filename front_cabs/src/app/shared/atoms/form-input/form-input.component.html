@@ -1,0 +1,28 @@
+<div class="form-input-wrapper">
+  <label *ngIf="label" class="form-label">
+    {{ label }}
+    <span *ngIf="required" class="required-mark">*</span>
+  </label>
+  
+  <input
+    [type]="type"
+    class="form-input"
+    [class.error]="errorMessage"
+    [class.disabled]="disabled"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [readonly]="readonly"
+    [attr.maxlength]="maxLength"
+    [value]="value"
+    (input)="onInputChange($any($event.target).value)"
+    (blur)="onBlur()"
+  />
+  
+  <span *ngIf="helpText && !errorMessage" class="help-text">
+    {{ helpText }}
+  </span>
+  
+  <span *ngIf="errorMessage" class="error-text">
+    {{ errorMessage }}
+  </span>
+</div>

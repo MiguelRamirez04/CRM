@@ -1,0 +1,143 @@
+<!-- =====================================================================================
+     TEMPLATE MODAL DE FILTROS - ESTILO PANEL LATERAL
+     ===================================================================================== -->
+
+<div *ngIf="visible" class="fixed inset-0 z-50 overflow-hidden">
+
+  <!-- Overlay -->
+  <div class="panel-overlay absolute inset-0 transition-opacity" (click)="onCerrar()"></div>
+
+  <!-- Panel -->
+  <!-- Panel con margen -->
+  <div class="absolute inset-y-0 right-0 flex max-w-full pl-10">
+
+    <div
+      class="w-screen transform transition-transform bg-white shadow-xl flex flex-col max-w-md m-4 rounded-2xl overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-white">
+        <h2 class="text-xl font-bold text-gray-800">{{ config.titulo }}
+         
+        </h2>
+        
+        <!-- Indicador de filtros activos -->
+
+         <app-status-dot *ngIf="hayFiltrosActivos()" texto="Activos" tipo="nuevo"  [mostrarIcono]="false" >
+        </app-status-dot>
+
+        
+        <button type="button"
+          class="p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-lg hover:bg-gray-100 cursor-pointer"
+          (click)="onCerrar()" aria-label="Cerrar">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Contenido scrolleable -->
+      <div class="flex-1 overflow-y-auto px-6 py-6">
+
+        <!-- GRUPOS DE CHECKBOXES -->
+        <div *ngFor="let grupo of config.gruposCheckbox" class="filtro-seccion mb-6">
+
+          <h4 class="filtro-titulo text-sm font-semibold text-gray-700 mb-3">{{ grupo.titulo }}</h4>
+
+          <div class="checkbox-grid space-y-2">
+            <label *ngFor="let opcion of grupo.opciones"
+              class="checkbox-item flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" [checked]="isCheckboxChecked(grupo.id, opcion.valor)"
+                (change)="onCheckboxChange(grupo.id, opcion, $event)"
+                class="checkbox-input mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+              <span class="checkbox-label flex-1">
+                <span class="checkbox-texto block text-sm text-gray-900">{{ opcion.etiqueta }}</span>
+                <span *ngIf="opcion.descripcion" class="checkbox-descripcion block text-xs text-gray-500 mt-1">
+                  {{ opcion.descripcion }}
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- FILTROS DE FECHA -->
+        <div *ngFor="let filtro of config.filtrosFecha" class="filtro-seccion mb-6">
+
+          <h4 class="filtro-titulo text-sm font-semibold text-gray-700 mb-3">{{ filtro.titulo }}</h4>
+
+          <div class="input-wrapper relative">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor"
+              class="input-icon absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+            </svg>
+
+            <input [type]="filtro.tipo" [placeholder]="filtro.placeholder" [value]="estadoFechas[filtro.id] || ''"
+              (change)="onFechaChange(filtro.id, $event)"
+              class="fecha-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+        </div>
+
+        <!-- FILTROS DE SELECT -->
+        <div *ngFor="let filtro of config.filtrosSelect" class="filtro-seccion mb-6">
+
+          <h4 class="filtro-titulo text-sm font-semibold text-gray-700 mb-3">{{ filtro.titulo }}</h4>
+
+          <div class="select-wrapper relative">
+            <select [value]="estadoSelects[filtro.id] || ''" (change)="onSelectChange(filtro.id, $event)"
+              class="select-input w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+              <option value="">{{ filtro.placeholder }}</option>
+              <option *ngFor="let opcion of filtro.opciones" [value]="opcion.valor">
+                {{ opcion.etiqueta }}
+              </option>
+            </select>
+
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor"
+              class="select-icon absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
+        </div>
+
+
+
+
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 bg-white">
+        <div class="flex items-center justify-between gap-3">
+
+
+          <!-- boton de limpiar -->
+          <app-ui-boton [variante]="'terciario'" tipo="button" [texto]="config.textoBotonLimpiar || 'Nuevo'"
+            [anchoCompleto]="false" [mostrarIcono]="false" (alClickear)="onLimpiar()"
+            clasesAdicionales="px-4 py-2 text-sm font-medium">
+          </app-ui-boton>
+
+
+          <div class="footer-buttons-right flex gap-3 ml-auto">
+
+
+
+            <!-- boton de cerrar -->
+            <app-ui-boton [variante]="'cancelar'" tipo="button" [texto]="config.textoBotonCerrar || 'Nuevo'"
+              [anchoCompleto]="false" [mostrarIcono]="false" (alClickear)="onCerrar()"
+              clasesAdicionales="px-4 py-2 text-sm font-medium">
+            </app-ui-boton>
+
+            <!-- boton de aplicar -->
+            <app-ui-boton [variante]="'primario'" tipo="button" [texto]="config.textoBotonAplicar || 'Nuevo'"
+              [anchoCompleto]="false" [mostrarIcono]="false" (alClickear)="onAplicar()"
+              clasesAdicionales="px-4 py-2 text-sm font-medium">
+            </app-ui-boton>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

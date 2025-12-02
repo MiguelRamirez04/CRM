@@ -1,23 +1,21 @@
+
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { 
-  FormularioInfoGeneral, 
-  FaseEvaluacionDto,
-  EvaluacionCompletaDto,
-  mapFormularioToEvaluacionDto,
-  mapComponenteFaseToDto,
-  Foto
-} from '../models/evaluaciones-listado.interface';
-
-//Servicio compartido para manejar el estado de la evaluación
-//entre los 3 componentes (InfoGeneral, FaseAntes, FaseDespues)
+import {
+  FormularioInfoGeneral,
+  DatosFase,
+  EvaluacionCompletaDTO,
+  mapFormularioToRequest
+} from '../models/evaluaciones.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SharedEvaluacionService {
   
-  // Estado de la evaluación actual
+  // ==================== STATE SUBJECTS ====================
+  
+  // ID de la evaluación (null para nueva, number para editar)
   private evaluacionIdSubject = new BehaviorSubject<number | null>(null);
   public evaluacionId$ = this.evaluacionIdSubject.asObservable();
 
@@ -26,355 +24,487 @@ export class SharedEvaluacionService {
   public infoGeneral$ = this.infoGeneralSubject.asObservable();
 
   // Datos de fase ANTES
-  private faseAntesSubject = new BehaviorSubject<any>(null);
+  private faseAntesSubject = new BehaviorSubject<DatosFase | null>(null);
   public faseAntes$ = this.faseAntesSubject.asObservable();
-  private faseAntesDetalleIdSubject = new BehaviorSubject<number | null>(null);
-  public faseAntesDetalleId$ = this.faseAntesDetalleIdSubject.asObservable();
 
   // Datos de fase DESPUÉS
-  private faseDespuesSubject = new BehaviorSubject<any>(null);
+  private faseDespuesSubject = new BehaviorSubject<DatosFase | null>(null);
   public faseDespues$ = this.faseDespuesSubject.asObservable();
-  private faseDespuesDetalleIdSubject = new BehaviorSubject<number | null>(null);
-  public faseDespuesDetalleId$ = this.faseDespuesDetalleIdSubject.asObservable();
 
   // Estado de guardado
   private guardandoSubject = new BehaviorSubject<boolean>(false);
   public guardando$ = this.guardandoSubject.asObservable();
 
-  constructor() { }
+  // Estado de carga
+  private cargandoSubject = new BehaviorSubject<boolean>(false);
+  public cargando$ = this.cargandoSubject.asObservable();
+
+  constructor() {
+    // Log inicial del estado
+    console.log(' SharedEvaluacionService inicializado');
+  }
 
   // ==================== SETTERS ====================
 
-  
-//Establece el ID de la evaluación actual//en
   setEvaluacionId(id: number | null): void {
-    console.log('🆔 Estableciendo ID de evaluación:', id);
+    console.log(' Estableciendo ID de evaluación:', id);
     this.evaluacionIdSubject.next(id);
   }
 
-  
-//Guarda los datos de información general//en
   setInfoGeneral(info: FormularioInfoGeneral): void {
+    console.log('Guardando información general');
     this.infoGeneralSubject.next(info);
   }
 
-  
-//Guarda los datos de la fase ANTES//en
-  setFaseAntes(datos: {
-    lugar: string;
-    fechaCreacion: string;
-    scoreFase: number;
-    descripcion: string;
-    sugerencias: string;
-    notaGeneral: string;
-    fotos: Foto[];
-    detalleId?: number;
-  }): void {
-    console.log('📥 Guardando fase ANTES:', { 
-      lugar: datos.lugar, 
-      detalleId: datos.detalleId,
-      tieneFotos: datos.fotos.length 
-    });
-    
+  setFaseAntes(datos: DatosFase): void {
+    console.log(' Guardando fase ANTES');
     this.faseAntesSubject.next(datos);
-    
-    if (datos.detalleId !== undefined) {
-      this.faseAntesDetalleIdSubject.next(datos.detalleId);
-      console.log('✅ DetalleId ANTES actualizado:', datos.detalleId);
-    }
   }
 
-  
-//Guarda los datos de la fase DESPUÉS//en
-  setFaseDespues(datos: {
-    lugar: string;
-    fechaCreacion: string;
-    scoreFase: number;
-    descripcion: string;
-    sugerencias: string;
-    notaGeneral: string;
-    fotos: Foto[];
-    detalleId?: number;
-  }): void {
-    console.log('📥 Guardando fase DESPUÉS:', { 
-      lugar: datos.lugar, 
-      detalleId: datos.detalleId,
-      tieneFotos: datos.fotos.length 
-    });
-    
+  setFaseDespues(datos: DatosFase): void {
+    console.log(' Guardando fase DESPUÉS');
     this.faseDespuesSubject.next(datos);
-    
-    if (datos.detalleId !== undefined) {
-      this.faseDespuesDetalleIdSubject.next(datos.detalleId);
-      console.log('✅ DetalleId DESPUÉS actualizado:', datos.detalleId);
-    }
   }
 
-  
-//Establece el estado de guardado//en
   setGuardando(guardando: boolean): void {
     this.guardandoSubject.next(guardando);
+    if (guardando) {
+      console.log(' Iniciando guardado...');
+    } else {
+      console.log(' Guardado completado');
+    }
+  }
+
+  setCargando(cargando: boolean): void {
+    this.cargandoSubject.next(cargando);
+    if (cargando) {
+      console.log(' Cargando datos...');
+    } else {
+      console.log(' Carga completada');
+    }
   }
 
   // ==================== GETTERS ====================
 
-  
-//Obtiene el ID de la evaluación actual//en
   getEvaluacionId(): number | null {
     return this.evaluacionIdSubject.value;
   }
 
-  
-//Obtiene los datos de información general//en
   getInfoGeneral(): FormularioInfoGeneral | null {
     return this.infoGeneralSubject.value;
   }
 
-  
-//Obtiene los datos de la fase ANTES//en
-  getFaseAntes(): any {
+  getFaseAntes(): DatosFase | null {
     return this.faseAntesSubject.value;
   }
 
-  
-//Obtiene los datos de la fase DESPUÉS//en
-  getFaseDespues(): any {
+  getFaseDespues(): DatosFase | null {
     return this.faseDespuesSubject.value;
   }
 
-  
-//Obtiene el ID del detalle de fase ANTES//en
-  getFaseAntesDetalleId(): number | null {
-    return this.faseAntesDetalleIdSubject.value;
-  }
-
-  
-//Obtiene el ID del detalle de fase DESPUÉS//en
-  getFaseDespuesDetalleId(): number | null {
-    return this.faseDespuesDetalleIdSubject.value;
-  }
-
-  
-//Verifica si se está guardando//en
   isGuardando(): boolean {
     return this.guardandoSubject.value;
   }
 
+  isCargando(): boolean {
+    return this.cargandoSubject.value;
+  }
+
+  // ==================== MÉTODOS DE VERIFICACIÓN ====================
+
+  /**
+   *  Verificar si hay datos residuales de sesión anterior
+   * Útil para detectar cuando el servicio no se limpió correctamente
+   */
+  tieneDatosSucios(): boolean {
+    const tieneInfo = this.infoGeneralSubject.value !== null;
+    const tieneAntes = this.faseAntesSubject.value !== null;
+    const tieneDespues = this.faseDespuesSubject.value !== null;
+    const tieneId = this.evaluacionIdSubject.value !== null;
+    
+    const tieneDatos = tieneInfo || tieneAntes || tieneDespues || tieneId;
+    
+    if (tieneDatos) {
+      console.warn(' Se detectaron datos residuales:', {
+        tieneInfo,
+        tieneAntes,
+        tieneDespues,
+        tieneId,
+        evaluacionId: this.evaluacionIdSubject.value
+      });
+    }
+    
+    return tieneDatos;
+  }
+
+  /**
+   * Limpiar si el modo es 'crear' y hay datos
+   * Método de seguridad para componentes
+   */
+  limpiarSiModoCrear(modoOperacion: 'crear' | 'editar'): void {
+    if (modoOperacion === 'crear') {
+      if (this.tieneDatosSucios()) {
+        console.log(' Limpiando datos residuales para modo CREAR');
+        this.limpiar();
+      } else {
+        console.log(' Servicio limpio para modo CREAR');
+      }
+    } else {
+      console.log(' Modo EDITAR - manteniendo datos');
+    }
+  }
+
+  /**
+   * Verificar si el servicio está limpio
+   */
+  estaLimpio(): boolean {
+    const limpio = !this.tieneDatosSucios();
+    if (limpio) {
+      console.log(' Servicio está limpio');
+    }
+    return limpio;
+  }
+
+  /**
+   * Obtener resumen del estado actual
+   * Útil para debugging y logs
+   */
+  obtenerResumenEstado(): {
+    tieneId: boolean;
+    tieneInfoGeneral: boolean;
+    tieneFaseAntes: boolean;
+    tieneFaseDespues: boolean;
+    estaGuardando: boolean;
+    estaCargando: boolean;
+    evaluacionId: number | null;
+    modoOperacion: 'crear' | 'editar' | 'indeterminado';
+  } {
+    const evaluacionId = this.evaluacionIdSubject.value;
+    const modoOperacion = evaluacionId === null 
+      ? 'crear' 
+      : evaluacionId > 0 
+        ? 'editar' 
+        : 'indeterminado';
+
+    return {
+      tieneId: evaluacionId !== null,
+      tieneInfoGeneral: this.infoGeneralSubject.value !== null,
+      tieneFaseAntes: this.faseAntesSubject.value !== null,
+      tieneFaseDespues: this.faseDespuesSubject.value !== null,
+      estaGuardando: this.guardandoSubject.value,
+      estaCargando: this.cargandoSubject.value,
+      evaluacionId: evaluacionId,
+      modoOperacion: modoOperacion
+    };
+  }
+
+  /**
+   * Verificar consistencia de datos
+   * Detecta estados inválidos
+   */
+  verificarConsistencia(): {
+    esConsistente: boolean;
+    errores: string[];
+  } {
+    const errores: string[] = [];
+    const resumen = this.obtenerResumenEstado();
+
+    // Verificar que en modo crear no haya ID
+    if (resumen.modoOperacion === 'crear' && resumen.tieneId) {
+      errores.push('Modo CREAR pero hay ID de evaluación');
+    }
+
+    // Verificar que en modo editar haya ID
+    if (resumen.modoOperacion === 'editar' && !resumen.tieneId) {
+      errores.push('Modo EDITAR pero no hay ID de evaluación');
+    }
+
+    // Verificar que si hay fases, haya info general
+    if ((resumen.tieneFaseAntes || resumen.tieneFaseDespues) && !resumen.tieneInfoGeneral) {
+      errores.push('Hay fases guardadas pero falta información general');
+    }
+
+    return {
+      esConsistente: errores.length === 0,
+      errores
+    };
+  }
+
   // ==================== UTILIDADES ====================
 
-  
-//🔥 CORREGIDO: Construye el DTO completo para enviar al backend//enAhora incluye todos los IDs necesarios para UPDATE
-  
-  construirEvaluacionCompleta(): EvaluacionCompletaDto | null {
+  /**
+   * Construir DTO completo para enviar al backend
+   */
+  construirDTO(): EvaluacionCompletaDTO | null {
     const infoGeneral = this.getInfoGeneral();
     
     if (!infoGeneral) {
-      console.error('❌ No hay información general para guardar');
+      console.error(' No hay información general para construir DTO');
       return null;
     }
 
-    // Validar campos requeridos
-    if (!infoGeneral.ordenTrabajoId || !infoGeneral.evaluadorId) {
-      console.error('❌ Faltan campos obligatorios: ordenTrabajoId o evaluadorId');
-      return null;
-    }
-
-    // Obtener datos de fases
+    const evaluacionId = this.getEvaluacionId();
     const faseAntes = this.getFaseAntes();
     const faseDespues = this.getFaseDespues();
-    const evaluacionId = this.getEvaluacionId();
 
-    // 🔥 CRÍTICO: Obtener los detalleId directamente de los datos de las fases
-    const detalleAntesId = faseAntes?.detalleId ?? null;
-    const detalleDespuesId = faseDespues?.detalleId ?? null;
-
-    // Log de verificación detallado
-    console.log('🔨 Construyendo DTO completo:');
-    console.log('- Evaluación ID:', evaluacionId);
-    console.log('- Fase ANTES:', {
-      existe: !!faseAntes,
-      detalleId: detalleAntesId,
-      lugar: faseAntes?.lugar,
-      fotos: faseAntes?.fotos?.length || 0
-    });
-    console.log('- Fase DESPUÉS:', {
-      existe: !!faseDespues,
-      detalleId: detalleDespuesId,
-      lugar: faseDespues?.lugar,
-      fotos: faseDespues?.fotos?.length || 0
+    console.log('🔨 Construyendo DTO:', {
+      evaluacionId,
+      tieneFaseAntes: !!faseAntes,
+      tieneFaseDespues: !!faseDespues,
+      ordenTrabajoId: infoGeneral.ordenTrabajoId
     });
 
-    // Mapear evaluación principal
-    const evaluacionDto = mapFormularioToEvaluacionDto(infoGeneral);
-
-    // Construir el DTO completo
-    const evaluacionCompleta: EvaluacionCompletaDto = {
+    const dto: EvaluacionCompletaDTO = {
       evaluacionId: evaluacionId || undefined,
-      evaluacion: evaluacionDto,
-      faseAntes: faseAntes ? this.mapFase(faseAntes, detalleAntesId) : undefined,
-      faseDespues: faseDespues ? this.mapFase(faseDespues, detalleDespuesId) : undefined
+      evaluacion: mapFormularioToRequest(infoGeneral),
+      faseAntes: faseAntes || undefined,
+      faseDespues: faseDespues || undefined
     };
 
-    // 🔥 Verificación final del DTO
-    console.log('✅ DTO construido:', {
-      tieneEvaluacionId: !!evaluacionCompleta.evaluacionId,
-      tieneFaseAntes: !!evaluacionCompleta.faseAntes,
-      faseAntesDetalleId: evaluacionCompleta.faseAntes?.detalleId,
-      faseAntesFotos: evaluacionCompleta.faseAntes?.fotos?.length || 0,
-      tieneFaseDespues: !!evaluacionCompleta.faseDespues,
-      faseDespuesDetalleId: evaluacionCompleta.faseDespues?.detalleId,
-      faseDespuesFotos: evaluacionCompleta.faseDespues?.fotos?.length || 0
-    });
-
-    return evaluacionCompleta;
+    return dto;
   }
 
-  
-//Mapea los datos de una fase del componente al DTO//en
-  private mapFase(datos: any, detalleId: number | null): FaseEvaluacionDto {
-    const faseDto = mapComponenteFaseToDto(
-      datos.lugar,
-      datos.fechaCreacion,
-      datos.scoreFase,
-      datos.descripcion,
-      datos.sugerencias,
-      datos.notaGeneral,
-      datos.fotos,
-      detalleId || undefined
-    );
-    
-    console.log('🗺️ Fase mapeada:', {
-      detalleId: faseDto.detalleId,
-      lugar: faseDto.lugar,
-      fotos: faseDto.fotos?.length || 0
-    });
-    
-    return faseDto;
-  }
-
-  
-//Valida si todos los datos necesarios están completos//en
-  validarDatosCompletos(): { valido: boolean; errores: string[] } {
+  /**
+   * Validar datos completos antes de guardar
+   */
+  validar(): { valido: boolean; errores: string[] } {
     const errores: string[] = [];
-    const infoGeneral = this.getInfoGeneral();
+    const info = this.getInfoGeneral();
 
-    if (!infoGeneral) {
-      errores.push('Falta completar la información general');
+    // Validar info general
+    if (!info) {
+      errores.push('Falta información general');
       return { valido: false, errores };
     }
 
-    if (!infoGeneral.ordenTrabajoId) {
-      errores.push('Debe seleccionar una orden de trabajo');
+    if (!info.ordenTrabajoId) {
+      errores.push('Seleccione una orden de trabajo');
     }
 
-    if (!infoGeneral.evaluadorId) {
-      errores.push('Debe seleccionar un evaluador');
+    if (!info.evaluadorId) {
+      errores.push('Seleccione un evaluador');
     }
 
+    // Validar que haya al menos una fase
     const faseAntes = this.getFaseAntes();
     const faseDespues = this.getFaseDespues();
 
     if (!faseAntes && !faseDespues) {
-      errores.push('Debe completar al menos una fase (ANTES o DESPUÉS)');
+      errores.push('Complete al menos una fase (ANTES o DESPUÉS)');
     }
 
+    // Validar lugares en fases
     if (faseAntes && !faseAntes.lugar) {
-      errores.push('Debe especificar el lugar en la fase ANTES');
+      errores.push('Especifique el lugar en fase ANTES');
     }
 
     if (faseDespues && !faseDespues.lugar) {
-      errores.push('Debe especificar el lugar en la fase DESPUÉS');
+      errores.push('Especifique el lugar en fase DESPUÉS');
+    }
+
+    // Validar scores (opcional pero si existe debe ser válido)
+    if (faseAntes?.scoreFase !== undefined && 
+        (faseAntes.scoreFase < 0 || faseAntes.scoreFase > 100)) {
+      errores.push('Score de fase ANTES debe estar entre 0 y 100');
+    }
+
+    if (faseDespues?.scoreFase !== undefined && 
+        (faseDespues.scoreFase < 0 || faseDespues.scoreFase > 100)) {
+      errores.push('Score de fase DESPUÉS debe estar entre 0 y 100');
     }
 
     return {
       valido: errores.length === 0,
-      errores: errores
+      errores
     };
   }
 
-  
-//Calcula el score total basado en las fases completadas//en
-  calcularScoreTotal(): number {
-    const faseAntes = this.getFaseAntes();
-    const faseDespues = this.getFaseDespues();
+  /**
+   * Calcular score total promedio
+   */
+  /**
+ * Calcular score total promedio
+ *  SOLO PROMEDIA FASES COMPLETADAS (con score > 0)
+ * Ignora fases sin completar o sin inicializar
+ */
+calcularScore(): number {
+  const faseAntes = this.getFaseAntes();
+  const faseDespues = this.getFaseDespues();
 
-    let scoreTotal = 0;
-    let fasesCompletadas = 0;
+  let scoreTotal = 0;
+  let fasesCompletadas = 0;
 
-    if (faseAntes && faseAntes.scoreFase) {
-      scoreTotal += faseAntes.scoreFase;
-      fasesCompletadas++;
-    }
-
-    if (faseDespues && faseDespues.scoreFase) {
-      scoreTotal += faseDespues.scoreFase;
-      fasesCompletadas++;
-    }
-
-    const score = fasesCompletadas > 0 ? Math.round(scoreTotal / fasesCompletadas) : 0;
-    console.log('📊 Score calculado:', score, '(fases completadas:', fasesCompletadas + ')');
-    return score;
+  //  CAMBIO: Solo contar si scoreFase > 0
+  // Una fase con score = 0 NO se considera completada
+  if (faseAntes?.scoreFase !== undefined && 
+      faseAntes.scoreFase !== null && 
+      faseAntes.scoreFase > 0) {
+    scoreTotal += faseAntes.scoreFase;
+    fasesCompletadas++;
+    console.log('Fase ANTES completada con score:', faseAntes.scoreFase);
+  } else if (faseAntes) {
+    console.log('Fase ANTES existe pero score no es válido:', faseAntes.scoreFase);
   }
 
-  
-//Actualiza el score en la información general//en
-  actualizarScoreEnInfoGeneral(): void {
-    const infoGeneral = this.getInfoGeneral();
-    if (infoGeneral) {
-      const nuevoScore = this.calcularScoreTotal();
-      infoGeneral.scoreCalidad = nuevoScore;
-      this.setInfoGeneral(infoGeneral);
-      console.log('✅ Score actualizado en InfoGeneral:', nuevoScore);
+  //  CAMBIO: Solo contar si scoreFase > 0
+  if (faseDespues?.scoreFase !== undefined && 
+      faseDespues.scoreFase !== null && 
+      faseDespues.scoreFase > 0) {
+    scoreTotal += faseDespues.scoreFase;
+    fasesCompletadas++;
+    console.log('Fase DESPUÉS completada con score:', faseDespues.scoreFase);
+  } else if (faseDespues) {
+    console.log('Fase DESPUÉS existe pero score no es válido:', faseDespues.scoreFase);
+  }
+
+  const promedio = fasesCompletadas > 0 
+    ? Math.round(scoreTotal / fasesCompletadas) 
+    : 0;
+
+  console.log('Score calculado:', {
+    scoreAntes: faseAntes?.scoreFase ?? 'null',
+    scoreDespues: faseDespues?.scoreFase ?? 'null',
+    fasesCompletadas,
+    scoreTotal,
+    promedio
+  });
+
+  return promedio;
+}
+
+  /**
+   * Actualizar score en info general
+   */
+  actualizarScore(): void {
+    const info = this.getInfoGeneral();
+    if (info) {
+      const nuevoScore = this.calcularScore();
+      info.scoreCalidad = nuevoScore;
+      this.setInfoGeneral(info);
+      console.log(' Score actualizado en info general:', nuevoScore);
+    } else {
+      console.warn(' No se puede actualizar score: falta info general');
     }
   }
 
-  
-//Limpia todos los datos (útil para crear nueva evaluación)//en
-  limpiar(): void {
-    console.log('🧹 Limpiando SharedEvaluacionService');
-    this.evaluacionIdSubject.next(null);
-    this.infoGeneralSubject.next(null);
-    this.faseAntesSubject.next(null);
-    this.faseDespuesSubject.next(null);
-    this.faseAntesDetalleIdSubject.next(null);
-    this.faseDespuesDetalleIdSubject.next(null);
-    this.guardandoSubject.next(false);
-  }
-
-  
-//🔥 CORREGIDO: Carga una evaluación existente con logs de verificación//en
+  /**
+   * Cargar evaluación existente
+   */
   cargarEvaluacion(
     evaluacionId: number,
     infoGeneral: FormularioInfoGeneral,
-    faseAntes?: any,
-    faseDespues?: any
+    faseAntes?: DatosFase,
+    faseDespues?: DatosFase
   ): void {
-    console.log('📥 Cargando evaluación completa en SharedService');
-    console.log('- ID:', evaluacionId);
-    console.log('- Tiene fase ANTES:', !!faseAntes, 'detalleId:', faseAntes?.detalleId);
-    console.log('- Tiene fase DESPUÉS:', !!faseDespues, 'detalleId:', faseDespues?.detalleId);
-
+    console.log(' Cargando evaluación completa:', evaluacionId);
+    
+    this.setCargando(true);
+    
     this.setEvaluacionId(evaluacionId);
     this.setInfoGeneral(infoGeneral);
     
     if (faseAntes) {
       this.setFaseAntes(faseAntes);
-      console.log('✅ Fase ANTES cargada con detalleId:', faseAntes.detalleId);
-    } else {
-      this.faseAntesSubject.next(null);
-      this.faseAntesDetalleIdSubject.next(null);
-      console.log('⚠️ No hay fase ANTES');
     }
     
     if (faseDespues) {
       this.setFaseDespues(faseDespues);
-      console.log('✅ Fase DESPUÉS cargada con detalleId:', faseDespues.detalleId);
-    } else {
-      this.faseDespuesSubject.next(null);
-      this.faseDespuesDetalleIdSubject.next(null);
-      console.log('⚠️ No hay fase DESPUÉS');
     }
+    
+    this.setCargando(false);
+    
+    console.log(' Evaluación cargada. Estado:', this.obtenerResumenEstado());
+  }
 
-    console.log('✅ Evaluación cargada completamente en SharedService');
+  /**
+   * LIMPIAR TODO EL SERVICIO
+   * CRÍTICO: Debe llamarse al salir del formulario o después de guardar exitosamente
+   */
+  limpiar(): void {
+    console.log(' ============================================');
+    console.log(' INICIANDO LIMPIEZA DEL SERVICIO');
+    console.log(' ============================================');
+    
+    // Mostrar estado antes de limpiar
+    const estadoAntes = this.obtenerResumenEstado();
+    console.log(' Estado ANTES de limpiar:', estadoAntes);
+    
+    // Si está guardando, advertir
+    if (this.isGuardando()) {
+      console.warn(' ADVERTENCIA: Limpiando mientras está guardando');
+    }
+    
+    // Limpiar todos los subjects
+    this.evaluacionIdSubject.next(null);
+    this.infoGeneralSubject.next(null);
+    this.faseAntesSubject.next(null);
+    this.faseDespuesSubject.next(null);
+    this.guardandoSubject.next(false);
+    this.cargandoSubject.next(false);
+    
+    // Verificar que se limpió correctamente
+    const estadoDespues = this.obtenerResumenEstado();
+    console.log(' Estado DESPUÉS de limpiar:', estadoDespues);
+    
+    // Validar limpieza
+    if (this.estaLimpio()) {
+      console.log(' ============================================');
+      console.log(' SERVICIO LIMPIADO CORRECTAMENTE');
+      console.log(' ============================================');
+    } else {
+      console.error(' ============================================');
+      console.error(' ERROR: EL SERVICIO NO SE LIMPIÓ CORRECTAMENTE');
+      console.error(' Datos residuales detectados:', estadoDespues);
+      console.error(' ============================================');
+    }
+  }
+
+  /**
+   * NUEVO: Limpiar con confirmación
+   * Útil para componentes que quieren estar seguros
+   */
+  limpiarConConfirmacion(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.tieneDatosSucios()) {
+        console.log(' Limpiando datos existentes...');
+        this.limpiar();
+        // Verificar después de limpiar
+        setTimeout(() => {
+          const limpio = this.estaLimpio();
+          resolve(limpio);
+        }, 100);
+      } else {
+        console.log(' Servicio ya estaba limpio');
+        resolve(true);
+      }
+    });
+  }
+
+  /**
+   * NUEVO: Reset completo con logs
+   * Para casos extremos donde necesitas empezar de cero
+   */
+  resetCompleto(): void {
+    console.log('============================================');
+    console.log('RESET COMPLETO DEL SERVICIO');
+    console.log('============================================');
+    
+    // Guardar estado anterior para logs
+    const estadoAnterior = this.obtenerResumenEstado();
+    console.log(' Estado anterior:', estadoAnterior);
+    
+    // Limpiar
+    this.limpiar();
+    
+    // Verificar consistencia
+    const consistencia = this.verificarConsistencia();
+    if (consistencia.esConsistente) {
+      console.log(' Servicio reseteado y consistente');
+    } else {
+      console.error(' Servicio reseteado pero con inconsistencias:', consistencia.errores);
+    }
+    
+    console.log('============================================');
   }
 }
+

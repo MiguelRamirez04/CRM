@@ -1,5 +1,3 @@
-
-
 using System.ComponentModel.DataAnnotations;
 
 namespace back_cabs.CRM.DTOs.Soporte
@@ -68,6 +66,10 @@ namespace back_cabs.CRM.DTOs.Soporte
         [StringLength(200, ErrorMessage = "La ubicación de almacenamiento no puede exceder 200 caracteres.")]
         public string? UbicacionAlmacenamiento { get; init; }
         public string? Notas { get; init; }
+
+        public string? NombreCliente {get; init;}
+
+        public long Telefono {get; init;}
 
     }
 
@@ -150,7 +152,7 @@ namespace back_cabs.CRM.DTOs.Soporte
         public int? GarantiaMeses { get; init; }
         public decimal? CostoUnitarioCompra { get; init; }
         public decimal? CostoUnitarioPublico { get; init; }
-        public string? Notas { get; init; }
+        public string? Notas { get; init; }
 
-    }
+    }
 }

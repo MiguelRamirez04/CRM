@@ -1,0 +1,45 @@
+<div class="form-panel">
+  <!-- Loading overlay -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <span class="loading-text">{{ loadingMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div *ngIf="showHeader && (title || subtitle)" class="panel-header">
+    <div class="header-content">
+      <h2 *ngIf="title" class="panel-title">{{ title }}</h2>
+      <p *ngIf="subtitle" class="panel-subtitle">{{ subtitle }}</p>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="panel-body">
+    <ng-content></ng-content>
+  </div>
+
+  <!-- Footer -->
+  <div *ngIf="showFooter && (showPrimaryButton || showSecondaryButton)" class="panel-footer">
+    <button
+      *ngIf="showSecondaryButton"
+      type="button"
+      class="btn btn-secondary"
+      [disabled]="secondaryButtonDisabled || loading"
+      (click)="onSecondaryClick()"
+    >
+      {{ secondaryButtonText }}
+    </button>
+
+    <button
+      *ngIf="showPrimaryButton"
+      type="button"
+      class="btn btn-primary"
+      [disabled]="primaryButtonDisabled || loading"
+      (click)="onPrimaryClick()"
+    >
+      {{ primaryButtonText }}
+    </button>
+  </div>
+</div>

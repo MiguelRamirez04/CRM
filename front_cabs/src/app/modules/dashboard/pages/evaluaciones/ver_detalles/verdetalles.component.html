@@ -1,105 +1,354 @@
-<div class="contenedor">
-  <!-- Estado de carga -->
-  <div *ngIf="cargando" class="estado-carga">
-    <div class="spinner"></div>
-    <p>Cargando evaluación...</p>
+<app-side-panel [mostrar]="mostrarPanel" [titulo]="tituloPanel" [ancho]="'lg'" (cerrar)="cerrarPanel()">
+
+  <!-- Botón para volver (solo visible en vistas de fases) -->
+  <div *ngIf="vistaActual !== 'detalles'" class="mb-4 pb-4 border-b border-gray-200">
+    <button (click)="volverADetallesDesdeVista()"
+      class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all cursor-pointer">
+      <app-ui-icono [name]="'chevron-left'" [size]="'w-4 h-4'" [color]="'currentColor'"></app-ui-icono>
+      <span class="font-medium">Volver a información general</span>
+    </button>
   </div>
 
-  <!-- Estado de error -->
-  <div *ngIf="error && !cargando" class="estado-error">
-    <div class="icono-error">⚠️</div>
-    <h3>Error al cargar</h3>
-    <p>{{ error }}</p>
-    <button class="boton-reintentar" (click)="reintentar()">Reintentar</button>
-  </div>
+  <!-- ============================================== -->
+  <!-- VISTA: Información General -->
+  <!-- ============================================== -->
+  <ng-container *ngIf="vistaActual === 'detalles'">
 
-  <!-- Contenido principal -->
-  <ng-container *ngIf="evaluacion && !cargando && !error">
-    <h1 class="titulo-principal">Detalles de la evaluación</h1>
+    <!-- ESTADO DE CARGA INICIAL -->
+    <app-loading-spinner *ngIf="cargando" [mensaje]="'Cargando evaluación...'">
+    </app-loading-spinner>
 
-    <div class="tarjeta">
-      <h2 class="titulo-seccion">Información general</h2>
+    <!-- ESTADO DE ERROR -->
+    <app-alert *ngIf="error && !cargando" [tipo]="'error'">
+      {{ error }}
+    </app-alert>
 
-      <div class="grid-info">
-        <div class="campo-info">
-          <span class="etiqueta-campo">Orden de trabajo:</span>
-          <span class="valor-campo">{{ evaluacion.ordenTrabajo }}</span>
-        </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <ng-container *ngIf="evaluacion && !cargando && !error">
 
-        <div class="campo-info">
-          <span class="etiqueta-campo">Ejecución:</span>
-          <span class="valor-campo">{{ evaluacion.ejecucion }}</span>
-        </div>
+      <!-- Badge de progreso -->
+      <div class="mb-6 flex items-center justify-between">
+        <app-badge [tipo]="todasFasesCompletadas ? 'success' : 'info'" [mostrarIcono]="todasFasesCompletadas">
+          {{ fasesCompletadas }} de {{ totalFases }} fases completadas
+        </app-badge>
 
-        <div class="campo-info">
-          <span class="etiqueta-campo">Cliente:</span>
-          <span class="valor-campo">{{ evaluacion.cliente }}</span>
-        </div>
-
-        <div class="campo-info">
-          <span class="etiqueta-campo">Evaluador:</span>
-          <span class="valor-campo">{{ evaluacion.evaluador }}</span>
-        </div>
+        <app-badge [tipo]="'default'">
+          ID: #{{ evaluacion.id }}
+        </app-badge>
       </div>
 
-      <div class="bloque-texto" *ngIf="evaluacion.objetivo">
-        <div class="campo-texto-completo">
-          <span class="etiqueta-campo">Objetivo de la evaluación:</span>
-          <span class="valor-campo">{{ evaluacion.objetivo }}</span>
-        </div>
-      </div>
+      <!-- SECCIÓN: INFORMACIÓN GENERAL CON SPINNER -->
+      <app-detail-section 
+        [titulo]="'Información General'" 
+        [icono]="'information-circle'" 
+        [colorIcono]="'text-blue-600'">
 
-      <div class="bloque-texto" *ngIf="evaluacion.comentarios">
-        <div class="campo-texto-completo">
-          <span class="etiqueta-campo">Comentarios generales</span>
-          <p class="texto-completo">{{ evaluacion.comentarios }}</p>
+        <!-- SPINNER DE CARGA DE CATÁLOGOS -->
+        <div *ngIf="cargandoCatalogos" class="flex items-center justify-center py-8">
+          <div class="flex flex-col items-center space-y-3">
+            <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            <p class="text-sm text-gray-600 font-medium">Cargando información detallada...</p>
+          </div>
         </div>
-      </div>
 
-      <div class="bloque-texto">
-        <span class="etiqueta-campo">Score de calidad total</span>
-        <div class="contenedor-score">
-          <div class="score-numero">{{ evaluacion.scoreTotal }}</div>
-          <div class="barra-progreso-contenedor">
-            <div class="barra-progreso">
-              <div class="barra-progreso-relleno" [style.width.%]="porcentajeScore"></div>
+        <!-- DATOS CON TEXTOS DESCRIPTIVOS -->
+        <div *ngIf="!cargandoCatalogos" class="space-y-4">
+
+          <!-- Orden de trabajo -->
+          <div class="flex items-start pb-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3 w-48 flex-shrink-0">
+              <app-ui-icono [name]="'document'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Orden de trabajo:'"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+            <div class="flex-1">
+              <app-ui-tipografia [variante]="'p'" [texto]="textoOrden"
+                [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
             </div>
           </div>
-          <span class="texto-score">/100</span>
+
+          <!-- Ejecución -->
+          <div *ngIf="evaluacion.ejecucionId" class="flex items-start pb-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3 w-48 flex-shrink-0">
+              <app-ui-icono [name]="'folder'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Ejecución:'"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+            <div class="flex-1">
+              <app-ui-tipografia [variante]="'p'" [texto]="textoEjecucion"
+                [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+            </div>
+          </div>
+
+          <!-- Cliente -->
+          <div *ngIf="evaluacion.clienteId" class="flex items-start pb-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3 w-48 flex-shrink-0">
+              <app-ui-icono [name]="'identification'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Cliente:'"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+            <div class="flex-1">
+              <app-ui-tipografia [variante]="'p'" [texto]="textoCliente"
+                [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+            </div>
+          </div>
+
+          <!-- Evaluador -->
+          <div class="flex items-start pb-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3 w-48 flex-shrink-0">
+              <app-ui-icono [name]="'user'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Evaluador:'"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+            <div class="flex-1">
+              <app-ui-tipografia [variante]="'p'" [texto]="textoEvaluador"
+                [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+            </div>
+          </div>
+
+          <!-- Fecha de creación -->
+          <div class="flex items-start">
+            <div class="flex items-center space-x-3 w-48 flex-shrink-0">
+              <app-ui-icono [name]="'calendar'" [size]="'w-5 h-5'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="'Fecha de creación:'"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+            <div class="flex-1">
+              <app-ui-tipografia [variante]="'p'" [texto]="fechaCreacionFormateada"
+                [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+            </div>
+          </div>
         </div>
+      </app-detail-section>
+
+      <!-- SECCIÓN: OBJETIVO -->
+      <app-detail-section 
+        *ngIf="evaluacion.objetivo" 
+        [titulo]="'Objetivo de la Evaluación'" 
+        [icono]="'presentation-chart-line'"
+        [colorIcono]="'text-purple-600'">
+        <app-ui-tipografia [variante]="'p'" [texto]="evaluacion.objetivo"
+          [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+      </app-detail-section>
+
+      <!-- SECCIÓN: SCORE DE CALIDAD -->
+      <app-detail-section 
+        [titulo]="'Score de Calidad Total'" 
+        [icono]="'chart-bar-square'" 
+        [colorIcono]="'text-green-600'">
+        <div class="space-y-4">
+          <!-- Score visual -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-4xl font-bold" [ngClass]="obtenerClaseScoreFase(evaluacion.scoreCalidadTotal)">
+                {{ evaluacion.scoreCalidadTotal ?? 0 }}
+              </span>
+              <span class="text-2xl text-gray-400">/100</span>
+            </div>
+
+            <app-badge [tipo]="obtenerTipoBadgeScore(evaluacion.scoreCalidadTotal)" [mostrarIcono]="true">
+              {{
+              (evaluacion.scoreCalidadTotal ?? 0) >= 90 ? 'Excelente' :
+              (evaluacion.scoreCalidadTotal ?? 0) >= 80 ? 'Bueno' :
+              (evaluacion.scoreCalidadTotal ?? 0) >= 60 ? 'Regular' :
+              'Deficiente'
+              }}
+            </app-badge>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" [ngClass]="claseScore"
+              [style.width.%]="porcentajeScore">
+            </div>
+          </div>
+        </div>
+      </app-detail-section>
+
+      <!-- SECCIÓN: COMENTARIOS GENERALES -->
+      <app-detail-section 
+        *ngIf="evaluacion.comentariosGenerales" 
+        [titulo]="'Comentarios Generales'"
+        [icono]="'chat-bubble-bottom-center-text'" 
+        [colorIcono]="'text-indigo-600'">
+        <app-ui-tipografia [variante]="'p'" [texto]="evaluacion.comentariosGenerales"
+          [color]="'text-gray-700 leading-relaxed'"></app-ui-tipografia>
+      </app-detail-section>
+
+      <!-- ALERTA DE SEGUIMIENTO -->
+      <div *ngIf="evaluacion.requiereSeguimiento" class="mb-6">
+        <app-alert [tipo]="tipoAlertaSeguimiento">
+          <div class="space-y-1">
+            <div class="font-semibold">{{ textoSeguimiento }}</div>
+            <div *ngIf="evaluacion.seguimientoNotas" class="text-sm">
+              <strong>Notas:</strong> {{ evaluacion.seguimientoNotas }}
+            </div>
+          </div>
+        </app-alert>
       </div>
 
-      <div class="alerta-seguimiento" *ngIf="evaluacion.requiereSeguimiento && evaluacion.notasSeguimiento">
-        <div class="alerta-encabezado">
-         <svg *ngIf="evaluacion.requiereSeguimiento" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-              stroke="currentColor" class="icono-alerta">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-            </svg>
-          <span class="titulo-alerta">Requiere seguimiento</span>
-        </div>
-        <div class="contenido-alerta">
-          <strong>Notas:</strong> {{ evaluacion.notasSeguimiento }}
-        </div>
-      </div>
+      <!-- ============================================== -->
+      <!-- SECCIÓN: FASES CON TRES ESTADOS -->
+      <!-- ============================================== -->
+      <app-detail-section 
+        [titulo]="'Fases de Evaluación'" 
+        [icono]="'clipboard-document-list'" 
+        [colorIcono]="'text-orange-600'">
 
-      <div class="seccion-fases">
-        <h2 class="titulo-seccion">Fases de evaluación</h2>
-        <p class="descripcion-fases">Haga clic en cada fase para ver la evaluación correspondiente</p>
+        <app-ui-tipografia [variante]="'p'" [texto]="'Haga clic en cada fase para ver o editar la evaluación'"
+          [color]="'text-gray-600 mb-4'"></app-ui-tipografia>
 
-        <div class="grid-fases">
-          <button
-  *ngFor="let fase of evaluacion.fases"
-  class="tarjeta-fase"
-  [class.completada]="fase.completada"
-  [class.deshabilitada]="!fase.completada"
-  (click)="verFase(fase.tipo)">
-  <div class="titulo-fase">{{ fase.titulo }}</div>
-  <div class="estatus-fase">{{ fase.completada ? 'Completada' : 'Sin completar' }}</div>
-</button>
+        <!-- Grid de fases -->
+        <div class="space-y-3">
+          <button *ngFor="let faseData of datosFases" 
+            [disabled]="faseData.estado === 'sin-inicializar'"
+            (click)="navegarAFase(faseData.fase)"
+            class="w-full text-left p-4 rounded-lg border-2 transition-all duration-300" [ngClass]="{
+            'border-green-300 bg-green-50 hover:border-green-400 hover:shadow-md': faseData.estado === 'completada',
+            'border-yellow-300 bg-yellow-50 hover:border-yellow-400 hover:shadow-md': faseData.estado === 'sin-completar',
+            'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed': faseData.estado === 'sin-inicializar',
+            'cursor-pointer': faseData.estado !== 'sin-inicializar'
+          }">
 
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+
+                <!-- ICONOS SEGÚN ESTADO -->
+                <div class="flex-shrink-0">
+
+                  <!-- Estado: COMPLETADA (verde con check) -->
+                  <app-ui-icono 
+                    *ngIf="faseData.estado === 'completada'"
+                    [name]="'check-circle-outline'" 
+                    [size]="'w-8 h-8'" 
+                    [color]="'text-green-600'">
+                  </app-ui-icono>
+
+                  <!-- Estado: SIN COMPLETAR (amarillo con lápiz) -->
+                  <app-ui-icono 
+                    *ngIf="faseData.estado === 'sin-completar'"
+                    [name]="'pencil-square'" 
+                    [size]="'w-8 h-8'" 
+                    [color]="'text-yellow-600'">
+                  </app-ui-icono>
+
+                  <!-- Estado: SIN INICIALIZAR (gris con reloj) -->
+                  <app-ui-icono 
+                    *ngIf="faseData.estado === 'sin-inicializar'"
+                    [name]="'x-circle'" 
+                    [size]="'w-8 h-8'" 
+                    [color]="'text-gray-400'">
+                  </app-ui-icono>
+
+                </div>
+
+                <!-- Info de fase -->
+                <div>
+                  <app-ui-tipografia [variante]="'p'" [texto]="faseData.titulo"
+                    [color]="'text-gray-900 font-semibold'"></app-ui-tipografia>
+
+                  <!-- TEXTO SEGÚN ESTADO -->
+                  <app-ui-tipografia [variante]="'caption'" [texto]="
+                      faseData.estado === 'completada' ? 'Completada y calificada' :
+                      faseData.estado === 'sin-completar' ? 'Iniciada - Sin completar' :
+                      'No inicializada'
+                    " [color]="
+                      faseData.estado === 'completada' ? 'text-green-600' :
+                      faseData.estado === 'sin-completar' ? 'text-yellow-600' :
+                      'text-gray-500'
+                    "></app-ui-tipografia>
+                </div>
+              </div>
+
+              <!-- BADGES SEGÚN ESTADO -->
+              <div class="flex flex-col items-end space-y-1">
+
+                <!-- Score badge (solo si está completada) -->
+                <div *ngIf="faseData.estado === 'completada' && faseData.detalle && 
+                           faseData.detalle.scoreFase !== null && faseData.detalle.scoreFase !== undefined">
+                  <app-badge [tipo]="obtenerTipoBadgeScore(faseData.detalle.scoreFase)" [mostrarIcono]="false">
+                    {{ faseData.detalle.scoreFase }}/100
+                  </app-badge>
+                </div>
+
+                <!-- Badge de estado (sin completar) -->
+                <div *ngIf="faseData.estado === 'sin-completar'">
+                  <app-badge [tipo]="'warning'" [mostrarIcono]="true">
+                    Sin calificar
+                  </app-badge>
+                </div>
+
+                <!-- Badge de estado (sin inicializar) -->
+                <div *ngIf="faseData.estado === 'sin-inicializar'">
+                  <app-badge [tipo]="'default'" [mostrarIcono]="false">
+                    Bloqueada
+                  </app-badge>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Lugar (si está disponible) -->
+            <div *ngIf="faseData.detalle && faseData.detalle.lugar"
+              class="mt-2 flex items-center text-sm text-gray-600">
+              <app-ui-icono [name]="'map-pin'" [size]="'w-4 h-4 mr-1'" [color]="'text-gray-600'"></app-ui-icono>
+              <app-ui-tipografia [variante]="'caption'" [texto]="faseData.detalle.lugar"
+                [color]="'text-gray-600'"></app-ui-tipografia>
+            </div>
+
+            <!-- INDICADOR VISUAL ADICIONAL -->
+            <div *ngIf="faseData.estado !== 'sin-inicializar'" class="mt-3 pt-3 border-t border-gray-200">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-500">
+                  {{ faseData.estado === 'completada' ? 'Fase finalizada' : 'En proceso de evaluación' }}
+                </span>
+                <app-ui-icono [name]="'arrow-long-right'" [size]="'w-4 h-4'" [color]="'text-gray-400'"></app-ui-icono>
+              </div>
+            </div>
+
+          </button>
         </div>
-      </div>
-    </div>
+
+      </app-detail-section>
+
+    </ng-container>
   </ng-container>
-</div>
+
+  <!-- ============================================== -->
+  <!-- VISTA: Fase ANTES -->
+  <!-- ============================================== -->
+  <ng-container *ngIf="vistaActual === 'faseAntes'">
+    <app-faseantes [evaluacionId]="evaluacionId" [mostrarPanel]="false" [soloContenido]="true"
+      (cerrar)="volverADetallesDesdeVista()">
+    </app-faseantes>
+  </ng-container>
+
+  <!-- ============================================== -->
+  <!-- VISTA: Fase DESPUÉS -->
+  <!-- ============================================== -->
+  <ng-container *ngIf="vistaActual === 'faseDespues'">
+    <app-fasedespues [evaluacionId]="evaluacionId" [mostrarPanel]="false" [soloContenido]="true"
+      (cerrar)="volverADetallesDesdeVista()">
+    </app-fasedespues>
+  </ng-container>
+
+  <!-- ============================================== -->
+  <!-- FOOTER CON ACCIONES -->
+  <!-- ============================================== -->
+  <div footer class="">
+    <app-ui-boton [variante]="'cerrar'" [texto]="'Volver al listado'" [anchoCompleto]="true"
+      (alClickear)="volverAlListado()">
+    </app-ui-boton>
+
+    <app-ui-boton *ngIf="error" [variante]="'primario'" [texto]="'Reintentar'" [anchoCompleto]="true"
+      [estaCargando]="cargando" (alClickear)="reintentar()">
+    </app-ui-boton>
+  </div>
+
+</app-side-panel>

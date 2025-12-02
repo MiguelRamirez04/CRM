@@ -1,0 +1,662 @@
+/*
+<!-- ===================================================================================== -->
+<!-- ESTILOS CSS PARA LOS TEMPLATES -->
+<!-- ===================================================================================== -->
+*/
+
+/* Badge Score */
+.badge-score {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 45px;
+  text-align: center;
+}
+
+/* Clases de color para scores */
+.bg-green-500 {
+  background-color: #22C55E;
+  color: white;
+}
+
+.bg-blue-500 {
+  background-color: #0092B8;
+  color: white;
+}
+
+.bg-yellow-500 {
+  background-color: #ffc20c;
+  color: #ffffff;
+}
+
+.bg-red-500 {
+  background-color: #EF4444;
+  color: white;
+}
+
+.bg-gray-300 {
+  background-color: #D1D5DB;
+  color: #374151;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA EL MODAL CON FOOTER INTEGRADO */
+/* ===================================================================================== */
+
+/* Overlay del modal (fondo oscuro) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999 !important;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Contenedor del modal */
+.modal-contenedor {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90vw;
+  max-width: 1000px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+  z-index: 10000 !important;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header del modal */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+
+.modal-titulo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+/* Botón de cerrar */
+.modal-cerrar {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-cerrar:hover {
+  background-color: #F3F4F6;
+  color: #111827;
+}
+
+.modal-cerrar:active {
+  transform: scale(0.95);
+}
+
+.icono-cerrar {
+  width: 24px;
+  height: 24px;
+}
+
+/* Cuerpo del modal */
+.modal-cuerpo {
+  padding: 10px 32px;
+  overflow-y: auto;
+  flex: 1;
+  /* Estilos personalizados para la barra de scroll */
+  scrollbar-width: thin;
+  scrollbar-color: #D1D5DB #F3F4F6;
+}
+
+.modal-cuerpo::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-cuerpo::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.modal-cuerpo::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+
+.modal-cuerpo::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ===================================================================================== */
+/* FOOTER DEL MODAL CON UI-BOTON */
+/* ===================================================================================== */
+
+.modal-footer {
+  border-top: 1px solid #E5E7EB;
+  background: white;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor para alinear tabs a la izquierda y botones a la derecha */
+.footer-contenido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* ===================================================================================== */
+/* TABS DE NAVEGACIÓN CON UI-BOTON */
+/* ===================================================================================== */
+
+.tabs-footer {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  align-items: center;
+}
+
+/* Estilos adicionales para los tabs (app-ui-boton) */
+.tab-boton-ui {
+  font-size: 13px !important;
+  padding: 8px 14px !important;
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+/* ✅ FOCUS MÁS SUAVE PARA LOS TABS */
+::ng-deep .tabs-footer app-ui-boton button:focus,
+::ng-deep .tab-boton-ui button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  /* Anillo azul muy suave */
+}
+
+/* Focus para tabs completados (verde suave) */
+::ng-deep .tabs-footer app-ui-boton.estado-completada button:focus {
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Focus para tabs sin completar (amarillo suave) */
+::ng-deep .tabs-footer app-ui-boton.estado-sin-completar button:focus {
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Focus para tabs sin inicializar (gris suave) */
+::ng-deep .tabs-footer app-ui-boton.estado-sin-inicializar button:focus {
+  box-shadow: 0 0 0 2px rgba(156, 163, 175, 0.2) !important;
+}
+
+/* Estados de las tabs */
+.tab-boton-ui.tab-activo {
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tab-boton-ui.tab-inactivo {
+  opacity: 0.85;
+}
+
+/* ===================================================================================== */
+/* ESTADOS DE FASE EN LOS TABS - COLORES SEGÚN ESTADO */
+/* Usar ::ng-deep para sobrescribir estilos del componente UI-Boton */
+/* ===================================================================================== */
+
+/* Estado: COMPLETADA (Verde) */
+::ng-deep app-ui-boton.estado-completada button,
+::ng-deep .tab-boton-ui.estado-completada button,
+.tabs-footer ::ng-deep app-ui-boton.estado-completada button {
+  border-color: #10b981 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #059669 !important;
+}
+
+/* Texto del botón completada */
+::ng-deep app-ui-boton.estado-completada button span,
+::ng-deep .tab-boton-ui.estado-completada button span,
+::ng-deep app-ui-boton.estado-completada span {
+  color: #059669 !important;
+}
+
+::ng-deep app-ui-boton.estado-completada button:hover,
+::ng-deep .tab-boton-ui.estado-completada button:hover,
+.tabs-footer ::ng-deep app-ui-boton.estado-completada button:hover {
+  background: #f0fdf4 !important;
+  background-color: #f0fdf4 !important;
+  border-color: #059669 !important;
+  color: #047857 !important;
+}
+
+/* Icono verde para completada */
+::ng-deep app-ui-boton.estado-completada svg,
+::ng-deep .tab-boton-ui.estado-completada svg,
+::ng-deep .tab-boton-ui.estado-completada button svg,
+::ng-deep app-ui-boton.estado-completada button svg {
+  color: #10b981 !important;
+  stroke: #10b981 !important;
+  fill: none !important;
+}
+
+/* Estado: SIN COMPLETAR / INICIADO (Amarillo) */
+::ng-deep app-ui-boton.estado-sin-completar button,
+::ng-deep .tab-boton-ui.estado-sin-completar button,
+.tabs-footer ::ng-deep app-ui-boton.estado-sin-completar button {
+  border-color: #f59e0b !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #d97706 !important;
+}
+
+/* Texto del botón sin completar */
+::ng-deep app-ui-boton.estado-sin-completar button span,
+::ng-deep .tab-boton-ui.estado-sin-completar button span,
+::ng-deep app-ui-boton.estado-sin-completar span {
+  color: #d97706 !important;
+}
+
+::ng-deep app-ui-boton.estado-sin-completar button:hover,
+::ng-deep .tab-boton-ui.estado-sin-completar button:hover,
+.tabs-footer ::ng-deep app-ui-boton.estado-sin-completar button:hover {
+  background: #fffbeb !important;
+  background-color: #fffbeb !important;
+  border-color: #d97706 !important;
+  color: #b45309 !important;
+}
+
+/* Icono amarillo para sin completar */
+::ng-deep app-ui-boton.estado-sin-completar svg,
+::ng-deep .tab-boton-ui.estado-sin-completar svg,
+::ng-deep .tab-boton-ui.estado-sin-completar button svg,
+::ng-deep app-ui-boton.estado-sin-completar button svg {
+  color: #f59e0b !important;
+  stroke: #f59e0b !important;
+  fill: none !important;
+}
+
+/* Estado: SIN INICIALIZAR (Gris) */
+::ng-deep app-ui-boton.estado-sin-inicializar button,
+::ng-deep .tab-boton-ui.estado-sin-inicializar button,
+.tabs-footer ::ng-deep app-ui-boton.estado-sin-inicializar button {
+  border-color: #9ca3af !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #6b7280 !important;
+  opacity: 0.85;
+}
+
+/* Texto del botón sin inicializar */
+::ng-deep app-ui-boton.estado-sin-inicializar button span,
+::ng-deep .tab-boton-ui.estado-sin-inicializar button span,
+::ng-deep app-ui-boton.estado-sin-inicializar span {
+  color: #6b7280 !important;
+}
+
+::ng-deep app-ui-boton.estado-sin-inicializar button:hover,
+::ng-deep .tab-boton-ui.estado-sin-inicializar button:hover,
+.tabs-footer ::ng-deep app-ui-boton.estado-sin-inicializar button:hover {
+  background: #f9fafb !important;
+  background-color: #f9fafb !important;
+  border-color: #6b7280 !important;
+  color: #4b5563 !important;
+  opacity: 1;
+}
+
+/* Icono gris para sin inicializar */
+::ng-deep app-ui-boton.estado-sin-inicializar svg,
+::ng-deep .tab-boton-ui.estado-sin-inicializar svg,
+::ng-deep .tab-boton-ui.estado-sin-inicializar button svg,
+::ng-deep app-ui-boton.estado-sin-inicializar button svg {
+  color: #9ca3af !important;
+  stroke: #9ca3af !important;
+  fill: none !important;
+}
+
+/* ===================================================================================== */
+/* ESTADOS CUANDO EL TAB ESTÁ ACTIVO */
+/* ===================================================================================== */
+
+/* Tab activo + completada (Verde intenso) */
+::ng-deep app-ui-boton.tab-activo.estado-completada button,
+::ng-deep .tab-boton-ui.tab-activo.estado-completada button,
+.tabs-footer ::ng-deep app-ui-boton.tab-activo.estado-completada button {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+  border-color: #10b981 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Texto del botón activo completado */
+::ng-deep app-ui-boton.tab-activo.estado-completada button span,
+::ng-deep .tab-boton-ui.tab-activo.estado-completada button span,
+::ng-deep app-ui-boton.tab-activo.estado-completada span {
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+::ng-deep app-ui-boton.tab-activo.estado-completada svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-completada svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-completada button svg,
+::ng-deep app-ui-boton.tab-activo.estado-completada button svg {
+  color: #059669 !important;
+  stroke: #059669 !important;
+  fill: none !important;
+}
+
+/* Tab activo + sin completar (Amarillo intenso) */
+::ng-deep app-ui-boton.tab-activo.estado-sin-completar button,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-completar button,
+.tabs-footer ::ng-deep app-ui-boton.tab-activo.estado-sin-completar button {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border-color: #f59e0b !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  color: #92400e !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Texto del botón activo sin completar */
+::ng-deep app-ui-boton.tab-activo.estado-sin-completar button span,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-completar button span,
+::ng-deep app-ui-boton.tab-activo.estado-sin-completar span {
+  color: #92400e !important;
+  font-weight: 700 !important;
+}
+
+::ng-deep app-ui-boton.tab-activo.estado-sin-completar svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-completar svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-completar button svg,
+::ng-deep app-ui-boton.tab-activo.estado-sin-completar button svg {
+  color: #d97706 !important;
+  stroke: #d97706 !important;
+  fill: none !important;
+}
+
+/* Tab activo + sin inicializar (Gris intenso) */
+::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar button,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-inicializar button,
+.tabs-footer ::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar button {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  border-color: #9ca3af !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  color: #374151 !important;
+  font-weight: 700 !important;
+  opacity: 1;
+  box-shadow: 0 4px 6px rgba(156, 163, 175, 0.2) !important;
+}
+
+/* Texto del botón activo sin inicializar */
+::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar button span,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-inicializar button span,
+::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar span {
+  color: #374151 !important;
+  font-weight: 700 !important;
+}
+
+::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-inicializar svg,
+::ng-deep .tab-boton-ui.tab-activo.estado-sin-inicializar button svg,
+::ng-deep app-ui-boton.tab-activo.estado-sin-inicializar button svg {
+  color: #6b7280 !important;
+  stroke: #6b7280 !important;
+  fill: none !important;
+}
+
+/* ===================================================================================== */
+/* BOTONES DE ACCIÓN CON UI-BOTON */
+/* ===================================================================================== */
+
+.acciones-footer {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.boton-accion-footer {
+  padding: 8px 20px !important;
+  font-size: 14px !important;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+/* ✅ FOCUS MÁS SUAVE PARA BOTONES DE ACCIÓN */
+::ng-deep .acciones-footer app-ui-boton button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  /* Anillo azul muy suave */
+}
+
+/* ===================================================================================== */
+/* RESPONSIVE DEL MODAL */
+/* ===================================================================================== */
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .modal-contenedor {
+    width: 90vw;
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+  }
+
+  .modal-titulo {
+    font-size: 20px;
+  }
+
+  .modal-cuerpo {
+    padding: 24px;
+  }
+
+  .modal-footer {
+    padding: 14px 20px;
+  }
+
+  .footer-contenido {
+    gap: 15px;
+  }
+
+  .tabs-footer {
+    gap: 8px;
+  }
+
+  .tab-boton-ui {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    min-width: 120px;
+  }
+}
+
+/* Móviles - Todo se apila verticalmente */
+@media (max-width: 768px) {
+  .modal-contenedor {
+    width: 95vw;
+    max-height: 95vh;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-titulo {
+    font-size: 18px;
+  }
+
+  .modal-cuerpo {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+  }
+
+  /* En móvil, apilar verticalmente */
+  .footer-contenido {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tabs-footer {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tab-boton-ui {
+    width: 100% !important;
+    justify-content: center;
+    padding: 10px 14px !important;
+  }
+
+  .acciones-footer {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .boton-accion-footer {
+    width: 100% !important;
+  }
+}
+
+/* ===================================================================================== */
+/* ANIMACIONES Y TRANSICIONES */
+/* ===================================================================================== */
+
+/* Animación para el badge de estado */
+@keyframes pulse-badge {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.badge-crear,
+.badge-editar {
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+/* Transición suave para cambios de estado en tabs */
+.tab-boton-ui {
+  transition: all 0.3s ease !important;
+}
+
+/* Efecto hover mejorado para botones de acción */
+.boton-accion-footer:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ===================================================================================== */
+/* ESTILOS ADICIONALES PARA MEJOR INTEGRACIÓN */
+/* ===================================================================================== */
+
+/* Ajuste de iconos en los tabs */
+.tab-boton-ui [class*="w-full"] {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Asegurar que el texto de los botones no se corte */
+.tab-boton-ui span,
+.boton-accion-footer span {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Espaciado consistente entre icono y texto */
+.tab-boton-ui > *,
+.boton-accion-footer > * {
+  margin-right: 6px;
+}
+
+.tab-boton-ui > *:last-child,
+.boton-accion-footer > *:last-child {
+  margin-right: 0;
+}
+
+/* ===================================================================================== */
+/* ESTADOS DE CARGA Y DESHABILITADO */
+/* ===================================================================================== */
+
+/* Cuando el botón está cargando */
+.boton-accion-footer:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Indicador de carga animado */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.boton-accion-footer [class*="animate-spin"] {
+  animation: spin 1s linear infinite;
+}

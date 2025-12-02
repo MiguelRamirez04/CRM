@@ -18,13 +18,13 @@ export class ReparacionComponentesComponent implements OnInit {
   private router = inject(Router);        // 👈 3. Para navegar atrás
 
   // Ya no es fijo, inicia en 0 y se llena desde la URL
-  reparacionIdPadre = 0; 
+  reparacionIdPadre = 0;
 
   componentes = signal<ReparacionComponente[]>([]);
   compSeleccionado = signal<ReparacionComponente | null>(null);
   cargando = signal(false);
   error = signal<string | null>(null);
-  
+
   mostrarModal = signal(false);
   modoModal = signal<'crear' | 'editar'>('crear');
 
@@ -101,7 +101,7 @@ export class ReparacionComponentesComponent implements OnInit {
     this.cargando.set(true);
     // Aseguramos que el ID padre siempre vaya correcto
     this.formComponente.patchValue({ reparacionId: this.reparacionIdPadre });
-    
+
     const dto = this.formComponente.value as ReparacionComponenteDto;
 
     const obs = this.modoModal() === 'crear'
@@ -130,6 +130,8 @@ export class ReparacionComponentesComponent implements OnInit {
         detalle = Object.keys(error.error.errors).map(k => `${k}: ${error.error.errors[k]}`).join(' | ');
     }
     this.error.set(`${msg}: ${detalle}`);
-    setTimeout(() => this.error.set(null), 5000); 
+    setTimeout(() => this.error.set(null), 5000);
   }
 }
+
+

@@ -1,131 +1,199 @@
-<div class="contenedor-principal">
-  <!-- Encabezado -->
-  <div class="encabezado-fase">
-    <h1 class="titulo-fase">Fase - {{ tituloFase }}</h1>
+<!-- ============================================================ -->
+<!-- SECCIÓN DE FASE INTEGRADA (sin apariencia de modal) -->
+<!-- ============================================================ -->
 
-    <div class="fila-campos">
-      <div class="grupo-campo">
-        <label class="etiqueta-campo">Lugar</label>
-        <input type="text" class="campo-entrada" [(ngModel)]="lugar" placeholder="Ej: ODSficina central">
-      </div>
+<div class="contenedor-fase">
+  
+  <div class="contenido-fase">
+    
+    <!-- FILA 1: Lugar, Fecha, Score -->
+    <app-form-row [columns]="3" [gap]="'medium'">
+      
+      <!-- Lugar -->
+      <app-form-input
+        [label]="'Lugar'"
+        [placeholder]="'Ej: Oficina central'"
+        [type]="'text'"
+        [(ngModel)]="lugar"
+        (valueChange)="onCampoChange()">
+      </app-form-input>
+      
+      <!-- Fecha de creación -->
       <div class="grupo-campo">
         <label class="etiqueta-campo">Fecha de creación</label>
-        <input type="date" class="campo-entrada" [(ngModel)]="fechaCreacion">
+        <input 
+          type="date" 
+          class="campo-entrada" 
+          [(ngModel)]="fechaCreacion" 
+          (ngModelChange)="onCampoChange()">
       </div>
+      
+      <!-- Score de fase -->
       <div class="grupo-campo">
         <label class="etiqueta-campo">Score de fase (0-100)</label>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" class="campo-entrada" [(ngModel)]="scoreFase" min="0" max="100" style="flex: 1;">
-          <span style="color: var(--color-primario); font-size: 14px;">/100</span>
+        <div class="score-input-container">
+          <input 
+            type="number" 
+            class="campo-entrada score-input" 
+            [(ngModel)]="scoreFase" 
+            (ngModelChange)="onScoreChange($event)"
+            (keydown)="validarEntradaScore($event)"
+            (paste)="validarPegadoScore($event)"
+            min="0" 
+            max="100"
+            step="1">
+          <span class="score-max-label">/100</span>
         </div>
       </div>
-    </div>
 
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Descripción</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="descripcion"
-        placeholder="Describa qué se hizo o encontró..."></textarea>
-    </div>
+    </app-form-row>
+
+    <div style="margin-top: 16px;"></div>
+
+    <!-- Nota informativa -->
+    <app-form-info-alert
+      type="info"
+      [message]="'Al agregar una calificación mayor a 0, esta fase se marcará como completada'"
+      [showIcon]="true">
+    </app-form-info-alert>
+
+    <div style="margin-top: 8px;"></div>
+
+    <!-- Descripción -->
+    <app-form-textarea
+      [label]="'Descripción'"
+      [placeholder]="'Describa qué se hizo o encontró...'"
+      [rows]="4"
+      [(ngModel)]="descripcion"
+      (valueChange)="onCampoChange()">
+    </app-form-textarea>
 
     <hr class="separador">
 
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Sugerencias/Recomendaciones</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="sugerencias"
-        placeholder="Recomendaciones sobre el trabajo..."></textarea>
-    </div>
+    <!-- Sugerencias/Recomendaciones -->
+    <app-form-textarea
+      [label]="'Sugerencias/Recomendaciones'"
+      [placeholder]="'Recomendaciones sobre el trabajo...'"
+      [rows]="4"
+      [(ngModel)]="sugerencias"
+      (valueChange)="onCampoChange()">
+    </app-form-textarea>
 
     <hr class="separador">
 
-    <div class="grupo-campo">
-      <label class="etiqueta-campo">Nota general de evidencia</label>
-      <textarea class="campo-entrada campo-texto-area" [(ngModel)]="notaGeneral"
-        placeholder="Acciones o puntos a dar seguimiento..."></textarea>
-    </div>
-  </div>
+    <!-- Nota general de evidencia -->
+    <app-form-textarea
+      [label]="'Nota general de evidencia'"
+      [placeholder]="'Acciones o puntos a dar seguimiento...'"
+      [rows]="4"
+      [(ngModel)]="notaGeneral"
+      (valueChange)="onCampoChange()">
+    </app-form-textarea>
 
-  <!-- Sección de Fotos -->
-  <div class="seccion-contenido">
-    <h2 class="titulo-seccion">Fotos de Evidencia - {{ tituloFase }}</h2>
+    <hr class="separador">
 
-    <div class="area-subir-foto" (click)="abrirSelectorArchivo()">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-        class="icono-camara">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-      </svg>
-      <p class="texto-subir">Haga click para subir una foto</p>
-    </div>
+    <!-- SECCIÓN DE FOTOS -->
+    <div class="seccion-fotos">
+      <h4 class="titulo-seccion-fotos">Fotos de Evidencia - {{ tituloFase }}</h4>
+      
+      <!-- Advertencia -->
+      <app-form-info-alert
+        type="warning"
+        [message]="'Una vez guardada la imagen, no podrá ser modificada. Solo podrá eliminarla si es necesario.'"
+        [showIcon]="true">
+      </app-form-info-alert>
 
-    <!-- Tarjetas de Fotos -->
-    <div class="tarjeta-foto" *ngFor="let foto of fotos">
-      <div>
-        <div class="vista-previa-foto">
-          <img *ngIf="foto.preview" [src]="foto.preview" alt="Preview"
-            style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-          <svg *ngIf="!foto.preview" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-            stroke-width="1.5" stroke="currentColor" class="icono-foto-previa">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-          </svg>
-        </div>
-        <p class="texto-foto">FOTO</p>
+      <div style="margin-top: 12px;"></div>
+
+      <!-- Área para subir foto -->
+      <div class="area-subir-foto" (click)="abrirSelectorArchivo()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+          class="icono-camara">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+        </svg>
+        <p class="texto-subir">Haga click para subir una foto</p>
       </div>
-      <div class="detalles-foto">
-        <div class="fila-foto">
-          <div class="grupo-campo">
-            <label class="etiqueta-campo">Tipo de foto</label>
-            <select class="campo-entrada campo-select" [(ngModel)]="foto.tipo">
-              <option>General</option>
-              <option>Detalle</option>
-              <option>Otro</option>
-            </select>
-          </div>
-          <div class="grupo-campo">
-            <label class="etiqueta-campo">Fecha de subida</label>
-            <input type="date" class="campo-entrada" [(ngModel)]="foto.fecha">
-          </div>
-        </div>
 
-        <div class="grupo-campo">
-          <label class="etiqueta-campo">Descripción</label>
-          <textarea class="campo-entrada" [(ngModel)]="foto.descripcion"
-            placeholder="Descripción de la imagen..."></textarea>
+      <!-- Lista de fotos -->
+      <div class="tarjeta-foto" *ngFor="let foto of fotos">
+        <div>
+          <div class="vista-previa-foto">
+            <img *ngIf="foto.preview" 
+                 [src]="foto.preview" 
+                 alt="Preview de foto"
+                 (error)="onImageError($event, foto)"
+                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+            
+            <svg *ngIf="!foto.preview" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+              stroke-width="1.5" stroke="currentColor" class="icono-foto-previa">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+            </svg>
+          </div>
+          <p class="texto-foto">FOTO</p>
         </div>
-        <button class="boton-eliminar" (click)="eliminarFoto(foto.id)">Eliminar foto</button>
+        
+        <div class="detalles-foto">
+          <!-- Fila: Tipo y Fecha -->
+          <app-form-row [columns]="2" [gap]="'small'">
+            <div class="grupo-campo">
+              <label class="etiqueta-campo">Tipo de foto</label>
+              <select 
+                class="campo-entrada campo-select" 
+                [(ngModel)]="foto.tipo" 
+                (ngModelChange)="onCampoChange()"
+                [disabled]="modoOperacion === 'editar' && !!foto.fotoIdBD">
+                <option value="General">General</option>
+                <option value="Detalle">Detalle</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <span class="texto-ayuda" *ngIf="modoOperacion === 'editar' && foto.fotoIdBD">
+                No se puede modificar
+              </span>
+            </div>
+
+            <div class="grupo-campo">
+              <label class="etiqueta-campo">Fecha de subida</label>
+              <input 
+                type="date" 
+                class="campo-entrada" 
+                [(ngModel)]="foto.fecha" 
+                (ngModelChange)="onCampoChange()"
+                [disabled]="modoOperacion === 'editar' && !!foto.fotoIdBD">
+              <span class="texto-ayuda" *ngIf="modoOperacion === 'editar' && foto.fotoIdBD">
+                No se puede modificar
+              </span>
+            </div>
+          </app-form-row>
+
+          <!-- Descripción de la foto -->
+          <app-form-textarea
+            [label]="'Descripción'"
+            [placeholder]="(modoOperacion === 'editar' && foto.fotoIdBD) ? 'La descripción no puede modificarse una vez guardada' : 'Descripción de la imagen...'"
+            [rows]="2"
+            [disabled]="modoOperacion === 'editar' && !!foto.fotoIdBD"
+            [helpText]="(modoOperacion === 'editar' && foto.fotoIdBD) ? 'Este campo no puede modificarse después de guardar la imagen' : ''"
+            [(ngModel)]="foto.descripcion"
+            (valueChange)="onCampoChange()">
+          </app-form-textarea>
+          
+          <button class="boton-eliminar" (click)="eliminarFoto(foto.id)" type="button">
+            Eliminar foto
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensaje cuando no hay fotos -->
+      <div *ngIf="fotos.length === 0" class="sin-fotos">
+        <p>No hay fotos agregadas todavía</p>
       </div>
     </div>
 
-
-  </div>
-
-
-
-
-
-</div>
-
-<div class="recuadro-botones">
-
-  <div class="grupo-fases izquierda">
-    <button class="boton-fase" [class.activo]="faseActiva === 'infogeneral'" (click)="cambiarFase('infogeneral')">
-      Información general
-    </button>
-    <button class="boton-fase" [class.activo]="faseActiva === 'antes'" (click)="cambiarFase('antes')">
-      Fase ANTES
-    </button>
-    <button class="boton-fase" [class.activo]="faseActiva === 'despues'" (click)="cambiarFase('despues')">
-      Fase DESPUÉS
-    </button>
-  </div>
-
-  <div class="grupo-acciones">
-    <button class="btn-guardar" (click)="guardarEvaluacion()">Guardar</button>
-    <button class="btn-cerrar" (click)="cerrarFormulario()">Cerrar</button>
   </div>
 
 </div>

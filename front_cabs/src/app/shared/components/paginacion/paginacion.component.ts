@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
+import { UiBotonComponent } from '../../atoms/boton/boton.component';
 export interface ConfiguracionPaginacion {
   elementosPorPagina?: number;
   paginasVisiblesMaximas?: number;
@@ -15,7 +15,7 @@ export interface ConfiguracionPaginacion {
 @Component({
   selector: 'app-paginacion',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,UiBotonComponent],
   templateUrl: './paginacion.component.html',
   styleUrls: ['./paginacion.component.css']
 })

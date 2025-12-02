@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 
 @Component({
     selector: 'app-ui-icono',
+    standalone: true,
     templateUrl: './icono.component.html',
 })
 export class UiIconComponent {

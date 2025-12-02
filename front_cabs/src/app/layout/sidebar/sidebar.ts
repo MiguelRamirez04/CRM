@@ -5,18 +5,18 @@ import { SecureAuthService, User } from '../../../../src/app/core/services/secur
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-type IconType = 
-  | 'resumen' 
-  | 'evaluaciones' 
-  | 'reparaciones' 
-  | 'ordenes' 
-  | 'clientes' 
+type IconType =
+  | 'resumen'
+  | 'evaluaciones'
+  | 'reparaciones'
+  | 'ordenes'
+  | 'clientes'
   | 'cotizaciones'
   | 'viaticos'
   | 'vehiculos'
-  | 'calendario' 
-  | 'notificaciones' 
-  | 'configuracion' 
+  | 'calendario'
+  | 'notificaciones'
+  | 'configuracion'
   | 'tutorial'
   | 'ayuda';
 
@@ -57,7 +57,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Evaluaciones',
       icon: 'evaluaciones',
-      link: '/evaluaciones',
+      link: '/dashboard/evaluaciones',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       children: [
       /* {
@@ -71,7 +71,7 @@ export class Sidebar implements OnInit {
     {
       label: 'Reparaciones',
       icon: 'reparaciones',
-      link: '/modulesShared/reparaciones', 
+      link: '/modulesShared/reparaciones',
       children: [
       ]
     },
@@ -107,6 +107,7 @@ export class Sidebar implements OnInit {
       link: '/modulesShared/viaticos',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
     },
+
     {
       label: 'Vehículos',
       icon: 'vehiculos',
@@ -119,7 +120,7 @@ export class Sidebar implements OnInit {
       children: [
         {
           label: 'Catálogos Base',
-          icon: 'ordenes', 
+          icon: 'ordenes',
           link: '/legacy/catalogos-base',
           roles: ['ADMINISTRACION']
         },
@@ -130,7 +131,7 @@ export class Sidebar implements OnInit {
         },
         {
           label: 'Operaciones',
-          icon: 'reparaciones', 
+          icon: 'reparaciones',
           link: '/legacy/operaciones',
         },
 
@@ -216,7 +217,7 @@ export class Sidebar implements OnInit {
   toggleSubmenu(item: NavItem, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (item.children && item.children.length > 0) {
       item.expanded = !item.expanded;
     }
@@ -256,11 +257,11 @@ export class Sidebar implements OnInit {
    */
   getInitials(user: User | null): string {
     if (!user) return 'U';
-    
+
     if (user.nombre && user.apellido) {
       return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
     }
-    
+
     if (user.nombreCompleto) {
       const parts = user.nombreCompleto.split(' ');
       if (parts.length >= 2) {
@@ -268,12 +269,12 @@ export class Sidebar implements OnInit {
       }
       return parts[0].substring(0, 2).toUpperCase();
     }
-    
+
     if (user.name) {
       const parts = user.name.split(' ');
       return parts.map(p => p.charAt(0)).join('').substring(0, 2).toUpperCase();
     }
-    
+
     return 'U';
   }
 

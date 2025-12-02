@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, TemplateRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { TableHeaderCellComponent } from '../../atoms/tabla-base/table-header-cell/table-header-cell.component';
 import { TableCellComponent } from '../../atoms/tabla-base/table-cell/table-cell.component';
+import { UiBotonComponent } from '../../atoms/boton/boton.component';
 
 export interface ConfiguracionColumna<T = any> {
   encabezado: string;
@@ -13,8 +14,9 @@ export interface ConfiguracionColumna<T = any> {
 
 export interface AccionTabla<T = any> {
   etiqueta: string;
-  icono?: TemplateRef<any>;
+  icono?: string;
   clase?: string;
+  variante?: string; // Acepta cualquier string de variante
   accion: (item: T) => void;
   mostrar?: (item: T) => boolean;
 }
@@ -22,7 +24,12 @@ export interface AccionTabla<T = any> {
 @Component({
   selector: 'app-tabla-listado',
   standalone: true,
-  imports: [CommonModule, TableHeaderCellComponent, TableCellComponent],
+  imports: [
+    CommonModule, 
+    TableHeaderCellComponent, 
+    TableCellComponent,
+    UiBotonComponent
+  ],
   templateUrl: './tabla-listado.component.html',
   styleUrls: ['./tabla-listado.component.css']
 })
@@ -62,5 +69,9 @@ export class TablaListadoComponent<T = any> {
 
   obtenerAlineacion(columna: ConfiguracionColumna<T>): string {
     return columna.alineacion || 'center';
+  }
+
+  obtenerVarianteBoton(accion: AccionTabla<T>): string {
+    return accion.variante || 'primario';
   }
 }
