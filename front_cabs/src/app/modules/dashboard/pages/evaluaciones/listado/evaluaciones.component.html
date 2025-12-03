@@ -93,7 +93,6 @@
             [texto]="'Info General' + (vistaActualModal === 'infoGeneral' ? ' • ' + badgeEstadoModal.texto : '')"
             [anchoCompleto]="false"
             [mostrarIcono]="true"
-            [iconoPersonalizado]="iconoInfo"
             [clasesAdicionales]="'tab-boton-ui'"
             (alClickear)="cambiarVistaModal('infoGeneral')">
           </app-ui-boton>
@@ -104,7 +103,6 @@
             [texto]="'Fase ANTES'"
             [anchoCompleto]="false"
             [mostrarIcono]="true"
-            [iconoPersonalizado]="estadoFaseAntes === 'completada' ? iconoCheck : estadoFaseAntes === 'sin-completar' ? iconoEditar : iconoCerrar"
             [colorBorde]="obtenerColorBordeFase(estadoFaseAntes, vistaActualModal === 'faseAntes')"
             [colorTexto]="obtenerColorTextoFase(estadoFaseAntes, vistaActualModal === 'faseAntes')"
             [colorIcono]="obtenerColorIconoFase(estadoFaseAntes)"
@@ -120,7 +118,6 @@
             [texto]="'Fase DESPUÉS'"
             [anchoCompleto]="false"
             [mostrarIcono]="true"
-            [iconoPersonalizado]="estadoFaseDespues === 'completada' ? iconoCheck : estadoFaseDespues === 'sin-completar' ? iconoEditar : iconoCerrar"
             [colorBorde]="obtenerColorBordeFase(estadoFaseDespues, vistaActualModal === 'faseDespues')"
             [colorTexto]="obtenerColorTextoFase(estadoFaseDespues, vistaActualModal === 'faseDespues')"
             [colorIcono]="obtenerColorIconoFase(estadoFaseDespues)"

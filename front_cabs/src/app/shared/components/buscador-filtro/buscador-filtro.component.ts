@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiBotonComponent } from '../../atoms/boton/boton.component'; 
 
 export interface ConfiguracionBuscador {
   placeholderBusqueda?: string;
@@ -14,7 +13,7 @@ export interface ConfiguracionBuscador {
 @Component({
   selector: 'app-buscador-filtro',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiBotonComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './buscador-filtro.component.html',
   styleUrls: ['./buscador-filtro.component.css']
 })

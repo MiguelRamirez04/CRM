@@ -86,33 +86,7 @@ export const dashboardRoutes: Routes = [
         redirectTo: 'evaluaciones/nueva',
         pathMatch: 'full'
       },
-      
-      // =====================================================================================
-      // RUTAS DE COTIZACIONES
-      // =====================================================================================
-      
-      {
-        path: 'cotizaciones',
-        children: [
-          {
-            path: '',
-            redirectTo: 'vista',
-            pathMatch: 'full'
-          },
-          {
-            path: 'nueva',
-            loadComponent: () => import('./pages/cotizaciones/cotizacion.component').then(m => m.CotizacionComponent)
-          },
-          {
-            path: 'vista',
-            loadComponent: () => import('./pages/cotizaciones-vista/cotizaciones-vista.component').then(m => m.CotizacionesVistaComponent)
-          },
-          {
-            path: 'editar/:id',
-            loadComponent: () => import('./pages/cotizaciones/cotizacion.component').then(m => m.CotizacionComponent)
-          }
-        ]
-      },
+    
       
       // =====================================================================================
       // RUTAS DE CENTRO DE AYUDA

@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { UiIconComponent } from "../../shared/~exports/detail-view.index";
 
 type IconType =
   | 'resumen'
@@ -33,7 +34,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, UiIconComponent],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })
@@ -69,36 +70,9 @@ export class Sidebar implements OnInit {
       ]
     },
     {
-      label: 'Reparaciones',
-      icon: 'reparaciones',
-      link: '/modulesShared/reparaciones',
-      children: [
-      ]
-    },
-    {
-      label: 'Órdenes de Trabajo',
-      icon: 'ordenes',
-      link: '/recepcion/ordenes-trabajo',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
-      children: [
-        {
-          label: 'Ejecuciones de Orden',
-          icon: 'ordenes',
-          link: '/recepcion/ordenes-trabajo/ejecuciones',
-          roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
-        }
-      ]
-    },
-    {
       label: 'Clientes Legacy',
       icon: 'clientes',
       link: '/recepcion/clientes-completos',
-      roles: ['ADMINISTRACION', 'RECEPCION']
-    },
-    {
-      label: 'Cotizaciones',
-      icon: 'cotizaciones',
-      link: '/dashboard/cotizaciones',
       roles: ['ADMINISTRACION', 'RECEPCION']
     },
     {
@@ -146,33 +120,6 @@ export class Sidebar implements OnInit {
     }
   ];
 
-  private readonly secondaryNavItems: NavItem[] = [
-    {
-      label: 'Notificaciones',
-      icon: 'notificaciones',
-      link: '/notificaciones',
-      notify: true,
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
-    },
-    {
-      label: 'Configuración',
-      icon: 'configuracion',
-      link: '/configuracion',
-      roles: ['ADMINISTRACION']
-    },
-    {
-      label: 'Tutorial',
-      icon: 'tutorial',
-      link: '/tutorial',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
-    },
-    {
-      label: 'Ayuda',
-      icon: 'ayuda',
-      link: '/dashboard/centrodeayuda',
-      roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
-    }
-  ];
 
   mainNav: NavItem[] = [];
   secondaryNav: NavItem[] = [];
@@ -192,7 +139,6 @@ export class Sidebar implements OnInit {
     this.currentUserRole$.subscribe(role => {
       if (role) {
         this.mainNav = this.filterNavByRole(this.allNavItems, role);
-        this.secondaryNav = this.filterNavByRole(this.secondaryNavItems, role);
       }
     });
   }

@@ -1,7 +1,6 @@
 import { Component, forwardRef  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef } from '@angular/material/dialog';
-import { UiHeaderModalComponent } from '../../../molecules/headerModal/header-modal.component';
 import { UiInputComponent } from '../../../molecules/input/input.component';
 import { UiBotonComponent } from '../../../atoms/boton/boton.component';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -16,7 +15,6 @@ import { UiDividerComponent } from '../../../atoms/linea/linea.component';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    UiHeaderModalComponent,
     UiInputComponent,
     UiBotonComponent,
     UiDividerComponent
