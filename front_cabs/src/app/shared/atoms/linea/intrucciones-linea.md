@@ -17,8 +17,14 @@ import { UiDividerComponent } from './ruta/atomic/linea/linea.component';
 ```
 
 
-# Uso 
+# Uso
+## Divisor horizontal (por defecto)
 ```html
   </app-ui-divider>
+```
 
+## Divisor vertical
+
+```html
+  <app-ui-divider [horizontal]="false"></app-ui-divider>
 ```
