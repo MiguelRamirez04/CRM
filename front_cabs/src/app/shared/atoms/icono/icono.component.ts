@@ -1,9 +1,11 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-ui-icono',
     standalone: true,
     templateUrl: './icono.component.html',
+    imports: [CommonModule],
 })
 export class UiIconComponent {
     @Input() name: string = 'check'; 
