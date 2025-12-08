@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,26 +13,37 @@ import { UiInputComponent } from '../../../../shared/molecules/input/input.compo
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiHeaderComponent, UiAvatarComponent, UitipografiaComponent, UiDividerComponent, UiInputComponent, UiBotonComponent,BadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UiHeaderComponent,
+    UiAvatarComponent,
+    UitipografiaComponent,
+    UiDividerComponent,
+    UiInputComponent,
+    UiBotonComponent,
+  ],
   templateUrl: './profile.component.html',
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   private authService = inject(SecureAuthService);
   private router = inject(Router);
 
-  currentUser = this.authService.getCurrentUser();
-
+  currentUser: User | null = null;
   user$: Observable<User | null>;
 
-  showNewPassword: boolean | undefined;
-  showConfirmPassword: boolean | undefined;
-
-  ngOnInit(): void {
-  this.currentUser = this.authService.getCurrentUser();
-}
+  showNewPassword = false;
+  showConfirmPassword = false;
 
   constructor() {
     this.user$ = this.authService.currentUser$;
+  }
+
+  ngOnInit(): void {
+    // Inicializar usuario actual
+    this.currentUser = this.authService.getCurrentUser();
+    console.log('Usuario cargado en Profile:', this.currentUser);
+    
   }
 
   editProfile(): void {
@@ -43,20 +54,19 @@ export class ProfileComponent {
     alert('Funcionalidad de cambio de contraseña próximamente...');
   }
 
-
   // 📱 Campo teléfono
   isEditingPhone = false;
-  phoneNumber = '6183316693';
+  phoneNumber = '';
   phoneError = '';
 
-  toggleEditPhone() {
+  toggleEditPhone(): void {
     this.isEditingPhone = !this.isEditingPhone;
     if (this.isEditingPhone) {
       this.phoneError = '';
     }
   }
 
-  onPhoneInput(event: Event) {
+  onPhoneInput(event: Event): void {
     const input = event.target as HTMLInputElement;
     let value = input.value.replace(/[^0-9]/g, '').slice(0, 10);
     input.value = value;
@@ -64,7 +74,7 @@ export class ProfileComponent {
     this.validatePhone(value);
   }
 
-  validatePhone(value: string) {
+  validatePhone(value: string): void {
     if (value.length === 0) {
       this.phoneError = 'El número de teléfono es requerido';
     } else if (value.length < 10) {
@@ -76,7 +86,7 @@ export class ProfileComponent {
     }
   }
 
-  updatePhone() {
+  updatePhone(): void {
     this.validatePhone(this.phoneNumber);
     if (this.phoneError === '') {
       console.log('Actualizando teléfono:', this.phoneNumber);
@@ -104,23 +114,18 @@ export class ProfileComponent {
   confirmPassword = '';
   passwordError = '';
 
-
-  // Alternar visibilidad de contraseña actual
   toggleCurrentPasswordVisibility(): void {
     this.showCurrentPassword = !this.showCurrentPassword;
   }
 
-  // Alternar visibilidad de nueva contraseña
   toggleNewPasswordVisibility(): void {
     this.showNewPassword = !this.showNewPassword;
   }
 
-  // Alternar visibilidad de confirmación de contraseña
   toggleConfirmPasswordVisibility(): void {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // Método para actualizar contraseña
   updatePassword(): void {
     if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
       alert('Por favor, completa todos los campos.');
@@ -136,11 +141,39 @@ export class ProfileComponent {
       alert('La nueva contraseña debe tener al menos 6 caracteres.');
       return;
     }
+
     alert('✅ Contraseña actualizada correctamente.');
     this.currentPassword = '';
     this.newPassword = '';
     this.confirmPassword = '';
   }
 
+  // 🔹 Getters para usar en inputs y tipografías
+  get nombre(): string {
+    return this.currentUser?.name ?? '';
+  }
+
+  get apellido(): string {
+    return this.currentUser?.apellido ?? '';
+  }
+
+  get email(): string {
+    return this.currentUser?.email ?? '';
+  }
+
+  get telefono(): string {
+    return this.currentUser?.telefono?.toString() ?? '';
+  }
+
+  get rol(): string {
+        return this.currentUser?.role ?? '';
+
+  }
+
+  get fullName(): string {
+    if (!this.currentUser) return '';
+    if (this.currentUser.nombreCompleto) return this.currentUser.nombreCompleto;
+    return `${this.currentUser.nombre ?? ''} ${this.currentUser.apellido ?? ''}`.trim();
+  }
 
 }
