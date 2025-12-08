@@ -14,7 +14,6 @@ import { UitipografiaComponent } from '../../../../shared/atoms/tipografia/tipog
   selector: 'app-panel-control',
   imports: [CommonModule,UiHeaderComponent,UiCardComponent,UiBarraGraficaComponent,UiDividerComponent,UitipografiaComponent],  
   templateUrl: './panel-control.component.html',
-  styleUrls: ['./panel-control.component.css']
 })
 export class PanelControlComponent {
   @ViewChild('barCanvas') barCanvas!: ElementRef<HTMLCanvasElement>;
