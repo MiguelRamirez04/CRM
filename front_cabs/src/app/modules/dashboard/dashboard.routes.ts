@@ -9,14 +9,7 @@ export const dashboardRoutes: Routes = [
         path: '',
         loadComponent: () => import('./pages/landing/landing.component').then(m => m.DashboardComponent)
       },
-      {
-        path: 'profile',
-        loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent)
-      },
-      {
-        path: 'settings',
-        loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
-      },
+
       {
         path: 'calendario',
         loadComponent: () => import('./pages/calendario/calendario.component').then(m => m.CalendarioComponent)

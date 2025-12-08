@@ -28,7 +28,7 @@
 
       <!-- Badge de progreso -->
       <div class="mb-6 flex items-center justify-between">
-        <app-badge [tipo]="todasFasesCompletadas ? 'success' : 'info'" [mostrarIcono]="todasFasesCompletadas">
+        <app-badge [tipo]="todasFasesCompletadas ? 'success' : 'info'" >
           {{ fasesCompletadas }} de {{ totalFases }} fases completadas
         </app-badge>
 
@@ -152,7 +152,7 @@
               <span class="text-2xl text-gray-400">/100</span>
             </div>
 
-            <app-badge [tipo]="obtenerTipoBadgeScore(evaluacion.scoreCalidadTotal)" [mostrarIcono]="true">
+            <app-badge [tipo]="obtenerTipoBadgeScore(evaluacion.scoreCalidadTotal)" >
               {{
               (evaluacion.scoreCalidadTotal ?? 0) >= 90 ? 'Excelente' :
               (evaluacion.scoreCalidadTotal ?? 0) >= 80 ? 'Bueno' :
@@ -272,21 +272,21 @@
                 <!-- Score badge (solo si está completada) -->
                 <div *ngIf="faseData.estado === 'completada' && faseData.detalle && 
                            faseData.detalle.scoreFase !== null && faseData.detalle.scoreFase !== undefined">
-                  <app-badge [tipo]="obtenerTipoBadgeScore(faseData.detalle.scoreFase)" [mostrarIcono]="false">
+                  <app-badge [tipo]="obtenerTipoBadgeScore(faseData.detalle.scoreFase)" >
                     {{ faseData.detalle.scoreFase }}/100
                   </app-badge>
                 </div>
 
                 <!-- Badge de estado (sin completar) -->
                 <div *ngIf="faseData.estado === 'sin-completar'">
-                  <app-badge [tipo]="'warning'" [mostrarIcono]="true">
+                  <app-badge [tipo]="'warning'">
                     Sin calificar
                   </app-badge>
                 </div>
 
                 <!-- Badge de estado (sin inicializar) -->
                 <div *ngIf="faseData.estado === 'sin-inicializar'">
-                  <app-badge [tipo]="'default'" [mostrarIcono]="false">
+                  <app-badge [tipo]="'default'" >
                     Bloqueada
                   </app-badge>
                 </div>

@@ -1,0 +1,180 @@
+
+<div class="flex flex-col gap-8 " >
+
+  <!-- Encabezado -->
+  <app-ui-header
+    titulo="Mi perfil"
+    [visualizarButton]="false"
+    [visualizarDescripcion]="false"
+  ></app-ui-header>
+
+  <!-- Contenido-->
+  <div class="flex flex-col gap-8 bg-white rounded-2xl px-5 py-8 ">
+    <!-- Encabezdao contendio -->
+    <div class="flex flex-row gap-4">
+      <!-- Avatar -->
+      <app-ui-avatar class="h-full w-20"></app-ui-avatar>
+      <!-- Layout nombre y correo -->
+      <div class="flex flex-col gap-2">
+        <app-ui-tipografia
+          variante="h3"
+          [texto]="currentUser?.nombre || ''"
+
+        ></app-ui-tipografia>
+        <app-ui-tipografia
+          variante="h6"
+          texto="Tadeo@gamil.com"
+          [texto]="currentUser?.nombre || ''"
+          color=""
+        ></app-ui-tipografia>
+      </div>
+      <!-- Etiqueta del rol -->
+      <div class="bg-blue-800  flex items-center w-auto h-auto">
+        <app-ui-tipografia
+          variante="caption"
+          texto="Administrador"
+          color="text-white"
+        ></app-ui-tipografia>
+      </div>
+    </div>
+
+    <app-ui-divider></app-ui-divider>
+
+    <!-- Contenedor Información Personal -->
+    <div class="flex flex-col gap-4">
+      <!-- Contenedor texto y descripción-->
+      <div class="flex flex-col gap-3">
+        <app-ui-tipografia
+          variante="h4"
+          texto="Información personal"
+        ></app-ui-tipografia>
+        <app-ui-tipografia
+          variante="caption"
+          texto="(Edita únicamente los campos habilitados en color blanco.)"
+        ></app-ui-tipografia> 
+      </div>
+      <!-- Contendor informacion detallada -->   
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 md:flex-row">
+          <!-- Texto normal -->
+          <app-ui-input-field
+            label="Nombre"
+            variant="text"
+            nombreIcono="user"
+            placeholder="Tadeo "
+            [value]="'Juan Pérez'"
+            [(ngModel)]="currentUser!.nombre"
+            class="w-full">
+          </app-ui-input-field>
+          <!-- Texto apellido -->
+          <app-ui-input-field
+            label="Apellido"
+            variant="text"
+            nombreIcono="user"
+            placeholder="Díaz "
+            [value]="'Juan Pérez'"
+            [(ngModel)]="currentUser!.apellido"
+            class="w-full">
+          </app-ui-input-field>
+        </div>
+        <div class="flex flex-col gap-4 md:flex-row">
+          <!-- Texto correo electronico -->
+          <app-ui-input-field
+            label="Correo Electrónico"
+            variant="email"
+            nombreIcono="envelope"
+            placeholder="Ingresa tu nombre"
+            [value]="'Juan Pérez'"
+            [(ngModel)]="currentUser!.email"
+            class="w-full">
+          </app-ui-input-field>             
+          <!-- Texto celular -->
+          <app-ui-input-field
+            label="Celular"
+            variant="text"
+            nombreIcono="phone"
+            placeholder="Ingresa tu nombre"
+            [value]="'Juan Pérez'"
+            [editable]="false"
+            [(ngModel)]="currentUser!.telefono"
+            class="w-full">
+          </app-ui-input-field> 
+        </div>        
+      </div>  
+
+      <app-ui-divider></app-ui-divider>      
+
+      <div class="flex flex-col gap-4">
+        <app-ui-tipografia
+          variante="h4"
+          texto="Información adicional"
+        ></app-ui-tipografia>
+        <!-- Texto tipo de manejo -->
+        <div class="flex flex-col gap-4 md:flex-row">
+          <app-ui-input-field
+            label="Tipo de manejo"
+            variant="text"
+            nombreIcono="truck"
+            placeholder="Ingresa tu nombre"
+            [value]="'Juan Pérez'"
+            [(ngModel)]="currentUser!.name"
+            class="w-full">
+          </app-ui-input-field>    
+          <!-- Texto normal -->
+          <app-ui-input-field
+            label="Tipo de rol"
+            variant="text"
+            nombreIcono="identification"
+            placeholder="Ingresa tu nombre"
+            [(ngModel)]="currentUser!.rol"
+            [value]="'Ambos'"
+            class="w-full">
+          </app-ui-input-field>
+        </div>
+      </div>
+      <app-ui-divider></app-ui-divider> 
+      <!-- Contenedor cambiar contraseña -->
+      <div class="flex flex-col gap-4">
+        <app-ui-tipografia
+          variante="h4"
+          texto="Cambiar contraseña"
+        ></app-ui-tipografia>
+        <!-- Cambiar contraseña-->
+        <div class="flex flex-col gap-4">
+          <!-- Contraseña Actual -->
+          <app-ui-input-field
+            label="Contraseña actual"
+            variant="password"
+            nombreIcono="lock-closed"
+            [value]="'Password123!'"
+            class="w-[49%]">
+          </app-ui-input-field>
+          <!-- Sesión de cambiar contraseña-->
+          <div class="flex flex-col gap-4 md:flex-row">
+            <!-- Nueva contraseña -->
+            <app-ui-input-field
+              label="Nuevo contraseña"
+              variant="password"
+              nombreIcono="lock-closed"
+              [value]="'Password123!'"
+              class="w-full">
+            </app-ui-input-field>
+            <!-- Confirmación contraseña -->
+            <app-ui-input-field
+              label="Confirmarción contraseña"
+              variant="password"
+              nombreIcono="lock-closed"
+              [value]="'Password123!'"
+              class="w-full">
+            </app-ui-input-field>          
+          </div>
+          <app-ui-boton  
+          texto="Aceptar"
+          class="w-[25%]"
+          ></app-ui-boton>
+        </div>      
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -5,6 +5,7 @@ import { UiHeaderComponent } from '../../../../shared/molecules/header/header.co
 import { ModalCrearUsuario } from '../../../../shared/templates/modales/crear-usuario/modal-crear-usuario.component';
 import { SecureAuthService, User } from '../../../../core/services/secure-auth.service';
 import { UiInputComponent } from '../../../../shared/molecules/input/input.component';
+import { UiBotonComponent } from '../../../../shared/~exports/detail-view.index';
 
 // Interface que usarás en la tabla
 interface UsuarioTabla { 
@@ -40,7 +41,7 @@ interface AccionTabla<T = any> {
 @Component({
   selector: 'app-roles',
   standalone: true,
-  imports: [TablaListadoComponent, UiHeaderComponent, UiInputComponent],
+  imports: [TablaListadoComponent, UiHeaderComponent, UiInputComponent,UiBotonComponent],
   templateUrl: 'roles.component.html'
 })
 export class RolesComponent {

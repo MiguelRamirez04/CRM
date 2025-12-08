@@ -24,5 +24,109 @@
         [terminoBusqueda]="terminoBusqueda"
         >
     </app-tabla-listado>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+
+  <!-- ================================ -->
+  <!-- VARIANTES PRINCIPALES            -->
+  <!-- ================================ -->
+  <app-ui-boton variante="primario" texto="Botón Primario"></app-ui-boton>
+  <app-ui-boton variante="secundario" texto="Botón Secundario"></app-ui-boton>
+  <app-ui-boton variante="terciario" texto="Botón Terciario"></app-ui-boton>
+
+  <!-- ================================ -->
+  <!-- VARIANTES FUNCIONALES            -->
+  <!-- ================================ -->
+  <app-ui-boton variante="ver" texto="Ver"></app-ui-boton>
+  <app-ui-boton variante="editar" texto="Editar"></app-ui-boton>
+  <app-ui-boton variante="eliminar" texto="Eliminar"></app-ui-boton>
+  <app-ui-boton variante="guardar" texto="Guardar"></app-ui-boton>
+  <app-ui-boton variante="cancelar" texto="Cancelar"></app-ui-boton>
+  <app-ui-boton variante="descargar" texto="Descargar"></app-ui-boton>
+  <app-ui-boton variante="compartir" texto="Compartir"></app-ui-boton>
+  <app-ui-boton variante="buscar" texto="Buscar"></app-ui-boton>
+  <app-ui-boton variante="cerrar" texto="Cerrar"></app-ui-boton>
+  <app-ui-boton variante="info" texto="Info"></app-ui-boton>
+
+  <!-- ================================ -->
+  <!-- AZULES 1–10                      -->
+  <!-- ================================ -->
+  <app-ui-boton variante="azul-1" texto="Azul 1"></app-ui-boton>
+  <app-ui-boton variante="azul-2" texto="Azul 2"></app-ui-boton>
+  <app-ui-boton variante="azul-3" texto="Azul 3"></app-ui-boton>
+  <app-ui-boton variante="azul-4" texto="Azul 4"></app-ui-boton>
+  <app-ui-boton variante="azul-5" texto="Azul 5"></app-ui-boton>
+  <app-ui-boton variante="azul-6" texto="Azul 6"></app-ui-boton>
+  <app-ui-boton variante="azul-7" texto="Azul 7"></app-ui-boton>
+  <app-ui-boton variante="azul-8" texto="Azul 8"></app-ui-boton>
+  <app-ui-boton variante="azul-9" texto="Azul 9"></app-ui-boton>
+  <app-ui-boton variante="azul-10" texto="Azul 10"></app-ui-boton>
+
+  <!-- ================================ -->
+  <!-- VARIANTES NUEVAS - AZULES        -->
+  <!-- ================================ -->
+  <app-ui-boton variante="cielo-profundo" texto="Cielo profundo"></app-ui-boton>
+  <app-ui-boton variante="anil-suave" texto="Añil suave"></app-ui-boton>
+  <app-ui-boton variante="cian-vibrante" texto="Cian vibrante"></app-ui-boton>
+  <app-ui-boton variante="mar-oscuro" texto="Mar oscuro"></app-ui-boton>
+  <app-ui-boton variante="aqua-degradado" texto="Aqua degradado"></app-ui-boton>
+  <app-ui-boton variante="azul-frio" texto="Azul frío"></app-ui-boton>
+  <app-ui-boton variante="azul-electrico" texto="Azul eléctrico"></app-ui-boton>
+  <app-ui-boton variante="azul-metalico" texto="Azul metálico"></app-ui-boton>
+  <app-ui-boton variante="marino-uniforme" texto="Marino uniforme"></app-ui-boton>
+  <app-ui-boton variante="fusion-morada" texto="Fusión morada"></app-ui-boton>
+  <app-ui-boton variante="borde-azul" texto="Borde azul"></app-ui-boton>
+
+
+  <!-- ================================ -->
+  <!-- BOTÓN CON CARGA / DESHABILITADO  -->
+  <!-- ================================ -->
+  <app-ui-boton variante="primario" texto="Cargando…" [estaCargando]="true" textoAlCargar="Procesando..."></app-ui-boton>
+
+  <app-ui-boton variante="secundario" texto="Deshabilitado" [estaDeshabilitado]="true"></app-ui-boton>
+
+
+  <!-- ================================ -->
+  <!-- BOTONES CON ÍCONO                -->
+  <!-- ================================ -->
+  <app-ui-boton
+    variante="primario"
+    texto="Con Ícono"
+    [mostrarIcono]="true"
+    nombreIcono="user">
+  </app-ui-boton>
+
+  <app-ui-boton
+    variante="buscar"
+    texto="Buscar con icono"
+    [mostrarIcono]="true"
+    nombreIcono="search">
+  </app-ui-boton>
+
+
+  <!-- ================================ -->
+  <!-- BOTÓN SOLO ÍCONO                 -->
+  <!-- ================================ -->
+  <app-ui-boton
+    variante="primario"
+    [mostrarIcono]="true"
+    [visualizarTexto]="false"
+    nombreIcono="heart">
+  </app-ui-boton>
+
+
+  <!-- ================================ -->
+  <!-- BOTÓN PERSONALIZADO (COLORES)    -->
+  <!-- ================================ -->
+  <app-ui-boton
+    texto="Personalizado"
+    [colorBorde]="'#4F46E5'"
+    [colorFondo]="'#6366F1'"
+    [colorTexto]="'white'"
+    [colorHoverFondo]="'#4F46E5'"
+    [anchoBorde]="'2px'">
+  </app-ui-boton>
+
+</div>
+
 
 </div>

@@ -4,13 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SecureAuthService, User } from '../../../../core/services/secure-auth.service';
+import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
+import { UiAvatarComponent } from '../../../../shared/atoms/avatar/avatar.component';
+import { UitipografiaComponent, UiBotonComponent, BadgeComponent } from '../../../../shared/~exports/detail-view.index';
+import { UiDividerComponent } from "../../../../shared/atoms/linea/linea.component";
+import { UiInputComponent } from '../../../../shared/molecules/input/input.component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UiHeaderComponent, UiAvatarComponent, UitipografiaComponent, UiDividerComponent, UiInputComponent, UiBotonComponent,BadgeComponent],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent {
   private authService = inject(SecureAuthService);
@@ -23,6 +27,9 @@ export class ProfileComponent {
   showNewPassword: boolean | undefined;
   showConfirmPassword: boolean | undefined;
 
+  ngOnInit(): void {
+  this.currentUser = this.authService.getCurrentUser();
+}
 
   constructor() {
     this.user$ = this.authService.currentUser$;
@@ -36,24 +43,6 @@ export class ProfileComponent {
     alert('Funcionalidad de cambio de contraseña próximamente...');
   }
 
-  getInitials(user: User | null): string {
-    if (!user) return 'U';
-    if (user.nombre && user.apellido) {
-      return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
-    }
-    if (user.nombreCompleto) {
-      const parts = user.nombreCompleto.split(' ');
-      if (parts.length >= 2) {
-        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
-      }
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    if (user.name) {
-      const parts = user.name.split(' ');
-      return parts.map(p => p.charAt(0)).join('').substring(0, 2).toUpperCase();
-    }
-    return 'U';
-  }
 
   // 📱 Campo teléfono
   isEditingPhone = false;

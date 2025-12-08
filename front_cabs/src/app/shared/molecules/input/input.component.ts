@@ -17,7 +17,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   ]
 })
 export class UiInputComponent implements OnInit, ControlValueAccessor {
-
   /* Inputs */
   @Input() label: string = '';
   @Input() placeholder: string = '';
@@ -31,16 +30,21 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   @Input() options: { value: string; label: string }[] = [];
   @Input() labelObligatorio: boolean = false;
   @Input() nombreIcono: string = "user";
+  
+  // Nueva propiedad para controlar si el campo es editable
+  @Input() editable: boolean = false;
 
-  /*  Value del input  */
+  /* Value del input */
   @Input() value: any = '';
   editMode = false;
+  originalValue: any = '';
+  tempValue: any = '';
 
-  /*  Outputs opcionales  */
+  /* Outputs opcionales */
   @Output() valueChange = new EventEmitter<string>();
   @Output() checkedChange = new EventEmitter<boolean>();
 
-  /*  ControlValueAccessor  */
+  /* ControlValueAccessor */
   onChange: any = () => {};
   onTouched: any = () => {};
   isDisabled = false;
@@ -63,23 +67,116 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.isDisabled = isDisabled;
   }
 
-  /*   */
+  /* */
   iconoVisible: boolean = true;
   codeDigits: string[] = [];
 
   ngOnInit() {
     if (this.variant === 'code') {
       this.codeDigits = Array(this.codeLength).fill('');
+      if (this.value) {
+        this.codeDigits = this.value.split('').slice(0, this.codeLength);
+      }
     }
+  }
+
+  // Método para obtener el valor a mostrar en modo visualización
+  getDisplayValue(): string {
+    if (this.variant === 'select' && this.value) {
+      const option = this.options.find(opt => opt.value === this.value);
+      return option ? option.label : this.value;
+    }
+    if (this.variant === 'checkbox') {
+      return this.value === 'true' ? 'Sí' : 'No';
+    }
+    if (this.variant === 'password') {
+      return '••••••••';
+    }
+    if (this.variant === 'email' && this.value) {
+      return this.value;
+    }
+    if (this.variant === 'tel' && this.value) {
+      return this.value;
+    }
+    return this.value || '';
+  }
+
+  // Método para activar modo edición
+  activarEdicion(): void {
+    if (!this.editable || this.isDisabled) return;
+    
+    this.originalValue = this.value;
+    this.tempValue = this.value;
+    this.editMode = true;
+    
+    // Enfocar el input después de un breve delay
+    setTimeout(() => {
+      const input = document.querySelector('input, select') as HTMLElement;
+      if (input) input.focus();
+    }, 50);
+  }
+
+  // Método para guardar cambios
+  guardarCambios(): void {
+    if (this.validate()) {
+      this.value = this.tempValue;
+      this.editMode = false;
+      
+      // Actualizar codeDigits si es variant code
+      if (this.variant === 'code' && this.value) {
+        this.codeDigits = this.value.split('').slice(0, this.codeLength);
+      }
+      
+      // Emitir cambios
+      this.onChange(this.value);
+      this.valueChange.emit(this.value);
+      this.onTouched();
+    }
+  }
+
+  // Método para cancelar edición
+  cancelarEdicion(): void {
+    this.value = this.originalValue;
+    this.editMode = false;
+    this.textoError = '';
+    this.textoErrores = [];
+    this.onTouched();
+  }
+
+  // Método para desactivar edición (con validación)
+  desactivarEdicion(): void {
+    if (this.validate()) {
+      this.guardarCambios();
+    }
+  }
+
+  // Clases para modo visualización
+  obtenerClasesVisualizacion(): string {
+    const baseClasses = `
+      min-h-[44px] px-3 py-2.5 rounded-md border
+      bg-gray-50 text-gray-700 text-sm font-normal
+      flex items-center w-full
+      transition-colors duration-200
+      hover:bg-gray-100 cursor-default
+      border-gray-200
+    `;
+    
+    return baseClasses;
   }
 
   onTextChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.value = input.value;
-
-    this.onChange(this.value); 
-    this.valueChange.emit(this.value);
-
+    
+    if (this.editMode) {
+      // En modo edición, guardamos en tempValue
+      this.tempValue = input.value;
+    } else {
+      // En modo normal, actualizamos directamente el value
+      this.value = input.value;
+      this.onChange(this.value);
+      this.valueChange.emit(this.value);
+    }
+    
     this.validate();
   }
 
@@ -90,68 +187,74 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.codeDigits[index] = digit;
     const code = this.codeDigits.join('');
 
-    this.value = code;
-    this.onChange(code);
-    this.valueChange.emit(code);
+    this.tempValue = code;
+    this.validate();
 
     const next = input.nextElementSibling as HTMLInputElement;
-    if (digit && next) next.focus();
+    if (digit && next) {
+      next.focus();
+    }
   }
 
   onCheckboxChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.value = input.checked;
-    this.onChange(this.value);
-    this.checkedChange.emit(input.checked);
+    this.tempValue = input.checked ? 'true' : 'false';
+    this.validate();
   }
 
-  /*  Validaciones */
+  /* Validaciones */
   textoErrores: string[] = [];
 
-  setError(msg: string) { this.textoError = msg; }
-  clearError() { this.textoError = ''; }
+  setError(msg: string) { 
+    this.textoError = msg; 
+  }
+  
+  clearError() { 
+    this.textoError = ''; 
+  }
 
   validate(): boolean {
     this.textoErrores = [];
+    const valueToValidate = this.editMode ? this.tempValue : this.value;
 
-    if (this.labelObligatorio && !this.value) {
+    if (this.labelObligatorio && !valueToValidate) {
       this.setError(`El ${this.label.toLowerCase()} es obligatorio`);
       return false;
     }
 
-    if (this.variant === 'email' && this.value && !/\S+@\S+\.\S+/.test(this.value)) {
+    if (this.variant === 'email' && valueToValidate && !/\S+@\S+\.\S+/.test(valueToValidate)) {
       this.setError('Correo inválido');
       return false;
     }
 
-    if (this.variant === 'tel' && this.value) {
-      if (/[a-zA-Z]/.test(this.value)) {
+    if (this.variant === 'tel' && valueToValidate) {
+      if (/[a-zA-Z]/.test(valueToValidate)) {
         this.setError('Teléfono inválido, contiene letras');
         return false;
       }
-      if (/[^0-9\s]/.test(this.value)) {
-        this.setError('Teléfono inválido, contiene símbolos');
+      if (/[^0-9\s+\-()]/.test(valueToValidate)) {
+        this.setError('Teléfono inválido, contiene símbolos no permitidos');
         return false;
       }
     }
 
-    if (this.variant === 'password' && this.value) {
-      if (!/[A-Z]/.test(this.value)) {
+    if (this.variant === 'password' && valueToValidate) {
+      if (!/[A-Z]/.test(valueToValidate)) {
         this.textoErrores.push('La contraseña debe tener una mayúscula');
       }
-      if (this.value.length < 8) {
+      if (valueToValidate.length < 8) {
         this.textoErrores.push('Debe tener mínimo 8 caracteres');
       }
-      if (!/[!@#$%^&*(),.?":{}|<>]/.test(this.value)) {
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(valueToValidate)) {
         this.textoErrores.push('La contraseña debe tener un símbolo');
       }
     }
 
     this.clearError();
-    return true;
+    return this.textoErrores.length === 0;
   }
 
-  /*  Estilos  */
+  /* Estilos */
   obtenerClasesInput(): string {
     const baseInput = `
       rounded-md font-normal pl-8 pr-3 py-3 text-sm 
@@ -159,6 +262,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       w-full
       bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
       focus:ring-blue-500
+      disabled:opacity-50 disabled:cursor-not-allowed
     `;
 
     const baseInputSelect = `
@@ -167,13 +271,16 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       w-full
       bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
       focus:ring-blue-500
+      disabled:opacity-50 disabled:cursor-not-allowed
     `;
+    
     const baseInputSearch = `
       rounded-md font-normal pl-8 pr-3 py-3 text-sm 
       focus:outline-none focus:ring-1 
       w-full
       bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
       focus:ring-blue-500
+      disabled:opacity-50 disabled:cursor-not-allowed
     `;    
 
     // Si hay error, solo halo rojo en foco
@@ -198,19 +305,21 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return `${base} ${error} ${borde}`;
   }
 
-
-
-  /*  Otros  */
-
-  get mostrarLabelRojo() { return (this.labelObligatorio && !this.value) || !!this.textoError; }
+  /* Otros */
+  get mostrarLabelRojo() { 
+    return (this.labelObligatorio && !this.value) || !!this.textoError; 
+  }
 
   dropdownAbierto = false;
-  toggleDropdown() { this.dropdownAbierto = !this.dropdownAbierto; }
+  
+  toggleDropdown() { 
+    if (!this.isDisabled) {
+      this.dropdownAbierto = !this.dropdownAbierto; 
+    }
+  }
 
   seleccionar(valor: string) {
-    this.value = valor;
-    this.onChange(valor);
-    this.valueChange.emit(valor);
+    this.tempValue = valor;
     this.dropdownAbierto = false;
     this.validate();
   }
@@ -221,20 +330,18 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
 
   onBlur() {
     this.isFocused = false;
+    if (this.variant !== 'select') {
+      this.onTouched();
+    }
   }
+  
   getColorIcono(): string {
     if (this.textoError || this.textoErrores.length > 0) {
       return 'text-red-500';
     }
     if (this.isFocused) {
-      return 'text-blue-500 ';
+      return 'text-blue-500';
     }
     return 'text-zinc-500';
-  }
-
-  
-  // Metodo para cambiar el estado del input del 
-  actualizarLaber(){
-    this.editMode = true;
   }
 }

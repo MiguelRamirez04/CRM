@@ -1,132 +1,304 @@
-<div class="flex flex-col gap-2 ">
+<div class="flex flex-col gap-2">
   <!-- Label superior solo para inputs normales -->
   @if (variant !== 'checkbox') {
     @if (labelObligatorio) {
       <label class="text-sm font-medium text-zinc-700">
-        {{ label }} <span class="text-red-500">* </span>
+        {{ label }} <span class="text-red-500">*</span>
       </label>
-    }
-    @else {
+    } @else {
       <label class="text-sm font-medium text-zinc-700">{{ label }}</label>
     }
   }
 
-  <!-- Switch de variantes -->
-  @switch (variant) {
-    @case ('checkbox') {
-      <!-- Bloque checkbox -->
-      <div class="flex items-center gap-2">
-        <div class="flex items-center gap-2  relative">
-          <input
-            type="checkbox"
-            [checked]="value === 'true'"
-            (change)="onCheckboxChange($event)"
-            class="appearance-none h-4 w-4 border border-[var(--color-borde)] rounded-xs bg-white checked:bg-blue-500 checked:border-blue-500"
-          />       
-          <app-ui-icono
-            name="check"
-            size="size-4"
-            color="text-white"
-            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2  pointer-events-none"
-          ></app-ui-icono>
-        </div>
-        <label class="text-sm font-normal text-zinc-700">
-          {{ label }}
-          @if (labelObligatorio) {
-            <span class="text-red-500">* </span>
-          }
-        </label>
-      </div>
-    }
-    @case ('select') {
-      <!-- Bloque select -->
-      <div class="relative w-full flex ">
-        <button (click)="toggleDropdown()" [class]="obtenerClasesInput() + ' flex flex-row justify-between items-center pl-3 pr-3'">
-          
-          <!-- Contenedor icono + texto -->
-          <div class="flex flex-row gap-2 items-center">
+  <!-- MODO VISUALIZACIÓN (solo cuando editable=true y no está en modo edición) -->
+  @if (editable && !editMode && !isDisabled) {
+    <div class="flex items-center gap-2 group">
+      <!-- Campo de solo lectura -->
+      <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
+        <div class="flex items-center gap-2 h-full">
+          <!-- Icono para todos excepto checkbox -->
+          @if (variant !== 'checkbox' && variant !== 'select') {
             <app-ui-icono
               name="{{nombreIcono}}"
-              size="h-4 w-4"
-              [color]="getColorIcono()">
+              size="size-4"
+              color="text-zinc-500"
+              class="flex-shrink-0">
             </app-ui-icono>
-            <span>{{ value || 'Seleccione una opción' }}</span>
-          </div>
-          <!-- Contenedor flecha -->
-          <div>
-            @if (dropdownAbierto) {
-              <app-ui-icono
-                name="chevron-up"
-                size="h-4 w-4"
-                class="transition-transform duration-200">
-              </app-ui-icono>
-            }
-            @if (!dropdownAbierto){
-              <app-ui-icono
-                name="chevron-down"
-                size="h-4 w-4"
-                class="transition-transform duration-200">
-              </app-ui-icono>
-            }
-          </div>
-        </button>
-        <!-- Dropdown -->
-        @if (dropdownAbierto) {
-          <ul class="absolute top-full left-0 z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1">
-            @for (opt of options; track $index) {
-              <li
-                (click)="seleccionar(opt.value)"
-                class="px-3 py-2 hover:bg-violet-100 cursor-pointer text-sm text-zinc-700 ">
-                {{ opt.label }}
-              </li>
-            }
-          </ul>
-        }
-      </div>
-    }
-    @case ('search') {
-      <div class="relative w-full">
-        <!-- Input de búsqueda -->
-        <input
-          type="search"
-          [class]="obtenerClasesInput()" 
-          [placeholder]="placeholder || 'Buscar...'"
-          [value]="value"
-          (input)="onTextChange($event)"
-          (blur)="onBlur()" 
-          (focus)="onFocus()"          
-        />
-
-        <!-- Ícono de lupa a la derecha -->
-        <app-ui-icono
-          name="magnifying-glass"
-          size="size-4"
-          [color]="getColorIcono()"
-          class="absolute left-3 top-1/2 -translate-y-1/2">
-        </app-ui-icono>
+          }
+          
+          <!-- Valor mostrado -->
+          <span class="truncate">{{ getDisplayValue() }}</span>
+        </div>
       </div>
 
-
-    }
-    @default {
-      <!-- Bloque input normal -->
-      <div class="relative ">
-        <app-ui-icono
-          name="{{nombreIcono}}"
-          size="size-4"
-          [color]="getColorIcono()"
-          class="absolute left-3 top-1/2 -translate-y-1/2">
+      <!-- Botón para editar -->
+      <button 
+        type="button"
+        (click)="activarEdicion()"
+        class="edit-button p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+        title="Editar">
+        <app-ui-icono 
+          name="pencil-square" 
+          size="size-4">
         </app-ui-icono>
-        <input
-          [type]="variant"
-          [class]="obtenerClasesInput()"
-          [placeholder]="placeholder"
-          [value]="value"
-          (input)="onTextChange($event)"
-          (blur)="onBlur()" 
-          (focus)="onFocus()"          
+      </button>
+    </div>
+  }
+
+  <!-- MODO EDICIÓN o INPUT NORMAL (cuando editable=false o está en modo edición) -->
+  @if ((!editable && !isDisabled) || editMode || isDisabled) {
+    <!-- Switch de variantes -->
+    @switch (variant) {
+      @case ('checkbox') {
+        <!-- Bloque checkbox -->
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 relative">
+            <input
+              type="checkbox"
+              [checked]="value === 'true'"
+              [disabled]="isDisabled"
+              (change)="onCheckboxChange($event)"
+              class="appearance-none h-4 w-4 border border-[var(--color-borde)] rounded-xs bg-white checked:bg-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <app-ui-icono
+              name="check"
+              size="size-4"
+              color="text-white"
+              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            ></app-ui-icono>
+          </div>
+          <label class="text-sm font-normal text-zinc-700">
+            {{ label }}
+            @if (labelObligatorio) {
+              <span class="text-red-500">*</span>
+            }
+          </label>
+          
+          <!-- Botones de acción para checkbox solo en modo edición -->
+          @if (editMode && !isDisabled) {
+            <div class="flex gap-1 ml-2">
+              <button 
+                type="button"
+                (click)="guardarCambios()"
+                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                title="Guardar">
+                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+              </button>
+              <button 
+                type="button"
+                (click)="cancelarEdicion()"
+                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                title="Cancelar">
+                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+              </button>
+            </div>
+          }
+        </div>
+      }
+      
+      @case ('select') {
+        <!-- Bloque select -->
+        <div class="relative w-full">
+          <div class="flex items-center gap-2">
+            <div class="flex-1 relative">
+              <button 
+                (click)="toggleDropdown()" 
+                [disabled]="isDisabled"
+                [class]="obtenerClasesInput() + ' flex flex-row justify-between items-center pl-3 pr-3 disabled:opacity-50 disabled:cursor-not-allowed'">
+                
+                <!-- Contenedor icono + texto -->
+                <div class="flex flex-row gap-2 items-center">
+                  <app-ui-icono
+                    name="{{nombreIcono}}"
+                    size="h-4 w-4"
+                    [color]="getColorIcono()">
+                  </app-ui-icono>
+                  <span class="truncate">{{ getDisplayValue() || 'Seleccione una opción' }}</span>
+                </div>
+                <!-- Contenedor flecha -->
+                <div>
+                  @if (dropdownAbierto) {
+                    <app-ui-icono
+                      name="chevron-up"
+                      size="h-4 w-4"
+                      class="transition-transform duration-200">
+                    </app-ui-icono>
+                  }
+                  @if (!dropdownAbierto) {
+                    <app-ui-icono
+                      name="chevron-down"
+                      size="h-4 w-4"
+                      class="transition-transform duration-200">
+                    </app-ui-icono>
+                  }
+                </div>
+              </button>
+              
+              <!-- Dropdown -->
+              @if (dropdownAbierto) {
+                <ul class="absolute top-full left-0 z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                  @for (opt of options; track $index) {
+                    <li
+                      (click)="seleccionar(opt.value)"
+                      class="px-3 py-2 hover:bg-violet-100 cursor-pointer text-sm text-zinc-700 truncate">
+                      {{ opt.label }}
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+            
+            <!-- Botones de acción para select solo en modo edición -->
+            @if (editMode && !isDisabled) {
+              <div class="flex gap-1">
+                <button 
+                  type="button"
+                  (click)="guardarCambios()"
+                  class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                  title="Guardar">
+                  <app-ui-icono name="check" size="size-4"></app-ui-icono>
+                </button>
+                <button 
+                  type="button"
+                  (click)="cancelarEdicion()"
+                  class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                  title="Cancelar">
+                  <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      
+      @case ('search') {
+        <div class="relative w-full">
+          <!-- Input de búsqueda -->
+          <input
+            type="search"
+            [class]="obtenerClasesInput() + (editMode && !isDisabled ? ' pr-20' : '')" 
+            [placeholder]="placeholder || 'Buscar...'"
+            [value]="value"
+            [disabled]="isDisabled"
+            (input)="onTextChange($event)"
+            (blur)="onBlur()" 
+            (focus)="onFocus()"
+            (keydown.enter)="desactivarEdicion()"
+            (keydown.escape)="cancelarEdicion()"
           />
-      </div>
+
+          <!-- Ícono de lupa a la izquierda -->
+          <app-ui-icono
+            name="magnifying-glass"
+            size="size-4"
+            [color]="getColorIcono()"
+            class="absolute left-3 top-1/2 -translate-y-1/2">
+          </app-ui-icono>
+          
+          <!-- Botones de acción para search solo en modo edición -->
+          @if (editMode && !isDisabled) {
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+              <button 
+                type="button"
+                (click)="guardarCambios()"
+                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                title="Guardar">
+                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+              </button>
+              <button 
+                type="button"
+                (click)="cancelarEdicion()"
+                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                title="Cancelar">
+                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+              </button>
+            </div>
+          }
+        </div>
+      }
+      
+      @case ('code') {
+        <!-- Bloque code input -->
+        <div class="code-input-container">
+          <div class="flex gap-2 justify-center">
+            @for (digit of codeDigits; track $index) {
+              <input
+                type="text"
+                maxlength="1"
+                [value]="digit"
+                [disabled]="isDisabled"
+                class="w-12 h-12 text-center text-xl border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                (input)="onDigitChange($index, $event)"
+                (focus)="onFocus()"
+                (blur)="onBlur()"
+                (keydown.enter)="desactivarEdicion()"
+                (keydown.escape)="cancelarEdicion()"
+              />
+            }
+          </div>
+          <!-- Botones de acción para code solo en modo edición -->
+          @if (editMode && !isDisabled) {
+            <div class="flex gap-2 justify-center mt-2">
+              <button 
+                type="button"
+                (click)="guardarCambios()"
+                class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                Guardar
+              </button>
+              <button 
+                type="button"
+                (click)="cancelarEdicion()"
+                class="px-3 py-1 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
+                Cancelar
+              </button>
+            </div>
+          }
+        </div>
+      }
+      
+      @default {
+        <!-- Bloque input normal -->
+        <div class="relative">
+          <app-ui-icono
+            name="{{nombreIcono}}"
+            size="size-4"
+            [color]="getColorIcono()"
+            class="absolute left-3 top-1/2 -translate-y-1/2">
+          </app-ui-icono>
+          <input
+            [type]="variant"
+            [class]="obtenerClasesInput() + (editMode && !isDisabled ? ' pr-20' : '')"
+            [placeholder]="placeholder"
+            [value]="value"
+            [disabled]="isDisabled"
+            (input)="onTextChange($event)"
+            (blur)="onBlur()" 
+            (focus)="onFocus()"
+            (keydown.enter)="desactivarEdicion()"
+            (keydown.escape)="cancelarEdicion()"
+          />
+          
+          <!-- Botones de acción para inputs normales solo en modo edición -->
+          @if (editMode && !isDisabled) {
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+              <button 
+                type="button"
+                (click)="guardarCambios()"
+                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                title="Guardar">
+                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+              </button>
+              <button 
+                type="button"
+                (click)="cancelarEdicion()"
+                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                title="Cancelar">
+                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+              </button>
+            </div>
+          }
+        </div>
+      }
     }
   }
 

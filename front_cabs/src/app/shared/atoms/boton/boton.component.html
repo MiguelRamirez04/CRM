@@ -54,5 +54,8 @@
   </svg>
 
   <!-- Texto del botón (solo si tiene contenido) -->
-  <span *ngIf="texto && texto.trim()">{{ obtenerTexto() }}</span>
+  @if (texto && texto.trim()){
+    <span>{{ obtenerTexto() }}</span>
+  }
+  
 </button>

@@ -26,11 +26,12 @@ import { UiIconComponent } from "../../shared/atoms/icono/icono.component";
 import { UitipografiaComponent } from "../../shared/atoms/tipografia/tipografia.component";
 import { UiAvatarComponent } from "../../shared/atoms/avatar/avatar.component";
 import { User } from '../../core/services/secure-auth.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, NotificacionesComponent, ClickOutsideDirective, UiIconComponent, UitipografiaComponent, UiAvatarComponent,],
+  imports: [CommonModule, RouterModule, NotificacionesComponent, ClickOutsideDirective, UiIconComponent, UitipografiaComponent, UiAvatarComponent,],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })

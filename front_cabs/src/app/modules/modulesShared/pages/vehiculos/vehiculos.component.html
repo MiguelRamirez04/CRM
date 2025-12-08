@@ -218,8 +218,7 @@
         </app-detail-field>
         <app-detail-field label="Estado">
           <app-badge
-            [tipo]="vehiculo.activo ? 'success' : 'error'"
-            [mostrarIcono]="true">
+            [tipo]="vehiculo.activo ? 'success' : 'error'">
             {{ obtenerTextoEstado(vehiculo) }}
           </app-badge>
         </app-detail-field>

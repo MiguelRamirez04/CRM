@@ -91,7 +91,7 @@
             <span class="text-2xl text-gray-400">/100</span>
           </div>
 
-          <app-badge [tipo]="obtenerTipoBadgeScore(datosFase.scoreFase)" [mostrarIcono]="true">
+          <app-badge [tipo]="obtenerTipoBadgeScore(datosFase.scoreFase)">
             {{ (datosFase.scoreFase ?? 0) >= 80 ? 'Excelente' :
             (datosFase.scoreFase ?? 0) >= 60 ? 'Bueno' :
             (datosFase.scoreFase ?? 0) >= 40 ? 'Regular' : 'Bajo' }}
@@ -156,13 +156,13 @@
     <app-detail-section [titulo]="'Fotos de Evidencia'" [icono]="'camera'" [colorIcono]="'text-orange-600'">
 
       <div class="mb-4">
-        <app-badge [tipo]="tieneFotos ? 'success' : 'default'" [mostrarIcono]="false">
+        <app-badge [tipo]="tieneFotos ? 'success' : 'default'" >
           {{ cantidadFotos }} {{ cantidadFotos === 1 ? 'foto' : 'fotos' }}
         </app-badge>
       </div>
 
       <!-- Sin fotos -->
-      <app-alert *ngIf="!tieneFotos" [tipo]="'info'" [mostrarIcono]="false">
+      <app-alert *ngIf="!tieneFotos" [tipo]="'info'" >
         <div class="flex items-center space-x-2">
           <app-ui-icono [name]="'photo'" [size]="'w-5 h-5'" [color]="'text-blue-500'"></app-ui-icono>
           <app-ui-tipografia [variante]="'p'" [texto]="'No hay fotos de evidencia para esta fase'"
@@ -179,7 +179,7 @@
           <div class="flex items-center justify-between mb-3">
             <app-ui-tipografia [variante]="'h6'" [texto]="'Foto #' + (i + 1)"
               [color]="'text-gray-900'"></app-ui-tipografia>
-            <app-badge [tipo]="'default'" [mostrarIcono]="false">
+            <app-badge [tipo]="'default'" >
               {{ foto.tipo || 'General' }}
             </app-badge>
           </div>
