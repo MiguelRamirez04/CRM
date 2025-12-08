@@ -3,11 +3,6 @@ import { VehiculosComponent } from '../modulesShared/pages/vehiculos/vehiculos.c
 
 export const soporteRoutes: Routes = [
   {
-    path: '',
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.SoporteDashboardComponent)
-  },
-
-  {
     path: 'vehiculos',
     loadComponent: () => import('../modulesShared/pages/vehiculos/vehiculos.component').then(m => m.VehiculosComponent)
   },
@@ -19,8 +14,4 @@ export const soporteRoutes: Routes = [
     path: 'asignaciones',
     loadComponent: () => import('./pages/asignaciones/asignaciones.component').then(m => m.MisAsignacionesComponent)
   },
-  {
-    path: 'chat',
-    loadComponent: () => import('./pages/chat/chat.component').then(m => m.ChatComponent)
-  }
 ];
