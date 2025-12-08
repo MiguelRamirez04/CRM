@@ -11,9 +11,6 @@
   height: 100%;
   max-width: 280px;
   background-color: white;
-  border-top-right-radius: 1rem;
-  border-bottom-right-radius: 1rem;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -126,7 +123,7 @@
 .nav-link.active,
 .nav-link.nav-link-active {
   background-color: #eff2ff;
-  color: #4F46E5;
+  color: oklch(42.4% 0.199 265.638);
   font-weight: 600;
 }
 
@@ -159,7 +156,7 @@
 }
 
 .nav-icon-wrapper.active {
-  color: #4F46E5;
+  color: oklch(42.4% 0.199 265.638);
   
 }
 
@@ -189,7 +186,7 @@
 }
 
 .nav-label.active {
-  color: #4F46E5;
+  color: oklch(42.4% 0.199 265.638);
 }
 
 /* Submenu toggle button */
@@ -209,7 +206,7 @@
 }
 
 .submenu-toggle:hover {
-  color: #4F46E5;
+  color: oklch(42.4% 0.199 265.638);
 }
 
 .submenu-toggle.expanded svg {
@@ -257,7 +254,7 @@
 }
 
 .submenu-link.active .submenu-indicator {
-  background-color: #4F46E5;
+  background-color: oklch(42.4% 0.199 265.638);
 }
 
 /* Divider */

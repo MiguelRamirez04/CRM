@@ -19,6 +19,7 @@ type IconType =
   | 'notificaciones'
   | 'configuracion'
   | 'tutorial'
+  | 'usuarios'
   | 'ayuda';
 
 interface NavItem {
@@ -112,12 +113,19 @@ export class Sidebar implements OnInit {
       ],
     },
     {
+      label: 'Usuarios',
+      icon: 'usuarios',
+      link: '/modulesShared/usuarios',
+      roles: ['ADMINISTRACION'],
+    },
+    {
       label: 'Calendario',
       icon: 'calendario',
       link: '/dashboard/calendario',
       roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE'],
       notify: true
-    }
+    },
+
   ];
 
 
@@ -199,42 +207,10 @@ export class Sidebar implements OnInit {
   }
 
   /**
-   * Obtiene las iniciales del usuario
-   */
-  getInitials(user: User | null): string {
-    if (!user) return 'U';
-
-    if (user.nombre && user.apellido) {
-      return `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase();
-    }
-
-    if (user.nombreCompleto) {
-      const parts = user.nombreCompleto.split(' ');
-      if (parts.length >= 2) {
-        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
-      }
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-
-    if (user.name) {
-      const parts = user.name.split(' ');
-      return parts.map(p => p.charAt(0)).join('').substring(0, 2).toUpperCase();
-    }
-
-    return 'U';
-  }
-
-  /**
    * Toggle sidebar collapsed state
    */
   toggleSidebar(): void {
     this.isCollapsed = !this.isCollapsed;
   }
 
-  /**
-   * Toggle bandeja perfil
-   */
-  toggleBandejaPerfil(): void {
-    this.mostrarBandejaPerfil = !this.mostrarBandejaPerfil;
-  }
 }
