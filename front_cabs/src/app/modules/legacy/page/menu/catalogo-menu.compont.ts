@@ -1,17 +1,18 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
 
 @Component({
   selector: 'app-catalogo-menu',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, UiHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-6 md:p-10">
-      <h1 class="text-3xl font-bold text-gray-900 mb-6">
-        Catálogos Base
-      </h1>
-      
+    <div class="flex flex-col gap-8 w-full">
+      <app-ui-header
+        titulo="Catálogos Base"
+        [visualizarButton]="false"
+      ></app-ui-header>
       <nav class="flex items-center gap-6 border-b border-gray-300 overflow-x-auto">
         
         <a routerLink="./monedas"
@@ -46,7 +47,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 
       </nav>
       
-      <div class="mt-6 fade-in">
+      <div class=" fade-in">
         <router-outlet />
       </div>
     </div>
