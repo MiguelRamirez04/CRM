@@ -23,7 +23,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   @Input() variant:
     | 'text' | 'code' | 'email' | 'password' | 'tel' | 'number' | 'search'
     | 'url' | 'file' | 'button' | 'reset' | 'submit' | 'radio'
-    | 'checkbox' | 'range' | 'image' | 'select'
+    | 'checkbox' | 'range' | 'image' | 'select' | 'info'
     = 'text';
   @Input() codeLength: number = 6;
   @Input() textoError: string = '';
@@ -50,6 +50,11 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   isDisabled = false;
 
   isFocused:boolean = false;
+
+  // Nueva propiedad para determinar si el campo es solo lectura (info)
+  get isInfoMode(): boolean {
+    return this.variant === 'info';
+  }
 
   writeValue(value: any): void {
     this.value = value ?? '';
@@ -101,9 +106,9 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return this.value || '';
   }
 
-  // Método para activar modo edición
+  // Método para activar modo edición (no permitir para variant info)
   activarEdicion(): void {
-    if (!this.editable || this.isDisabled) return;
+    if (this.isInfoMode || !this.editable || this.isDisabled) return;
     
     this.originalValue = this.value;
     this.tempValue = this.value;
@@ -157,11 +162,14 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       bg-gray-50 text-gray-700 text-sm font-normal
       flex items-center w-full
       transition-colors duration-200
-      hover:bg-gray-100 cursor-default
+      hover:bg-gray-100
       border-gray-200
     `;
     
-    return baseClasses;
+    // Si es info mode, el cursor es default, si no, pointer para indicar que es editable
+    const cursorClass = this.isInfoMode ? 'cursor-default' : 'cursor-pointer';
+    
+    return `${baseClasses} ${cursorClass}`;
   }
 
   onTextChange(event: Event) {
@@ -260,27 +268,30 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       rounded-md font-normal pl-8 pr-3 py-3 text-sm 
       focus:outline-none focus:ring-1 
       w-full
-      bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
+      text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
+      bg-gray-50
     `;
 
     const baseInputSelect = `
       rounded-md font-normal pl-3 pr-3 py-3 text-sm 
       focus:outline-none focus:ring-1 
       w-full
-      bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
+      text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
+      bg-gray-50
     `;
     
     const baseInputSearch = `
       rounded-md font-normal pl-8 pr-3 py-3 text-sm 
       focus:outline-none focus:ring-1 
       w-full
-      bg-[var(--color-background-input)] text-[var(--color-texto-icono)]
+      text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
+      bg-gray-50
     `;    
 
     // Si hay error, solo halo rojo en foco
@@ -313,7 +324,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   dropdownAbierto = false;
   
   toggleDropdown() { 
-    if (!this.isDisabled) {
+    if (!this.isDisabled && !this.isInfoMode) {
       this.dropdownAbierto = !this.dropdownAbierto; 
     }
   }

@@ -10,9 +10,29 @@
     }
   }
 
-  <!-- MODO VISUALIZACIÓN (solo cuando editable=true y no está en modo edición) -->
-  @if (editable && !editMode && !isDisabled) {
-    <div class="flex items-center gap-2 group">
+  <!-- MODO INFO (siempre que variant sea 'info') -->
+  @if (isInfoMode) {
+    <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
+      <div class="flex items-center gap-2 h-full">
+        <!-- Icono para todos excepto checkbox -->
+        @if (variant !== 'checkbox' && variant !== 'select') {
+          <app-ui-icono
+            name="{{nombreIcono}}"
+            size="size-4"
+            color="text-zinc-500"
+            class="flex-shrink-0">
+          </app-ui-icono>
+        }
+        
+        <!-- Valor mostrado -->
+        <span class="truncate">{{ getDisplayValue() }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- MODO VISUALIZACIÓN (solo cuando editable=true y no está en modo edición y NO es info) -->
+  @else if (editable && !editMode && !isDisabled && !isInfoMode) {
+    <div class="flex items-center gap-2">
       <!-- Campo de solo lectura -->
       <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
         <div class="flex items-center gap-2 h-full">
@@ -31,11 +51,11 @@
         </div>
       </div>
 
-      <!-- Botón para editar -->
+      <!-- Botón para editar (SIEMPRE VISIBLE) -->
       <button 
         type="button"
         (click)="activarEdicion()"
-        class="edit-button p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+        class="edit-button p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
         title="Editar">
         <app-ui-icono 
           name="pencil-square" 
@@ -45,8 +65,8 @@
     </div>
   }
 
-  <!-- MODO EDICIÓN o INPUT NORMAL (cuando editable=false o está en modo edición) -->
-  @if ((!editable && !isDisabled) || editMode || isDisabled) {
+  <!-- MODO EDICIÓN o INPUT NORMAL (cuando editable=false o está en modo edición y NO es info) -->
+  @else if ((!editable && !isDisabled && !isInfoMode) || (editMode && !isInfoMode) || (isDisabled && !isInfoMode)) {
     <!-- Switch de variantes -->
     @switch (variant) {
       @case ('checkbox') {
@@ -67,6 +87,7 @@
               class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             ></app-ui-icono>
           </div>
+          
           <label class="text-sm font-normal text-zinc-700">
             {{ label }}
             @if (labelObligatorio) {
@@ -80,16 +101,16 @@
               <button 
                 type="button"
                 (click)="guardarCambios()"
-                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                class="p-1 text-green-800 hover:text-green-900 hover:bg-green-50 rounded transition-colors"
                 title="Guardar">
-                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+                <app-ui-icono name="check" size="size-4" color="text-green-800"></app-ui-icono>
               </button>
               <button 
                 type="button"
                 (click)="cancelarEdicion()"
-                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                class="p-1 text-red-800 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
                 title="Cancelar">
-                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+                <app-ui-icono name="x-mark" size="size-4" color="text-red-800"></app-ui-icono>
               </button>
             </div>
           }
@@ -154,16 +175,16 @@
                 <button 
                   type="button"
                   (click)="guardarCambios()"
-                  class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                  class="p-1 text-green-800 hover:text-green-900 hover:bg-green-50 rounded transition-colors"
                   title="Guardar">
-                  <app-ui-icono name="check" size="size-4"></app-ui-icono>
+                  <app-ui-icono name="check" size="size-4" color="text-green-800"></app-ui-icono>
                 </button>
                 <button 
                   type="button"
                   (click)="cancelarEdicion()"
-                  class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                  class="p-1 text-red-800 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
                   title="Cancelar">
-                  <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+                  <app-ui-icono name="x-mark" size="size-4" color="text-red-800"></app-ui-icono>
                 </button>
               </div>
             }
@@ -201,16 +222,16 @@
               <button 
                 type="button"
                 (click)="guardarCambios()"
-                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                class="p-1 text-green-800 hover:text-green-900 hover:bg-green-50 rounded transition-colors"
                 title="Guardar">
-                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+                <app-ui-icono name="check" size="size-4" color="text-green-800"></app-ui-icono>
               </button>
               <button 
                 type="button"
                 (click)="cancelarEdicion()"
-                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                class="p-1 text-red-800 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
                 title="Cancelar">
-                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+                <app-ui-icono name="x-mark" size="size-4" color="text-red-800"></app-ui-icono>
               </button>
             </div>
           }
@@ -242,13 +263,15 @@
               <button 
                 type="button"
                 (click)="guardarCambios()"
-                class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                class="px-3 py-1 text-sm text-green-800 bg-green-50 hover:bg-green-100 rounded transition-colors border border-green-800"
+                title="Guardar">
                 Guardar
               </button>
               <button 
                 type="button"
                 (click)="cancelarEdicion()"
-                class="px-3 py-1 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
+                class="px-3 py-1 text-sm text-red-800 bg-red-50 hover:bg-red-100 rounded transition-colors border border-red-800"
+                title="Cancelar">
                 Cancelar
               </button>
             </div>
@@ -284,16 +307,16 @@
               <button 
                 type="button"
                 (click)="guardarCambios()"
-                class="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                class="p-1 text-green-800 hover:text-green-900 hover:bg-green-50 rounded transition-colors"
                 title="Guardar">
-                <app-ui-icono name="check" size="size-4"></app-ui-icono>
+                <app-ui-icono name="check" size="size-4" color="text-green-800"></app-ui-icono>
               </button>
               <button 
                 type="button"
                 (click)="cancelarEdicion()"
-                class="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                class="p-1 text-red-800 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
                 title="Cancelar">
-                <app-ui-icono name="x-mark" size="size-4"></app-ui-icono>
+                <app-ui-icono name="x-mark" size="size-4" color="text-red-800"></app-ui-icono>
               </button>
             </div>
           }
