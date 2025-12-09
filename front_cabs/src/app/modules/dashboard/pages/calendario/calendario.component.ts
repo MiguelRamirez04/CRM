@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FullCalendarModule, FullCalendarComponent } from '@fullcalendar/angular';
 import { CalendarOptions } from '@fullcalendar/core';
 import esLocale from '@fullcalendar/core/locales/es';
+import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
 
 // Plugins
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -17,7 +18,7 @@ import adaptivePlugin from '@fullcalendar/adaptive';
 @Component({
   selector: 'app-calendario',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule],
+  imports: [CommonModule, FullCalendarModule,UiHeaderComponent],
   templateUrl: './calendario.component.html',
   styleUrls: ['./calendario.component.css']
 })
