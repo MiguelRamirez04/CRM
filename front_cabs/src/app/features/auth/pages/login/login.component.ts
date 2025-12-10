@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs'; 
 import { startWith } from 'rxjs/operators';
-
+import { UiIconComponent, UitipografiaComponent } from '../../../../shared/~exports/detail-view.index';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 
@@ -16,12 +16,14 @@ import { UiBotonComponent } from '../../../../shared/atoms/boton/boton.component
   selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule, 
-    ReactiveFormsModule, 
+    CommonModule,
+    ReactiveFormsModule,
     RouterLink,
-    UiInputComponent, 
-    UiBotonComponent  
-  ],
+    UiInputComponent,
+    UiBotonComponent,
+    UiIconComponent,
+    UitipografiaComponent
+],
   templateUrl: './login.component.html',
 })
 export class LoginComponent implements OnInit, OnDestroy {
