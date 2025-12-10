@@ -440,71 +440,83 @@ namespace back_cabs.CRM.controllers.Auth
         }
 
         /// <summary>
-        /// Obtiene información del usuario actualmente autenticado
+        /// Obtiene información completa del usuario actualmente autenticado
         /// </summary>
-        /// <returns>Información del usuario actual</returns>
+        /// <returns>Información completa del usuario actual</returns>
         /// <response code="200">Usuario obtenido exitosamente</response>
         /// <response code="401">Token inválido o no proporcionado</response>
+        /// <response code="500">Error interno del servidor</response>
         [HttpGet("me")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(UserMeResponseDto), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.InternalServerError)]
         public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
-                // Usar la información del usuario ya autenticado por el middleware
+                // Extraer el ID del usuario desde los claims del JWT
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 if (string.IsNullOrEmpty(userIdClaim))
                 {
-                    _logger.LogWarning("Usuario autenticado pero sin claim NameIdentifier");
+                    _logger.LogWarning("Usuario autenticado pero sin claim NameIdentifier. Claims disponibles: {Claims}", 
+                        string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
                     return Unauthorized(new { message = "Token de acceso inválido - falta ID de usuario" });
                 }
 
-                // Obtener los datos reales del usuario desde la base de datos usando el ID
+                // Validar y parsear el ID del usuario
                 if (!int.TryParse(userIdClaim, out var userId))
                 {
                     _logger.LogWarning("ID de usuario inválido en claims: {UserId}", userIdClaim);
                     return Unauthorized(new { message = "ID de usuario inválido en el token" });
                 }
 
+                // Obtener los datos completos del usuario desde la base de datos
                 var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userId);
+                
                 if (usuario == null)
                 {
                     _logger.LogWarning("Usuario no encontrado en BD para ID: {UserId}", userId);
                     return Unauthorized(new { message = "Usuario no encontrado" });
                 }
 
-                _logger.LogInformation("Usuario {Email} obtuvo su información exitosamente", usuario.Email);
+                _logger.LogInformation("Usuario {Email} (ID: {UserId}) obtuvo su información exitosamente", 
+                    usuario.Email, usuario.Id);
 
-                // Determinar rol (por defecto Recepcion si no está definido)
+                // Determinar rol (por defecto RECEPCION si no está definido)
                 var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
                     ? rol
                     : RolUsuario.RECEPCION;
 
-                return Ok(new
+                // Mapear a DTO de respuesta completo
+                var response = new UserMeResponseDto
                 {
-                    user = new
-                    {
-                        id = usuario.Id,
-                        email = usuario.Email,
-                        name = usuario.NombreCompleto,
-                        role = rolUsuario.ToString(), // Mantener en MAYÚSCULAS
-                        permissions = GetPermissionsByRole(rolUsuario),
-                        fechaRegistro = usuario.CreadoEn,
-                        tipoTransmision = usuario.TransmisionHabilitada
-                    }
-                });
+                    Id = usuario.Id,
+                    Email = usuario.Email,
+                    Nombre = usuario.Nombre,
+                    Apellido = usuario.Apellido,
+                    NombreCompleto = usuario.NombreCompleto,
+                    Telefono = usuario.Telefono,
+                    Rol = rolUsuario.ToString(),
+                    Permissions = GetPermissionsByRole(rolUsuario),
+                    Activo = usuario.Activo,
+                    TransmisionHabilitada = usuario.TransmisionHabilitada,
+                    PuedeUsarVehiculo = usuario.PuedeUsarVehiculo,
+                    CreadoEn = usuario.CreadoEn,
+                    ActualizadoEn = usuario.ActualizadoEn
+                };
+
+                return Ok(response);
             }
             catch (FormatException ex)
             {
                 _logger.LogError(ex, "Error de formato al procesar claims de usuario");
-                return Unauthorized(new { message = "Token inválido" });
+                return Unauthorized(new { message = "Token inválido - formato incorrecto" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener usuario actual");
+                _logger.LogError(ex, "Error inesperado al obtener usuario actual");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
