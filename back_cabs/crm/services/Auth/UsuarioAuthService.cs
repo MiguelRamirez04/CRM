@@ -268,19 +268,14 @@ namespace back_cabs.CRM.services.Auth
 
                 var usuario = await _usuarioRepository.GetByIdAsync(id);
 
-                if (usuario == null || !usuario.Activo)
-                {
-                    _logger.LogWarning("Usuario no encontrado con ID: {UserId}", id);
-                    return null;
-                }
-
                 if (usuario == null)
                 {
                     _logger.LogWarning("Usuario no encontrado con ID: {UserId}", id);
                     return null;
                 }
 
-                _logger.LogInformation("Usuario encontrado: {UserId} - {Email}", usuario.Id, usuario.Email);
+                _logger.LogInformation("Usuario encontrado: {UserId} - {Email} - Activo: {Activo}", 
+                    usuario.Id, usuario.Email, usuario.Activo);
                 return usuario;
             }
             catch (Exception ex)
@@ -289,6 +284,7 @@ namespace back_cabs.CRM.services.Auth
                 throw;
             }
         }
+
 
         /// <summary>
         /// Actualiza la contraseña de un usuario
