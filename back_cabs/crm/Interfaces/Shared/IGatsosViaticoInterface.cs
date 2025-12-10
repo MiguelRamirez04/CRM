@@ -23,6 +23,11 @@ namespace back_cabs.CRM.Interfaces
         Task<GastoViatico?> GetViaticoByIdForUpdateAsync(int id);
 
         /// <summary>
+        /// Obtiene un viático por ID incluyendo el vehículo relacionado (si existe)
+        /// </summary>
+        Task<GastoViatico?> GetViaticoConVehiculoAsync(int id);
+
+        /// <summary>
         /// Obtiene una lista paginada de viáticos según los filtros
         /// </summary>
         Task<(List<GastoViatico> Items, int TotalCount)> GetViaticosFilteredAsync(

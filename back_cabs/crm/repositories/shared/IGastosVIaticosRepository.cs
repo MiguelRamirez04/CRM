@@ -39,6 +39,17 @@ namespace back_cabs.CRM.Repositories
                 .FirstOrDefaultAsync(v => v.Id == id);
         }
 
+        /// <summary>
+        /// Obtiene un viático por ID incluyendo el vehículo relacionado (si existe)
+        /// </summary>
+        public async Task<GastoViatico?> GetViaticoConVehiculoAsync(int id)
+        {
+            return await _readContext.GastosViaticos
+                .AsNoTracking()
+                .Include(v => v.Vehiculo) // ✅ Cargar vehículo para evitar N+1
+                .FirstOrDefaultAsync(v => v.Id == id);
+        }
+
         public async Task<GastoViatico?> GetViaticoByIdForUpdateAsync(int id)
         {
             return await _writeContext.GastosViaticos.FindAsync(id);

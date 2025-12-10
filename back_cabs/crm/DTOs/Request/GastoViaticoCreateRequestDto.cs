@@ -10,6 +10,11 @@ namespace back_cabs.CRM.DTOs.Request
     {
         public int? OrdenId { get; set; }
 
+        /// <summary>
+        /// ID del vehículo usado para el viático (opcional)
+        /// </summary>
+        public int? VehiculoId { get; set; }
+
         [Required(ErrorMessage = "El campo TieneFactura es requerido")]
         public bool TieneFactura { get; set; }
 
@@ -43,6 +48,11 @@ namespace back_cabs.CRM.DTOs.Request
     public class GastoViaticoUpdateRequestDto
     {
         public int? OrdenId { get; set; }
+
+        /// <summary>
+        /// ID del vehículo usado para el viático (opcional)
+        /// </summary>
+        public int? VehiculoId { get; set; }
 
         [Required(ErrorMessage = "El campo TieneFactura es requerido")]
         public bool TieneFactura { get; set; }

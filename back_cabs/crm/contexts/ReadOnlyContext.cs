@@ -114,11 +114,6 @@ public class ReadOnlyContext : DbContext
     public DbSet<GastoViatico> GastosViaticos { get; set; } = null!;
 
     /// <summary>
-    /// Notificaciones del sistema (solo lectura)
-    /// </summary>
-    public DbSet<Notificacion> Notificaciones { get; set; } = null!;
-
-    /// <summary>
     /// Vista de conceptos completos con datos locales y legacy
     /// </summary>
     public DbSet<VwConceptosCompletos> VwConceptosCompletos { get; set; } = null!;

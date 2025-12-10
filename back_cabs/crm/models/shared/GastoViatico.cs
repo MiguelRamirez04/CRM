@@ -15,8 +15,17 @@ namespace back_cabs.CRM.models.Shared
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
+        /// <summary>
+        /// ID de la orden de trabajo (OPCIONAL - viáticos pueden ser independientes)
+        /// </summary>
         [Column("orden_id")]
         public int? OrdenId { get; set; }
+
+        /// <summary>
+        /// ID del vehículo usado para el viático (OPCIONAL)
+        /// </summary>
+        [Column("vehiculo_id")]
+        public int? VehiculoId { get; set; }
 
         [Required]
         [Column("tiene_factura")]
@@ -48,5 +57,16 @@ namespace back_cabs.CRM.models.Shared
         [Column("lugar_destino")]
         [StringLength(200)]
         public string? LugarDestino { get; set; }
+
+        // =====================================================================
+        // PROPIEDADES DE NAVEGACIÓN
+        // =====================================================================
+
+        /// <summary>
+        /// Vehículo utilizado para el viático (opcional)
+        /// Permite cargar con Include() para evitar N+1 queries
+        /// </summary>
+        [ForeignKey("VehiculoId")]
+        public virtual Vehiculo? Vehiculo { get; set; }
     }
 }

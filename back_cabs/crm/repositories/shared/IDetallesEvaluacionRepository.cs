@@ -22,14 +22,19 @@ namespace back_cabs.CRM.Repositories
         public async Task<List<EvaluacionDetalle>> GetByEvaluacionIdAsync(int evaluacionId)
         {
             return await _readOnlyContext.EvaluacionesDetalles
+                        .AsNoTracking() // ✅ Optimización: No trackear entidades en lecturas
                         .Where(d => d.EvaluacionId == evaluacionId)
+                        .OrderBy(d => d.Id) // ✅ Ordenamiento consistente
                         .ToListAsync();
         }
 
         public async Task<EvaluacionDetalle?> GetByIdAsync(int id)
         {
-            // Nota: Usamos ReadOnlyContext para lecturas
-            return await _readOnlyContext.EvaluacionesDetalles.FindAsync(id);
+            // ✅ Optimización: Usar FirstOrDefaultAsync con AsNoTracking para lecturas
+            // FindAsync no soporta AsNoTracking
+            return await _readOnlyContext.EvaluacionesDetalles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Id == id);
         }
 
         public async Task<EvaluacionDetalle> CreateAsync(EvaluacionDetalle detalle)

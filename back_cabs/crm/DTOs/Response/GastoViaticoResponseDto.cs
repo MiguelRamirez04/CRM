@@ -9,6 +9,21 @@ namespace back_cabs.CRM.DTOs.Response
     {
         public int Id { get; set; }
         public int? OrdenId { get; set; }
+        
+        /// <summary>
+        /// ID del vehículo usado (opcional)
+        /// </summary>
+        public int? VehiculoId { get; set; }
+        
+        /// <summary>
+        /// Nombre del vehículo (si se usó)
+        /// </summary>
+        public string? VehiculoNombre { get; set; }
+        
+        /// <summary>
+        /// Placas del vehículo (si se usó)
+        /// </summary>
+        public string? VehiculoPlacas { get; set; }
         public bool TieneFactura { get; set; }
         public string? Descripcion { get; set; }
         public string? ProveedorNombre { get; set; }

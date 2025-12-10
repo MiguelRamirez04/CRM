@@ -110,11 +110,7 @@ public class WriteContext : DbContext
     /// </summary>
     public DbSet<GastoViatico> GastosViaticos { get; set; } = null!;
 
-    /// <summary>
-    /// Notificaciones del sistema
-    /// </summary>
-    public DbSet<Notificacion> Notificaciones { get; set; } = null!;
-
+    // ═══════════════════════════════════════════════════════════════
     /// <summary>
     /// Vista de conceptos completos con datos locales y legacy
     /// </summary>

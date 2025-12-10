@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -83,5 +84,23 @@ namespace back_cabs.CRM.models.Shared
         [Required]
         [Column("creado_en", TypeName = "DATETIME2(0)")]
         public DateTime CreadoEn { get; set; } = DateTime.UtcNow;
+
+        // =====================================================================
+        // PROPIEDADES DE NAVEGACIÓN (para optimización de queries)
+        // =====================================================================
+
+        /// <summary>
+        /// Detalles de la evaluación (relación 1:N)
+        /// Permite cargar detalles con Include() para evitar N+1 queries
+        /// </summary>
+        public virtual ICollection<EvaluacionDetalle> Detalles { get; set; } = new List<EvaluacionDetalle>();
+
+        /// <summary>
+        /// Fotos de la evaluación a través de detalles (relación 1:N indirecta)
+        /// Nota: Las fotos están relacionadas con DetalleId, no directamente con EvaluacionId
+        /// Para cargar fotos: Include(e => e.Detalles).ThenInclude(d => d.Fotos)
+        /// </summary>
+        // public virtual ICollection<EvaluacionFoto> Fotos { get; set; } = new List<EvaluacionFoto>();
+        // ⚠️ Comentado porque las fotos están relacionadas con DetalleId, no EvaluacionId
     }
 }

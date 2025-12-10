@@ -19,7 +19,6 @@ using StackExchange.Redis;
 using back_cabs.CRM.Interfaces;
 using back_cabs.CRM.services.shared;
 using back_cabs.CRM.Repositories;
-using back_cabs.CRM.hubs;
 using Microsoft.Data.SqlClient;
 using back_cabs.CRM.Services.Shared;
 
@@ -93,13 +92,6 @@ builder.Services.AddControllers()
         // Configurar timezone para fechas
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
-
-// Configurar SignalR para notificaciones en tiempo real con autenticación
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true; // Para desarrollo
-    options.MaximumReceiveMessageSize = 102400; // 100KB
-});
 
 // Inyección de contextos de base de datos
 builder.Services.AddDbContext<ReadOnlyContext>(options =>
@@ -209,9 +201,6 @@ builder.Services.AddScoped<back_cabs.CRM.services.Soporte.ReparacionFotoService>
 // Servicio genérico de almacenamiento de archivos
 builder.Services.AddScoped<back_cabs.CRM.services.Files.IFileStorageService, back_cabs.CRM.services.Files.FileStorageService>();
 
-// Servicio de notificaciones con SignalR
-builder.Services.AddScoped<back_cabs.CRM.services.INotificacionService, back_cabs.CRM.services.NotificacionService>();
-
 // Servicios Legacy - Catálogos Adminpaq
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmMonedaRepository, back_cabs.CRM.repositories.Legacy.AdmMonedaRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Legacy.IAdmAgenteRepository, back_cabs.CRM.repositories.Legacy.AdmAgenteRepository>();
@@ -318,10 +307,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
+
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API v1");
         c.RoutePrefix = "swagger";
         // Inyectar script para manejar CSRF token automáticamente
         c.InjectJavascript("/swagger-ui/csrf-interceptor.js");
+        
     });
 }
 
@@ -330,9 +321,6 @@ app.UseHealthChecksConfiguration();
 
 // Controladores
 app.MapControllers();
-
-// Configurar SignalR Hub para notificaciones
-app.MapHub<NotificacionesHub>("/hubs/notificaciones");
 
 // Logging de inicio
 app.Logger.LogInformation("🚀 CRM API iniciada correctamente");

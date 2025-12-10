@@ -36,6 +36,7 @@ namespace back_cabs.CRM.Services.Shared
             var model = new GastoViatico
             {
                 OrdenId = dto.OrdenId,
+                VehiculoId = dto.VehiculoId, // ✅ Nuevo campo
                 TieneFactura = dto.TieneFactura,
                 Descripcion = dto.Descripcion,
                 ProveedorNombre = dto.ProveedorNombre,
@@ -74,7 +75,8 @@ namespace back_cabs.CRM.Services.Shared
 
         public async Task<GastoViaticoResponseDto?> GetViaticoByIdAsync(int id)
         {
-            var viatico = await _repository.GetViaticoByIdReadOnlyAsync(id);
+            // ✅ Usar método con Include para cargar vehículo
+            var viatico = await _repository.GetViaticoConVehiculoAsync(id);
             if (viatico == null) return null;
             return MapViaticoToResponseDto(viatico);
         }
@@ -86,6 +88,7 @@ namespace back_cabs.CRM.Services.Shared
 
             // Actualizar campos permitidos
             viatico.OrdenId = dto.OrdenId;
+            viatico.VehiculoId = dto.VehiculoId; // ✅ Nuevo campo
             viatico.TieneFactura = dto.TieneFactura;
             viatico.Descripcion = dto.Descripcion;
             viatico.ProveedorNombre = dto.ProveedorNombre;
@@ -107,6 +110,9 @@ namespace back_cabs.CRM.Services.Shared
             {
                 Id = v.Id,
                 OrdenId = v.OrdenId,
+                VehiculoId = v.VehiculoId, // ✅ Nuevo campo
+                VehiculoNombre = v.Vehiculo?.NombreVehiculo, // ✅ Datos del vehículo
+                VehiculoPlacas = v.Vehiculo?.Placas, // ✅ Datos del vehículo
                 TieneFactura = v.TieneFactura,
                 Descripcion = v.Descripcion,
                 ProveedorNombre = v.ProveedorNombre,

@@ -102,5 +102,13 @@ namespace back_cabs.CRM.models.Shared
         /// </summary>
         [Column("historial_cambios")]
         public string? HistorialCambios { get; set; }
+
+        /// <summary>
+        /// Indica si el vehículo está disponible para ser asignado
+        /// Se marca como false cuando se usa en un viático activo
+        /// </summary>
+        [Required]
+        [Column("disponible")]
+        public bool Disponible { get; set; } = true;
     }
 }

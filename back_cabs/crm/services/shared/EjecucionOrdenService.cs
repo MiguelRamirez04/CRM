@@ -26,21 +26,18 @@ namespace back_cabs.CRM.services.shared
         private readonly ReadOnlyContext _readContext;
         private readonly UsuarioAuthService _usuarioAuthService;
         private readonly ILogger<EjecucionOrdenService> _logger;
-        private readonly INotificacionService _notificacionService;
 
         public EjecucionOrdenService(
             IEjecucionOrdenRepository ejecucionRepository,
             WriteContext writeContext,
             ReadOnlyContext readContext,
             UsuarioAuthService usuarioAuthService,
-            INotificacionService notificacionService,
             ILogger<EjecucionOrdenService> logger)
         {
             _ejecucionRepository = ejecucionRepository ?? throw new ArgumentNullException(nameof(ejecucionRepository));
             _writeContext = writeContext ?? throw new ArgumentNullException(nameof(writeContext));
             _readContext = readContext ?? throw new ArgumentNullException(nameof(readContext));
             _usuarioAuthService = usuarioAuthService ?? throw new ArgumentNullException(nameof(usuarioAuthService));
-            _notificacionService = notificacionService ?? throw new ArgumentNullException(nameof(notificacionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -306,9 +303,6 @@ namespace back_cabs.CRM.services.shared
             // ✅ Repository Pattern: delegar ejecución con validaciones y auditoría
             await _ejecucionRepository.DelegateAsync(ejecucionId, nuevoTecnicoId, usuarioActualId);
 
-            // Notificar al nuevo técnico sobre la delegación
-            await _notificacionService.NotificarDelegacionAsync(ejecucionId, nuevoTecnicoId, motivo);
-
             _logger.LogInformation("Ejecución {EjecucionId} delegada exitosamente a técnico {NuevoTecnicoId}", ejecucionId, nuevoTecnicoId);
         }
 
@@ -406,12 +400,6 @@ namespace back_cabs.CRM.services.shared
 
             // ✅ Repository Pattern: actualizar ejecución con validaciones
             await _ejecucionRepository.UpdateAsync(ejecucion);
-
-            // Notificar finalización si se completó la ejecución
-            if (updates.HrFin.HasValue && !ejecucion.HrFin.HasValue)
-            {
-                await _notificacionService.NotificarEjecucionFinalizadaAsync(id);
-            }
 
             _logger.LogInformation("Ejecución {EjecucionId} actualizada exitosamente", id);
         }
@@ -581,9 +569,6 @@ namespace back_cabs.CRM.services.shared
 
                 _logger.LogInformation("Usuario {UsuarioId} tomó exitosamente la tarea de orden {OrdenId}, ejecución {EjecucionId} creada",
                     usuarioId, request.OrdenId, ejecucion.Id);
-
-                // Notificar a otros técnicos que la tarea ya no está disponible
-                await _notificacionService.NotificarTareaTomadaAsync(request.OrdenId, usuarioId);
 
                 return ejecucion;
             }

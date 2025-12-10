@@ -34,7 +34,6 @@ namespace back_cabs.Tests.UnitTests.Services
         private readonly ReadOnlyContext _readContext;            // ✅ Contexto REAL
         private readonly Mock<ILogger<EjecucionOrdenService>> _mockLogger;
         private readonly Mock<UsuarioAuthService> _mockUsuarioAuthService;
-        private readonly Mock<NotificacionService> _mockNotificacionService;
         private readonly EjecucionOrdenService _service;
 
         public EjecucionOrdenServiceTests()
@@ -42,7 +41,6 @@ namespace back_cabs.Tests.UnitTests.Services
             _mockRepository = new Mock<IEjecucionOrdenRepository>();
             _mockLogger = new Mock<ILogger<EjecucionOrdenService>>();
             _mockUsuarioAuthService = new Mock<UsuarioAuthService>();
-            _mockNotificacionService = new Mock<NotificacionService>();
 
             // ✅ Crear contextos REALES con InMemory database - USAR LA MISMA DATABASE
             var databaseName = Guid.NewGuid().ToString();
@@ -66,7 +64,6 @@ namespace back_cabs.Tests.UnitTests.Services
                 _writeContext,              // ✅ Contexto real
                 _readContext,               // ✅ Contexto real
                 _mockUsuarioAuthService.Object, // ✅ Mock del servicio de usuarios
-                _mockNotificacionService.Object, // ✅ Mock del servicio de notificaciones
                 _mockLogger.Object
             );
         }
