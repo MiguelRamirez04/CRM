@@ -271,7 +271,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-50
+      bg-gray-100
     `;
 
     const baseInputSelect = `
@@ -281,7 +281,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-50
+      bg-gray-100
     `;
     
     const baseInputSearch = `
@@ -291,7 +291,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-50
+      bg-gray-100
     `;    
 
     // Si hay error, solo halo rojo en foco
