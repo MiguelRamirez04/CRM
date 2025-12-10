@@ -1,20 +1,6 @@
-// =====================================================================================
-// COMPONENTE NOTIFICACIONES - notificaciones.component.ts
-// =====================================================================================
-//
-// ¿QUÉ HACE ESTE ARCHIVO?
-// Componente que muestra las notificaciones del sistema en un dropdown.
-// Integra SignalR para recibir notificaciones en tiempo real.
-//
-// FUNCIONALIDADES:
-// - Dropdown con lista de notificaciones
-// - Badge con contador de no leídas
-// - Marcar como leída al hacer clic
-// - Notificaciones en tiempo real vía SignalR
-// - Estados de conexión SignalR
-//
-// =====================================================================================
-
+// ============================================================
+// COMPONENTE DE NOTIFICACIONES - notificaciones.component.ts
+// ============================================================
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -23,120 +9,106 @@ import { SignalRService } from '../../../core/services/signalr.service';
 import { Notificacion } from '../../../core/models/notificacion.interface';
 import { ClickOutsideDirective } from '../../directives/click-outside.directive';
 import { UiIconComponent } from '../../atoms/icono/icono.component';
-
+import { UitipografiaComponent } from "../../~exports/detail-view.index";
+import { NOTIFICACIONES_FAKE } from './notificaciones.fake';
 
 @Component({
   selector: 'app-notificaciones',
   standalone: true,
-  imports: [CommonModule, ClickOutsideDirective,UiIconComponent],
-  templateUrl: './notificaciones.component.html',
-  styleUrls: ['./notificaciones.component.css']
+  imports: [CommonModule, ClickOutsideDirective, UiIconComponent, UitipografiaComponent],
+  templateUrl: './notificaciones.component.html'
 })
 export class NotificacionesComponent implements OnInit, OnDestroy {
+  // Estado del componente
   notificaciones: Notificacion[] = [];
   mostrarDropdown = false;
-  notificacionesNoLeidas = 0;
-  connectionState: 'connecting' | 'connected' | 'disconnected' | 'reconnecting' = 'disconnected';
-
-  private subscriptions: Subscription = new Subscription();
+  notificacionesNoLeidas = 0;  
+  // Modo prueba para desarrollo
+  private modoPrueba = true; // Cambia a false cuando tengas backend
+  private subscriptions = new Subscription();
 
   constructor(
     private notificacionesService: NotificacionesService,
     private signalRService: SignalRService
   ) {}
 
+  // INICIALIZACIÓN
   ngOnInit() {
-    // Suscribirse a cambios en notificaciones
-    this.subscriptions.add(
-      this.notificacionesService.notificaciones.subscribe(notificaciones => {
-        this.notificaciones = notificaciones;
-        this.notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-      })
-    );
-
-    // Suscribirse al estado de conexión SignalR
-    this.subscriptions.add(
-      this.signalRService.connectionState.subscribe(state => {
-        this.connectionState = state;
-      })
-    );
-
-    // Cargar notificaciones iniciales
-    this.cargarNotificaciones();
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.unsubscribe();
-  }
-
-  toggleDropdown() {
-    this.mostrarDropdown = !this.mostrarDropdown;
-    if (this.mostrarDropdown) {
+    if (this.modoPrueba) {
+      // Usar datos falsos para desarrollo
+      this.notificaciones = NOTIFICACIONES_FAKE;
+      this.actualizarContador();
+      console.log('🔔 Modo prueba activado - Usando datos falsos');
+    } else {
+      // Modo producción con backend real
+      this.suscribirNotificaciones();
       this.cargarNotificaciones();
     }
   }
 
+  // LIMPIEZA
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  // SUSCRIPCIONES
+  private suscribirNotificaciones() {
+    this.subscriptions.add(
+      this.notificacionesService.notificaciones.subscribe(notificaciones => {
+        this.notificaciones = notificaciones;
+        this.actualizarContador();
+      })
+    );
+  }
+
+
+  private actualizarContador() {
+    this.notificacionesNoLeidas = this.notificaciones.filter(n => !n.leida).length;
+  }
+
+  // UI - DROPDOWN
+  toggleDropdown() {
+    this.mostrarDropdown = !this.mostrarDropdown;
+    if (this.mostrarDropdown) {
+      console.log('📂 Dropdown abierto -', this.notificacionesNoLeidas, 'no leídas');
+    }
+  }
+
+  // DATOS
   cargarNotificaciones() {
+    if (this.modoPrueba) return; // No cargar en modo prueba
+    
     this.notificacionesService.getNotificaciones().subscribe({
-      next: (notificaciones) => {
-        console.log('📋 Notificaciones cargadas:', notificaciones.length);
-      },
-      error: (error) => {
-        console.error('❌ Error al cargar notificaciones:', error);
-      }
+      error: (error) => console.error('Error cargando notificaciones:', error)
     });
   }
 
-  marcarComoLeida(notificacion: Notificacion, event: Event) {
-    event.stopPropagation(); // Evitar que se cierre el dropdown
-
-    if (!notificacion.leida) {
+  // ACCIONES
+  marcarComoLeida(notificacion: Notificacion) {
+    if (notificacion.leida) return;
+    
+    if (this.modoPrueba) {
+      // Simular en modo prueba
+      notificacion.leida = true;
+      this.actualizarContador();
+      console.log('✅ Notificación marcada como leída:', notificacion.titulo);
+    } else {
       this.notificacionesService.marcarComoLeida(notificacion.id).subscribe({
-        next: () => {
-          console.log('✅ Notificación marcada como leída:', notificacion.id);
-        },
-        error: (error) => {
-          console.error('❌ Error al marcar notificación como leída:', error);
-        }
+        error: (error) => console.error('Error marcando como leída:', error)
       });
     }
   }
 
-  getPrioridadClass(prioridad: string): string {
-    switch (prioridad) {
-      case 'ALTA':
-        return 'border-l-4 border-red-500 bg-red-50';
-      case 'MEDIA':
-        return 'border-l-4 border-yellow-500 bg-yellow-50';
-      case 'BAJA':
-        return 'border-l-4 border-green-500 bg-green-50';
-      default:
-        return 'border-l-4 border-gray-500 bg-gray-50';
+  ejecutarAccion(notificacion: Notificacion) {
+    console.log('🎯 Acción ejecutada:', notificacion.accion);
+    
+    // Simular navegación (cambiar según tu router)
+    if (notificacion.accion) {
+      alert(`Navegando a: ${notificacion.accion}`);
+      // this.router.navigate([notificacion.accion]);
     }
-  }
-
-  getConnectionStatusClass(): string {
-    const classes = {
-      'connected': 'text-green-600',
-      'connecting': 'text-yellow-600',
-      'reconnecting': 'text-orange-600',
-      'disconnected': 'text-red-600'
-    };
-    return classes[this.connectionState] || 'text-gray-600';
-  }
-
-  getConnectionStatusText(): string {
-    switch (this.connectionState) {
-      case 'connected':
-        return '🟢 Conectado';
-      case 'connecting':
-        return '🟡 Conectando...';
-      case 'reconnecting':
-        return '🟠 Reconectando...';
-      case 'disconnected':
-        return '🔴 Desconectado';
-      default:
-        return '⚪ Desconocido';
-    }
+    
+    // Opcional: cerrar dropdown después de acción
+    // this.mostrarDropdown = false;
   }
 }
