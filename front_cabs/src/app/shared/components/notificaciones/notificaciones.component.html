@@ -1,13 +1,13 @@
 <!-- notificaciones.component.html -->
-<div class="relative">
+<div class="relative ">
   <button (click)="toggleDropdown()"
-          class="relative p-2 inline-flex text-gray-600 hover:text-gray-900 focus:outline-none">
+          class="relative p-2 cursor-pointer inline-flex text-gray-600 hover:text-gray-900 focus:outline-none hover:bg-gray-100 transition-colors duration-200 rounded-lg ">
     <app-ui-icono name="bell" size="size-5"></app-ui-icono>
     
     @if (notificacionesNoLeidas > 0) {
-<span class="absolute right-1/4 top-1/4 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full size-4 flex items-center justify-center">
-  {{notificacionesNoLeidas}}
-</span>
+      <span class="absolute right-1/4 top-1/4 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full size-4 flex items-center justify-center">
+        {{notificacionesNoLeidas}}
+      </span>
     }
   </button>
 
@@ -91,7 +91,7 @@
       <!-- FOOTER -->
       @if (notificaciones.length > 0) {
         <div class="p-3 border-t border-gray-200">
-          <button class="w-full text-sm text-gray-600 hover:text-gray-900">
+          <button class=" cursor-pointer w-full text-sm text-gray-600 hover:text-gray-900">
             Ver todas las notificaciones
           </button>
         </div>

@@ -1,61 +1,118 @@
 <!-- =====================================================================================
-     HEADER PRINCIPAL - header.component.html
-     =====================================================================================
+    HEADER PRINCIPAL - header.component.html
+    =====================================================================================
 
-     ¿QUÉ CONTIENE ESTE HEADER?
-     Barra de navegación superior con notificaciones y menú de usuario.
-     Se muestra en la parte superior de todas las páginas del dashboard.
+    ¿QUÉ CONTIENE ESTE HEADER?
+    Barra de navegación superior con notificaciones y menú de usuario.
+    Se muestra en la parte superior de todas las páginas del dashboard.
 
-     ELEMENTOS:
-     - Logo/branding
-     - Componente de notificaciones
-     - Información del usuario
-     - Menú desplegable de usuario
-     - Indicador de conexión SignalR
+    ELEMENTOS:
+    - Logo/branding
+    - Componente de notificaciones
+    - Información del usuario
+    - Menú desplegable de usuario
+    - Indicador de conexión SignalR
 
-     ===================================================================================== -->
+======================================================================================== -->
 
 <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-3">
   <div class="flex items-center justify-between">
     <!-- Logo y título -->
-    <div class="flex items-center space-x-4">
-      <app-ui-tipografia
-        variante="h4"
-        texto="CABS"
-      ></app-ui-tipografia>
-      <app-ui-tipografia
-        variante="caption"
-        texto="Sistema de Gestion"
-      ></app-ui-tipografia>
+    <div class="flex items-baseline space-x-4">
+      <app-ui-tipografia variante="h4" texto="CABS"></app-ui-tipografia>
+      <app-ui-tipografia variante="caption" texto="Sistema de Gestión"></app-ui-tipografia>
     </div>
+
     <!-- Panel derecho: Notificaciones y Usuario -->
     <div class="flex items-center space-x-4">
-      <!-- Indicador de conexión SignalR -->
-      <div class="flex items-center space-x-2 text-sm">
-        <div class="flex items-center space-x-1">
-          <div [class]="'w-2 h-2 rounded-full ' + (signalRConectado ? 'bg-green-500' : 'bg-red-500')"></div>
-          <span [class]="'text-xs ' + (signalRConectado ? 'text-green-600' : 'text-red-600')">
-            {{ signalRConectado ? 'Conectado' : 'Desconectado' }}
-          </span>
-        </div>
+      <!-- Menú de conexión SignalR -->
+      <div class="relative">
+        <button (click)="toggleMenuSignalR()" class="flex cursor-pointer items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+          
+          <!-- Ciruclo + texto -->
+          <div class="flex items-center space-x-2">
+            <!-- Círculo de estado -->
+            @switch(estadoUsuario){
+              @case ('conectado') {
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>                
+              }
+              @case ('descanso'){
+                <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              }
+              @case ('desconectado'){ 
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              }
+            }
+            <!-- Texto del estado -->
+            <span class="text-sm font-medium"
+                  [ngClass]="{
+                    'text-green-600': estadoUsuario === 'conectado',
+                    'text-yellow-600': estadoUsuario === 'descanso',
+                    'text-red-600': estadoUsuario === 'desconectado'
+                  }">
+              {{ estadoUsuario === 'conectado' ? 'Conectado' : estadoUsuario === 'descanso' ? 'En descanso' : 'Desconectado' }}
+            </span>
+          </div>
+          
+          <!-- Icono de flecha -->
+          <app-ui-icono
+            name="chevron-down"
+            size="size-4"
+            class="text-gray-500 transition-transform duration-200"
+            [class.rotate-180]="mostrarMenuSignalR"
+          ></app-ui-icono>
+        </button>    
+
+        <!-- Dropdown del menú de SignalR -->
+        @if (mostrarMenuSignalR) {
+          <div class="absolute right-0 mt-2 w-56 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-200 z-50"  clickOutside  (clickOutside)="onClicOutsideSignalR()">
+            
+            <!-- Opciones de estado -->
+            <div class="py-1">
+              <button (click)="cambiarEstadoUsuario('conectado')" 
+                      class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex gap-3 items-center">
+                <div class="size-3 rounded-full bg-green-500"></div>
+                <app-ui-tipografia variante="p-sm" texto="Conectado"></app-ui-tipografia>
+              </button>
+
+              <button (click)="cambiarEstadoUsuario('descanso')" 
+                      class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex gap-3 items-center">
+                <div class="size-3 rounded-full bg-yellow-400"></div>
+                <app-ui-tipografia variante="p-sm" texto="En descanso"></app-ui-tipografia>
+              </button>
+            </div>
+          </div>           
+        }
       </div>
+
       <!-- Componente de notificaciones -->
-      <app-notificaciones></app-notificaciones>
-      <!-- Separador -->
-      <div class="h-6 w-px bg-gray-300"></div>
+      <app-notificaciones ></app-notificaciones>
+
+      <!-- Separador vertical -->
+      <app-ui-divider [horizontal]="false" class="h-6 w-[1px]"></app-ui-divider>
+
       <!-- Menú de usuario -->
-      <div class="relative ">
-        <button (click)="toggleMenuUsuario()"
-          class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="relative">
+        <button (click)="toggleMenuUsuario()" class="flex  cursor-pointer items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
           <!-- Avatar -->
-          <div class="w-8 h-8">
+          <div class="size-8">
             <app-ui-avatar></app-ui-avatar>
           </div>
+
           <!-- Información del usuario -->
-          <div class="hidden md:block text-left">
-            <p class="text-sm font-medium text-gray-900">{{getFullName(usuarioActual) || 'Usuario' }}</p>
-            <p class="text-xs text-gray-500">{{getUserRole(usuarioActual) || 'Sin rol' }}</p>
+          <div class="hidden md:flex md:flex-col md:items-start leading-tight">
+            <app-ui-tipografia
+              variante="p-sm"
+              texto="{{getFullName(usuarioActual) || 'Usuario'}}"
+              color="text-gray-900"
+            ></app-ui-tipografia>
+            <app-ui-tipografia
+              variante="caption-md"
+              texto="{{getUserRole(usuarioActual) || 'Sin rol'}}"
+            ></app-ui-tipografia>
           </div>
+
           <!-- Icono de flecha -->
           <app-ui-icono
             name="chevron-down"
@@ -64,43 +121,45 @@
             [class.rotate-180]="mostrarMenuUsuario"
           ></app-ui-icono>
         </button>
+
         <!-- Dropdown del menú de usuario -->
         @if (mostrarMenuUsuario) {
-        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
-            clickOutside
-            (clickOutside)="onClickOutside()">
-            <!-- Nombre y correo-->
-          <div class="p-3 border-b border-gray-200">
-            <p class="text-sm font-medium text-gray-900">{{ usuarioActual?.nombre }}</p>
-            <p class="text-xs text-gray-500">{{ usuarioActual?.email }}</p>
+          <div class="absolute right-0 mt-2 w-48 overflow-hidden bg-white rounded-lg shadow-lg border border-gray-200 z-50" clickOutside (clickOutside)="onClickOutsideUsuario()">
+            
+            <!-- Nombre y correo -->
+            <div class="p-3 border-b border-gray-200">
+              <app-ui-tipografia variante="caption-md" texto="{{usuarioActual?.email}}"></app-ui-tipografia>
+            </div>
+
+            <!-- Opciones -->
+            <div class="py-1">
+              <a routerLink="/modulesShared/perfil" 
+                class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex gap-2 items-center">
+                <app-ui-icono name="user" size="size-4"></app-ui-icono>
+                <app-ui-tipografia variante="p-sm" texto="Perfil"></app-ui-tipografia>
+              </a>
+
+              <a routerLink="/modulesShared/configuracion" 
+                 class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex gap-2 items-center">
+                <app-ui-icono name="cog-6-tooth" size="size-4"></app-ui-icono>
+                <app-ui-tipografia variante="p-sm" texto="Configuración"></app-ui-tipografia>
+              </a>
+            </div>
+
+            <!-- Logout -->
+            <div class="border-t border-gray-200">
+              <button (click)="logout()" 
+                      class="w-full cursor-pointer text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 flex gap-1 items-center">  
+                <app-ui-icono
+                  name="arrow-right-start-on-rectangle"
+                  size="size-4"
+                  color="text-red-500"
+                  class="inline mr-2"
+                ></app-ui-icono>   
+                <app-ui-tipografia variante="p-sm" texto="Cerrar sesión"></app-ui-tipografia>                 
+              </button>
+            </div>
           </div>
-          <div class="py-1">
-            <a routerLink="/modulesShared/perfil" class=" px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex gap-3 items-center">
-              <app-ui-icono
-                name="user"
-                size="size-4"
-              ></app-ui-icono>
-              Perfil
-            </a>
-            <a routerLink="/modulesShared/congiruacion" class="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex gap-3 items-center">
-              <app-ui-icono
-                name="cog-6-tooth"
-                size="size-4"
-              ></app-ui-icono>
-              Configuración
-            </a>
-          </div>
-          <div class="border-t border-gray-200">
-            <button (click)="logout()" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 flex gap-1 items-center">     
-              <app-ui-icono
-                name="arrow-right-start-on-rectangle"
-                size="size-4"
-                class="inline mr-2"
-              ></app-ui-icono>      
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
         }
       </div>
     </div>

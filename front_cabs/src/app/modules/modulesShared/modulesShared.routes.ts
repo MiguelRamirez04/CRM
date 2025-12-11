@@ -27,7 +27,7 @@ export const modulesSharedRoutes: Routes = [
         loadComponent: () => import('../modulesShared/pages/profile/profile.component').then(m => m.ProfileComponent)
       },
       {
-        path: 'congiruacion',
+        path: 'configuracion',
         loadComponent: () => import('../modulesShared/pages/settings/settings.component').then(m => m.SettingsComponent)
       },            
     ]
