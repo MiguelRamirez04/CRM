@@ -1,180 +1,281 @@
-<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-8 h-full w-full mb-8 ">
 
-  <!-- Encabezado -->
-  <app-ui-header
-    titulo="Mi perfil"
-    [visualizarButton]="false"
-    [visualizarDescripcion]="false"
-  ></app-ui-header>
-
-  <!-- Contenido -->
-  <div class="flex flex-col gap-8 bg-white rounded-2xl px-5 py-8">
-
-    <!-- Encabezado contenido -->
-    <div class="flex flex-row gap-4">
-
-      <!-- Avatar -->
-      <app-ui-avatar class="h-full w-20"></app-ui-avatar>
-
-      <!-- Nombre + Correo -->
-      <div class="flex flex-col gap-2">
-        <app-ui-tipografia
-          variante="h3"
-          [texto]="fullName"
-        ></app-ui-tipografia>
-
-        <app-ui-tipografia
-          variante="h6"
-          [texto]="email"
-          color=""
-        ></app-ui-tipografia>
-      </div>
-
-      <!-- Rol -->
-      <div class="bg-blue-800 flex items-center px-3 rounded-md">
-        <app-ui-tipografia
-          variante="caption"
-          color="text-white"
-          [texto]="rol"
-        ></app-ui-tipografia>
-      </div>
-    </div>
-
-    <app-ui-divider></app-ui-divider>
-
-    <!-- Información Personal -->
+  <!-- Estado de error -->
+  @if (errorMessage) {
+  <div class="bg-red-50 border border-red-200 rounded-xl p-6">
     <div class="flex flex-col gap-4">
-
-      <div class="flex flex-col gap-3">
-        <app-ui-tipografia variante="h4" texto="Información personal"></app-ui-tipografia>
-        <app-ui-tipografia variante="caption" texto="(Edita únicamente los campos habilitados en color blanco.)"></app-ui-tipografia>
-      </div>
-
-      <!-- Inputs personales -->
-      <div class="flex flex-col gap-4">
-
-        <!-- Nombre + Apellido -->
-        <div class="flex flex-col gap-4 md:flex-row">
-          <app-ui-input-field
-            label="Nombre"
-            variant="info"
-            nombreIcono="user"
-            placeholder="Nombre"
-            [value]="nombre"
-            class="w-full">
-          </app-ui-input-field>
-
-          <app-ui-input-field
-            label="Apellido"
-            variant="info"
-            nombreIcono="user"
-            placeholder="Apellido"
-            [value]="apellido"
-            class="w-full">
-          </app-ui-input-field>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+          <span class="text-red-600 font-bold">!</span>
         </div>
-
-        <!-- Email + Celular -->
-        <div class="flex flex-col gap-4 md:flex-row">
-          <app-ui-input-field
-            label="Correo electrónico"
-            variant="info"
-            nombreIcono="envelope"
-            placeholder="Correo"
-            [value]="email"
-            class="w-full">
-          </app-ui-input-field>
-
-          <app-ui-input-field
-            label="Celular"
-            variant="tel"
-            nombreIcono="phone"
-            placeholder="Teléfono"
-            [value]="telefono"
-            class="w-full"
-            [editable]="true">
-          </app-ui-input-field>
-        </div>
-
-      </div>
-
-      <app-ui-divider></app-ui-divider>
-
-      <!-- Información adicional -->
-      <div class="flex flex-col gap-4">
-        <app-ui-tipografia variante="h4" texto="Información adicional"></app-ui-tipografia>
-
-        <div class="flex flex-col gap-4 md:flex-row">
-
-          <app-ui-input-field
-            label="Tipo de manejo"
-            variant="info"
-            nombreIcono="truck"
-            placeholder="Tipo de manejo"
-            class="w-full">
-          </app-ui-input-field>
-
-          <app-ui-input-field
-            label="Tipo de rol"
-            variant="info"
-            nombreIcono="identification"
-            placeholder="Rol"
-            class="w-full"
-            [value]="rol">
-          </app-ui-input-field>
-
+        <div>
+          <h3 class="text-lg font-semibold text-red-800">Error al cargar perfil</h3>
+          <p class="text-red-600">{{ errorMessage }}</p>
         </div>
       </div>
-
-      <app-ui-divider></app-ui-divider>
-
-      <!-- Cambiar contraseña -->
-      <div class="flex flex-col gap-4">
-
-        <app-ui-tipografia variante="h4" texto="Cambiar contraseña"></app-ui-tipografia>
-
-        <div class="flex flex-col gap-4">
-
-          <!-- Contraseña actual -->
-          <app-ui-input-field
-            label="Contraseña actual"
-            variant="password"
-            nombreIcono="lock-closed"
-            class="w-full md:w-[49%]"
-            [(ngModel)]="currentPassword">
-          </app-ui-input-field>
-
-          <!-- Nueva + Confirmación -->
-          <div class="flex flex-col gap-4 md:flex-row">
-
-            <app-ui-input-field
-              label="Nueva contraseña"
-              variant="password"
-              nombreIcono="lock-closed"
-              class="w-full"
-              [(ngModel)]="newPassword">
-            </app-ui-input-field>
-
-            <app-ui-input-field
-              label="Confirmar contraseña"
-              variant="password"
-              nombreIcono="lock-closed"
-              class="w-full"
-              [(ngModel)]="confirmPassword">
-            </app-ui-input-field>
-
-          </div>
-
-          <app-ui-boton  
-            texto="Aceptar"
-            class="w-[25%]"
-            (click)="updatePassword()"
-          ></app-ui-boton>
-
-        </div>
+      <div class="flex gap-3 mt-2">
       </div>
-
     </div>
   </div>
+  }
 
+  <!-- Contenido principal -->
+  @if (currentUser) {
+  <div class="flex flex-col gap-8 ">
+
+    <!-- Encabezado -->
+    <app-ui-header
+      titulo="Mi perfil"
+      [visualizarButton]="false"
+      [visualizarDescripcion]="false">
+    </app-ui-header>
+
+    <!-- Contenido del perfil -->
+    <div class="flex flex-col gap-8 bg-white rounded-2xl px-5 py-8 shadow-sm">
+
+      <!-- Encabezado contenido -->
+      <div class="flex flex-row gap-6 items-center ">
+        <!-- Avatar -->
+        <app-ui-avatar 
+          class="w-20 h-20">
+        </app-ui-avatar>
+        <!-- Nombre + Correo -->
+        <div class="flex flex-col gap-1 ">
+          <app-ui-tipografia
+            variante="h3"
+            [texto]="fullName"
+            class="text-gray-800">
+          </app-ui-tipografia>
+          <app-ui-tipografia
+            variante="h6"
+            [texto]="email"
+            color="text-gray-500"
+            class="font-normal">
+          </app-ui-tipografia>
+        </div>
+        <!-- Activo -->
+          @if (estaActivo === true) {
+            <div class="bg-green-200 flex items-center px-3 py-2 rounded-lg shadow-sm" >
+              <app-ui-tipografia
+                variante="caption-lg"
+                color="text-white"
+                texto="Activo"
+                color="text-green-800"
+                >
+              </app-ui-tipografia>
+            </div>              
+          }@else {
+            <div class="bg-red-200 flex items-center px-3 py-2 rounded-lg shadow-sm" >
+              <app-ui-tipografia
+                variante="caption-lg"
+                color="text-white"
+                texto="Inactivo"
+                color="text-red-800"
+                >
+              </app-ui-tipografia>
+            </div>   
+          }        
+      </div>
+
+      <app-ui-divider></app-ui-divider>
+
+      <!-- Información Personal -->
+      <div class="flex flex-col gap-4">
+
+        <!-- Título sección -->
+        <div class="flex flex-col gap-2">
+          <app-ui-tipografia 
+            variante="h4" 
+            texto="Información personal"
+            class="text-gray-800">
+          </app-ui-tipografia>
+          <app-ui-tipografia 
+            variante="caption" 
+            texto="(Edita únicamente los campos habilitados en color blanco.)"
+            color="text-gray-500">
+          </app-ui-tipografia>
+        </div>
+
+        <!-- Inputs personales -->
+        <div class="flex flex-col gap-6">
+
+          <!-- Nombre + Apellido -->
+          <div class="flex flex-col gap-6 md:flex-row">
+            <div class="w-full">
+              <app-ui-input-field
+                label="Nombre"
+                variant="info"
+                nombreIcono="user"
+                placeholder="Nombre"
+                [value]="nombre"
+                [editable]="false"
+                class="w-full">
+              </app-ui-input-field>
+            </div>
+
+            <div class="w-full">
+              <app-ui-input-field
+                label="Apellido"
+                variant="info"
+                nombreIcono="user"
+                placeholder="Apellido"
+                [value]="apellido"
+                [editable]="false"
+                class="w-full">
+              </app-ui-input-field>
+            </div>
+          </div>
+
+          <!-- Email + Celular -->
+          <div class="flex flex-col gap-6 md:flex-row">
+            <div class="w-full">
+              <app-ui-input-field
+                label="Correo electrónico"
+                variant="info"
+                nombreIcono="envelope"
+                placeholder="Correo"
+                [value]="email"
+                [editable]="false"
+                class="w-full">
+              </app-ui-input-field>
+            </div>
+
+            <div class="w-full">
+              <div class="flex flex-col gap-2">
+                <app-ui-input-field
+                  label="Celular"
+                  variant="tel"
+                  nombreIcono="phone"
+                  placeholder="Teléfono"
+                  [value]="telefono"
+                  [editable]="true"
+                  class="w-full"
+                  (input)="onPhoneInput($event)">
+                </app-ui-input-field>
+                <!-- Mensaje de error del teléfono -->
+                @if (phoneError) {
+                <div class="text-sm text-red-600 mt-1 pl-1">
+                  {{ phoneError }}
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <app-ui-divider></app-ui-divider>
+
+        <!-- Información adicional -->
+        <div class="flex flex-col gap-4">
+          <app-ui-tipografia 
+            variante="h4" 
+            texto="Información adicional"
+            class="text-gray-800">
+          </app-ui-tipografia>
+
+          <div class="flex flex-col gap-6 md:flex-row">
+            <div class="w-full">
+              <app-ui-input-field
+                label="Tipo de manejo"
+                variant="info"
+                nombreIcono="truck"
+                placeholder="Tipo de manejo"
+                [value]="transmisionHabilitada"
+                [editable]="false"
+                class="w-full">
+              </app-ui-input-field>
+            </div>
+
+            <div class="w-full">
+              <app-ui-input-field
+                label="Tipo de rol"
+                variant="info"
+                nombreIcono="identification"
+                placeholder="Rol"
+                [value]="rol"
+                [editable]="false"
+                class="w-full">
+              </app-ui-input-field>
+            </div>
+          </div>
+        </div>
+
+        <app-ui-divider></app-ui-divider>
+
+        <!-- Cambiar contraseña -->
+        <div class="flex flex-col gap-4">
+
+          <app-ui-tipografia 
+            variante="h4" 
+            texto="Cambiar contraseña"
+            class="text-gray-800">
+          </app-ui-tipografia>
+
+          <div class="flex flex-col gap-6">
+
+            <!-- Contraseña actual -->
+            <div class="w-full md:w-1/2">
+              <div class="relative">
+                <app-ui-input-field
+                  label="Contraseña actual"
+                  nombreIcono="lock-closed"
+                  [(ngModel)]="currentPassword"
+                  [variant]="showCurrentPassword ? 'text' : 'password'"
+                  class="w-full">
+                </app-ui-input-field>
+              </div>
+            </div>
+
+            <!-- Nueva + Confirmación -->
+            <div class="flex flex-col gap-6 md:flex-row">
+              <div class="w-full">
+                <div class="relative">
+                  <app-ui-input-field
+                    label="Nueva contraseña"
+                    nombreIcono="lock-closed"
+                    [(ngModel)]="newPassword"
+                    [variant]="showNewPassword ? 'text' : 'password'"
+                    class="w-full">
+                  </app-ui-input-field>
+                </div>
+              </div>
+
+              <div class="w-full">
+                <div class="relative">
+                  <app-ui-input-field
+                    label="Confirmar contraseña"
+                    nombreIcono="lock-closed"
+                    [(ngModel)]="confirmPassword"
+                    [variant]="showConfirmPassword ? 'text' : 'password'"
+                    class="w-full">
+                  </app-ui-input-field>
+                </div>
+              </div>
+            </div>
+            <!-- Botón para cambiar contraseña -->
+              <app-ui-boton  
+                variante="secundario"
+                texto="Cambiar contraseña"
+                class="w-1/5"
+                (click)="updatePassword()">
+              </app-ui-boton>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  } @else if (!errorMessage) {
+  <!-- Estado sin usuario (pero no hay error) -->
+  <div class="text-center py-12">
+    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <span class="text-gray-400 text-2xl">👤</span>
+    </div>
+    <h3 class="text-xl font-semibold text-gray-700 mb-2">No se encontró información del perfil</h3>
+    <p class="text-gray-500 mb-6">Por favor, inicia sesión para ver tu perfil.</p>
+    <app-ui-boton
+      texto="Ir al login"
+      class="w-auto px-6 mx-auto">
+    </app-ui-boton>
+  </div>
+  }
 </div>

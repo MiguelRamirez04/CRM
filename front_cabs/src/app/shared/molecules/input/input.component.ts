@@ -33,6 +33,9 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   
   // Nueva propiedad para controlar si el campo es editable
   @Input() editable: boolean = false;
+  
+  // Nueva propiedad para disabled
+  @Input() disabled: boolean = false;
 
   /* Value del input */
   @Input() value: any = '';
@@ -70,6 +73,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
 
   setDisabledState(isDisabled: boolean): void {
     this.isDisabled = isDisabled;
+    this.disabled = isDisabled; // Mantener consistencia
   }
 
   /* */
@@ -108,7 +112,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
 
   // Método para activar modo edición (no permitir para variant info)
   activarEdicion(): void {
-    if (this.isInfoMode || !this.editable || this.isDisabled) return;
+    if (this.isInfoMode || !this.editable || this.isDisabled || this.disabled) return;
     
     this.originalValue = this.value;
     this.tempValue = this.value;
@@ -166,13 +170,16 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       border-gray-200
     `;
     
-    // Si es info mode, el cursor es default, si no, pointer para indicar que es editable
-    const cursorClass = this.isInfoMode ? 'cursor-default' : 'cursor-pointer';
+    // Si está disabled, usar cursor-not-allowed
+    const cursorClass = this.disabled ? 'cursor-not-allowed opacity-70' : 
+                       this.isInfoMode ? 'cursor-default' : 'cursor-pointer';
     
     return `${baseClasses} ${cursorClass}`;
   }
 
   onTextChange(event: Event) {
+    if (this.disabled) return;
+    
     const input = event.target as HTMLInputElement;
     
     if (this.editMode) {
@@ -189,6 +196,8 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   }
 
   onDigitChange(index: number, event: Event) {
+    if (this.disabled) return;
+    
     const input = event.target as HTMLInputElement;
     const digit = input.value.slice(0, 1);
 
@@ -205,6 +214,8 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   }
 
   onCheckboxChange(event: Event) {
+    if (this.disabled) return;
+    
     const input = event.target as HTMLInputElement;
     this.tempValue = input.checked ? 'true' : 'false';
     this.validate();
@@ -313,7 +324,11 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
         base = baseInput;
         break;
     }
-    return `${base} ${error} ${borde}`;
+    
+    // Agregar clase disabled si está deshabilitado
+    const disabledClass = this.disabled ? 'opacity-50 cursor-not-allowed' : '';
+    
+    return `${base} ${error} ${borde} ${disabledClass}`;
   }
 
   /* Otros */
@@ -324,18 +339,21 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   dropdownAbierto = false;
   
   toggleDropdown() { 
-    if (!this.isDisabled && !this.isInfoMode) {
+    if (!this.isDisabled && !this.disabled && !this.isInfoMode) {
       this.dropdownAbierto = !this.dropdownAbierto; 
     }
   }
 
   seleccionar(valor: string) {
+    if (this.disabled) return;
+    
     this.tempValue = valor;
     this.dropdownAbierto = false;
     this.validate();
   }
 
   onFocus() {
+    if (this.disabled) return;
     this.isFocused = true;
   }
 
@@ -347,6 +365,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   }
   
   getColorIcono(): string {
+    if (this.disabled) return 'text-gray-400';
     if (this.textoError || this.textoErrores.length > 0) {
       return 'text-red-500';
     }
