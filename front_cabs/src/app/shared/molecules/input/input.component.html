@@ -1,4 +1,5 @@
 <div class="flex flex-col gap-2">
+  <!-- Label superior solo para inputs normales -->
   @if (variant !== 'checkbox' && variant !== 'filter-checkbox' && variant !== 'toggle') {
     <div class="label-row flex justify-between items-center">
       @if (labelObligatorio) {
@@ -15,15 +16,19 @@
     </div>
   }
 
+  <!-- MODO INFO (siempre que variant sea 'info') -->
   @if (isInfoMode) {
     <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
       <div class="flex items-center gap-2 h-full">
+        <!-- Icono para todos excepto checkbox -->
         <app-ui-icono
           [name]="defaultIcon"
           size="size-4"
           color="text-zinc-500"
           class="flex-shrink-0">
         </app-ui-icono>
+        
+        <!-- Valor mostrado -->
         <span class="truncate">{{ getDisplayValue() }}</span>
       </div>
     </div>
@@ -43,10 +48,13 @@
     }
   }
 
+  <!-- MODO VISUALIZACIÓN (solo cuando editable=true y no está en modo edición y NO es info) -->
   @else if (editable && !editMode && !isDisabled && !isInfoMode && !isLockedMode) {
     <div class="flex items-center gap-2">
+      <!-- Campo de solo lectura -->
       <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
         <div class="flex items-center gap-2 h-full">
+          <!-- Icono para todos excepto checkbox -->
           @if (variant !== 'checkbox' && variant !== 'select' && variant !== 'toggle') {
             <app-ui-icono
               [name]="defaultIcon"
@@ -55,10 +63,13 @@
               class="flex-shrink-0">
             </app-ui-icono>
           }
+          
+          <!-- Valor mostrado -->
           <span class="truncate">{{ getDisplayValue() }}</span>
         </div>
       </div>
 
+      <!-- Botón para editar (SIEMPRE VISIBLE) -->
       <button 
         type="button"
         (click)="activarEdicion()"
@@ -72,10 +83,13 @@
     </div>
   }
 
+  <!-- MODO EDICIÓN o INPUT NORMAL (cuando editable=false o está en modo edición y NO es info) -->
   @else if ((!editable && !isDisabled && !isInfoMode && !isLockedMode) || (editMode && !isInfoMode && !isLockedMode) || (isDisabled && !isInfoMode && !isLockedMode)) {
+    <!-- Switch de variantes -->
     @switch (variant) {
       
       @case ('checkbox') {
+        <!-- Bloque checkbox -->
         <div class="flex items-center gap-2">
           <div class="flex items-center gap-2 relative">
             <input
@@ -102,6 +116,7 @@
             }
           </label>
           
+          <!-- Botones de acción para checkbox solo en modo edición -->
           @if (editMode && !isDisabled) {
             <div class="flex gap-1 ml-2">
               <button 
@@ -150,6 +165,7 @@
       }
       
       @case ('select') {
+        <!-- Bloque select -->
         <div class="relative w-full">
           <div class="flex items-center gap-2">
             <div class="flex-1 relative">
@@ -158,6 +174,7 @@
                 [disabled]="isDisabled"
                 [class]="obtenerClasesInput() + ' flex flex-row justify-between items-center pl-3 pr-3 disabled:opacity-50 disabled:cursor-not-allowed'">
                 
+                <!-- Contenedor icono + texto -->
                 <div class="flex flex-row gap-2 items-center">
                   <app-ui-icono
                     [name]="defaultIcon"
@@ -166,6 +183,7 @@
                   </app-ui-icono>
                   <span class="truncate">{{ getDisplayValue() || placeholderText }}</span>
                 </div>
+                <!-- Contenedor flecha -->
                 <div>
                   @if (dropdownAbierto) {
                     <app-ui-icono
@@ -183,6 +201,7 @@
                 </div>
               </button>
               
+              <!-- Dropdown -->
               @if (dropdownAbierto) {
                 <ul class="absolute top-full left-0 z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
                   @for (opt of options; track $index) {
@@ -198,6 +217,7 @@
               }
             </div>
             
+            <!-- Botones de acción para select solo en modo edición -->
             @if (editMode && !isDisabled) {
               <div class="flex gap-1">
                 <button 
@@ -248,6 +268,7 @@
       
       @case ('search') {
         <div class="relative w-full">
+          <!-- Input de búsqueda -->
           <input
             type="search"
             [class]="obtenerClasesInput() + (editMode && !isDisabled ? ' pr-20' : '')" 
@@ -261,6 +282,7 @@
             (keydown.escape)="cancelarEdicion()"
           />
 
+          <!-- Ícono de lupa a la izquierda -->
           <app-ui-icono
             name="magnifying-glass"
             size="size-4"
@@ -268,6 +290,7 @@
             class="absolute left-3 top-1/2 -translate-y-1/2">
           </app-ui-icono>
           
+          <!-- Botones de acción para search solo en modo edición -->
           @if (editMode && !isDisabled) {
             <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
               <button 
@@ -314,6 +337,7 @@
       }
       
       @case ('code') {
+        <!-- Bloque code input -->
         <div class="code-input-container">
           <div class="flex gap-2 justify-center">
             @for (digit of codeDigits; track $index) {
@@ -331,6 +355,7 @@
               />
             }
           </div>
+          <!-- Botones de acción para code solo en modo edición -->
           @if (editMode && !isDisabled) {
             <div class="flex gap-2 justify-center mt-2">
               <button 
@@ -469,6 +494,7 @@
       }
       
       @default {
+        <!-- Bloque input normal -->
         <div class="relative">
           <app-ui-icono
             [name]="defaultIcon"
@@ -491,6 +517,7 @@
             (keydown.escape)="cancelarEdicion()"
           />
           
+          <!-- Botones de acción para inputs normales solo en modo edición -->
           @if (editMode && !isDisabled) {
             <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
               <button 
@@ -518,6 +545,7 @@
     <span class="text-gray-500 text-xs">{{ helpText }}</span>
   }
   
+  <!-- Errores -->
   @if (textoError) {
     <span class="text-red-500 text-xs mt-1">{{ textoError }}</span>
   }

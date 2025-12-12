@@ -33,16 +33,22 @@ export type ToggleSize = 'small' | 'medium' | 'large';
   ]
 })
 export class UiInputComponent implements OnInit, ControlValueAccessor {
+  /* ===== INPUTS PRINCIPALES ===== */
   @Input() label: string = '';
   @Input() placeholder: string = '';
   @Input() variant: InputVariant = 'text';
   @Input() textoError: string = '';
   @Input() labelObligatorio: boolean = false;
   @Input() nombreIcono: string = 'user';
+  
+  // Nueva propiedad para controlar si el campo es editable
   @Input() editable: boolean = false;
+  
+  // Nueva propiedad para disabled (agregada en versión mejorada)
   @Input() disabled: boolean = false;
+  
+  // Propiedades adicionales (nuevas versiones)
   @Input() readonly: boolean = false;
-  @Input() value: any = '';
   @Input() helpText: string = '';
   @Input() codeLength: number = 6;
   @Input() options: SelectOption[] = [];
@@ -56,77 +62,35 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   @Input() checkboxDescription?: string;
   @Input() checked: boolean = false;
 
+  /* ===== VALUE DEL INPUT ===== */
+  @Input() value: any = '';
+  editMode = false;
+  originalValue: any = '';
+  tempValue: any = '';
+
+  /* ===== OUTPUTS OPCIONALES ===== */
   @Output() valueChange = new EventEmitter<any>();
   @Output() checkedChange = new EventEmitter<boolean>();
   @Output() selectionChange = new EventEmitter<SelectOption | null>();
   @Output() toggle = new EventEmitter<boolean>();
 
-  editMode = false;
-  originalValue: any = '';
-  tempValue: any = '';
+  /* ===== CONTROL VALUE ACCESSOR ===== */
+  onChange: any = () => {};
+  onTouched: any = () => {};
+  
+  // Propiedad interna para disabled (original - mantener compatibilidad)
+  isDisabled = false;
+
+  /* ===== ESTADO INTERNO ===== */
   isFocused: boolean = false;
   iconoVisible: boolean = true;
   codeDigits: string[] = [];
   dropdownAbierto = false;
   textoErrores: string[] = [];
 
-  onChange: any = () => {};
-  onTouched: any = () => {};
-  isDisabled = false;
-
-  writeValue(value: any): void {
-    if (this.variant === 'toggle') {
-      this.value = !!value;
-      return;
-    }
-    
-    if (this.variant === 'filter-checkbox') {
-      this.checked = !!value;
-      this.value = value;
-      return;
-    }
-    
-    if (this.variant === 'checkbox') {
-      if (typeof value === 'boolean') {
-        this.value = value ? 'true' : 'false';
-      } else if (value === 'true' || value === true) {
-        this.value = 'true';
-      } else {
-        this.value = 'false';
-      }
-      this.checked = this.value === 'true';
-      return;
-    }
-    
-    this.value = value ?? '';
-  }
-
-  registerOnChange(fn: any): void {
-    this.onChange = fn;
-  }
-
-  registerOnTouched(fn: any): void {
-    this.onTouched = fn;
-  }
-
-  setDisabledState(isDisabled: boolean): void {
-    this.isDisabled = isDisabled;
-    this.disabled = isDisabled;
-  }
-
-  ngOnInit() {
-    if (this.variant === 'code') {
-      this.codeDigits = Array(this.codeLength).fill('');
-      if (this.value) {
-        this.codeDigits = this.value.split('').slice(0, this.codeLength);
-      }
-    }
-    
-    if (this.variant === 'checkbox' && this.value) {
-      this.checked = this.value === 'true';
-    }
-  }
-
+  /* ===== GETTERS PARA MODOS ESPECIALES ===== */
+  
+  // Nueva propiedad para determinar si el campo es solo lectura (info)
   get isInfoMode(): boolean {
     return this.variant === 'info';
   }
@@ -136,11 +100,16 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   }
 
   get isFilterVariant(): boolean {
-    return this.variant === 'filter-input' || this.variant === 'filter-select' || this.variant === 'filter-checkbox';
+    return this.variant === 'filter-input' || 
+           this.variant === 'filter-select' || 
+           this.variant === 'filter-checkbox';
   }
 
   get hasIcon(): boolean {
-    return !!this.nombreIcono || this.variant === 'date' || this.variant === 'month' || this.variant === 'year';
+    return !!this.nombreIcono || 
+           this.variant === 'date' || 
+           this.variant === 'month' || 
+           this.variant === 'year';
   }
 
   get defaultIcon(): string {
@@ -169,7 +138,10 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
 
   get placeholderText(): string {
     if (this.loading) return this.loadingText;
-    if (this.options.length === 0 && (this.variant === 'select' || this.variant === 'filter-select')) return this.emptyText;
+    if (this.options.length === 0 && 
+       (this.variant === 'select' || this.variant === 'filter-select')) {
+      return this.emptyText;
+    }
     return this.placeholder || 'Seleccione una opción';
   }
 
@@ -187,6 +159,76 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return (this.labelObligatorio && !this.value) || !!this.textoError; 
   }
 
+  /* ===== CONTROL VALUE ACCESSOR - IMPLEMENTACIÓN ===== */
+  
+  writeValue(value: any): void {
+    // Manejo especial para toggle
+    if (this.variant === 'toggle') {
+      this.value = !!value;
+      return;
+    }
+    
+    // Manejo especial para filter-checkbox
+    if (this.variant === 'filter-checkbox') {
+      this.checked = !!value;
+      this.value = value;
+      return;
+    }
+    
+    // Manejo especial para checkbox
+    if (this.variant === 'checkbox') {
+      if (typeof value === 'boolean') {
+        this.value = value ? 'true' : 'false';
+      } else if (value === 'true' || value === true) {
+        this.value = 'true';
+      } else {
+        this.value = 'false';
+      }
+      this.checked = this.value === 'true';
+      return;
+    }
+    
+    this.value = value ?? '';
+  }
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+
+  /**
+   * Sincroniza el estado disabled entre isDisabled (original) y disabled (nuevo)
+   * Mantiene compatibilidad con código legacy que usa isDisabled
+   * y permite usar disabled desde el template padre
+   */
+  setDisabledState(isDisabled: boolean): void {
+    this.isDisabled = isDisabled;
+    this.disabled = isDisabled;
+  }
+
+  /* ===== LIFECYCLE HOOKS ===== */
+  
+  ngOnInit() {
+    // Inicialización para variant 'code'
+    if (this.variant === 'code') {
+      this.codeDigits = Array(this.codeLength).fill('');
+      if (this.value) {
+        this.codeDigits = this.value.split('').slice(0, this.codeLength);
+      }
+    }
+    
+    // Inicialización para checkbox
+    if (this.variant === 'checkbox' && this.value) {
+      this.checked = this.value === 'true';
+    }
+  }
+
+  /* ===== MÉTODOS PARA OBTENER VALOR A MOSTRAR ===== */
+  
+  // Método para obtener el valor a mostrar en modo visualización
   getDisplayValue(): string {
     if ((this.variant === 'select' || this.variant === 'filter-select') && this.value) {
       const option = this.options.find(opt => opt.value?.toString() === this.value?.toString());
@@ -209,37 +251,56 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       return this.value ? 'Activado' : 'Desactivado';
     }
     
+    if (this.variant === 'email' && this.value) {
+      return this.value;
+    }
+    
+    if (this.variant === 'tel' && this.value) {
+      return this.value;
+    }
+    
     return this.value || '';
   }
 
+  /* ===== MÉTODOS PARA MODO EDICIÓN ===== */
+  
+  // Método para activar modo edición (no permitir para variant info)
   activarEdicion(): void {
-    if (this.isInfoMode || this.isLockedMode || !this.editable || this.isDisabled || this.disabled) return;
+    if (this.isInfoMode || this.isLockedMode || !this.editable || 
+        this.isDisabled || this.disabled) {
+      return;
+    }
     
     this.originalValue = this.value;
     this.tempValue = this.value;
     this.editMode = true;
     
+    // Enfocar el input después de un breve delay
     setTimeout(() => {
       const input = document.querySelector('input, select, textarea') as HTMLElement;
       if (input) input.focus();
     }, 50);
   }
 
+  // Método para guardar cambios
   guardarCambios(): void {
     if (this.validate()) {
       this.value = this.tempValue;
       this.editMode = false;
       
+      // Actualizar codeDigits si es variant code
       if (this.variant === 'code' && this.value) {
         this.codeDigits = this.value.split('').slice(0, this.codeLength);
       }
       
+      // Emitir cambios
       this.onChange(this.value);
       this.valueChange.emit(this.value);
       this.onTouched();
     }
   }
 
+  // Método para cancelar edición
   cancelarEdicion(): void {
     this.value = this.originalValue;
     this.editMode = false;
@@ -248,20 +309,25 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.onTouched();
   }
 
+  // Método para desactivar edición (con validación)
   desactivarEdicion(): void {
     if (this.validate()) {
       this.guardarCambios();
     }
   }
 
+  /* ===== MANEJADORES DE EVENTOS ===== */
+  
   onTextChange(event: Event) {
     if (this.disabled) return;
     
     const input = event.target as HTMLInputElement;
     
     if (this.editMode) {
+      // En modo edición, guardamos en tempValue
       this.tempValue = input.value;
     } else {
+      // En modo normal, actualizamos directamente el value
       this.value = input.value;
       this.onChange(this.value);
       this.valueChange.emit(this.value);
@@ -294,6 +360,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.tempValue = code;
     this.validate();
 
+    // Mover foco al siguiente input
     const next = input.nextElementSibling as HTMLInputElement;
     if (digit && next) {
       next.focus();
@@ -306,6 +373,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     const input = event.target as HTMLInputElement;
     const isChecked = input.checked;
     
+    // Manejo para filter-checkbox
     if (this.variant === 'filter-checkbox') {
       this.checked = isChecked;
       this.onChange(isChecked);
@@ -315,6 +383,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       return;
     }
     
+    // Manejo para checkbox normal
     if (this.variant === 'checkbox') {
       const stringValue = isChecked ? 'true' : 'false';
       
@@ -399,6 +468,8 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     }
   }
 
+  /* ===== VALIDACIONES ===== */
+  
   setError(msg: string) { 
     this.textoError = msg; 
   }
@@ -411,16 +482,20 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.textoErrores = [];
     const valueToValidate = this.editMode ? this.tempValue : this.value;
 
+    // Validación de campo obligatorio
     if (this.labelObligatorio && !valueToValidate) {
       this.setError(`El ${this.label.toLowerCase()} es obligatorio`);
       return false;
     }
 
-    if (this.variant === 'email' && valueToValidate && !/\S+@\S+\.\S+/.test(valueToValidate)) {
+    // Validación de email
+    if (this.variant === 'email' && valueToValidate && 
+        !/\S+@\S+\.\S+/.test(valueToValidate)) {
       this.setError('Correo inválido');
       return false;
     }
 
+    // Validación de teléfono
     if (this.variant === 'tel' && valueToValidate) {
       if (/[a-zA-Z]/.test(valueToValidate)) {
         this.setError('Teléfono inválido, contiene letras');
@@ -432,6 +507,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       }
     }
 
+    // Validación de contraseña
     if (this.variant === 'password' && valueToValidate) {
       if (!/[A-Z]/.test(valueToValidate)) {
         this.textoErrores.push('La contraseña debe tener una mayúscula');
@@ -448,6 +524,9 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return this.textoErrores.length === 0;
   }
 
+  /* ===== ESTILOS Y CLASES ===== */
+  
+  // Clases para modo visualización
   obtenerClasesVisualizacion(): string {
     const baseClasses = `
       min-h-[44px] px-3 py-2.5 rounded-md border
@@ -458,8 +537,12 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       border-gray-200
     `;
     
+    // Si es info/locked mode, el cursor es default
+    // Si está disabled, cursor not-allowed
+    // Si no, cursor pointer para indicar que es editable
     const cursorClass = this.disabled ? 'cursor-not-allowed opacity-70' : 
-                       this.isInfoMode || this.isLockedMode ? 'cursor-default' : 'cursor-pointer';
+                       this.isInfoMode || this.isLockedMode ? 'cursor-default' : 
+                       'cursor-pointer';
     
     return `${baseClasses} ${cursorClass}`;
   }
@@ -495,9 +578,13 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       bg-gray-50
     `;    
 
+    // Si hay error, solo halo rojo en foco
     const error = this.textoError ? 'text-red-500 focus:ring-red-500 border-red-500' : '';
+
+    // Si no está enfocado, mantenemos borde normal
     const borde = this.isFocused ? 'border border-transparent' : 'border border-[var(--color-borde)]';
 
+    // Selecciona la base según el variant
     let base = '';
     switch (this.variant) {
       case 'select':
