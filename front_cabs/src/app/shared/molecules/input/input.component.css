@@ -1,0 +1,525 @@
+/* ===================================================================================== */
+/* ESTILOS CONSOLIDADOS PARA TODOS LOS INPUTS */
+/* ===================================================================================== */
+
+/* ===================================================================================== */
+/* ESTILOS BASE PARA FORM INPUTS */
+/* ===================================================================================== */
+
+.form-input-wrapper,
+.form-select-wrapper,
+.form-textarea-wrapper,
+.form-toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required-mark {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.error-text {
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FORM INPUT */
+/* ===================================================================================== */
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.form-input:hover:not(:disabled):not(:readonly) {
+  border-color: #9ca3af;
+}
+
+.form-input:focus:not(:disabled):not(:readonly) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-input.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-input:disabled,
+.form-input:readonly {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FORM SELECT */
+/* ===================================================================================== */
+
+.select-container {
+  position: relative;
+  width: 100%;
+}
+
+.form-select {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.form-select:hover:not(:disabled) {
+  border-color: #9ca3af;
+}
+
+.form-select:focus:not(:disabled) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-select.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-select.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-select:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.form-select.loading {
+  color: #9ca3af;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #6b7280;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.select-arrow.disabled {
+  color: #d1d5db;
+}
+
+.select-arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FORM TEXTAREA */
+/* ===================================================================================== */
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1f2937;
+  transition: all 0.2s ease;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.form-textarea:hover:not(:disabled):not(:readonly) {
+  border-color: #9ca3af;
+}
+
+.form-textarea:focus:not(:disabled):not(:readonly) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-textarea.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-textarea:disabled,
+.form-textarea:readonly {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  resize: none;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA TOGGLE */
+/* ===================================================================================== */
+
+.toggle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-button {
+  position: relative;
+  border: none;
+  border-radius: 9999px;
+  background-color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+/* Tamaños del toggle */
+.toggle-small {
+  width: 36px;
+  height: 20px;
+}
+
+.toggle-medium {
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-large {
+  width: 52px;
+  height: 28px;
+}
+
+/* Estado activo */
+.toggle-button.active {
+  background-color: #3b82f6;
+}
+
+.toggle-button.active:hover:not(.disabled) {
+  background-color: #2563eb;
+}
+
+/* Estado deshabilitado */
+.toggle-button.disabled {
+  background-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Hover en estado inactivo */
+.toggle-button:hover:not(.active):not(.disabled) {
+  background-color: #9ca3af;
+}
+
+/* Focus */
+.toggle-button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Slider (el círculo que se mueve) */
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tamaños del slider */
+.toggle-small .toggle-slider {
+  width: 16px;
+  height: 16px;
+}
+
+.toggle-medium .toggle-slider {
+  width: 20px;
+  height: 20px;
+}
+
+.toggle-large .toggle-slider {
+  width: 24px;
+  height: 24px;
+}
+
+/* Posición del slider cuando está activo */
+.toggle-small.active .toggle-slider {
+  transform: translateX(16px);
+}
+
+.toggle-medium.active .toggle-slider {
+  transform: translateX(20px);
+}
+
+.toggle-large.active .toggle-slider {
+  transform: translateX(24px);
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FILTER INPUT */
+/* ===================================================================================== */
+
+.filter-input-wrapper {
+  position: relative;
+}
+
+.filter-input {
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-input.has-icon {
+  padding-left: 2.5rem;
+}
+
+.filter-input:focus {
+  outline: none;
+}
+
+.filter-input::placeholder {
+  color: #9CA3AF;
+}
+
+.input-icon {
+  z-index: 1;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FILTER SELECT */
+/* ===================================================================================== */
+
+.filter-select-wrapper {
+  position: relative;
+}
+
+.filter-select {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-select:focus {
+  outline: none;
+}
+
+.filter-select:disabled {
+  cursor: not-allowed;
+}
+
+.select-icon {
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+/* Ocultar la flecha nativa del navegador */
+.filter-select::-ms-expand {
+  display: none;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA FILTER CHECKBOX */
+/* ===================================================================================== */
+
+.filter-checkbox-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filter-checkbox-container:not(.disabled):hover {
+  background-color: rgba(249, 250, 251, 1);
+}
+
+.checkbox-input {
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.checkbox-input:focus {
+  outline: none;
+}
+
+.checkbox-label {
+  user-select: none;
+}
+
+.checkbox-description {
+  line-height: 1.4;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA LOCKED FIELD */
+/* ===================================================================================== */
+
+.locked-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.locked-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  min-height: 42px;
+}
+
+.lock-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.lock-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.locked-value {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  flex: 1;
+}
+
+/* ===================================================================================== */
+/* ESTILOS PARA CODE INPUT */
+/* ===================================================================================== */
+
+.code-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-input-container input {
+  border-color: #d1d5db;
+}
+
+.code-input-container input:focus {
+  border-color: #3b82f6;
+}
+
+/* ===================================================================================== */
+/* ESTILOS ADICIONALES Y UTILIDADES */
+/* ===================================================================================== */
+
+/* Animaciones suaves para transiciones */
+.transition-colors {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Estilo para botones de edición */
+.edit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Reset para appearance en inputs de fecha */
+input[type="date"],
+input[type="month"],
+input[type="year"] {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Estilo para el dropdown del select customizado */
+.dropdown-menu {
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

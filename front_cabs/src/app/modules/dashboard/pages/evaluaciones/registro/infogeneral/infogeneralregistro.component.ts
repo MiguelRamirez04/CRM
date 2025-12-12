@@ -24,12 +24,8 @@ import { FaseDespuesModalComponent } from '../fases/fasedespuesregistro.componen
 
 // ==================== SHARED COMPONENTS ====================
 import {
-  FormInputComponent,
-  FormSelectComponent,
+  UiInputComponent,
   SelectOption,
-  FormTextareaComponent,
-  FormToggleComponent,
-  LockedFieldComponent,
   FormRowComponent,
   FormSectionComponent,
   FormInfoAlertComponent,
@@ -45,11 +41,7 @@ import {
     FormsModule,
     FaseAntesModalComponent,
     FaseDespuesModalComponent,
-    FormInputComponent,
-    FormSelectComponent,
-    FormTextareaComponent,
-    FormToggleComponent,
-    LockedFieldComponent,
+    UiInputComponent,          
     FormRowComponent,
     FormSectionComponent,
     FormInfoAlertComponent,
