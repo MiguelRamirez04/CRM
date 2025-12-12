@@ -11,7 +11,6 @@ type IconType =
   | 'evaluaciones'
   | 'reparaciones'
   | 'ordenes'
-  | 'clientes'
   | 'cotizaciones'
   | 'viaticos'
   | 'vehiculos'
@@ -69,12 +68,6 @@ export class Sidebar implements OnInit {
           roles: ['ADMINISTRACION', 'RECEPCION', 'SOPORTE']
         }*/
       ]
-    },
-    {
-      label: 'Clientes Legacy',
-      icon: 'clientes',
-      link: '/recepcion/clientes-completos',
-      roles: ['ADMINISTRACION', 'RECEPCION']
     },
     {
       label: 'Viáticos',
