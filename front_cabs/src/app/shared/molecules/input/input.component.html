@@ -1,7 +1,4 @@
 <div class="flex flex-col gap-2">
-  <!-- ===================================================================================== -->
-  <!-- LABEL SUPERIOR (para todos excepto checkbox y filter-checkbox) -->
-  <!-- ===================================================================================== -->
   @if (variant !== 'checkbox' && variant !== 'filter-checkbox' && variant !== 'toggle') {
     <div class="label-row flex justify-between items-center">
       @if (labelObligatorio) {
@@ -12,16 +9,12 @@
         <label class="text-sm font-medium text-zinc-700">{{ label }}</label>
       }
       
-      <!-- Contador de caracteres para textarea -->
       @if (variant === 'textarea' && showCharCount && maxLength) {
         <span class="text-xs text-gray-500">{{ charCount }}</span>
       }
     </div>
   }
 
-  <!-- ===================================================================================== -->
-  <!-- VARIANTE: INFO (solo lectura) -->
-  <!-- ===================================================================================== -->
   @if (isInfoMode) {
     <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
       <div class="flex items-center gap-2 h-full">
@@ -36,9 +29,6 @@
     </div>
   }
 
-  <!-- ===================================================================================== -->
-  <!-- VARIANTE: LOCKED (campo bloqueado) -->
-  <!-- ===================================================================================== -->
   @else if (isLockedMode) {
     <div class="locked-field flex items-center gap-2.5 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-md min-h-[42px]">
       <span class="lock-icon flex items-center justify-center w-4.5 h-4.5 text-gray-400 flex-shrink-0">
@@ -53,9 +43,6 @@
     }
   }
 
-  <!-- ===================================================================================== -->
-  <!-- MODO VISUALIZACIÓN (editable=true y no en modo edición) -->
-  <!-- ===================================================================================== -->
   @else if (editable && !editMode && !isDisabled && !isInfoMode && !isLockedMode) {
     <div class="flex items-center gap-2">
       <div [class]="obtenerClasesVisualizacion()" class="flex-1 min-h-[44px]">
@@ -85,31 +72,27 @@
     </div>
   }
 
-  <!-- ===================================================================================== -->
-  <!-- MODO EDICIÓN o INPUT NORMAL -->
-  <!-- ===================================================================================== -->
   @else if ((!editable && !isDisabled && !isInfoMode && !isLockedMode) || (editMode && !isInfoMode && !isLockedMode) || (isDisabled && !isInfoMode && !isLockedMode)) {
     @switch (variant) {
       
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: CHECKBOX -->
-      <!-- =============================================================================== -->
       @case ('checkbox') {
         <div class="flex items-center gap-2">
           <div class="flex items-center gap-2 relative">
             <input
               type="checkbox"
-              [checked]="value === 'true' || value === true || checked"
+              [checked]="value === 'true'"
               [disabled]="isDisabled"
               (change)="onCheckboxChange($event)"
               class="appearance-none h-4 w-4 border border-[var(--color-borde)] rounded-xs bg-white checked:bg-blue-500 checked:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <app-ui-icono
-              name="check"
-              size="size-4"
-              color="text-white"
-              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            </app-ui-icono>
+            @if (value === 'true') {
+              <app-ui-icono
+                name="check"
+                size="size-4"
+                color="text-white"
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+              </app-ui-icono>
+            }
           </div>
           
           <label class="text-sm font-normal text-zinc-700">
@@ -140,9 +123,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: FILTER-CHECKBOX -->
-      <!-- =============================================================================== -->
       @case ('filter-checkbox') {
         <label class="filter-checkbox-container flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
           [class.disabled]="disabled">
@@ -169,9 +149,6 @@
         </label>
       }
       
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: SELECT -->
-      <!-- =============================================================================== -->
       @case ('select') {
         <div class="relative w-full">
           <div class="flex items-center gap-2">
@@ -243,9 +220,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: FILTER-SELECT -->
-      <!-- =============================================================================== -->
       @case ('filter-select') {
         <div class="filter-select-wrapper relative">
           <select
@@ -272,9 +246,6 @@
         </div>
       }
       
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: SEARCH -->
-      <!-- =============================================================================== -->
       @case ('search') {
         <div class="relative w-full">
           <input
@@ -318,9 +289,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: FILTER-INPUT -->
-      <!-- =============================================================================== -->
       @case ('filter-input') {
         <div class="filter-input-wrapper relative">
           @if (hasIcon) {
@@ -345,9 +313,6 @@
         </div>
       }
       
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: CODE -->
-      <!-- =============================================================================== -->
       @case ('code') {
         <div class="code-input-container">
           <div class="flex gap-2 justify-center">
@@ -387,9 +352,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: TEXTAREA -->
-      <!-- =============================================================================== -->
       @case ('textarea') {
         <div class="form-textarea-wrapper">
           <textarea
@@ -409,9 +371,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTE: TOGGLE -->
-      <!-- =============================================================================== -->
       @case ('toggle') {
         <div class="form-toggle-wrapper flex flex-col gap-1.5 w-full">
           <div class="toggle-container flex flex-col items-center gap-2">
@@ -444,9 +403,6 @@
         </div>
       }
 
-      <!-- =============================================================================== -->
-      <!-- VARIANTES: DATE, MONTH, YEAR -->
-      <!-- =============================================================================== -->
       @case ('date') {
         <div class="relative w-full">
           <app-ui-icono
@@ -512,9 +468,6 @@
         </div>
       }
       
-      <!-- =============================================================================== -->
-      <!-- VARIANTE DEFAULT (text, email, password, tel, number, url, etc.) -->
-      <!-- =============================================================================== -->
       @default {
         <div class="relative">
           <app-ui-icono
@@ -561,9 +514,6 @@
     }
   }
 
-  <!-- ===================================================================================== -->
-  <!-- MENSAJES DE AYUDA Y ERRORES -->
-  <!-- ===================================================================================== -->
   @if (helpText && !textoError && variant !== 'locked' && variant !== 'toggle') {
     <span class="text-gray-500 text-xs">{{ helpText }}</span>
   }
