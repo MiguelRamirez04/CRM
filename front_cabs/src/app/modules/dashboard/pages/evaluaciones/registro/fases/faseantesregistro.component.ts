@@ -9,21 +9,19 @@ import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones
 
 // ==================== SHARED COMPONENTS ====================
 import {
-  FormInputComponent,
-  FormTextareaComponent,
+  UiInputComponent,
   FormRowComponent,
   FormSectionComponent,
   FormInfoAlertComponent
 } from '../../../../../../shared/~exports/form-system.index';
 
 @Component({
-  selector: 'app-fase-antes-modal',
+  selector: 'app-fase-antes-modal', // o 'app-fase-despues-modal'
   standalone: true,
   imports: [
     CommonModule, 
     FormsModule,
-    FormInputComponent,
-    FormTextareaComponent,
+    UiInputComponent,  // ✅ Único componente de input
     FormRowComponent,
     FormSectionComponent,
     FormInfoAlertComponent

@@ -4,7 +4,7 @@
 
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FilterCheckboxComponent } from '../../atoms/filter-checkbox/filter-checkbox.component';
+import { UiInputComponent } from '../input/input.component';
 
 export interface CheckboxOption {
   valor: any;
@@ -16,7 +16,7 @@ export interface CheckboxOption {
 @Component({
   selector: 'app-filter-checkbox-group',
   standalone: true,
-  imports: [CommonModule, FilterCheckboxComponent],
+  imports: [CommonModule, UiInputComponent],
   templateUrl: './filter-checkbox-group.component.html',
   styleUrls: ['./filter-checkbox-group.component.css']
 })

@@ -1,13 +1,16 @@
 // ============================================
-// FORM SYSTEM - ATOMIC DESIGN EXPORTS
+// FORM SYSTEM - Exportaciones centralizadas
 // ============================================
 
-// ==================== ATOMS ====================
-export * from '../atoms/form-input/form-input.component';
-export * from '../atoms/form-select/form-select.component';
-export * from '../atoms/form-textarea/form-textarea.component';
-export * from '../atoms/form-toggle/form-toggle.component';
-export * from '../atoms/locked-field/locked-field.component';
+// ==================== INPUT EN UN SOLO ARCHIVO ====================
+// Todos los inputs ahora están en un solo componente: UiInputComponent
+// Selector: <app-ui-input-field>
+// Usa la propiedad [variant] para especificar el tipo de input
+
+export { UiInputComponent } from '../molecules/input/input.component';
+
+// Exportación de tipos (con export type para isolatedModules)
+export type { SelectOption, InputVariant, ToggleSize } from '../molecules/input/input.component';
 
 // ==================== MOLECULES ====================
 export * from '../molecules/form-row/form-row.component';

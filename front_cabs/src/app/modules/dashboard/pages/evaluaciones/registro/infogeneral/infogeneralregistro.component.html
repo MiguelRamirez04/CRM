@@ -22,10 +22,11 @@
       <app-form-row [columns]="2" [gap]="'medium'">
         
         <!-- ORDEN - CREAR -->
-        <app-form-select
+        <app-ui-input-field
           *ngIf="modoOperacion === 'crear'"
+          [variant]="'select'"
           [label]="'Orden de trabajo'"
-          [required]="true"
+          [labelObligatorio]="true"
           [options]="ordenesOptions"
           [loading]="cargandoCatalogos.ordenes"
           [loadingText]="'Cargando órdenes...'"
@@ -33,22 +34,24 @@
           [placeholder]="'Seleccione una orden'"
           [(ngModel)]="formulario.ordenTrabajoId"
           (valueChange)="onOrdenChange()">
-        </app-form-select>
+        </app-ui-input-field>
 
         <!-- ORDEN - EDITAR -->
-        <app-locked-field
+        <app-ui-input-field
           *ngIf="modoOperacion === 'editar'"
+          [variant]="'locked'"
           [label]="'Orden de trabajo'"
-          [required]="true"
+          [labelObligatorio]="true"
           [value]="textoOrdenBloqueada || 'OT-' + formulario.ordenTrabajoId"
           [helpText]="'Este campo no se puede modificar después de crear la evaluación'">
-        </app-locked-field>
+        </app-ui-input-field>
 
         <!-- EJECUCIÓN - CREAR -->
-        <app-form-select
+        <app-ui-input-field
           *ngIf="modoOperacion === 'crear'"
+          [variant]="'select'"
           [label]="'Ejecución (opcional)'"
-          [required]="false"
+          [labelObligatorio]="false"
           [options]="ejecucionesOptions"
           [loading]="cargandoCatalogos.ejecuciones"
           [loadingText]="'Cargando ejecuciones...'"
@@ -57,14 +60,15 @@
           [disabled]="!formulario.ordenTrabajoId"
           [(ngModel)]="formulario.ejecucionId"
           (valueChange)="onFormularioChange()">
-        </app-form-select>
+        </app-ui-input-field>
 
         <!-- EJECUCIÓN - EDITAR -->
-        <app-locked-field
+        <app-ui-input-field
           *ngIf="modoOperacion === 'editar'"
+          [variant]="'locked'"
           [label]="'Ejecución'"
           [value]="textoEjecucionBloqueada || 'Sin ejecución'">
-        </app-locked-field>
+        </app-ui-input-field>
 
       </app-form-row>
 
@@ -72,10 +76,11 @@
       <app-form-row [columns]="2" [gap]="'medium'">
         
         <!-- EVALUADOR - CREAR -->
-        <app-form-select
+        <app-ui-input-field
           *ngIf="modoOperacion === 'crear'"
+          [variant]="'select'"
           [label]="'Evaluador'"
-          [required]="true"
+          [labelObligatorio]="true"
           [options]="evaluadoresOptions"
           [loading]="cargandoCatalogos.usuario"
           [loadingText]="'Cargando usuario...'"
@@ -83,39 +88,41 @@
           [helpText]="usuarioActual ? 'Usuario actual: ' + usuarioActual.nombreCompleto : ''"
           [(ngModel)]="formulario.evaluadorId"
           (valueChange)="onFormularioChange()">
-        </app-form-select>
+        </app-ui-input-field>
 
         <!-- EVALUADOR - EDITAR -->
-        <app-locked-field
+        <app-ui-input-field
           *ngIf="modoOperacion === 'editar'"
+          [variant]="'locked'"
           [label]="'Evaluador'"
-          [required]="true"
+          [labelObligatorio]="true"
           [value]="textoEvaluadorBloqueado || 'Evaluador #' + formulario.evaluadorId">
-        </app-locked-field>
+        </app-ui-input-field>
 
       </app-form-row>
 
       <!-- OBJETIVO -->
-      <app-form-input
+      <app-ui-input-field
+        [variant]="'text'"
         [label]="'Objetivo de la evaluación'"
         [placeholder]="'Ej: verificar la calidad del servicio prestado'"
-        [type]="'text'"
         [(ngModel)]="formulario.objetivo"
         (valueChange)="onFormularioChange()">
-      </app-form-input>
+      </app-ui-input-field>
 
       <div class="grupo-formulario" style="margin-top: 15px;">
         <label class="etiqueta descripcion">Describa el propósito principal de esta evaluación</label>
       </div>
 
       <!-- COMENTARIOS GENERALES -->
-      <app-form-textarea
+      <app-ui-input-field
+        [variant]="'textarea'"
         [label]="'Comentarios generales'"
         [placeholder]="'Observaciones generales sobre la evaluación...'"
         [rows]="4"
         [(ngModel)]="formulario.comentariosGenerales"
         (valueChange)="onFormularioChange()">
-      </app-form-textarea>
+      </app-ui-input-field>
 
       <!-- FILA DE PUNTUACIÓN Y SEGUIMIENTO -->
       <app-form-row [columns]="3" [gap]="'medium'" [alignItems]="'center'">
@@ -131,12 +138,13 @@
         </app-score-display>
 
         <!-- TOGGLE SEGUIMIENTO -->
-        <app-form-toggle
+        <app-ui-input-field
+          [variant]="'toggle'"
           [label]="'¿Requiere seguimiento?'"
           [disabled]="false"
           [(ngModel)]="formulario.requiereSeguimiento"
           (toggle)="onFormularioChange()">
-        </app-form-toggle>
+        </app-ui-input-field>
 
         <!-- ESTATUS -->
         <div class="grupo-formulario">
@@ -193,13 +201,14 @@
       </app-form-info-alert>
 
       <!-- NOTAS DEL SEGUIMIENTO -->
-      <app-form-textarea
+      <app-ui-input-field
+        [variant]="'textarea'"
         [label]="'Notas del seguimiento'"
         [placeholder]="'Acciones o puntos a dar seguimiento...'"
         [rows]="4"
         [(ngModel)]="formulario.notasSeguimiento"
         (valueChange)="onFormularioChange()">
-      </app-form-textarea>
+      </app-ui-input-field>
 
     </app-form-section>
   </div>

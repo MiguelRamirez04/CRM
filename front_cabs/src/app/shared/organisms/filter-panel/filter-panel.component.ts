@@ -8,7 +8,7 @@ import { UiBotonComponent } from '../../atoms/boton/boton.component';
 import { StatusDotComponent } from '../../atoms/status-dot/status-dot.component';
 import { FilterCheckboxGroupComponent, CheckboxOption } from '../../molecules/filter-checkbox-group/filter-checkbox-group.component';
 import { FilterFieldComponent } from '../../molecules/filter-field/filter-field.component';
-import { SelectOption } from '../../atoms/filter-select/filter-select.component';
+import { SelectOption } from '../../molecules/input/input.component';
 
 // =====================================================================================
 // INTERFACES
