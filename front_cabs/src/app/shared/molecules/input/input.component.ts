@@ -3,10 +3,6 @@ import { CommonModule } from '@angular/common';
 import { UiIconComponent } from '../../atoms/icono/icono.component';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
-// =====================================================================================
-// INTERFACES Y TIPOS
-// =====================================================================================
-
 export interface SelectOption {
   value: string | number;
   label: string;
@@ -21,10 +17,6 @@ export type InputVariant =
   | 'filter-input' | 'filter-select' | 'filter-checkbox';
 
 export type ToggleSize = 'small' | 'medium' | 'large';
-
-// =====================================================================================
-// COMPONENTE PRINCIPAL
-// =====================================================================================
 
 @Component({
   selector: 'app-ui-input-field',
@@ -41,10 +33,6 @@ export type ToggleSize = 'small' | 'medium' | 'large';
   ]
 })
 export class UiInputComponent implements OnInit, ControlValueAccessor {
-  // =====================================================================================
-  // INPUTS COMUNES
-  // =====================================================================================
-  
   @Input() label: string = '';
   @Input() placeholder: string = '';
   @Input() variant: InputVariant = 'text';
@@ -56,45 +44,23 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   @Input() readonly: boolean = false;
   @Input() value: any = '';
   @Input() helpText: string = '';
-
-  // =====================================================================================
-  // INPUTS ESPECÍFICOS POR VARIANTE
-  // =====================================================================================
-  
-  // Para code input
   @Input() codeLength: number = 6;
-  
-  // Para select
   @Input() options: SelectOption[] = [];
   @Input() loading: boolean = false;
   @Input() loadingText: string = 'Cargando...';
   @Input() emptyText: string = 'No hay opciones disponibles';
-  
-  // Para textarea
   @Input() rows: number = 4;
   @Input() maxLength?: number;
   @Input() showCharCount: boolean = false;
-  
-  // Para toggle
   @Input() toggleSize: ToggleSize = 'medium';
-  
-  // Para filter-checkbox
   @Input() checkboxDescription?: string;
   @Input() checked: boolean = false;
 
-  // =====================================================================================
-  // OUTPUTS
-  // =====================================================================================
-  
   @Output() valueChange = new EventEmitter<any>();
   @Output() checkedChange = new EventEmitter<boolean>();
   @Output() selectionChange = new EventEmitter<SelectOption | null>();
   @Output() toggle = new EventEmitter<boolean>();
 
-  // =====================================================================================
-  // PROPIEDADES INTERNAS
-  // =====================================================================================
-  
   editMode = false;
   originalValue: any = '';
   tempValue: any = '';
@@ -104,10 +70,6 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   dropdownAbierto = false;
   textoErrores: string[] = [];
 
-  // =====================================================================================
-  // CONTROL VALUE ACCESSOR
-  // =====================================================================================
-  
   onChange: any = () => {};
   onTouched: any = () => {};
   isDisabled = false;
@@ -115,12 +77,28 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
   writeValue(value: any): void {
     if (this.variant === 'toggle') {
       this.value = !!value;
-    } else if (this.variant === 'filter-checkbox' || this.variant === 'checkbox') {
+      return;
+    }
+    
+    if (this.variant === 'filter-checkbox') {
       this.checked = !!value;
       this.value = value;
-    } else {
-      this.value = value ?? '';
+      return;
     }
+    
+    if (this.variant === 'checkbox') {
+      if (typeof value === 'boolean') {
+        this.value = value ? 'true' : 'false';
+      } else if (value === 'true' || value === true) {
+        this.value = 'true';
+      } else {
+        this.value = 'false';
+      }
+      this.checked = this.value === 'true';
+      return;
+    }
+    
+    this.value = value ?? '';
   }
 
   registerOnChange(fn: any): void {
@@ -136,10 +114,6 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  // =====================================================================================
-  // LIFECYCLE
-  // =====================================================================================
-
   ngOnInit() {
     if (this.variant === 'code') {
       this.codeDigits = Array(this.codeLength).fill('');
@@ -147,11 +121,11 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
         this.codeDigits = this.value.split('').slice(0, this.codeLength);
       }
     }
+    
+    if (this.variant === 'checkbox' && this.value) {
+      this.checked = this.value === 'true';
+    }
   }
-
-  // =====================================================================================
-  // GETTERS COMPUTADOS
-  // =====================================================================================
 
   get isInfoMode(): boolean {
     return this.variant === 'info';
@@ -213,30 +187,30 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return (this.labelObligatorio && !this.value) || !!this.textoError; 
   }
 
-  // =====================================================================================
-  // MÉTODOS DE VISUALIZACIÓN
-  // =====================================================================================
-
   getDisplayValue(): string {
     if ((this.variant === 'select' || this.variant === 'filter-select') && this.value) {
       const option = this.options.find(opt => opt.value?.toString() === this.value?.toString());
       return option ? option.label : this.value;
     }
-    if (this.variant === 'checkbox' || this.variant === 'filter-checkbox') {
-      return this.value === 'true' || this.value === true || this.checked ? 'Sí' : 'No';
+    
+    if (this.variant === 'checkbox') {
+      return this.value === 'true' ? 'Sí' : 'No';
     }
+    
+    if (this.variant === 'filter-checkbox') {
+      return this.checked ? 'Sí' : 'No';
+    }
+    
     if (this.variant === 'password') {
       return '••••••••';
     }
+    
     if (this.variant === 'toggle') {
       return this.value ? 'Activado' : 'Desactivado';
     }
+    
     return this.value || '';
   }
-
-  // =====================================================================================
-  // MÉTODOS DE EDICIÓN
-  // =====================================================================================
 
   activarEdicion(): void {
     if (this.isInfoMode || this.isLockedMode || !this.editable || this.isDisabled || this.disabled) return;
@@ -279,10 +253,6 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       this.guardarCambios();
     }
   }
-
-  // =====================================================================================
-  // HANDLERS DE EVENTOS
-  // =====================================================================================
 
   onTextChange(event: Event) {
     if (this.disabled) return;
@@ -334,20 +304,32 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     if (this.disabled) return;
     
     const input = event.target as HTMLInputElement;
-    this.checked = input.checked;
+    const isChecked = input.checked;
     
     if (this.variant === 'filter-checkbox') {
-      this.onChange(this.checked);
-      this.checkedChange.emit(this.checked);
-    } else {
-      this.tempValue = input.checked ? 'true' : 'false';
-      this.value = this.tempValue;
-      this.onChange(this.value);
-      this.valueChange.emit(this.value);
+      this.checked = isChecked;
+      this.onChange(isChecked);
+      this.checkedChange.emit(isChecked);
+      this.onTouched();
+      this.validate();
+      return;
     }
     
-    this.onTouched();
-    this.validate();
+    if (this.variant === 'checkbox') {
+      const stringValue = isChecked ? 'true' : 'false';
+      
+      if (this.editMode) {
+        this.tempValue = stringValue;
+      } else {
+        this.value = stringValue;
+        this.checked = isChecked;
+        this.onChange(stringValue);
+        this.valueChange.emit(stringValue);
+      }
+      
+      this.onTouched();
+      this.validate();
+    }
   }
 
   onSelectChange(event: Event): void {
@@ -417,10 +399,6 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     }
   }
 
-  // =====================================================================================
-  // VALIDACIONES
-  // =====================================================================================
-
   setError(msg: string) { 
     this.textoError = msg; 
   }
@@ -470,10 +448,6 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
     return this.textoErrores.length === 0;
   }
 
-  // =====================================================================================
-  // ESTILOS
-  // =====================================================================================
-
   obtenerClasesVisualizacion(): string {
     const baseClasses = `
       min-h-[44px] px-3 py-2.5 rounded-md border
@@ -498,7 +472,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-100
+      bg-gray-50
     `;
 
     const baseInputSelect = `
@@ -508,7 +482,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-100
+      bg-gray-50
     `;
     
     const baseInputSearch = `
@@ -518,7 +492,7 @@ export class UiInputComponent implements OnInit, ControlValueAccessor {
       text-[var(--color-texto-icono)]
       focus:ring-blue-500
       disabled:opacity-50 disabled:cursor-not-allowed
-      bg-gray-100
+      bg-gray-50
     `;    
 
     const error = this.textoError ? 'text-red-500 focus:ring-red-500 border-red-500' : '';
