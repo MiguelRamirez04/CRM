@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-8 w-full">
+<div class="flex flex-col gap-6 w-full">
     <!-- Encabezado -->
     <app-ui-header
         titulo="Bienvenido"
@@ -7,7 +7,7 @@
     ></app-ui-header>
 
     <!-- Tarjetas y gráficas -->
-    <div class="flex flex-col gap-6 ">
+    <div class="flex flex-col gap-4 ">
         <!-- Tarjetas de estado -->
         <div class="w-full h-[120px] flex gap-2.5 ">
             @for(tarjeta of tarjetas; track tarjeta.id){
@@ -31,12 +31,9 @@
             <!-- Encabezado Subtitulo y boton desplegable -->
             <div class="mx-4 flex justify-between items-center">
                 <app-ui-tipografia
-                    variante="h5"
+                    variante="h6"
                     texto={{tituloSeleccionado}}
-                ></app-ui-tipografia>
-                <button class="rounded-md px-4 py-2 bg-gray-200 hover:bg-gray-300">
-                    Mes pasado
-                </button>                
+                ></app-ui-tipografia>             
             </div>
             <!-- Linea separadora -->
             <app-ui-divider></app-ui-divider>
@@ -52,18 +49,22 @@
         </div>
     </div>
     <!-- Contenedor de Resumen por empleado y Documentos subidos -->
-    <div class=" w-full h-auto flex  justify-between gap-4">
+    <div class=" w-full h-auto flex  flex-col justify-between gap-4 md:flex-row">
         <!-- Resuemn por empleado-->
         <div class=" w-[450px] h-[350px] bg-white flex flex-1 flex-col gap-2 pt-3 pb-3 rounded-xl border border-zinc-300">
-            <span class="text-lg font-semibold text-zinc-600 ml-4">Resumen por empleado</span>
+            <app-ui-tipografia
+                variante="h6"
+                texto="Resumen por empleado"
+                class="ml-4"
+                ></app-ui-tipografia>
             <!-- Linea separadora -->
             <div class="w-full h-px bg-zinc-300"></div>
             <!-- Columnas -->
             <div class="grid grid-cols-4 gap-2 px-4 ">
-                <span class="text-xs font-medium text-zinc-500">Empleado</span>
-                <span class="text-xs font-medium text-zinc-500">Ventas cotizadas</span>
-                <span class="text-xs font-medium text-zinc-500">Docs subidos</span>
-                <span class="text-xs font-medium text-zinc-500">Cotiz rechazadas</span>
+                <app-ui-tipografia variante="caption-md" texto="Empleado"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Ventas cotizadas"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Docs subidos"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Cotiz rechazadas"></app-ui-tipografia>
             </div>
             <!-- Filas -->
             <div class="grid grid-cols-4 gap-2 px-4 items-start">
@@ -107,15 +108,19 @@
         </div>
         <!-- Documetos subidos -->
         <div class="bg-white w-[450px] h-[350px] flex flex-1 flex-col gap-2 pt-3 pb-3 rounded-xl border border-zinc-300">
-            <span class="text-lg font-semibold text-zinc-600 ml-4">Documentos subidos</span>
+            <app-ui-tipografia
+                variante="h6"
+                texto="Documentos subidos"
+                class="ml-4"
+                ></app-ui-tipografia>            
             <!-- Linea separadora -->
             <div class="w-full h-px bg-zinc-300"></div>
                 <!-- Columnas -->
             <div class="grid grid-cols-4 gap-2 px-4">
-                <span class="text-xs font-medium text-zinc-500">Archivo</span>
-                <span class="text-xs font-medium text-zinc-500">Subido por</span>
-                <span class="text-xs font-medium text-zinc-500">Fecha</span>
-                <span class="text-xs font-medium text-zinc-500">Enlace</span>
+                <app-ui-tipografia variante="caption-md" texto="Archivo"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Subido por"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Fecha"></app-ui-tipografia>
+                <app-ui-tipografia variante="caption-md" texto="Enlace"></app-ui-tipografia>                
             </div>
             <!-- Filas -->
             <div class="grid grid-cols-4 gap-2 px-4 items-start">

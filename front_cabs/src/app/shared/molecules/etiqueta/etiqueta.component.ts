@@ -11,17 +11,17 @@ export type VarianteEtiqueta = 'positivo' | 'negativo' | 'neutro';
     imports: [UitipografiaComponent, UiIconComponent, CommonModule],
     template: `
         <div
-        class="flex gap-1 items-center rounded-sm p-1.5"
+        class="flex gap-1 items-center rounded-sm p-1"
         [ngClass]="mapaVariante[variante].bg"
         (click)="onSeleccionar.emit(texto)"
         >
         <app-ui-icono
             [name]="mapaVariante[variante].icono"
-            size="size-5"
+            size="size-4"
             [color]="mapaVariante[variante].color"
         />
         <app-ui-tipografia
-            variante="caption"
+            variante="caption-md"
             [texto]="texto"
             [color]="mapaVariante[variante].color"
         />
