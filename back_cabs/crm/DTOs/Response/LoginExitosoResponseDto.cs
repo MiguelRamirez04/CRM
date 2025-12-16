@@ -37,6 +37,12 @@ namespace CRM.DTOs.Response
         public string Token { get; set; } = string.Empty;
 
         /// <summary>
+        /// Token de refresco para renovar la sesión
+        /// </summary>
+        [JsonPropertyName("refreshToken")]
+        public string RefreshToken { get; set; } = string.Empty;
+
+        /// <summary>
         /// Tipo de token (siempre Bearer)
         /// </summary>
         /// <example>Bearer</example>

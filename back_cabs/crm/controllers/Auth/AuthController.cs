@@ -353,6 +353,7 @@ namespace back_cabs.CRM.controllers.Auth
                     },
                     // El token se envía en la cookie, pero lo devolvemos para facilitar pruebas en Swagger
                     token = tokens.AccessToken, 
+                    refreshToken = tokens.RefreshToken, // ✅ NUEVO: Token de refresco en la respuesta
                     expiresIn = 1800 // 30 minutos en segundos
                 });
             }
@@ -366,49 +367,102 @@ namespace back_cabs.CRM.controllers.Auth
         /// <summary>
         /// Refresca el token de acceso usando el refresh token
         /// </summary>
-        /// <returns>Nuevo token de acceso</returns>
-        /// <response code="200">Token refrescado exitosamente</response>
-        /// <response code="401">Refresh token inválido</response>
+        /// <returns>Nuevo token de acceso y refresh token</returns>
+        /// <response code="200">Tokens refrescados exitosamente</response>
+        /// <response code="401">Refresh token inválido o expirado</response>
         [HttpPost("refresh")]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.Unauthorized)]
-        public Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto? request)
         {
             try
             {
+                // 1. Intentar obtener el refresh token de la cookie
                 var refreshToken = Request.Cookies["RefreshToken"];
                 
-                if (string.IsNullOrEmpty(refreshToken) || !IsValidRefreshToken(refreshToken))
+                // 2. Si no hay cookie, intentar obtener del body (para clientes no-browser)
+                if (string.IsNullOrEmpty(refreshToken) && request != null)
                 {
-                    return Task.FromResult<IActionResult>(Unauthorized(new { message = "Token de refresco inválido" }));
+                    refreshToken = request.RefreshToken;
                 }
 
-                var userId = GetUserIdFromRefreshToken(refreshToken);
-                var user = GetUserById(userId); // TODO: Obtener de BD
-
-                if (user == null)
+                if (string.IsNullOrEmpty(refreshToken))
                 {
-                    return Task.FromResult<IActionResult>(Unauthorized(new { message = "Usuario no encontrado" }));
+                     _logger.LogWarning("Refresh Token fallido: Token no proporcionado ni en cookie ni en body");
+                     return Unauthorized(new { message = "Token de refresco no proporcionado" });
                 }
 
-                var tokens = GenerateTokens(user);
+                if (!IsValidRefreshToken(refreshToken))
+                {
+                     _logger.LogWarning("Refresh Token fallido: Token con formato inválido: {Token}", refreshToken);
+                     return Unauthorized(new { message = "Token de refresco inválido" });
+                }
 
-                // Actualizar cookies HttpOnly
+                // 3. Extraer ID de usuario
+                // TODO: En producción validar firma/BD real del refresh token
+                var userIdStr = GetUserIdFromRefreshToken(refreshToken).Trim(); // ✅ Add Trim()
+                
+                // Add explicit debug log
+                _logger.LogInformation("Refresh Token parsing: Token '{Token}' -> Extracted ID String '{IdStr}'", refreshToken, userIdStr);
+
+                if (!int.TryParse(userIdStr, out var userId))
+                {
+                     _logger.LogWarning("Refresh Token fallido: ID de usuario no es un número válido: '{IdString}'", userIdStr);
+                     return Unauthorized(new { message = "Formato de token erróneo" });
+                }
+
+                _logger.LogInformation("Refresh Token: Buscando usuario con ID int: {UserId}", userId);
+
+                // 4. Obtener usuario REAL de la BD
+                var usuario = await _usuarioAuthService.ObtenerUsuarioPorIdAsync(userId);
+
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Refresh Token fallido: Usuario NULL devuelto por servicio para ID: {UserId}", userId);
+                    return Unauthorized(new { message = "Usuario no encontrado" });
+                }
+
+                if (!usuario.Activo)
+                {
+                    _logger.LogWarning("Refresh Token fallido: Usuario inactivo: {Email}", usuario.Email);
+                    return Unauthorized(new { message = "Usuario inactivo" });
+                }
+
+                // 5. Generar nuevos tokens
+                // Mapear a modelo User interno si es necesario, o pasar datos
+                var rolUsuario = !string.IsNullOrEmpty(usuario.Rol) && Enum.TryParse<RolUsuario>(usuario.Rol, out var rol)
+                    ? rol
+                    : RolUsuario.RECEPCION;
+
+                var userModel = new User
+                {
+                    Id = usuario.Id.ToString(),
+                    Email = usuario.Email,
+                    Name = usuario.NombreCompleto,
+                    Role = rolUsuario.ToString(),
+                    Permissions = GetPermissionsByRole(rolUsuario)
+                };
+
+                var tokens = GenerateTokens(userModel);
+
+                // 6. Actualizar cookies HttpOnly (siempre útil para navegadores)
                 SetRefreshTokenCookie(tokens.RefreshToken);
                 SetAccessTokenCookie(tokens.AccessToken);
 
-                _logger.LogInformation($"Token refrescado para usuario {user.Email}");
+                _logger.LogInformation($"Tokens refrescados exitosamente para usuario {usuario.Email}");
 
-                return Task.FromResult<IActionResult>(Ok(new
+                // 7. Retornar tokens en el body también
+                return Ok(new
                 {
+                    accessToken = tokens.AccessToken,
+                    refreshToken = tokens.RefreshToken,
                     expiresIn = 1800 // 30 minutos
-                    // NO devolver tokens en la respuesta
-                }));
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error durante el refresh token");
-                return Task.FromResult<IActionResult>(Unauthorized(new { message = "Error al refrescar token" }));
+                _logger.LogError(ex, "Error crítico durante el refresh token");
+                return Unauthorized(new { message = "Error al procesar la solicitud de refresh" });
             }
         }
 

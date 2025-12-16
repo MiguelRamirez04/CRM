@@ -36,13 +36,18 @@ namespace CRM.DTOs.Response
         /// </summary>
         [JsonPropertyName("usuario")]
         public UsuarioResponseDto Usuario { get; set; } = new();
-
         /// <summary>
         /// Token JWT para acceso inmediato (opcional)
         /// </summary>
         /// <example>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</example>
         [JsonPropertyName("token")]
         public string? Token { get; set; }
+
+        /// <summary>
+        /// Token de refresco para renovar la sesión
+        /// </summary>
+        [JsonPropertyName("refreshToken")]
+        public string? RefreshToken { get; set; }
 
         /// <summary>
         /// Mensaje de confirmación
