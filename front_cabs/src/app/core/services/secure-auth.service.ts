@@ -217,34 +217,37 @@ export class SecureAuthService {
   /**
    * Verificar estado de autenticación (para guards)
    */
-  checkAuthStatus(): Observable<boolean> {
-    // Si se realizó logout, no considerar autenticado hasta nuevo login
-    if (this.logoutPerformed) {
-      return of(false);
-    }
-
-    if (this.isAuthenticated()) {
-      return this.isLoggedIn$;
-    }
-
-    // Si no hay usuario local, intentar verificar con el servidor
-    return this.http.get<User>(`${this.baseUrl}/api/auth/me`)
-      .pipe(
-        map(user => {
-          this.currentUserSubject.next(user);
-          this.cookieService.set('user', JSON.stringify(user), {
-            path: '/',
-            secure: environment.production,
-            sameSite: 'Strict'
-          });
-          return true;
-        }),
-        catchError(() => {
-          this.clearAuthData();
-          return of(false);
-        })
-      );
+// En tu SecureAuthService, modifica checkAuthStatus():
+checkAuthStatus(): Observable<boolean> {
+  if (this.logoutPerformed) {
+    return of(false);
   }
+
+  if (this.isAuthenticated()) {
+    return this.isLoggedIn$;
+  }
+
+  // Si no hay usuario local, intentar verificar con el servidor
+  return this.http.get<User>(`${this.baseUrl}/api/auth/me`).pipe(
+    tap(response => {
+      console.log('🔴 RESPUESTA CRUDA DEL BACKEND:', response); // <-- AÑADE ESTO
+    }),
+    map(user => {
+      console.log('🟢 Datos que se van a guardar:', user); // <-- AÑADE ESTO
+      this.currentUserSubject.next(user);
+      this.cookieService.set('user', JSON.stringify(user), {
+        path: '/',
+        secure: environment.production,
+        sameSite: 'Strict'
+      });
+      return true;
+    }),
+    catchError(() => {
+      this.clearAuthData();
+      return of(false);
+    })
+  );
+}
 
   /**
    * Refresh token (para interceptor)
@@ -385,5 +388,12 @@ export class SecureAuthService {
     return this.http
       .get<UsuariosResponse>(`${this.baseUrl}/api/auth/usuarios?incluirInactivos=${incluirInactivos}`)
       .pipe(catchError(this.handleError));
-  }  
+  }
+  
+  getMe(): Observable<User> {
+    return this.http
+      .get<User>(`${this.baseUrl}/api/Auth/me`)
+      .pipe(catchError(this.handleError));
+  }
+
 }

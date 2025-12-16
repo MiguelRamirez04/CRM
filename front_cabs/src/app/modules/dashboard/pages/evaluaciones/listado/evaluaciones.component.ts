@@ -43,11 +43,11 @@ import { UiBotonComponent } from '../../../../../shared/atoms/boton/boton.compon
     TablaListadoComponent,
     PaginacionComponent,
     StatusDotComponent,
-    FilterPanelComponent,  // ← Componente nuevo
+    FilterPanelComponent,  
     VerdetallesComponent,
     UiHeaderComponent,
     InfogeneralComponent,
-    UiBotonComponent  
+    UiBotonComponent
   ],
   templateUrl: './evaluaciones.component.html',
   styleUrls: ['./evaluaciones.component.css']
@@ -238,8 +238,8 @@ export class EvaluacionesComponent implements OnInit {
           placeholder: 'Seleccione un tipo de seguimiento',
           tipo: 'select',
           opciones: [
-            { valor: 'requiere', etiqueta: 'Requiere seguimiento' },
-            { valor: 'completado', etiqueta: 'Completado' }
+            { value: 'requiere', label: 'Requiere seguimiento' },
+            { value: 'completado', label: 'Completado' }
           ]
         }
       ],
@@ -839,9 +839,9 @@ export class EvaluacionesComponent implements OnInit {
       return true;
     }
 
-    if (datosFase.scoreFase !== null && 
-        datosFase.scoreFase !== undefined && 
-        datosFase.scoreFase > 0) {
+    if (datosFase.scoreFase !== null &&
+      datosFase.scoreFase !== undefined &&
+      datosFase.scoreFase > 0) {
       return true;
     }
 

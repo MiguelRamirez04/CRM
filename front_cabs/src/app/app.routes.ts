@@ -30,14 +30,6 @@ export const routes: Routes = [
     loadChildren: () => import('./modules/administracion/administracion.routes').then(m => m.administracionRoutes)
   },
 
-  // Recepción (usuarios autenticados)
-  {
-    path: 'recepcion',
-    canActivate: [SecureAuthGuard],
-    data: { permission: 'recepcion.read' },
-    loadChildren: () => import('./modules/recepcion/recepcion.routes').then(m => m.recepcionRoutes)
-  },
-
   // Soporte (usuarios autenticados)
   {
     path: 'soporte',

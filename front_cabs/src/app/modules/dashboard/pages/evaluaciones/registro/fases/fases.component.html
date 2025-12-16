@@ -10,13 +10,13 @@
     <app-form-row [columns]="3" [gap]="'medium'">
       
       <!-- Lugar -->
-      <app-form-input
+      <app-ui-input-field
+        [variant]="'text'"
         [label]="'Lugar'"
         [placeholder]="'Ej: Oficina central'"
-        [type]="'text'"
         [(ngModel)]="lugar"
         (valueChange)="onCampoChange()">
-      </app-form-input>
+      </app-ui-input-field>
       
       <!-- Fecha de creación -->
       <div class="grupo-campo">
@@ -60,35 +60,38 @@
     <div style="margin-top: 8px;"></div>
 
     <!-- Descripción -->
-    <app-form-textarea
+    <app-ui-input-field
+      [variant]="'textarea'"
       [label]="'Descripción'"
       [placeholder]="'Describa qué se hizo o encontró...'"
       [rows]="4"
       [(ngModel)]="descripcion"
       (valueChange)="onCampoChange()">
-    </app-form-textarea>
+    </app-ui-input-field>
 
     <hr class="separador">
 
     <!-- Sugerencias/Recomendaciones -->
-    <app-form-textarea
+    <app-ui-input-field
+      [variant]="'textarea'"
       [label]="'Sugerencias/Recomendaciones'"
       [placeholder]="'Recomendaciones sobre el trabajo...'"
       [rows]="4"
       [(ngModel)]="sugerencias"
       (valueChange)="onCampoChange()">
-    </app-form-textarea>
+    </app-ui-input-field>
 
     <hr class="separador">
 
     <!-- Nota general de evidencia -->
-    <app-form-textarea
+    <app-ui-input-field
+      [variant]="'textarea'"
       [label]="'Nota general de evidencia'"
       [placeholder]="'Acciones o puntos a dar seguimiento...'"
       [rows]="4"
       [(ngModel)]="notaGeneral"
       (valueChange)="onCampoChange()">
-    </app-form-textarea>
+    </app-ui-input-field>
 
     <hr class="separador">
 
@@ -172,7 +175,8 @@
           </app-form-row>
 
           <!-- Descripción de la foto -->
-          <app-form-textarea
+          <app-ui-input-field
+            [variant]="'textarea'"
             [label]="'Descripción'"
             [placeholder]="(modoOperacion === 'editar' && foto.fotoIdBD) ? 'La descripción no puede modificarse una vez guardada' : 'Descripción de la imagen...'"
             [rows]="2"
@@ -180,7 +184,7 @@
             [helpText]="(modoOperacion === 'editar' && foto.fotoIdBD) ? 'Este campo no puede modificarse después de guardar la imagen' : ''"
             [(ngModel)]="foto.descripcion"
             (valueChange)="onCampoChange()">
-          </app-form-textarea>
+          </app-ui-input-field>
           
           <button class="boton-eliminar" (click)="eliminarFoto(foto.id)" type="button">
             Eliminar foto

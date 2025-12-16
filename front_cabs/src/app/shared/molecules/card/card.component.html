@@ -1,4 +1,4 @@
-<div class="flex flex-1 p-2 rounded-md border w-full h-auto flex-col gap-8 bg-white cursor-pointer transition-all duration-200"
+<div class="flex flex-1 p-2 rounded-md border w-full h-auto flex-col gap-4 bg-white cursor-pointer transition-all duration-200"
     [ngClass]="{
         'border-blue-500': selected,
         'border-zinc-300': !selected
@@ -32,13 +32,14 @@
     <div class=" flex items-baseline w-full ">
         @if (viewSimbolo){
             <app-ui-tipografia class=""
-                variante="h1"
+                variante="h2"
                 texto="$"
             ></app-ui-tipografia>
         }
         <app-ui-tipografia class=""
-            variante="h1"
+            variante="h2"
             texto={{valor}}
+            color="text-gray-950"
         ></app-ui-tipografia>                    
     </div>
 </div>

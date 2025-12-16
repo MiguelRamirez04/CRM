@@ -47,7 +47,6 @@ import { UiHeaderComponent } from '../../../../shared/molecules/header/header.co
     BadgeComponent
   ],
   templateUrl: './vehiculos.component.html',
-  styleUrls: ['./vehiculos.component.css']
 })
 export class VehiculosComponent implements OnInit, AfterViewInit {
   private readonly vehiculoService = inject(VehiculoService);

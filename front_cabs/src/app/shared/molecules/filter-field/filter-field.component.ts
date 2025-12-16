@@ -4,15 +4,14 @@
 
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FilterInputComponent, FilterInputType } from '../../atoms/filter-input/filter-input.component';
-import { FilterSelectComponent, SelectOption } from '../../atoms/filter-select/filter-select.component';
+import { UiInputComponent, InputVariant, SelectOption } from '../input/input.component';
 
 export type FilterFieldType = 'date' | 'month' | 'year' | 'select' | 'text';
 
 @Component({
   selector: 'app-filter-field',
   standalone: true,
-  imports: [CommonModule, FilterInputComponent, FilterSelectComponent],
+  imports: [CommonModule, UiInputComponent],
   templateUrl: './filter-field.component.html',
   styleUrls: ['./filter-field.component.css']
 })
@@ -42,9 +41,19 @@ export class FilterFieldComponent {
     return !this.isSelect;
   }
 
-  get inputType(): FilterInputType {
-    if (this.type === 'select') return 'text';
-    return this.type as FilterInputType;
+  get inputVariant(): InputVariant {
+    switch (this.type) {
+      case 'select':
+        return 'filter-select';
+      case 'date':
+        return 'date';
+      case 'month':
+        return 'month';
+      case 'year':
+        return 'year';
+      default:
+        return 'filter-input';
+    }
   }
 
   // =====================================================================================

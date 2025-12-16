@@ -1,19 +1,16 @@
 <div class="filter-checkbox-group">
+  <h4 *ngIf="titulo" class="group-title">{{ titulo }}</h4>
   
-  <!-- Título del grupo -->
-  <h4 *ngIf="titulo" class="group-title text-sm font-semibold text-gray-700 mb-3">
-    {{ titulo }}
-  </h4>
-
-  <!-- Lista de checkboxes -->
-  <div class="checkbox-list space-y-2">
-    <app-filter-checkbox
-      *ngFor="let option of options"
-      [label]="option.etiqueta"
-      [description]="option.descripcion"
-      [value]="option.valor"
-      [checked]="isChecked(option.valor)"
-      (checkedChange)="onCheckboxChange(option, $event)"
-    ></app-filter-checkbox>
+  <div class="checkboxes-container">
+    <ng-container *ngFor="let option of options">
+      <app-ui-input-field
+        variant="filter-checkbox"
+        [label]="option.etiqueta"
+        [checkboxDescription]="option.descripcion"
+        [value]="option.valor"
+        [checked]="isChecked(option.valor)"
+        (checkedChange)="onCheckboxChange(option, $event)">
+      </app-ui-input-field>
+    </ng-container>
   </div>
 </div>

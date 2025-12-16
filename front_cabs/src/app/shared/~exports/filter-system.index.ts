@@ -1,15 +1,18 @@
 // =====================================================================================
 // FILTER SYSTEM - Exportaciones centralizadas
 // =====================================================================================
-// UBICACIÓN: Este archivo debe estar en: app/shared/filter-system.index.ts
-// =====================================================================================
 
-// ATOMS
-export { FilterCheckboxComponent } from '../atoms/filter-checkbox/filter-checkbox.component';
-export { FilterInputComponent } from '../atoms/filter-input/filter-input.component';
-export type { FilterInputType } from '../atoms/filter-input/filter-input.component';
-export { FilterSelectComponent } from '../atoms/filter-select/filter-select.component';
-export type { SelectOption } from '../atoms/filter-select/filter-select.component';
+// INPUT CONSOLIDADO - Todos los inputs de filtro ahora están en molecules/input
+// Selector: <app-ui-input-field>
+// Usa la propiedad [variant] para especificar el tipo
+
+export { UiInputComponent } from '../molecules/input/input.component';
+
+// Exportación de tipos (con export type para isolatedModules)
+export type { SelectOption, InputVariant } from '../molecules/input/input.component';
+
+// Tipo compatible con código legacy
+export type FilterInputType = 'text' | 'date' | 'month' | 'year' | 'number' | 'email';
 
 // MOLECULES
 export { FilterCheckboxGroupComponent } from '../molecules/filter-checkbox-group/filter-checkbox-group.component';

@@ -1,0 +1,101 @@
+<!-- notificaciones.component.html -->
+<div class="relative ">
+  <button (click)="toggleDropdown()"
+          class="relative p-2 cursor-pointer inline-flex text-gray-600 hover:text-gray-900 focus:outline-none hover:bg-gray-100 transition-colors duration-200 rounded-lg ">
+    <app-ui-icono name="bell" size="size-5"></app-ui-icono>
+    
+    @if (notificacionesNoLeidas > 0) {
+      <span class="absolute right-1/4 top-1/4 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full size-4 flex items-center justify-center">
+        {{notificacionesNoLeidas}}
+      </span>
+    }
+  </button>
+
+  @if (mostrarDropdown) {
+    <div class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+        clickOutside
+        (clickOutside)="mostrarDropdown = false">
+      
+      <!-- CABECERA -->
+      <div class="p-4 border-b border-gray-200">
+        <app-ui-tipografia
+          variante="h5"
+          texto="Notificaciones"
+        ></app-ui-tipografia>
+      </div>
+
+      <!-- LISTA -->
+      <div class="max-h-80 overflow-y-auto">
+        @for (notif of notificaciones; track notif.id) {
+          <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer" 
+            (click)="marcarComoLeida(notif)">
+            
+            <!-- TÍTULO + ESTADO -->
+            <div class="flex justify-between items-start">
+              <div class="flex items-center gap-2">
+                <p class="font-medium text-sm text-gray-900">{{notif.titulo}}</p>
+                @if (!notif.leida) {
+                  <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                }
+              </div>
+              <app-ui-icono 
+                name="check-circle" 
+                size="size-4" 
+                [color]="notif.leida ? 'text-gray-400' : 'text-blue-500'">
+              </app-ui-icono>
+            </div>
+
+            <!-- MENSAJE -->
+            <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{notif.mensaje}}</p>
+
+            <!-- FECHA + PRIORIDAD -->
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs text-gray-400">
+                {{notif.fechaCreacion | date:'short'}}
+              </span>
+              <span class="px-2 py-1 text-xs rounded-full font-medium"
+                    [class.bg-red-100.text-red-800]="notif.prioridad === 'ALTA'"
+                    [class.bg-yellow-100.text-yellow-800]="notif.prioridad === 'MEDIA'"
+                    [class.bg-green-100.text-green-800]="notif.prioridad === 'BAJA'">
+                {{notif.prioridad}}
+              </span>
+            </div>
+
+            <!-- ACCIÓN -->
+            @if (notif.accion) {
+              <button class="mt-3 text-xs text-blue-600 hover:text-blue-800 underline"
+                (click)="ejecutarAccion(notif); $event.stopPropagation()">
+                {{ notif.accion.startsWith('/') ? 'Ir a ' + notif.accion : notif.accion }}
+              </button>
+            }
+          </div>
+        }
+
+        <!-- VACÍO -->
+        @if (notificaciones.length === 0) {
+          <div class="p-8 text-center text-gray-500">
+            <app-ui-icono name="bell" size="w-12 h-12" class="mx-auto text-gray-300 mb-4"></app-ui-icono>
+            <app-ui-tipografia
+              variante="caption-lg"
+              texto="No hay notificaciones"
+            ></app-ui-tipografia>
+            <app-ui-tipografia
+              variante="caption-md"
+              texto="Las nuevas aparecerán aquí"
+              class="mt-1"
+            ></app-ui-tipografia>
+          </div>
+        }
+      </div>
+
+      <!-- FOOTER -->
+      @if (notificaciones.length > 0) {
+        <div class="p-3 border-t border-gray-200">
+          <button class=" cursor-pointer w-full text-sm text-gray-600 hover:text-gray-900">
+            Ver todas las notificaciones
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -4,33 +4,42 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs'; 
 import { startWith } from 'rxjs/operators';
+import { UiIconComponent, UitipografiaComponent } from '../../../../shared/~exports/detail-view.index';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
+
+
+import { UiInputComponent } from '../../../../shared/molecules/input/input.component'; 
+import { UiBotonComponent } from '../../../../shared/atoms/boton/boton.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    UiInputComponent,
+    UiBotonComponent,
+    UiIconComponent,
+    UitipografiaComponent
+],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  // Inyección de servicios
+  // INYECCIONES
   private fb = inject(FormBuilder);
   private authService = inject(SecureAuthService);
   private router = inject(Router);
 
-  // Propiedades de estado
+  // ESTADO
   loginForm: FormGroup;
   isLoading = false;
-  showPassword = false;
   
-  // CRÍTICO: Esta variable activa la alerta en el HTML
   errorMessage: string | null = null; 
-  
   successMessage: string | null = null;
   
-  // Lógica para el carrusel
+  // CARRUSEL
   currentSlide = 1;
   private carouselSubscription!: Subscription;
 
@@ -43,7 +52,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.startCarousel();
+    this.carouselSubscription = interval(4000)
+      .pipe(startWith(0))
+      .subscribe(() => {
+        this.currentSlide = (this.currentSlide % 3) + 1; 
+      });
   }
 
   ngOnDestroy(): void {
@@ -52,38 +65,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Obtiene la URL de la imagen de mockup según el slide actual.
-   */
-  getImageUrl(slide: number): string {
-    switch (slide) {
-      case 1:
-        return 'assets/img/dashboard-mockup.jpg';
-      case 2:
-        return 'assets/img/support-mockup.jpg';
-      case 3:
-        return 'assets/img/reception-mockup.jpg';
-      default:
-        return '';
-    }
-  }
-
-  /**
-   * Inicia el temporizador para cambiar de slide automáticamente.
-   */
-  startCarousel(): void {
-    this.carouselSubscription = interval(4000)
-      .pipe(startWith(0))
-      .subscribe(() => {
-        this.currentSlide = (this.currentSlide % 3) + 1; 
-      });
-  }
-
-  /**
-   * Maneja el envío del formulario de inicio de sesión.
-   */
   onSubmit(): void {
-    // 1. Manejo de errores de validación del formulario (Frontend)
     if (this.loginForm.invalid) {
         this.loginForm.markAllAsTouched();
         this.errorMessage = 'Por favor, completa correctamente los campos requeridos.';
@@ -91,42 +73,27 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    this.errorMessage = null; // Reiniciar antes de la llamada al backend
+    this.errorMessage = null; 
+    this.successMessage = null;
 
     const loginData = {
         email: this.loginForm.get('email')?.value,
         password: this.loginForm.get('password')?.value
     };
 
-    // 2. Llamada al servicio de autenticación (Backend)
     this.authService.login(loginData).subscribe({
         next: () => {
             this.isLoading = false;
             this.successMessage = 'Inicio de sesión exitoso';
-            
-            // Redirección al dashboard
             setTimeout(() => {
                 this.router.navigate(['/dashboard']);
             }, 1000);
         },
-        // En login.component.ts (dentro de onSubmit, bloque error)
         error: (error) => {
           this.isLoading = false;
-          
-          //  ASIGNACIÓN FORZADA DEL MENSAJE LARGO DESEADO 
-          this.errorMessage = 'No se pudo iniciar sesión. Verifica tu usuario y contraseña e inténtalo de nuevo.';
-          // Limpiar la contraseña en el formulario después de un error
+          this.errorMessage = 'No se pudo iniciar sesión. Verifica tu usuario y contraseña.';
           this.loginForm.patchValue({ password: '' });
         }
     });
   }
-
-  /**
-   * Alterna la visibilidad del campo de contraseña.
-   */
-  togglePassword(): void {
-    this.showPassword = !this.showPassword;
-  }
 }
-
-

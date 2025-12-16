@@ -47,13 +47,6 @@
                 >
                 </app-ui-icono>
               }
-              @case ('clientes') {
-                <app-ui-icono
-                  name="user-group"
-                  size="size-5"
-                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
-                ></app-ui-icono>
-              }
               @case ('viaticos') {
                 <app-ui-icono
                   name="banknotes"
