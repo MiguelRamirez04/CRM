@@ -17,6 +17,7 @@ export interface Vehiculo {
   actualizadoEn?: string;
   actualizadoPorUsuarioId?: number;
   historialCambios?: string;
+  disponible: boolean;
 }
 
 /**
@@ -32,6 +33,7 @@ export interface VehiculoCreateDto {
   observaciones: string;
   nombreVehiculo: string;
   kilometraje: number;
+  transmisionManual?: boolean; // Helper opcional para UI
 }
 
 /**
@@ -46,7 +48,7 @@ export interface VehiculoUpdateDto {
 }
 
 /**
- * DTO para el historial de cambios del vehículo
+ * DTO para el historial de cambios (auditoría)
  */
 export interface VehiculoHistorial {
   id: number;
@@ -58,4 +60,43 @@ export interface VehiculoHistorial {
   usuarioNombre: string;
   fechaCambio: Date;
   tipoCambio: string;
+}
+
+/**
+ * DTO para registrar la SALIDA de un vehículo
+ */
+export interface RegistrarSalidaDto {
+  usuarioId: number;
+  motivoUso: string;
+  kilometrajeInicial: number;
+  fechaSalida?: string; // ISO string form
+}
+
+/**
+ * DTO para registrar la ENTRADA de un vehículo
+ */
+export interface RegistrarEntradaDto {
+  kilometrajeFinal: number;
+  observaciones?: string;
+  fechaRegreso?: string; // ISO string form
+  estado?: string; // 'COMPLETADO', etc.
+}
+
+/**
+ * Modelo para el historial de USO (Viajes)
+ */
+export interface UsoVehiculo {
+  id: number;
+  vehiculoId: number;
+  usuarioId: number;
+  usuarioNombre?: string; // Propiedad auxiliar para mostrar nombre si se hace join en front o back
+  fechaInicio: string; // DateTime
+  fechaFin?: string; // DateTime
+  horaSalida: string; // TimeSpan string "HH:mm:ss"
+  horaRegreso?: string; // TimeSpan string
+  motivoUso: string;
+  kilometrajeInicial: number;
+  kilometrajeFinal?: number;
+  estado: string; // 'EN_USO', 'COMPLETADO', etc.
+  observaciones?: string;
 }

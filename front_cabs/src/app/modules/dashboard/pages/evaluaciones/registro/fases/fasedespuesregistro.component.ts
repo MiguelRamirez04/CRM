@@ -11,19 +11,19 @@ import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones
 import {
   UiInputComponent,
   FormRowComponent,
-  FormSectionComponent,
+
   FormInfoAlertComponent
 } from '../../../../../../shared/~exports/form-system.index';
 
 @Component({
-  selector: 'app-fase-despues-modal', 
+  selector: 'app-fase-despues-modal',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
-    UiInputComponent,  
+    UiInputComponent,
     FormRowComponent,
-    FormSectionComponent,
+
     FormInfoAlertComponent
   ],
   templateUrl: './fases.component.html',
@@ -82,16 +82,16 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
       }
 
       const blob = await this.evaluacionService.descargarFoto(fotoIdBD).toPromise();
-      
+
       if (!blob) {
         throw new Error('No se recibió blob');
       }
 
       const blobUrl = URL.createObjectURL(blob);
       this.blobUrls.set(fotoIdBD, blobUrl);
-      
+
       return blobUrl;
-      
+
     } catch (error) {
       console.error(`Error al cargar imagen ${fotoIdBD}:`, error);
       return '/assets/images/placeholder-image.png';
@@ -100,9 +100,9 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
 
   private async cargarPreviewsFotos(): Promise<void> {
     const fotosConIdBD = this.fotos.filter(f => f.fotoIdBD && !f.preview?.startsWith('data:'));
-    
+
     if (fotosConIdBD.length === 0) return;
-    
+
     for (const foto of fotosConIdBD) {
       if (foto.fotoIdBD) {
         foto.preview = await this.cargarImagenAutenticada(foto.fotoIdBD);
@@ -128,14 +128,14 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
       this.notaGeneral = datosGuardados.notaGeneral || '';
       this.fotos = datosGuardados.fotos || [];
       this.detalleId = datosGuardados.detalleId;
-      
+
       this.cargarPreviewsFotos();
     }
   }
 
   async onImageError(event: Event, foto: FotoLocal): Promise<void> {
     const imgElement = event.target as HTMLImageElement;
-    
+
     if (foto.fotoIdBD) {
       try {
         const blobUrl = await this.cargarImagenAutenticada(foto.fotoIdBD);
@@ -189,7 +189,7 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('Archivo demasiado grande. Máximo: 10MB');
@@ -227,21 +227,21 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
     if (!id) return;
 
     const foto = this.fotos.find(f => f.id === id);
-    
+
     if (!foto) return;
-    
+
     if (foto.fotoIdBD) {
       const confirmar = confirm('ADVERTENCIA: Esta foto se eliminará de forma permanente sin necesidad de guardar la evaluación. Esta acción no se puede deshacer.\n\n¿Está seguro de que desea eliminar esta foto?');
-      
+
       if (!confirmar) return;
-      
+
       this.evaluacionService.eliminarFoto(foto.fotoIdBD).subscribe({
         next: () => {
           if (this.blobUrls.has(foto.fotoIdBD!)) {
             URL.revokeObjectURL(this.blobUrls.get(foto.fotoIdBD!)!);
             this.blobUrls.delete(foto.fotoIdBD!);
           }
-          
+
           this.fotos = this.fotos.filter(f => f.id !== id);
           this.onCampoChange();
           alert('Foto eliminada correctamente.');
@@ -282,11 +282,11 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
 
   onScoreChange(value: string | number): void {
     let numValue = typeof value === 'string' ? parseInt(value, 10) : value;
-    
+
     if (isNaN(numValue)) numValue = 0;
     if (numValue < 0) numValue = 0;
     if (numValue > 100) numValue = 100;
-    
+
     this.scoreFase = numValue;
     this.onCampoChange();
   }
@@ -326,14 +326,14 @@ export class FaseDespuesModalComponent implements OnInit, OnDestroy {
 
   validarPegadoScore(event: ClipboardEvent): void {
     const textoPegado = event.clipboardData?.getData('text') || '';
-    
+
     if (!/^\d+$/.test(textoPegado)) {
       event.preventDefault();
       return;
     }
 
     const numero = parseInt(textoPegado, 10);
-    
+
     if (numero < 0 || numero > 100) {
       event.preventDefault();
       return;

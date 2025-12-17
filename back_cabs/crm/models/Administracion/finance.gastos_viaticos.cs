@@ -23,7 +23,7 @@ namespace back_cabs.CRM.models.Administracion
         /// ID de la orden de trabajo relacionada
         /// </summary>
         [Required]
-        [Column("corden_id")]
+        [Column("orden_id")]
         public int CordenId { get; set; }
 
         /// <summary>

@@ -233,5 +233,30 @@ namespace back_cabs.CRM.repositories.Auth
                 throw;
             }
         }
+        public async Task<IEnumerable<UsuarioAuth>> GetByIdsAsync(IEnumerable<int> ids)
+        {
+            try
+            {
+                if (ids == null || !ids.Any())
+                {
+                    return new List<UsuarioAuth>();
+                }
+
+                var uniqueIds = ids.Distinct().ToList();
+                _logger.LogInformation("Obteniendo {Count} usuarios por lista de IDs", uniqueIds.Count);
+
+                var usuarios = await _readContext.UsuariosAuth
+                    .AsNoTracking()
+                    .Where(u => uniqueIds.Contains(u.Id))
+                    .ToListAsync();
+
+                return usuarios;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuarios por lista de IDs");
+                throw;
+            }
+        }
     }
 }

@@ -44,28 +44,163 @@ public class VehiculosService
     // desacoplado y testeable
     private readonly IVehiculoRepository _vehiculoRepository;
     private readonly IUsuarioAuthRepository _usuarioAuthRepository;
+    private readonly IUsoVehiculoRepository _usoVehiculoRepository;
     private readonly ILogger<VehiculosService> _logger;
     private readonly ICacheService _cacheService; // ✅ REDIS: Servicio de caché
+    private readonly WriteContext _writeContext; // ✅ Para transacciones
     private readonly ReadOnlyContext _readContext; // Para consultar auditoría
 
     // ✅ REDIS: Constantes para claves de caché (consistencia y mantenibilidad)
     private const string CACHE_KEY_ALL_VEHICULOS = "vehiculos:active"; // Solo activos
     private const string CACHE_KEY_VEHICULO_PREFIX = "vehiculos:id:";
+    private const string CACHE_KEY_HISTORIAL_PREFIX = "vehiculos:historial:";
+    private const string CACHE_KEY_USO_PREFIX = "vehiculos:uso:";
     private const int CACHE_EXPIRATION_MINUTES = 30; // Catálogos estables
 
     public VehiculosService(
         IVehiculoRepository vehiculoRepository,
         IUsuarioAuthRepository usuarioAuthRepository,
+        IUsoVehiculoRepository usoVehiculoRepository,
         ILogger<VehiculosService> logger,
         ICacheService cacheService,
-        ReadOnlyContext readContext)
+        ReadOnlyContext readContext,
+        WriteContext writeContext)
     {
         _vehiculoRepository = vehiculoRepository;
         _usuarioAuthRepository = usuarioAuthRepository;
+        _usoVehiculoRepository = usoVehiculoRepository;
         _logger = logger;
         _cacheService = cacheService;
         _readContext = readContext;
+        _writeContext = writeContext;
     }
+
+    // ... (Existing methods) ...
+
+    /// <summary>
+    /// Registra la salida de un vehículo.
+    /// - Verifica disponibilidad
+    /// - Crea registro en historial de uso
+    /// - Marca vehículo como no disponible
+    /// ✅ TRANSACCIÓN: Asegura consistencia atómica
+    /// </summary>
+    public async Task<VehiculoResponseDto> RegistrarSalidaAsync(int vehiculoId, RegistrarSalidaDto request)
+    {
+        // Iniciar transacción
+        using var transaction = await _writeContext.Database.BeginTransactionAsync();
+        try
+        {
+            var vehiculo = await _vehiculoRepository.GetByIdAsync(vehiculoId);
+            if (vehiculo == null) throw new KeyNotFoundException($"Vehículo {vehiculoId} no encontrado.");
+
+            if (!vehiculo.Disponible) throw new InvalidOperationException($"El vehículo {vehiculo.Placas} no está disponible.");
+
+            var fechaInicio = request.FechaSalida ?? DateTime.UtcNow;
+
+            var uso = new UsoVehiculo
+            {
+                VehiculoId = vehiculoId,
+                UsuarioId = request.UsuarioId,
+                FechaInicio = fechaInicio,
+                Fecha = fechaInicio.Date,
+                HoraSalida = fechaInicio.TimeOfDay,
+                MotivoUso = request.MotivoUso,
+                KilometrajeInicial = request.KilometrajeInicial,
+                Estado = "EN_USO"
+            };
+
+            await _usoVehiculoRepository.CreateAsync(uso);
+
+            // Actualizar estado del vehículo
+            vehiculo.Disponible = false;
+            if (request.KilometrajeInicial > vehiculo.Kilometraje)
+            {
+                 vehiculo.Kilometraje = request.KilometrajeInicial;
+            }
+
+            await _vehiculoRepository.UpdateAsync(vehiculo);
+            
+            // Confirmar transacción
+            await transaction.CommitAsync();
+
+            await InvalidarCacheVehiculo(vehiculoId);
+
+            return MapToResponseDto(vehiculo);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Registra el regreso de un vehículo.
+    /// - Encuentra el uso activo
+    /// - Calcula tiempos y actualiza registro
+    /// - Marca vehículo como disponible
+    /// - Actualiza kilometraje del vehículo
+    /// ✅ TRANSACCIÓN: Asegura consistencia atómica
+    /// </summary>
+    public async Task<VehiculoResponseDto> RegistrarEntradaAsync(int vehiculoId, RegistrarEntradaDto request)
+    {
+        using var transaction = await _writeContext.Database.BeginTransactionAsync();
+        try
+        {
+            var vehiculo = await _vehiculoRepository.GetByIdAsync(vehiculoId);
+            if (vehiculo == null) throw new KeyNotFoundException($"Vehículo {vehiculoId} no encontrado.");
+
+            var uso = await _usoVehiculoRepository.GetUsoActivoPorVehiculoAsync(vehiculoId);
+            if (uso == null) throw new InvalidOperationException($"No hay un uso activo registrado para el vehículo {vehiculo.Placas}.");
+
+            if (request.KilometrajeFinal < uso.KilometrajeInicial)
+            {
+                 throw new InvalidOperationException($"El kilometraje final ({request.KilometrajeFinal}) no puede ser menor al inicial ({uso.KilometrajeInicial}).");
+            }
+
+            var fechaFin = request.FechaRegreso ?? DateTime.UtcNow;
+
+            // Actualizar registro de uso
+            uso.KilometrajeFinal = request.KilometrajeFinal;
+            uso.FechaFin = fechaFin;
+            uso.HoraRegreso = fechaFin.TimeOfDay;
+            uso.Observaciones = request.Observaciones;
+            uso.Estado = request.Estado ?? "COMPLETADO";
+
+            await _usoVehiculoRepository.UpdateAsync(uso);
+
+            // Actualizar vehículo
+            vehiculo.Disponible = true;
+            vehiculo.Kilometraje = request.KilometrajeFinal;
+            
+            await _vehiculoRepository.UpdateAsync(vehiculo);
+
+            await transaction.CommitAsync();
+            
+            await InvalidarCacheVehiculo(vehiculoId);
+
+            return MapToResponseDto(vehiculo);
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<UsoVehiculo>> ObtenerHistorialUsoAsync(int vehiculoId)
+    {
+        // ✅ REDIS: Cachear historial de uso
+        string cacheKey = $"{CACHE_KEY_USO_PREFIX}{vehiculoId}";
+        var cached = await _cacheService.GetAsync<IEnumerable<UsoVehiculo>>(cacheKey);
+        if (cached != null) return cached;
+
+        var historial = await _usoVehiculoRepository.GetHistorialPorVehiculoAsync(vehiculoId);
+        
+        await _cacheService.SetAsync(cacheKey, historial, TimeSpan.FromMinutes(CACHE_EXPIRATION_MINUTES));
+        return historial;
+    }
+
 
     /// <summary>
     /// Obtiene todos los vehículos ACTIVOS ordenados por placas.
@@ -176,9 +311,16 @@ public class VehiculosService
         var vehiculoCreado = await _vehiculoRepository.CreateAsync(vehiculo);
 
         // ✅ REDIS: Invalidar caché de listado completo (Write-Through Pattern)
-        await _cacheService.RemoveAsync(CACHE_KEY_ALL_VEHICULOS);
-        _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}. Caché invalidado.", 
-            vehiculoCreado.Id, vehiculoCreado.Placas);
+        try
+        {
+            await _cacheService.RemoveAsync(CACHE_KEY_ALL_VEHICULOS);
+            _logger.LogInformation("Vehículo creado con ID: {VehiculoId} y Placas: {Placas}. Caché invalidado.", 
+                vehiculoCreado.Id, vehiculoCreado.Placas);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error al invalidar caché tras creación de vehículo {VehiculoId}", vehiculoCreado.Id);
+        }
 
         return MapToResponseDto(vehiculoCreado);
     }
@@ -224,8 +366,15 @@ public class VehiculosService
         var vehiculoActualizado = await _vehiculoRepository.UpdateAsync(vehiculo);
 
         // ✅ REDIS: Invalidar ambos cachés (listado y detalle)
-        await InvalidarCacheVehiculo(id);
-        _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}. Caché invalidado.", vehiculoActualizado.Id);
+        try
+        {
+            await InvalidarCacheVehiculo(id);
+            _logger.LogInformation("Vehículo actualizado con ID: {VehiculoId}. Caché invalidado.", vehiculoActualizado.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error al invalidar caché tras actualización de vehículo {VehiculoId}", id);
+        }
 
         return MapToResponseDto(vehiculoActualizado);
     }
@@ -243,8 +392,15 @@ public class VehiculosService
         if (eliminado)
         {
             // ✅ REDIS: Invalidar ambos cachés
-            await InvalidarCacheVehiculo(id);
-            _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}. Caché invalidado.", id);
+            try
+            {
+                await InvalidarCacheVehiculo(id);
+                _logger.LogInformation("Vehículo eliminado con ID: {VehiculoId}. Caché invalidado.", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error al invalidar caché tras eliminación de vehículo {VehiculoId}", id);
+            }
         }
 
         return eliminado;
@@ -257,6 +413,11 @@ public class VehiculosService
     {
         try
         {
+            // ✅ REDIS: Caché de historial
+            string cacheKey = $"{CACHE_KEY_HISTORIAL_PREFIX}{vehiculoId}";
+            var cached = await _cacheService.GetAsync<IEnumerable<VehiculoHistorialResponseDto>>(cacheKey);
+            if (cached != null) return cached;
+
             var vehiculo = await _vehiculoRepository.GetByIdAsync(vehiculoId);
             if (vehiculo == null || string.IsNullOrEmpty(vehiculo.HistorialCambios))
             {
@@ -270,28 +431,35 @@ public class VehiculosService
                 return new List<VehiculoHistorialResponseDto>();
             }
 
+            // ✅ OPTIMIZACIÓN N+1: Obtener todos los IDs de usuarios únicos
+            var userIds = historial
+                .Where(h => h.usuario_id.HasValue)
+                .Select(h => h.usuario_id!.Value)
+                .Distinct()
+                .ToList();
+
+            // Cargar usuarios en lote
+            var usuariosDict = new Dictionary<int, string>();
+            if (userIds.Any())
+            {
+                try {
+                    var usuarios = await _usuarioAuthRepository.GetByIdsAsync(userIds);
+                    usuariosDict = usuarios.ToDictionary(u => u.Id, u => $"{u.Nombre} {u.Apellido}");
+                } catch (Exception ex) {
+                    _logger.LogWarning(ex, "Error al cargar lote de usuarios para historial");
+                }
+            }
+
             var resultado = new List<VehiculoHistorialResponseDto>();
             int idCounter = 1;
 
             foreach (var cambio in historial.OrderByDescending(h => h.fecha))
             {
-                // Obtener el nombre real del usuario
-                string usuarioNombre = $"Usuario {cambio.usuario_id ?? 0}"; // Valor por defecto
-                if (cambio.usuario_id.HasValue)
+                // Obtener nombre desde el diccionario (InMemory, súper rápido)
+                string usuarioNombre = $"Usuario {cambio.usuario_id ?? 0}";
+                if (cambio.usuario_id.HasValue && usuariosDict.TryGetValue(cambio.usuario_id.Value, out var nombre))
                 {
-                    try
-                    {
-                        var usuario = await _usuarioAuthRepository.GetByIdAsync(cambio.usuario_id.Value);
-                        if (usuario != null)
-                        {
-                            usuarioNombre = $"{usuario.Nombre} {usuario.Apellido}";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error al obtener nombre del usuario {UsuarioId} para historial", cambio.usuario_id);
-                        // Mantener el valor por defecto
-                    }
+                    usuarioNombre = nombre;
                 }
 
                 // Para cada cambio, crear entradas separadas por campo modificado
@@ -344,6 +512,8 @@ public class VehiculosService
                 }
             }
 
+            // ✅ REDIS: Guardar
+            await _cacheService.SetAsync(cacheKey, resultado, TimeSpan.FromMinutes(CACHE_EXPIRATION_MINUTES));
             return resultado;
         }
         catch (Exception ex)
@@ -362,13 +532,16 @@ public class VehiculosService
     private async Task InvalidarCacheVehiculo(int id)
     {
         // Invalidar caché individual
-        string cacheKey = $"{CACHE_KEY_VEHICULO_PREFIX}{id}";
-        await _cacheService.RemoveAsync(cacheKey);
+        await _cacheService.RemoveAsync($"{CACHE_KEY_VEHICULO_PREFIX}{id}");
         
         // Invalidar listado completo
         await _cacheService.RemoveAsync(CACHE_KEY_ALL_VEHICULOS);
         
-        _logger.LogDebug("Caché de vehículo {Id} invalidado", id);
+        // ✅ Invalidar caché de historial y uso
+        await _cacheService.RemoveAsync($"{CACHE_KEY_HISTORIAL_PREFIX}{id}");
+        await _cacheService.RemoveAsync($"{CACHE_KEY_USO_PREFIX}{id}");
+
+        _logger.LogDebug("Cachés de vehículo {Id} invalidados (Detalle, Lista, Historial, Uso)", id);
     }
 
     /// <summary>

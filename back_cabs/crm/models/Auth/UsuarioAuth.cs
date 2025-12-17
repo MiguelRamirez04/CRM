@@ -118,6 +118,20 @@ namespace back_cabs.CRM.models.Auth
         [Column("transmision_habilitada")]
         public string? TransmisionHabilitada { get; set; }
 
+        [Column("id_agente_legacy")]
+        public int? IdAgenteLegacy { get; set; }
+
+        [Column("codigo_agente_legacy")]
+        [StringLength(30)]
+        public string? CodigoAgenteLegacy { get; set; }
+
+        [Column("nombre_agente_legacy")]
+        [StringLength(60)]
+        public string? NombreAgenteLegacy { get; set; }
+
+        [Column("fecha_enlace_agente")]
+        public DateTime? FechaEnlaceAgente { get; set; }
+
         /// <summary>
         /// Nombre completo del usuario (propiedad calculada)
         /// </summary>

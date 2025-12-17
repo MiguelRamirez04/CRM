@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { VehiculoService } from '../../../../core/services/vehiculo.service';
-import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto } from '../../../../core/models/vehiculo.interface';
+import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto, RegistrarSalidaDto, RegistrarEntradaDto } from '../../../../core/models/vehiculo.interface';
 
 // Componentes reutilizables
 import { TablaListadoComponent, ConfiguracionColumna, AccionTabla } from '../../../../shared/molecules/tabla-base/tabla-listado.component';
@@ -22,12 +22,13 @@ import { LoadingSpinnerComponent } from '../../../../shared/atoms/loading-spinne
 import { AlertComponent } from '../../../../shared/molecules/alert/alert.component';
 import { BadgeComponent } from '../../../../shared/atoms/bage/badge.component';
 import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
+import { AccionVehiculoModalComponent } from './components/accion-vehiculo-modal/accion-vehiculo-modal.component';
 
 @Component({
   selector: 'app-vehiculos',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     ReactiveFormsModule,
     // Componentes de tabla y navegación
     TablaListadoComponent,
@@ -44,7 +45,8 @@ import { UiHeaderComponent } from '../../../../shared/molecules/header/header.co
     DetailFieldComponent,
     LoadingSpinnerComponent,
     AlertComponent,
-    BadgeComponent
+    BadgeComponent,
+    AccionVehiculoModalComponent
   ],
   templateUrl: './vehiculos.component.html',
 })
@@ -68,10 +70,15 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
   cargando = signal(false);
   error = signal<string | null>(null);
 
+  // Estado para Modal de Acciones (Salida/Entrada)
+  mostrarModalAccion = signal(false);
+  modoAccion = signal<'salida' | 'entrada'>('salida');
+  vehiculoAccion = signal<Vehiculo | null>(null);
+
   // Filtros
   filtroTermino = signal<string>('');
   filtrosActivos = signal<ResultadoFiltros | null>(null);
-  
+
   // Paginación
   paginaActual = signal<number>(1);
   elementosPorPagina = signal<number>(10);
@@ -242,6 +249,24 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
     // Configuración de acciones
     this.accionesTabla = [
       {
+        etiqueta: 'Salida', /* Registrar Salida si disponible */
+        icono: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>`,
+        variante: 'primario',
+        mostrar: (vehiculo: Vehiculo) => !!(vehiculo.activo && vehiculo.disponible),
+        accion: (vehiculo: Vehiculo) => this.abrirModalAccion('salida', vehiculo)
+      },
+      {
+        etiqueta: 'Entrada', /* Registrar Entrada si no disponible */
+        icono: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+        </svg>`,
+        variante: 'secundario', // Color distinto
+        mostrar: (vehiculo: Vehiculo) => !!(vehiculo.activo && !vehiculo.disponible),
+        accion: (vehiculo: Vehiculo) => this.abrirModalAccion('entrada', vehiculo)
+      },
+      {
         etiqueta: 'Ver',
         icono: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -281,7 +306,7 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
     this.cargando.set(true);
     this.error.set(null);
     const filtros: { [key: string]: string } = {};
-    
+
     // No aplicar el filtro de término aquí, lo manejamos en el cliente
     this.vehiculoService.getVehiculos(filtros).subscribe({
       next: (data) => {
@@ -328,7 +353,7 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
     // Aplicar búsqueda por término
     const termino = this.filtroTermino().toLowerCase().trim();
     if (termino) {
-      vehiculosFiltrados = vehiculosFiltrados.filter(vehiculo => 
+      vehiculosFiltrados = vehiculosFiltrados.filter(vehiculo =>
         vehiculo.nombreVehiculo?.toLowerCase().includes(termino) ||
         vehiculo.placas?.toLowerCase().includes(termino) ||
         vehiculo.tipoVehiculo?.toLowerCase().includes(termino)
@@ -340,35 +365,35 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
     if (filtros) {
       // Filtro de transmisión
       if (filtros.checkboxes['transmision']?.length > 0) {
-        vehiculosFiltrados = vehiculosFiltrados.filter(v => 
+        vehiculosFiltrados = vehiculosFiltrados.filter(v =>
           filtros.checkboxes['transmision'].includes(v.transmision)
         );
       }
 
       // Filtro de estado
       if (filtros.checkboxes['estado']?.length > 0) {
-        vehiculosFiltrados = vehiculosFiltrados.filter(v => 
+        vehiculosFiltrados = vehiculosFiltrados.filter(v =>
           filtros.checkboxes['estado'].includes(v.activo)
         );
       }
 
       // Filtro de propiedad
       if (filtros.checkboxes['propiedad']?.length > 0) {
-        vehiculosFiltrados = vehiculosFiltrados.filter(v => 
+        vehiculosFiltrados = vehiculosFiltrados.filter(v =>
           filtros.checkboxes['propiedad'].includes(v.esDeEmpresa)
         );
       }
 
       // Filtro de tipo de vehículo
       if (filtros.selects['tipoVehiculo'] && filtros.selects['tipoVehiculo'] !== '') {
-        vehiculosFiltrados = vehiculosFiltrados.filter(v => 
+        vehiculosFiltrados = vehiculosFiltrados.filter(v =>
           v.tipoVehiculo === filtros.selects['tipoVehiculo']
         );
       }
     }
 
     this.vehiculosFiltrados.set(vehiculosFiltrados);
-    
+
     // Resetear a la primera página cuando cambian los filtros
     this.paginaActual.set(1);
     this.aplicarPaginacion();
@@ -390,7 +415,7 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
   abrirModalCrear(): void {
     // Cerrar panel de detalles si está abierto
     this.cerrarPanelDetalles();
-    
+
     // Abrir modal inmediatamente con indicador de carga
     this.modoModal.set('crear');
     this.vehiculoParaEditar.set(null);
@@ -424,7 +449,7 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
         kilometraje: null,
         observaciones: ''
       });
-      
+
       this.cargando.set(false);
     }, 0);
   }
@@ -432,7 +457,7 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
   abrirModalEditar(vehiculo: Vehiculo): void {
     // Cerrar panel de detalles si está abierto
     this.cerrarPanelDetalles();
-    
+
     // Configurar validaciones para editar (kilometraje requerido, activo opcional)
     this.formularioVehiculo.get('nombreVehiculo')?.clearValidators();
     this.formularioVehiculo.get('placas')?.clearValidators();
@@ -540,46 +565,92 @@ export class VehiculosComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Métodos para acciones de Salida/Entrada
+   */
+  abrirModalAccion(modo: 'salida' | 'entrada', vehiculo: Vehiculo): void {
+    this.vehiculoAccion.set(vehiculo);
+    this.modoAccion.set(modo);
+    this.mostrarModalAccion.set(true);
+  }
+
+  cerrarModalAccion(): void {
+    this.mostrarModalAccion.set(false);
+    this.vehiculoAccion.set(null);
+  }
+
+  registrarSalida(dto: RegistrarSalidaDto): void {
+    const vehiculo = this.vehiculoAccion();
+    if (!vehiculo) return;
+
+    this.cargando.set(true);
+    this.vehiculoService.registrarSalida(vehiculo.id, dto).subscribe({
+      next: () => {
+        this.cargando.set(false);
+        this.cerrarModalAccion();
+        this.cargarVehiculos(); // Recargar para ver cambios
+        alert('Salida registrada correctamente.');
+      },
+      error: (err) => this.handleError('Error al registrar salida.', err)
+    });
+  }
+
+  registrarEntrada(dto: RegistrarEntradaDto): void {
+    const vehiculo = this.vehiculoAccion();
+    if (!vehiculo) return;
+
+    this.cargando.set(true);
+    this.vehiculoService.registrarEntrada(vehiculo.id, dto).subscribe({
+      next: () => {
+        this.cargando.set(false);
+        this.cerrarModalAccion();
+        this.cargarVehiculos(); // Recargar para ver cambios
+        alert('Entrada registrada correctamente.');
+      },
+      error: (err) => this.handleError('Error al registrar entrada.', err)
+    });
+  }
+
+  /**
    * Métodos para el panel lateral de detalles
    */
   seleccionarVehiculo(vehiculo: Vehiculo): void {
     this.vehiculoSeleccionado.set(vehiculo);
   }
 
-// 1. Agregar signal para controlar la carga de detalles
-cargandoDetalles = signal(false);
+  // 1. Agregar signal para controlar la carga de detalles
+  cargandoDetalles = signal(false);
 
-// 2. REEMPLAZAR el método verDetalles() existente con este:
-verDetalles(vehiculo: Vehiculo): void {
-  // ABRIR EL PANEL INMEDIATAMENTE
-  this.vehiculoSeleccionado.set(vehiculo); // Establecer el vehículo básico primero
-  this.mostrarPanelDetalles.set(true);     // Abrir el panel
-  this.cargandoDetalles.set(true);         // Activar spinner
-  this.error.set(null);                     // Limpiar errores previos
+  // 2. REEMPLAZAR el método verDetalles() existente con este:
+  verDetalles(vehiculo: Vehiculo): void {
+    // ABRIR EL PANEL INMEDIATAMENTE
+    this.vehiculoSeleccionado.set(vehiculo); // Establecer el vehículo básico primero
+    this.mostrarPanelDetalles.set(true);     // Abrir el panel
+    this.cargandoDetalles.set(true);         // Activar spinner
+    this.error.set(null);                     // Limpiar errores previos
 
-  // LUEGO CARGAR LOS DATOS COMPLETOS
-  this.vehiculoService.getVehiculoById(vehiculo.id).subscribe({
-    next: (vehiculoCompleto) => {
-      this.vehiculoSeleccionado.set(vehiculoCompleto);
-      this.cargandoDetalles.set(false);
-    },
-    error: (err) => {
-      console.error('Error al obtener detalles del vehículo:', err);
-      this.error.set('Error al cargar los detalles del vehículo');
-      this.cargandoDetalles.set(false);
-      // Opcional: cerrar el panel si falla la carga
-      // this.cerrarPanelDetalles();
-    }
-  });
-}
+    // LUEGO CARGAR LOS DATOS COMPLETOS
+    this.vehiculoService.getVehiculoById(vehiculo.id).subscribe({
+      next: (vehiculoCompleto) => {
+        this.vehiculoSeleccionado.set(vehiculoCompleto);
+        this.cargandoDetalles.set(false);
+      },
+      error: (err) => {
+        console.error('Error al obtener detalles del vehículo:', err);
+        this.error.set('Error al cargar los detalles del vehículo');
+        this.cargandoDetalles.set(false);
+        // Opcional: cerrar el panel si falla la carga
+        // this.cerrarPanelDetalles();
+      }
+    });
+  }
 
-// 3. ACTUALIZAR el método cerrarPanelDetalles() para limpiar el estado de carga:
-cerrarPanelDetalles(): void {
-  this.mostrarPanelDetalles.set(false);
-  this.vehiculoSeleccionado.set(null);
-  this.cargandoDetalles.set(false); 
-  this.error.set(null);              
-}
+  // 3. ACTUALIZAR el método cerrarPanelDetalles() para limpiar el estado de carga:
+  cerrarPanelDetalles(): void {
+    this.mostrarPanelDetalles.set(false);
+    this.vehiculoSeleccionado.set(null);
+    this.cargandoDetalles.set(false);
+    this.error.set(null);
+  }
 
   verHistorial(vehiculo: Vehiculo): void {
     this.router.navigate(['historial', vehiculo.id], { relativeTo: this.route });
@@ -596,12 +667,15 @@ cerrarPanelDetalles(): void {
     return vehiculo.kilometraje ? vehiculo.kilometraje.toLocaleString() + ' km' : 'N/A';
   }
 
-  obtenerTipoEstado(vehiculo: Vehiculo): 'completado' | 'rechazado' {
-    return vehiculo.activo ? 'completado' : 'rechazado';
+  obtenerTipoEstado(vehiculo: Vehiculo): 'completado' | 'rechazado' | 'atencion' {
+    if (!vehiculo.activo) return 'rechazado';
+    return vehiculo.disponible ? 'completado' : 'atencion';
+    // Pendiente -> Se usa color amarillo/naranja en el componente base, que es apropiado para "En Uso"
   }
 
   obtenerTextoEstado(vehiculo: Vehiculo): string {
-    return vehiculo.activo ? 'Activo' : 'Inactivo';
+    if (!vehiculo.activo) return 'Inactivo';
+    return vehiculo.disponible ? 'Disponible' : 'En Uso';
   }
 
   obtenerTipoTransmision(vehiculo: Vehiculo): 'personalizado' | 'neutral' {
@@ -617,7 +691,7 @@ cerrarPanelDetalles(): void {
   private handleError(message: string, error: any, setGlobalError: boolean = true): void {
     const apiError = error?.error?.message || error?.error || error?.message || 'Error desconocido';
     const fullMessage = `${message} Detalles: ${apiError}`;
-    
+
     // Si el modal está abierto, siempre muestra el error ahí.
     if (this.mostrarModal()) {
       this.error.set(fullMessage);
@@ -627,7 +701,7 @@ cerrarPanelDetalles(): void {
         this.error.set(fullMessage);
       }
     }
-    
+
     this.cargando.set(false);
     console.error(message, error);
   }

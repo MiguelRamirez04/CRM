@@ -66,5 +66,11 @@ namespace back_cabs.CRM.Interfaces.Auth
         /// <param name="incluirInactivos">Si incluye usuarios inactivos</param>
         /// <returns>Lista de usuarios del rol especificado</returns>
         Task<IEnumerable<UsuarioAuth>> GetByRolAsync(string rol, bool incluirInactivos = false);
+            /// <summary>
+        /// Obtiene múltiples usuarios por sus IDs
+        /// </summary>
+        /// <param name="ids">Lista de IDs</param>
+        /// <returns>Lista de usuarios encontrados</returns>
+        Task<IEnumerable<UsuarioAuth>> GetByIdsAsync(IEnumerable<int> ids);
     }
 }

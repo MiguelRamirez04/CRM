@@ -106,10 +106,7 @@ namespace back_cabs.CRM.controllers.Auth
                     resultado.Usuario.Id, resultado.Usuario.Email);
 
                 // Retornar respuesta exitosa con código 201 Created
-                return CreatedAtAction(
-                    nameof(RegistrarUsuario),
-                    new { id = resultado.Usuario.Id },
-                    resultado);
+                return StatusCode(201, resultado);
             }
             catch (FluentValidation.ValidationException ex)
             {

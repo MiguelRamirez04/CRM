@@ -80,7 +80,7 @@ public class VehiculosController : ControllerBase
         try
         {
             var resultado = await _service.CrearAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = resultado.Id }, resultado);
+            return StatusCode(201, resultado);
         }
         catch (InvalidOperationException ex)
         {
@@ -155,5 +155,47 @@ public class VehiculosController : ControllerBase
             _logger.LogError(ex, "Error al eliminar el vehículo con ID {VehiculoId}", id);
             return StatusCode(500, new { message = "Error interno del servidor." });
         }
+    }
+    [HttpPost("{id}/salida")]
+    [ProducesResponseType(typeof(VehiculoResponseDto), 200)]
+    public async Task<IActionResult> RegistrarSalida(int id, [FromBody] RegistrarSalidaDto request)
+    {
+        try
+        {
+            var resultado = await _service.RegistrarSalidaAsync(id, request);
+            return Ok(resultado);
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al registrar salida del vehículo {Id}", id);
+            return StatusCode(500, new { message = "Error interno del servidor." });
+        }
+    }
+
+    [HttpPost("{id}/entrada")]
+    [ProducesResponseType(typeof(VehiculoResponseDto), 200)]
+    public async Task<IActionResult> RegistrarEntrada(int id, [FromBody] RegistrarEntradaDto request)
+    {
+        try
+        {
+            var resultado = await _service.RegistrarEntradaAsync(id, request);
+            return Ok(resultado);
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al registrar entrada del vehículo {Id}", id);
+            return StatusCode(500, new { message = "Error interno del servidor." });
+        }
+    }
+
+    [HttpGet("{id}/historial-uso")]
+    public async Task<IActionResult> GetHistorialUso(int id)
+    {
+        var historial = await _service.ObtenerHistorialUsoAsync(id);
+        return Ok(historial);
     }
 }

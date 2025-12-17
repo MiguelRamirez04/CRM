@@ -1,0 +1,107 @@
+<div *ngIf="visible" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <!-- Backdrop -->
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" (click)="onCancelar()"></div>
+
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+    <!-- Modal panel -->
+    <div class="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      
+      <!-- Header -->
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-between items-center border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+          {{ modo === 'salida' ? 'Registrar Salida de Vehículo' : 'Registrar Entrada de Vehículo' }}
+        </h3>
+        <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none" (click)="onCancelar()">
+          <span class="sr-only">Cerrar</span>
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="px-4 py-5 sm:p-6 space-y-4">
+        
+        <!-- Info Vehículo -->
+        <div class="bg-blue-50 p-3 rounded-md mb-4 border border-blue-100">
+          <p class="text-sm text-blue-800">
+            <strong>Vehículo:</strong> {{ vehiculo?.nombreVehiculo }} ({{ vehiculo?.placas }})
+          </p>
+          <p class="text-sm text-blue-800 mt-1">
+            <strong>Kilometraje Actual:</strong> {{ vehiculo?.kilometraje | number }} km
+          </p>
+        </div>
+
+        <!-- MODO SALIDA -->
+        <ng-container *ngIf="modo === 'salida'">
+          <!-- Conductor -->
+          <div class="space-y-1">
+            <label for="usuarioId" class="block text-sm font-medium text-gray-700">Conductor Asignado</label>
+            <select id="usuarioId" formControlName="usuarioId" 
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm border">
+              <option [ngValue]="null" disabled>Seleccione un conductor</option>
+              <option *ngFor="let user of usuarios()" [value]="user.id">
+                {{ user.nombre }} {{ user.apellido }}
+              </option>
+            </select>
+            <p *ngIf="cargandoUsuarios()" class="text-xs text-gray-500 mt-1">Cargando usuarios...</p>
+            <p *ngIf="campoEsInvalido('usuarioId')" class="text-xs text-red-600 mt-1">Seleccione un conductor.</p>
+          </div>
+
+          <!-- Motivo -->
+          <div class="space-y-1">
+            <label for="motivoUso" class="block text-sm font-medium text-gray-700">Motivo del Uso</label>
+            <textarea id="motivoUso" formControlName="motivoUso" rows="3"
+                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                      placeholder="Ej. Visita a cliente en Zona Industrial"></textarea>
+            <p *ngIf="campoEsInvalido('motivoUso')" class="text-xs text-red-600 mt-1">El motivo es requerido.</p>
+          </div>
+
+          <!-- Km Inicial (Readonly) -->
+          <div class="space-y-1">
+            <label class="block text-sm font-medium text-gray-700">Kilometraje de Salida</label>
+            <input type="number" formControlName="kilometrajeInicial" 
+                   class="mt-1 block w-full border-gray-300 bg-gray-100 text-gray-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm rounded-md border p-2 text-right">
+          </div>
+        </ng-container>
+
+        <!-- MODO ENTRADA -->
+        <ng-container *ngIf="modo === 'entrada'">
+          <!-- Km Final -->
+          <div class="space-y-1">
+            <label for="kilometrajeFinal" class="block text-sm font-medium text-gray-700">Kilometraje de Regreso</label>
+            <input type="number" id="kilometrajeFinal" formControlName="kilometrajeFinal"
+                   class="mt-1 block w-full border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm rounded-md border p-2 text-right">
+            <p class="text-xs text-gray-500 mt-1">Debe ser mayor o igual a {{ vehiculo?.kilometraje | number }} km</p>
+            <p *ngIf="campoEsInvalido('kilometrajeFinal')" class="text-xs text-red-600 mt-1">Ingrese un kilometraje válido.</p>
+          </div>
+
+          <!-- Observaciones -->
+          <div class="space-y-1">
+            <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones (Opcional)</label>
+            <textarea id="observaciones" formControlName="observaciones" rows="3"
+                      class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                      placeholder="Ej. Se requiere cargar gasolina, llanta baja..."></textarea>
+          </div>
+        </ng-container>
+
+        <!-- Footer Buttons -->
+        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+          <button type="submit" 
+                  [disabled]="!form.valid"
+                  [class.opacity-50]="!form.valid"
+                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
+                  [ngClass]="modo === 'salida' ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'">
+            {{ modo === 'salida' ? 'Registrar Salida' : 'Registrar Entrada' }}
+          </button>
+          <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                  (click)="onCancelar()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

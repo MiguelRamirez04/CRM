@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 // Ajusta la ruta para subir a 'core/models'
-import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto, VehiculoHistorial } from '../models/vehiculo.interface'; 
+import { Vehiculo, VehiculoCreateDto, VehiculoUpdateDto, VehiculoHistorial, RegistrarSalidaDto, RegistrarEntradaDto, UsoVehiculo } from '../models/vehiculo.interface';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 export class VehiculoService {
   private http = inject(HttpClient);
   // URL base de tu API de Vehículos
-  private baseUrl = `${environment.apiUrl}/api/Vehiculos`; 
+  private baseUrl = `${environment.apiUrl}/api/Vehiculos`;
 
   /**
    * Obtiene la lista de vehículos desde la API.
@@ -57,6 +57,30 @@ export class VehiculoService {
   getVehiculoHistorial(id: number): Observable<VehiculoHistorial[]> {
     // GET -> /api/Vehiculos/1/historial
     return this.http.get<VehiculoHistorial[]>(`${this.baseUrl}/${id}/historial`);
+  }
+
+  /**
+   * Registra la SALIDA de un vehículo (Check-out).
+   */
+  registrarSalida(id: number, dto: RegistrarSalidaDto): Observable<Vehiculo> {
+    // POST -> /api/Vehiculos/1/salida
+    return this.http.post<Vehiculo>(`${this.baseUrl}/${id}/salida`, dto);
+  }
+
+  /**
+   * Registra la ENTRADA de un vehículo (Check-in).
+   */
+  registrarEntrada(id: number, dto: RegistrarEntradaDto): Observable<Vehiculo> {
+    // POST -> /api/Vehiculos/1/entrada
+    return this.http.post<Vehiculo>(`${this.baseUrl}/${id}/entrada`, dto);
+  }
+
+  /**
+   * Obtiene el historial de USO de un vehículo (Viajes).
+   */
+  getHistorialUso(id: number): Observable<UsoVehiculo[]> {
+    // GET -> /api/Vehiculos/1/historial-uso
+    return this.http.get<UsoVehiculo[]>(`${this.baseUrl}/${id}/historial-uso`);
   }
 
   /**

@@ -29,9 +29,11 @@ public class VehiculosServiceTests
 {
     private readonly Mock<IVehiculoRepository> _mockRepository;
     private readonly Mock<IUsuarioAuthRepository> _mockUsuarioAuthRepository;
+    private readonly Mock<IUsoVehiculoRepository> _mockUsoVehiculoRepository;
     private readonly Mock<ILogger<VehiculosService>> _mockLogger;
     private readonly Mock<ICacheService> _mockCache;
     private readonly ReadOnlyContext _readContext;
+    private readonly WriteContext _writeContext;
     private readonly VehiculosService _service;
 
     /// <summary>
@@ -41,6 +43,7 @@ public class VehiculosServiceTests
     {
         _mockRepository = new Mock<IVehiculoRepository>();
         _mockUsuarioAuthRepository = new Mock<IUsuarioAuthRepository>();
+        _mockUsoVehiculoRepository = new Mock<IUsoVehiculoRepository>();
         _mockLogger = new Mock<ILogger<VehiculosService>>();
         _mockCache = new Mock<ICacheService>();
         
@@ -49,13 +52,20 @@ public class VehiculosServiceTests
             .UseInMemoryDatabase("TestDatabase")
             .Options;
         _readContext = new ReadOnlyContext(options);
+
+        var writeOptions = new DbContextOptionsBuilder<WriteContext>()
+            .UseInMemoryDatabase("TestDatabase_Write")
+            .Options;
+        _writeContext = new WriteContext(writeOptions);
         
         _service = new VehiculosService(
             _mockRepository.Object,
             _mockUsuarioAuthRepository.Object,
+            _mockUsoVehiculoRepository.Object,
             _mockLogger.Object,
             _mockCache.Object,
-            _readContext
+            _readContext,
+            _writeContext
         );
     }
 

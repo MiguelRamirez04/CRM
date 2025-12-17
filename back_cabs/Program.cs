@@ -27,14 +27,22 @@ var builder = WebApplication.CreateBuilder(args);
 // Redis cache registration (si aún no está)
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    var connection = builder.Configuration.GetConnectionString("RedisConnection");
+    options.Configuration = !string.IsNullOrEmpty(connection) 
+        ? connection 
+        : "localhost:6379,abortConnect=false,connectTimeout=500,syncTimeout=500";
     options.InstanceName = "CABS_";
 });
 
 // opcional: ConnectionMultiplexer si lo usaras directamente
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var cfg = ConfigurationOptions.Parse(builder.Configuration.GetConnectionString("RedisConnection")!, true);
+    var connectionString = builder.Configuration.GetConnectionString("RedisConnection");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = "localhost:6379,abortConnect=false,connectTimeout=500,syncTimeout=500";
+    }
+    var cfg = ConfigurationOptions.Parse(connectionString, true);
     return ConnectionMultiplexer.Connect(cfg);
 });
 
@@ -139,6 +147,7 @@ builder.Services.AddScoped<back_cabs.CRM.Core.UnitOfWork.IUnitOfWork, back_cabs.
 // ═══════════════════════════════════════════════════════════════
 // Nota: Los repositorios se mantienen para uso directo cuando no se requiere transacción
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IVehiculoRepository, back_cabs.CRM.repositories.Shared.VehiculoRepository>();
+builder.Services.AddScoped<back_cabs.CRM.Interfaces.Shared.IUsoVehiculoRepository, back_cabs.CRM.repositories.Shared.UsoVehiculoRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.IEjecucionOrdenRepository, back_cabs.CRM.repositories.Recepcion.EjecucionOrdenRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Auth.IUsuarioAuthRepository, back_cabs.CRM.repositories.Auth.UsuarioAuthRepository>();
 builder.Services.AddScoped<back_cabs.CRM.Interfaces.Recepcion.ICotizacionRepository, back_cabs.CRM.repositories.Recepcion.CotizacionRepository>();

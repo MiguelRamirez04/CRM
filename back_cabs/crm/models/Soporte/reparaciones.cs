@@ -165,6 +165,7 @@ namespace back_cabs.CRM.models.Soporte
         /// Costo total de la reparación a precio de compra (mano de obra + refacciones compra).
         /// Esta es una propiedad calculada en la base de datos, no mapeada directamente.
         /// </summary>
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("costo_total_compra", TypeName = "decimal(12,2)")]
         public decimal CostoTotalCompra { get; set; }
 
@@ -172,6 +173,7 @@ namespace back_cabs.CRM.models.Soporte
         /// Costo total de la reparación a precio público (mano de obra + refacciones público).
         /// Esta es una propiedad calculada en la base de datos, no mapeada directamente.
         /// </summary>
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("costo_total_publico", TypeName = "decimal(12,2)")]
         public decimal CostoTotalPublico { get; set; }
 
@@ -179,6 +181,7 @@ namespace back_cabs.CRM.models.Soporte
         /// Margen estimado de ganancia por las refacciones.
         /// Esta es una propiedad calculada en la base de datos, no mapeada directamente.
         /// </summary>
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         [Column("margen_estimado", TypeName = "decimal(12,2)")]
         public decimal MargenEstimado { get; set; }
 
@@ -228,11 +231,15 @@ namespace back_cabs.CRM.models.Soporte
         [Column("notas", TypeName = "NVARCHAR(MAX)")] // Changed to NVARCHAR(MAX)
         public string? Notas { get; set; }
 
-        [Column("nombre_cliente")]
-        public string? NombreCliente {get; set;}
+        // [Column("nombre_cliente")]
+        // public string? NombreCliente {get; set;}
+        [NotMapped]
+        public string? NombreCliente { get; set; }
 
-        [Column("telefono")]
-        public long Telefono {get; set;}
+        // [Column("telefono")]
+        // public long Telefono {get; set;}
+        [NotMapped]
+        public long Telefono { get; set; }
         /// <summary>
         /// Colección de fotos asociadas a esta reparación.
         /// </summary>
