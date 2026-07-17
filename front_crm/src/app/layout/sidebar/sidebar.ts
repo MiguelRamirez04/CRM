@@ -4,7 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { SecureAuthService, User } from '../../../../src/app/core/services/secure-auth.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { UiIconComponent } from "../../shared/~exports/detail-view.index";
+import { UiIconComponent } from "../../shared/atoms/icono/icono.component";
 
 type IconType =
   | 'resumen'

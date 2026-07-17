@@ -6,7 +6,8 @@ import { Observable, catchError, of, finalize } from 'rxjs';
 import { SecureAuthService, User } from '../../../../core/services/secure-auth.service';
 import { UiHeaderComponent } from '../../../../shared/molecules/header/header.component';
 import { UiAvatarComponent } from '../../../../shared/atoms/avatar/avatar.component';
-import { UitipografiaComponent, UiBotonComponent } from '../../../../shared/~exports/detail-view.index';
+import { UitipografiaComponent } from '../../../../shared/atoms/tipografia/tipografia.component';
+import { UiBotonComponent } from '../../../../shared/atoms/boton/boton.component';
 import { UiDividerComponent } from "../../../../shared/atoms/linea/linea.component";
 import { UiInputComponent } from '../../../../shared/molecules/input/input.component';
 

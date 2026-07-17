@@ -23,15 +23,12 @@ import { FaseAntesModalComponent } from '../fases/faseantesregistro.component';
 import { FaseDespuesModalComponent } from '../fases/fasedespuesregistro.component';
 
 // ==================== SHARED COMPONENTS ====================
-import {
-  UiInputComponent,
-  SelectOption,
-  FormRowComponent,
-  FormSectionComponent,
-  FormInfoAlertComponent,
-  ScoreDisplayComponent,
-  LoadingOverlayComponent
-} from '../../../../../../shared/~exports/form-system.index';
+import { UiInputComponent, SelectOption } from '../../../../../../shared/molecules/input/input.component';
+import { FormRowComponent } from '../../../../../../shared/molecules/form-row/form-row.component';
+import { FormSectionComponent } from '../../../../../../shared/molecules/form-section/form-section.component';
+import { FormInfoAlertComponent } from '../../../../../../shared/molecules/form-info-alert/form-info-alert.component';
+import { ScoreDisplayComponent } from '../../../../../../shared/molecules/score-display/score-display.component';
+import { LoadingOverlayComponent } from '../../../../../../shared/molecules/loading-overlay/loading-overlay.component';
 
 @Component({
   selector: 'app-infogeneral',

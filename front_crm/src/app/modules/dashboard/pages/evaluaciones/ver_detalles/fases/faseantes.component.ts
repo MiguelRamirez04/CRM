@@ -10,16 +10,14 @@ import {
 import { FaseEvaluacion } from '../../../../../../core/enums/evaluaciones.enum';
 
 // Importar componentes reutilizables desde index
-import {
-  SidePanelComponent,
-  DetailSectionComponent,
-  BadgeComponent,
-  AlertComponent,
-  LoadingSpinnerComponent,
-  UiBotonComponent,
-  UitipografiaComponent,
-  UiIconComponent
-} from '../../../../../../shared/~exports/detail-view.index';
+import { SidePanelComponent } from '../../../../../../shared/organisms/side-panel/side-panel.component';
+import { DetailSectionComponent } from '../../../../../../shared/molecules/detail-section/detail-section.component';
+import { BadgeComponent } from '../../../../../../shared/atoms/bage/badge.component';
+import { AlertComponent } from '../../../../../../shared/molecules/alert/alert.component';
+import { LoadingSpinnerComponent } from '../../../../../../shared/atoms/loading-spinner/loading-spinner.component';
+import { UiBotonComponent } from '../../../../../../shared/atoms/boton/boton.component';
+import { UitipografiaComponent } from '../../../../../../shared/atoms/tipografia/tipografia.component';
+import { UiIconComponent } from '../../../../../../shared/atoms/icono/icono.component';
 
 interface FotoConDetalle extends FotoEvaluacionResponse {
   urlImagen?: string;

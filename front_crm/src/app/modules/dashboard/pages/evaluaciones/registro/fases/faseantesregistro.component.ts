@@ -8,12 +8,9 @@ import { SharedEvaluacionService } from '../../../../../../core/services/shared-
 import { DatosFase, FotoLocal } from '../../../../../../core/models/evaluaciones.interface';
 
 // ==================== SHARED COMPONENTS ====================
-import {
-  UiInputComponent,
-  FormRowComponent,
-
-  FormInfoAlertComponent
-} from '../../../../../../shared/~exports/form-system.index';
+import { UiInputComponent } from '../../../../../../shared/molecules/input/input.component';
+import { FormRowComponent } from '../../../../../../shared/molecules/form-row/form-row.component';
+import { FormInfoAlertComponent } from '../../../../../../shared/molecules/form-info-alert/form-info-alert.component';
 
 @Component({
   selector: 'app-fase-antes-modal', // o 'app-fase-despues-modal'

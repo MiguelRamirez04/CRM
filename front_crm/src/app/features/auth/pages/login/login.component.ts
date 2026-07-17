@@ -4,7 +4,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs'; 
 import { startWith } from 'rxjs/operators';
-import { UiIconComponent, UitipografiaComponent } from '../../../../shared/~exports/detail-view.index';
+import { UiIconComponent } from '../../../../shared/atoms/icono/icono.component';
+import { UitipografiaComponent } from '../../../../shared/atoms/tipografia/tipografia.component';
 
 import { SecureAuthService } from '../../../../core/services/secure-auth.service';
 

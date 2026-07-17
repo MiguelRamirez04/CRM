@@ -24,11 +24,7 @@ import { StatusDotComponent } from '../../../../../shared/atoms/status-dot/statu
 import { UiHeaderComponent } from '../../../../../shared/molecules/header/header.component';
 
 // Sistema de filtros Atomic Design
-import {
-  FilterPanelComponent,
-  FilterPanelConfig,
-  FilterResult
-} from '../../../../../shared/~exports/filter-system.index';
+import { FilterPanelComponent, FilterPanelConfig, FilterResult } from '../../../../../shared/organisms/filter-panel/filter-panel.component';
 
 import { VerdetallesComponent } from '../ver_detalles/verdetalles.component';
 import { InfogeneralComponent } from '../registro/infogeneral/infogeneralregistro.component';
