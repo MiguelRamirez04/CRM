@@ -59,7 +59,7 @@ interface DatosFase {
     UitipografiaComponent,
     UiIconComponent
   ],
-  templateUrl: './verdetalles.component.htmL',
+  templateUrl: './verdetalles.component.html',
   styleUrls: ['./verdetalles.component.css']
 })
 export class VerdetallesComponent implements OnInit, OnChanges {
