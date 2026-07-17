@@ -1,0 +1,121 @@
+<aside class="sidebar-container" [class.collapsed]="isCollapsed">
+  <!-- Botón toggle -->
+  <button type="button" (click)="toggleSidebar()" class="sidebar-toggle-btn" aria-label="Colapsar sidebar">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+      class="icon-sm">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    </svg>
+  </button>
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    @if (!isCollapsed) {
+      <img src="/crm.png" alt="CRM" class="logo-full" />
+    } @else {
+      <img src="/crm.png" alt="CRM" class="logo-small" />
+    }
+  </div>
+
+  <!-- Lista principal de navegación -->
+  <div class="sidebar-nav-container">
+    <!-- Sección: Operaciones -->
+    @if (!isCollapsed) {
+      <p class="nav-section-title">Operaciones</p>
+    }
+    <nav class="nav-list">
+      @for (item of mainNav; track $index) {
+      <div class="nav-item-wrapper">
+        <!-- Item principal -->
+        <a [routerLink]="item.link" routerLinkActive="nav-link-active" [routerLinkActiveOptions]="{ exact: false }"
+          class="nav-link" [class.has-children]="hasChildren(item)" [class.collapsed]="isCollapsed"
+          [class.active]="isActive(item.link) || hasActiveChild(item)">
+          <span class="nav-icon-wrapper" >
+            <!-- Iconos  -->
+            @switch (item.icon) {
+              @case ('resumen') {
+                <app-ui-icono
+                  name="chart-bar-square" 
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                ></app-ui-icono>
+              }
+              @case ('evaluaciones') {
+                <app-ui-icono 
+                  name="clipboard-document-list"
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                >
+                </app-ui-icono>
+              }
+              @case ('viaticos') {
+                <app-ui-icono
+                  name="banknotes"
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                ></app-ui-icono>
+              }
+
+              @case ('vehiculos') {
+                <app-ui-icono
+                  name="truck"
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                >
+                </app-ui-icono>
+              }
+              @case ('usuarios'){
+                <app-ui-icono
+                  name="users"
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                  ></app-ui-icono>
+              }
+              @case ('calendario') {
+                <app-ui-icono
+                  name="calendar"
+                  size="size-5"
+                  [color]="(isActive(item.link) || hasActiveChild(item)) ? 'text-blue-800' : 'text-gray-500'"
+                ></app-ui-icono>
+              }
+            }
+            @if (item.notify) {
+            <span class="nav-notify-badge"></span>
+            }
+          </span>
+          @if (!isCollapsed) {
+          <span class="nav-label" [class.active]="isActive(item.link) || hasActiveChild(item)">
+            {{ item.label }}
+          </span>
+          }
+          <!-- Flecha solo si el sidebar está expandido y el item tiene hijos -->
+          @if (!isCollapsed && hasChildren(item)) {
+            <button type="button" (click)="toggleSubmenu(item, $event)" class="submenu-toggle"
+              [class.expanded]="item.expanded">
+              <app-ui-icono
+                name="chevron-down"
+                size="size-4"
+              ></app-ui-icono>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                stroke-width="1.5" stroke="currentColor" class="icon-xs">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          }
+        </a>
+        <!-- Submenu solo si el sidebar está expandido y el item está expandido -->
+        @if (!isCollapsed && hasChildren(item) && item.expanded) {
+          <div class="submenu-container">
+            @for (child of item.children; track $index) {
+              <a [routerLink]="child.link" routerLinkActive="nav-link-active" class="nav-link submenu-link"
+                [class.active]="isActive(child.link)">
+                <span class="submenu-indicator"></span>
+                <span class="nav-label">{{ child.label }}</span>
+              </a>
+            }
+          </div>
+        }
+      </div>
+      }
+    </nav>
+  </div>
+</aside>

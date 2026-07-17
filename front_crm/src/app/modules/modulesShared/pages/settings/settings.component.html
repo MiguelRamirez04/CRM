@@ -1,0 +1,62 @@
+<div class="perfil">
+  <div class="perfil-encabezado">
+    <h2 class="perfil-titulo">⚙️ Configuración del Sistema</h2>
+    <p class="perfil-subtitulo">
+      Configuración general del módulo de administración.
+    </p>
+  </div>
+
+  <div class="perfil-personal">
+    <div class="alerta-info">
+      <i class="fas fa-info-circle"></i>
+      Configuración del sistema próximamente disponible.
+    </div>
+
+    <div class="perfil-grid">
+      <div class="perfil-campo">
+        <h6 class="perfil-seccion-titulo">Preferencias de Usuario</h6>
+
+        <div class="perfil-campo">
+          <label for="darkMode">Modo oscuro</label>
+          <input class="perfil-checkbox" type="checkbox" id="darkMode" [checked]="darkMode()" (change)="darkMode.set($event.target.checked); onDarkModeChange()" />
+        </div>
+
+        <div class="perfil-campo">
+          <label for="notifications">Notificaciones Push</label>
+          <input class="perfil-checkbox" type="checkbox" id="notifications" [checked]="notifications" (change)="notifications = $event.target.checked" />
+        </div>
+      </div>
+
+      <div class="perfil-campo">
+        <h6 class="perfil-seccion-titulo">Configuración Regional</h6>
+
+        <div class="perfil-campo">
+          <label class="form-label">Idioma</label>
+          <select class="perfil-select" [value]="idioma" (change)="idioma = $any($event.target).value">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div class="perfil-campo">
+          <label class="form-label">Zona Horaria</label>
+          <select class="perfil-select" [value]="zonaHoraria" (change)="zonaHoraria = $any($event.target).value">
+            <option value="America/Buenos_Aires">Argentina (GMT-3)</option>
+            <option value="Europe/Madrid">España (GMT+1)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="perfil-boton">
+      <button class="btn-azul" (click)="guardarCambios()">
+        <i class="fas fa-save me-1"></i>
+        Guardar Cambios
+      </button>
+      <button class="btn-gris" (click)="restaurarValores()">
+        <i class="fas fa-undo me-1"></i>
+        Restaurar Valores
+      </button>
+    </div>
+  </div>
+</div>

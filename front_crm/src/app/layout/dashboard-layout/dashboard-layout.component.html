@@ -1,0 +1,13 @@
+<div class="flex h-screen w-auto" style="background-color: var(--fondo-principal);">
+  <app-sidebar></app-sidebar>
+
+  <div class=" flex flex-col w-full ">
+    <header>
+      <app-header></app-header>
+    </header>
+    <main class="flex-1 overflow-y-auto p-10 w-auto" style="background-color: var(--fondo-principal);">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+</div>

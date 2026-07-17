@@ -1,183 +1,139 @@
+# CABS CRM
 
-## ✅ Estado del Proyecto: LISTO PARA DESARROLLO
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet" alt=".NET 8" />
+  <img src="https://img.shields.io/badge/Angular-20-FF0000?logo=angular" alt="Angular 20" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-336791?logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis" alt="Redis" />
+</p>
 
+CRM full-stack para empresas de servicios técnicos. Gestiona recepción, soporte, cotizaciones, evaluaciones, vehículos, viáticos y un módulo legacy de facturación. Desarrollado con arquitectura limpia en backend y componentes standalone en frontend.
 
+## Módulos principales
 
-# idea principal / contexto del proyecto
+- **Recepción**: órdenes de trabajo, cotizaciones y seguimiento
+- **Soporte**: reparaciones, componentes y fotos de evidencia
+- **Evaluaciones**: inspecciones vehiculares con registro de fases y detalles
+- **Vehículos**: control de flota, historial y estados
+- **Viáticos**: gastos de operación con aprobaciones
+- **Administración**: panel de control, métricas y configuración
+- **Legacy**: integración con catálogos Adminpaq (documentos, productos, clientes)
 
-Elaborar un proyecto web para una empresa el cual cubrira y optimizar los procesos administrativos centrar la administracion en un CRM entre departamentos como recepcion/ssoporte/ administracion , en donde se vende software y hardware este software va a contar con 5 modulos clave el CRM/logistica interna y externa /Sistema punto de venta en ruta(POS)/finanzas
-
-
-
-
-
-
-Tu proyecto fullstack está completamente configurado con arquitectura de seguridad robusta y estructura familiar para quienes quienes vienen de Javascript
-
-## 🛡️ Seguridad Implementada
-
-### ❌ Lo que NO hacemos (vulnerable):
-- ❌ Almacenar JWT en `localStorage` o `sessionStorage`
-- ❌ CORS permisivo (`*`)
-- ❌ Tokens enviados en URLs o headers sin protección
-
-### ✅ Lo que SÍ hacemos (seguro):
-- ✅ **HttpOnly Cookies** - Tokens inaccesibles desde JavaScript
-- ✅ **CORS Estricto** - Solo dominios autorizados
-- ✅ **CSRF Protection** - Headers `X-Requested-With` + `SameSite`
-- ✅ **Security Headers** - Protección completa del navegador
-- ✅ **Refresh Tokens** - Renovación automática transparente
-
-## 📁 Estructura Implementada
-
-### Backend (.NET 8)
-```
-back_cabs/
-├── Controllers/
-│   └── AuthController.cs          ✅ Cookies HttpOnly + CSRF
-├── CRM/                          ✅ Clean Architecture
-│   ├── config/                   ✅ Configuraciones centralizadas
-│   ├── controllers/              ✅ Controladores organizados
-│   ├── services/                 ✅ Lógica de negocio
-│   ├── models/                   ✅ Modelos de datos
-│   └── contexts/                 ✅ Read/Write separados (CQRS)
-└── Program.cs                    ✅ CORS + Security Headers
-```
-
-### Frontend (Angular 17+)
-```
-front_cabs/src/app/
-├── core/                         ✅ Servicios seguros
-│   ├── services/
-│   │   └── secure-auth.service.ts ✅ Sin localStorage
-│   ├── guards/
-│   │   └── secure-auth.guard.ts   ✅ Verificación en servidor
-│   └── interceptors/
-│       ├── secure-auth.interceptor.ts ✅ Refresh automático
-│       └── security-headers.interceptor.ts ✅ Headers CSRF
-├── features/                     ✅ Módulos de funcionalidad
-│   └── auth/
-│       └── pages/login/          ✅ UI Bootstrap + validación
-├── shared/                       ✅ Componentes reutilizables
-└── modules/                      ✅ Administración, Recepción, Soporte
-```
-
-## 🔧 Tecnologías Configuradas
+## Stack tecnológico
 
 ### Backend
-- ✅ .NET 8 Web API
-- ✅ JWT Authentication (8.0.8) con cookies HttpOnly
-- ✅ Entity Framework Core (8.0.8) con SQL Server
-- ✅ FluentValidation (11.9.0) para validaciones
-- ✅ MediatR (11.1.0) para CQRS
-- ✅ Serilog (8.0.1) para logging
-- ✅ Swagger/OpenAPI (6.6.2) para documentación
-- ✅ HealthChecks (8.0.1) para monitoreo
+| Tecnología | Uso |
+|------------|-----|
+| .NET 8 Web API | API REST |
+| Entity Framework Core | ORM (Npgsql para PostgreSQL) |
+| MediatR | CQRS |
+| FluentValidation | Validaciones |
+| Serilog | Logging |
+| Swagger / OpenAPI | Documentación |
+| Health Checks | Monitoreo |
+| Redis | Cache distribuida |
+| JWT + HttpOnly Cookies | Autenticación |
 
 ### Frontend
-- ✅ Angular 20+ con Standalone Components
-- ✅ Bootstrap 5 + ng-bootstrap para UI
-- ✅ heroicons para iconos
-- ✅ ngx-cookie-service para manejo seguro
-- ✅ Reactive Forms para validación
-- ✅ RxJS para programación reactiva
+| Tecnología | Uso |
+|------------|-----|
+| Angular 20+ | Framework SPA |
+| Standalone Components | Arquitectura modular |
+| RxJS | Programación reactiva |
+| ngx-cookie-service | Manejo seguro de cookies |
+| ng2-charts / Chart.js | Reportes gráficos |
+| FullCalendar | Calendario interactivo |
+| html2canvas + jsPDF | Exportación a PDF |
 
-## 🚦 Comandos para Empezar
+## Seguridad
 
-### 1. Iniciar Backend (Puerto 3000)
+- Cookies HttpOnly (sin localStorage/sessionStorage)
+- CORS estricto por ambiente
+- Protección CSRF (`X-XSRF-TOKEN` + `SameSite`)
+- Refresh tokens transparentes
+- Security headers (HSTS, X-Frame-Options, CSP)
+- Validación en servidor (no confiar en frontend)
+
+## Estructura del proyecto
+
+```
+FullStack_CABS/
+├── back_crm/                 # Backend .NET 8
+│   ├── crm/                 # Clean Architecture
+│   │   ├── controllers/     # API Controllers
+│   │   ├── services/        # Lógica de negocio
+│   │   ├── repositories/    # Acceso a datos
+│   │   ├── models/          # Entidades
+│   │   ├── DTOs/            # Request/Response
+│   │   ├── contexts/        # DbContext (Read/Write)
+│   │   └── middleware/      # Security, errores, logging
+│   ├── Tests/UnitTests/     # Pruebas unitarias
+│   ├── Program.cs           # Startup
+│   └── appsettings.json     # Configuración
+├── front_crm/               # Frontend Angular 20
+│   ├── src/app/
+│   │   ├── core/            # Servicios, guards, interceptors
+│   │   ├── features/        # Auth (login, reset)
+│   │   ├── modules/         # Dashboard, Soporte, Legacy, Viáticos
+│   │   └── shared/          # Componentes UI atómicos
+│   ├── angular.json
+│   └── package.json
+└── database/                # Scripts SQL (PostgreSQL / Supabase)
+```
+
+## Puesta en marcha
+
+### Prerrequisitos
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js 18+](https://nodejs.org/)
+- [Angular CLI](https://angular.dev/tools/cli)
+- PostgreSQL (o cuenta en [Supabase](https://supabase.com/))
+
+### 1. Base de datos
+
+Ejecuta los scripts SQL en el orden indicado:
+
 ```bash
-cd back_cabs
-dotnet run --launch-profile https
+# Supabase SQL Editor o cliente PostgreSQL local
+database/CRM_Demo_001_create.sql   # Esquema
+database/CRM_Demo_002_seed.sql     # Datos demo
 ```
 
-### 2. Iniciar Frontend (Puerto 4200)
+### 2. Backend
+
 ```bash
-cd front_cabs
-ng serve --ssl
+cd back_crm
+dotnet restore
+dotnet run --launch-profile http
 ```
 
-### 3. Verificar Comunicación
-- Backend: https://localhost:3000/swagger
-- Frontend: https://localhost:4200
-- Login: admin@test.com / 123456
+- Swagger: `http://localhost:5176/swagger`
+- HTTPS: `https://localhost:7275`
 
-## 🧪 Testing de Seguridad
+Configura tus secretos reales via [user-secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) o variables de entorno. Nunca comitas credenciales.
 
-### 1. Verificar que NO hay tokens en localStorage
-```javascript
-// En DevTools Console (debe ser null)
-localStorage.getItem('token');
-sessionStorage.getItem('token');
-```
+### 3. Frontend
 
-### 2. Verificar cookies HttpOnly
-```javascript
-// En DevTools Console (NO debe mostrar AuthToken)
-document.cookie;
-```
-
-### 3. Test de CORS
 ```bash
-# Debe fallar desde otro dominio
-curl -X POST https://localhost:3000/api/auth/login \
-  -H "Origin: http://malicious-site.com"
+cd front_crm
+npm install
+ng serve
 ```
 
-## 📋 Para los Desarrolladores
+- App: `http://localhost:4200`
 
-### 🔐 Reglas de Seguridad OBLIGATORIAS
+## Credenciales de demo
 
-1. **NUNCA almacenar tokens en localStorage/sessionStorage**
-2. **SIEMPRE usar `withCredentials: true`** en requests HTTP
-3. **NUNCA enviar tokens en headers manualmente**
-4. **SIEMPRE validar en el servidor** (no confiar en frontend)
+| Campo | Valor |
+|-------|-------|
+| Usuario | `admin@test.com` |
+| Password | `123456` |
 
-### ✅ Patrón de Request Correcto
-```typescript
-// ✅ CORRECTO
-this.http.get('/api/data', {
-  withCredentials: true  // Para cookies HttpOnly
-});
+## Capturas de pantalla
 
-// ❌ INCORRECTO
-this.http.get('/api/data', {
-  headers: {
-    'Authorization': `Bearer ${token}` // ¡NO HACER!
-  }
-});
-```
+_(Agrega aquí tus screenshots del dashboard, cotizaciones, soporte y evaluaciones)_
 
-### 🎯 Flujo de Autenticación
-1. **Login** → Backend crea cookies HttpOnly
-2. **Requests** → Navegador envía cookies automáticamente
-3. **Refresh** → Renovación transparente antes de expirar
-4. **Logout** → Backend limpia cookies HttpOnly
+## Licencia
 
-## 📚 Documentación Disponible
-
-- `SECURITY.md` - Guía completa de seguridad
-- `front_cabs/src/app/*/README.md` - Documentación de cada módulo
-- `back_cabs/CRM/*/README.md` - Documentación de arquitectura backend
-
-## 🎉 ¡Listos para Codificar!
-
-La estructura está **100% preparada** para que empiecen a desarrollar:
-
-- ✅ Seguridad robusta implementada
-- ✅ Arquitectura limpia y familiar
-- ✅ Documentación exhaustiva
-- ✅ Bootstrap configurado para UI
-- ✅ Guards y permisos preparados
-- ✅ Error handling robusto
-
-## 🆘 Soporte
-
-Para dudas:
-1. Revisar `SECURITY.md` para temas de seguridad
-2. Revisar `README.md` de cada carpeta
-3. Consultar con el tech lead
-4. **NUNCA** implementar autenticación por cuenta propia siempre platicarlo con el grupo tanto para back como para front
-
----
-
-**¡Happy Coding! 🚀** El proyecto está blindado contra las vulnerabilidades más comunes y listo para el desarrollo.
+Este proyecto se comparte como material de portafolio. El código puede reutilizarse con fines educativos.

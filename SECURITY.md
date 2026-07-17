@@ -1,201 +1,55 @@
-# 🔐 Arquitectura de Seguridad - Frontend y Backend
+# Arquitectura de Seguridad
 
-## ⚠️ IMPORTANTE: NO almacenar JWT en localStorage o sessionStorage
+## HttpOnly Cookies
 
-Este proyecto implementa una arquitectura de seguridad robusta para prevenir las vulnerabilidades más comunes en aplicaciones web.
+No almacenamos JWT en `localStorage` ni `sessionStorage`. Los tokens se manejan exclusivamente via cookies HttpOnly configuradas en el backend.
 
-## 🍪 Cookies HttpOnly - Almacenamiento Seguro
-
-### ❌ Lo que NO hacemos (inseguro):
 ```typescript
-// ❌ NUNCA hacer esto - vulnerable a XSS
-localStorage.setItem('token', jwt);
-sessionStorage.setItem('token', jwt);
+// Correcto
+this.http.get('/api/data', { withCredentials: true });
+
+// Incorrecto - nunca hacer esto
+// localStorage.setItem('token', jwt);
 ```
 
-### ✅ Lo que SÍ hacemos (seguro):
-```typescript
-// ✅ Cookies HttpOnly manejadas automáticamente por el navegador
-// Los tokens se almacenan en cookies que solo el servidor puede leer
-login(credentials).subscribe(response => {
-  // Los tokens ya están seguros en cookies HttpOnly
-  // No necesitamos manejarlos manualmente
-});
-```
+## Capas de protección
 
-## 🛡️ Capas de Protección Implementadas
+1. **HttpOnly Cookies**: tokens inaccesibles desde JavaScript
+2. **CORS estricto**: solo orígenes autorizados por ambiente
+3. **CSRF Protection**: header `X-XSRF-TOKEN` + cookie `SameSite`
+4. **Security Headers**: HSTS, X-Frame-Options, CSP, X-Content-Type-Options
+5. **Refresh Tokens**: renovación automática antes del vencimiento
+6. **Server-side validation**: nunca confiar solo en el frontend
 
-### 1. **HttpOnly Cookies**
-- **Qué es**: Cookies que solo pueden ser leídas por el servidor
-- **Protege contra**: Scripts maliciosos (XSS) que roban tokens
-- **Ubicación**: Backend `AuthController.cs` y Frontend `SecureAuthService`
+## Configuración por ambiente
 
-### 2. **CORS Estricto**
-- **Desarrollo**: Solo `localhost:4200` y `localhost:3000`
-- **Producción**: Solo dominios específicos con HTTPS
-- **Configuración**: `Program.cs` líneas 21-42
+### Desarrollo
+- Backend: `http://localhost:5176`
+- Frontend: `http://localhost:4200`
+- Cookies: `SameSite=Lax`, `Secure` según request
 
-### 3. **CSRF Protection**
-- **Método**: Header `X-Requested-With` y cookies `SameSite`
-- **Protege contra**: Ataques de sitios cruzados
-- **Configuración**: Interceptores y middleware de headers
+### Producción
+- Solo HTTPS
+- Cookies: `SameSite=Strict`, `Secure=Always`
+- Orígenes CORS explícitos
 
-### 4. **Security Headers**
-- **X-Frame-Options**: Previene clickjacking
-- **X-Content-Type-Options**: Previene MIME sniffing
-- **X-XSS-Protection**: Protección adicional XSS
-- **Content-Security-Policy**: Control estricto de recursos
-- **HSTS**: Forzar HTTPS en producción
-
-### 5. **Refresh Token Automático**
-- **Access Token**: 30 minutos de vida
-- **Refresh Token**: 7 días, solo para renovar access token
-- **Proceso**: Renovación transparente antes del vencimiento
-
-## 🔧 Configuración por Ambiente
-
-### Desarrollo (localhost)
-```typescript
-// environment.ts
-security: {
-  cookieSettings: {
-    secure: false,        // HTTP permitido
-    sameSite: 'Lax'      // Menos restrictivo para desarrollo
-  }
-}
-```
-
-### Producción (HTTPS)
-```typescript
-// environment.prod.ts
-security: {
-  cookieSettings: {
-    secure: true,         // Solo HTTPS
-    sameSite: 'Strict'    // Máxima protección CSRF
-  }
-}
-```
-
-## 🚨 Vulnerabilidades Prevenidas
-
-### ✅ Cross-Site Scripting (XSS)
-- **Cómo**: HttpOnly cookies + Security headers
-- **Resultado**: Scripts maliciosos no pueden acceder a tokens
-
-### ✅ Cross-Site Request Forgery (CSRF)
-- **Cómo**: SameSite cookies + X-Requested-With header
-- **Resultado**: Sitios externos no pueden hacer requests
-
-### ✅ Man-in-the-Middle (MITM)
-- **Cómo**: HTTPS obligatorio + HSTS headers
-- **Resultado**: Comunicaciones siempre encriptadas
-
-### ✅ Session Hijacking
-- **Cómo**: Secure cookies + expiración automática
-- **Resultado**: Tokens robados expiran rápidamente
-
-## 📋 Checklist de Seguridad para Desarrolladores
-
-### Backend (.NET)
-- [ ] ✅ Cookies HttpOnly configuradas
-- [ ] ✅ CORS estricto por ambiente
-- [ ] ✅ Security headers implementados
-- [ ] ✅ JWT con expiración corta (30 min)
-- [ ] ✅ Refresh tokens seguros (7 días)
-- [ ] ⚠️ TODO: Hash de contraseñas (bcrypt)
-- [ ] ⚠️ TODO: Rate limiting para login
-- [ ] ⚠️ TODO: Validaciones de entrada
-
-### Frontend (Angular)
-- [ ] ✅ No almacenar tokens en localStorage
-- [ ] ✅ Interceptors para headers de seguridad
-- [ ] ✅ Guards con verificación en servidor
-- [ ] ✅ Refresh automático de tokens
-- [ ] ✅ withCredentials: true para cookies
-- [ ] ✅ Error handling robusto
-- [ ] ⚠️ TODO: Validación de formularios
-- [ ] ⚠️ TODO: Sanitización de inputs
-
-## 🔍 Testing de Seguridad
-
-### 1. Test de XSS
-```javascript
-// En DevTools Console (debe fallar)
-console.log(document.cookie); // No debe mostrar tokens
-localStorage.getItem('token'); // Debe ser null
-```
-
-### 2. Test de CSRF
-```bash
-# Request desde otro dominio (debe fallar)
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Origin: http://malicious-site.com" \
-  -d '{"email":"test","password":"test"}'
-```
-
-### 3. Test de CORS
-```javascript
-// Fetch desde otro dominio (debe fallar)
-fetch('http://localhost:3000/api/auth/me', {
-  method: 'GET',
-  credentials: 'include'
-});
-```
-
-## 📚 Para Desarrolladores Junior
-
-### ¿Por qué no localStorage?
-```typescript
-// ❌ Problema: Cualquier script puede leer esto
-const token = localStorage.getItem('jwt');
-// Si una librería tiene XSS, roban el token
-
-// ✅ Solución: HttpOnly cookies
-// Solo el servidor puede leer/escribir el token
-// Scripts maliciosos no tienen acceso
-```
-
-### ¿Cómo funciona el flujo seguro?
-1. **Login**: Usuario envía credenciales
-2. **Backend**: Valida y crea cookies HttpOnly
-3. **Frontend**: No maneja tokens directamente
-4. **Requests**: Navegador envía cookies automáticamente
-5. **Refresh**: Renovación transparente de tokens
-
-### ¿Qué hacer en cada request?
-```typescript
-// ✅ SIEMPRE incluir esto:
-this.http.get('/api/data', {
-  withCredentials: true  // Para enviar cookies HttpOnly
-});
-
-// ❌ NUNCA hacer esto:
-headers: {
-  'Authorization': `Bearer ${localStorage.getItem('token')}`
-}
-```
-
-## 🚀 Comandos de Desarrollo
+## Pruebas de seguridad recomendadas
 
 ```bash
-# Backend - Ejecutar con HTTPS
-dotnet run --launch-profile https
+# Verificar que no hay tokens en storage
+# (Debe retornar null)
+localStorage.getItem('token');
+sessionStorage.getItem('token');
 
-# Frontend - Desarrollo
-ng serve --ssl
-
-# Verificar headers de seguridad
-curl -I http://localhost:3000/api/auth/login
+# Verificar cookies desde DevTools
+# (No debe mostrar AuthToken)
+document.cookie;
 ```
 
-## 📞 Contacto y Soporte
+## Checklist para desarrolladores
 
-Para dudas sobre seguridad:
-1. Revisar este documento primero
-2. Consultar con el tech lead
-3. Nunca implementar autenticación por tu cuenta
-4. Seguir siempre las buenas prácticas establecidas
-
----
-
-**Recuerda**: La seguridad no es opcional. Cada línea de código debe seguir estos principios.
+- [ ] Usar `withCredentials: true` en todas las peticiones HTTP
+- [ ] Nunca almacenar tokens en storage del navegador
+- [ ] Nunca enviar tokens manualmente en headers
+- [ ] Validar siempre en el servidor
+- [ ] Usar templates de configuración para secrets

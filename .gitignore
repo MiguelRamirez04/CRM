@@ -1,0 +1,46 @@
+# Dependencias / artefactos de build
+node_modules/
+dist/
+.tmp/
+out-tsc/
+bazel-out/
+
+# .NET
+**/bin/
+**/obj/
+**/*.user
+**/*.userosscache
+project.lock.json
+project.fragment.lock.json
+artifacts/
+secrets.json
+*.user-secrets.json
+
+# Logs
+logs/
+*.log
+
+# Editores / configuracion local
+.kilo/
+.vscode/
+.idea/
+.ionide/
+
+# Angular
+.angular/
+.cache/
+.parcel-cache/
+
+# Archivos de prueba y configuracion local
+back_crm/*.http
+back_crm/Pruebas_Gnrales/*.http
+back_crm/package-lock.json
+back_crm/logs/
+back_crm/appsettings.json
+back_crm/appsettings.Development.json
+back_crm/appsettings.template.json
+
+# Base de datos y datos sensibles
+BD_CABS_completp.sql
+script.sql
+cookies.txt

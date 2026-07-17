@@ -1,0 +1,40 @@
+[data-theme='dark'] header {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] header .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme='dark'] header .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] header .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+[data-theme='dark'] header .text-gray-500 {
+  color: #64748b !important;
+}
+
+[data-theme='dark'] header .border-gray-200 {
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] header .border-gray-300 {
+  border-color: #475569 !important;
+}
+
+[data-theme='dark'] header .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+[data-theme='dark'] header .hover\:text-gray-700:hover {
+  color: #cbd5e1 !important;
+}
+
+[data-theme='dark'] header .hover\:bg-red-50:hover {
+  background-color: #450a0a !important;
+}
