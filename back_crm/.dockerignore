@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/*.user
+**/*.cache
+**/*.suo
+**/*.rsuser
+.vs/
+.git/
+.gitignore
+Dockerfile
+dockerfile
+.dockerignore
+*.md
