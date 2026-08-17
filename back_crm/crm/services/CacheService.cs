@@ -37,11 +37,10 @@ namespace back_cabs.CRM.services
         private readonly ILogger<CacheService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
         
-        // Métricas en memoria (thread-safe)
         private int _hitCount = 0;
         private int _missCount = 0;
         private int _errorCount = 0;
-        private const int COMPRESSION_THRESHOLD = 1024; // 1KB
+        private const int COMPRESSION_THRESHOLD = 1024;
 
         public CacheService(IDistributedCache cache, ILogger<CacheService> logger)
         {
@@ -50,7 +49,7 @@ namespace back_cabs.CRM.services
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-                WriteIndented = false // Compacto para menor tamaño
+                WriteIndented = false
             };
         }
 
@@ -64,16 +63,14 @@ namespace back_cabs.CRM.services
                 if (cachedBytes == null || cachedBytes.Length == 0)
                 {
                     Interlocked.Increment(ref _missCount);
-                    _logger.LogDebug("❌ Cache MISS: {Key}", key);
+                    _logger.LogDebug("Cache MISS: {Key}", key);
                     return default;
                 }
 
                 string jsonValue;
                 
-                // Detectar si está comprimido (primer byte es el flag)
                 if (cachedBytes[0] == 1)
                 {
-                    // Descomprimir
                     using var compressedStream = new MemoryStream(cachedBytes, 1, cachedBytes.Length - 1);
                     using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress);
                     using var resultStream = new MemoryStream();
@@ -82,7 +79,6 @@ namespace back_cabs.CRM.services
                 }
                 else
                 {
-                    // Sin comprimir
                     jsonValue = Encoding.UTF8.GetString(cachedBytes, 1, cachedBytes.Length - 1);
                 }
 
@@ -90,7 +86,7 @@ namespace back_cabs.CRM.services
                 
                 Interlocked.Increment(ref _hitCount);
                 var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                _logger.LogInformation("✅ Cache HIT: {Key} ({Elapsed:F2}ms, {Size}KB)", 
+                _logger.LogInformation("Cache HIT: {Key} ({Elapsed:F2}ms, {Size}KB)", 
                     key, elapsed, cachedBytes.Length / 1024.0);
                 
                 return result;
@@ -98,7 +94,7 @@ namespace back_cabs.CRM.services
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _errorCount);
-                _logger.LogWarning(ex, "⚠️ Error recuperando del caché: {Key}. Continuando sin caché.", key);
+                _logger.LogWarning(ex, "Error recuperando del cache: {Key}. Continuando sin cache.", key);
                 return default;
             }
         }
@@ -109,14 +105,12 @@ namespace back_cabs.CRM.services
             {
                 var startTime = DateTime.UtcNow;
                 
-                // Serializar a JSON
                 string jsonValue = JsonSerializer.Serialize(value, _jsonOptions);
                 byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonValue);
                 
                 byte[] finalBytes;
                 bool compressed = false;
 
-                // Comprimir si supera el umbral
                 if (jsonBytes.Length > COMPRESSION_THRESHOLD)
                 {
                     using var outputStream = new MemoryStream();
@@ -127,14 +121,14 @@ namespace back_cabs.CRM.services
                     
                     var compressedData = outputStream.ToArray();
                     finalBytes = new byte[compressedData.Length + 1];
-                    finalBytes[0] = 1; // Flag de compresión
+                    finalBytes[0] = 1;
                     Buffer.BlockCopy(compressedData, 0, finalBytes, 1, compressedData.Length);
                     compressed = true;
                 }
                 else
                 {
                     finalBytes = new byte[jsonBytes.Length + 1];
-                    finalBytes[0] = 0; // Flag sin compresión
+                    finalBytes[0] = 0;
                     Buffer.BlockCopy(jsonBytes, 0, finalBytes, 1, jsonBytes.Length);
                 }
 
@@ -147,7 +141,7 @@ namespace back_cabs.CRM.services
                 var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
                 var compressionRatio = compressed ? (1 - (double)finalBytes.Length / jsonBytes.Length) * 100 : 0;
                 
-                _logger.LogInformation("💾 Cache SET: {Key} ({Elapsed:F2}ms, {Size}KB{Compression})", 
+                _logger.LogInformation("Cache SET: {Key} ({Elapsed:F2}ms, {Size}KB{Compression})", 
                     key, 
                     elapsed, 
                     finalBytes.Length / 1024.0,
@@ -156,7 +150,7 @@ namespace back_cabs.CRM.services
             catch (Exception ex)
             {
                 Interlocked.Increment(ref _errorCount);
-                _logger.LogWarning(ex, "⚠️ Error guardando en caché: {Key}. Continuando sin caché.", key);
+                _logger.LogWarning(ex, "Error guardando en cache: {Key}. Continuando sin cache.", key);
             }
         }
 
@@ -165,11 +159,11 @@ namespace back_cabs.CRM.services
             try
             {
                 await _cache.RemoveAsync(key);
-                _logger.LogDebug("🗑️ Clave eliminada del caché: {Key}", key);
+                _logger.LogDebug("Clave eliminada del cache: {Key}", key);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "⚠️ Error al eliminar del caché Redis. Key: {Key}", key);
+                _logger.LogWarning(ex, "Error al eliminar del cache Redis. Key: {Key}", key);
             }
         }
 
@@ -182,25 +176,17 @@ namespace back_cabs.CRM.services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error al verificar existencia en caché. Key: {Key}", key);
+                _logger.LogWarning(ex, "Error al verificar existencia en cache. Key: {Key}", key);
                 return false;
             }
         }
 
-        /// <summary>
-        /// Elimina todas las claves con el prefijo especificado.
-        /// NOTA: IDistributedCache no soporta búsqueda por patrón nativamente.
-        /// Para implementación completa se requiere acceso directo a Redis con SCAN.
-        /// </summary>
         public Task RemoveByPrefixAsync(string prefix)
         {
-            _logger.LogWarning("⚠️ RemoveByPrefixAsync no implementado: IDistributedCache no soporta pattern matching. Usar implementación Redis directa si es crítico.");
+            _logger.LogWarning("RemoveByPrefixAsync no implementado: IDistributedCache no soporta pattern matching. Usar implementación Redis directa si es critico.");
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Obtiene estadísticas actuales del caché
-        /// </summary>
         public Task<CacheStatistics> GetStatisticsAsync()
         {
             var stats = new CacheStatistics
@@ -210,10 +196,55 @@ namespace back_cabs.CRM.services
                 ErrorCount = _errorCount
             };
 
-            _logger.LogInformation("📊 Estadísticas caché - Hit: {Hit}, Miss: {Miss}, Error: {Error}, Hit Rate: {HitRate:F1}%",
+            _logger.LogInformation("Estadísticas cache - Hit: {Hit}, Miss: {Miss}, Error: {Error}, Hit Rate: {HitRate:F1}%",
                 stats.HitCount, stats.MissCount, stats.ErrorCount, stats.HitRate);
 
             return Task.FromResult(stats);
+        }
+    }
+
+    public class NoOpCacheService : ICacheService
+    {
+        private readonly ILogger<NoOpCacheService> _logger;
+
+        public NoOpCacheService(ILogger<NoOpCacheService> logger)
+        {
+            _logger = logger;
+        }
+
+        public Task<T?> GetAsync<T>(string key)
+        {
+            _logger.LogDebug("NoOpCache: Get {Key} - Redis no configurado", key);
+            return Task.FromResult<T?>(default);
+        }
+
+        public Task SetAsync<T>(string key, T value, TimeSpan expiration)
+        {
+            _logger.LogDebug("NoOpCache: Set {Key} - Redis no configurado", key);
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(string key)
+        {
+            _logger.LogDebug("NoOpCache: Remove {Key} - Redis no configurado", key);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> ExistsAsync(string key)
+        {
+            _logger.LogDebug("NoOpCache: Exists {Key} - Redis no configurado", key);
+            return Task.FromResult(false);
+        }
+
+        public Task RemoveByPrefixAsync(string prefix)
+        {
+            _logger.LogDebug("NoOpCache: RemoveByPrefix {Prefix} - Redis no configurado", prefix);
+            return Task.CompletedTask;
+        }
+
+        public Task<CacheStatistics> GetStatisticsAsync()
+        {
+            return Task.FromResult(new CacheStatistics());
         }
     }
 }

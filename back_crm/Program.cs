@@ -29,30 +29,30 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 }
 
-// Redis cache registration (si aún no está)
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    var connection = builder.Configuration.GetConnectionString("RedisConnection");
-    options.Configuration = !string.IsNullOrEmpty(connection) 
-        ? connection 
-        : "localhost:6379,abortConnect=false,connectTimeout=500,syncTimeout=500";
-    options.InstanceName = "CABS_";
-});
+var useRedis = !string.IsNullOrEmpty(builder.Configuration.GetConnectionString("RedisConnection"));
 
-// opcional: ConnectionMultiplexer si lo usaras directamente
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+if (useRedis)
 {
-    var connectionString = builder.Configuration.GetConnectionString("RedisConnection");
-    if (string.IsNullOrEmpty(connectionString))
+    builder.Services.AddStackExchangeRedisCache(options =>
     {
-        connectionString = "localhost:6379,abortConnect=false,connectTimeout=500,syncTimeout=500";
-    }
-    var cfg = ConfigurationOptions.Parse(connectionString, true);
-    return ConnectionMultiplexer.Connect(cfg);
-});
+        var connection = builder.Configuration.GetConnectionString("RedisConnection");
+        options.Configuration = connection;
+        options.InstanceName = "CABS_";
+    });
 
-// registrar CacheService
-builder.Services.AddScoped<ICacheService, CacheService>();
+    builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    {
+        var connectionString = builder.Configuration.GetConnectionString("RedisConnection");
+        var cfg = ConfigurationOptions.Parse(connectionString, true);
+        return ConnectionMultiplexer.Connect(cfg);
+    });
+
+    builder.Services.AddScoped<ICacheService, CacheService>();
+}
+else
+{
+    builder.Services.AddScoped<ICacheService, back_cabs.CRM.Services.Shared.NoOpCacheService>();
+}
 
 // Configurar Serilog temprano para capturar logs de startup
 builder.Host.UseSerilog();
@@ -244,27 +244,42 @@ builder.Services.AddHealthChecks()
         return healthCheckPassed ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy();
     });
 
-// Configuración de CORS
+// Configuración de CORS dinámica basada en variables de entorno
+var allowedOrigins = new List<string>();
+var corsOriginsEnv = builder.Configuration.GetSection("CorsSettings:AllowedOrigins");
+if (corsOriginsEnv.Exists())
+{
+    foreach (var origin in corsOriginsEnv.Get<string[]>())
+    {
+        if (!string.IsNullOrWhiteSpace(origin))
+            allowedOrigins.Add(origin);
+    }
+}
+
+// Si no hay orígenes configurados, usar desarrollo local por defecto
+if (!allowedOrigins.Any())
+{
+    allowedOrigins.AddRange(new[] { "http://localhost:4200", "https://localhost:4200" });
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SecureFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200", "http://localhost:4201", "https://localhost:4201", "http://localhost:5176", "https://localhost:5176") // Angular
+        policy.WithOrigins(allowedOrigins.ToArray())
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials() // CRÍTICO: Para cookies HttpOnly
-            .SetIsOriginAllowedToAllowWildcardSubdomains()
-            .WithExposedHeaders("X-CSRF-Token"); // Para CSRF protection
+            .AllowCredentials()
+            .WithExposedHeaders("X-CSRF-Token");
     });
     
-    // Política más restrictiva para producción
     options.AddPolicy("Production", policy =>
     {
-        policy.WithOrigins("https://your-production-domain.com")
+        policy.WithOrigins(allowedOrigins.ToArray())
             .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token")
             .AllowCredentials()
-            .SetPreflightMaxAge(TimeSpan.FromHours(24)); // Cache preflight 24h
+            .SetPreflightMaxAge(TimeSpan.FromHours(24));
     });
 });
 
@@ -302,6 +317,12 @@ app.UseRequestResponseLogging();
 var corsPolicy = app.Environment.IsProduction() ? "Production" : "SecureFrontend";
 app.UseCors(corsPolicy);
 
+// Redirigir HTTP a HTTPS en producción
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
 // Servir archivos estáticos (para Swagger UI custom scripts)
 app.UseStaticFiles();
 
@@ -309,7 +330,7 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ✅ MEJORA 5: Activar validación CSRF (debe ir DESPUÉS de auth)
+// CSRF Protection
 app.UseCsrfValidation();
 
 // Swagger UI (solo en desarrollo y staging)
@@ -318,12 +339,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API v1");
         c.RoutePrefix = "swagger";
-        // Inyectar script para manejar CSRF token automáticamente
         c.InjectJavascript("/swagger-ui/csrf-interceptor.js");
-        
     });
 }
 
@@ -334,7 +352,7 @@ app.UseHealthChecksConfiguration();
 app.MapControllers();
 
 // Logging de inicio
-app.Logger.LogInformation("🚀 CRM API iniciada correctamente");
+app.Logger.LogInformation("CRM API iniciada correctamente en {Environment}", app.Environment.EnvironmentName);
 
 try
 {

@@ -2,13 +2,18 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 COPY back_crm.csproj ./
-RUN dotnet restore
+RUN dotnet restore --disable-parallel
 
 COPY . ./
-RUN dotnet publish back_crm.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish back_crm.csproj -c Release -o /app/publish --no-restore \
+    /p:DebugType=None \
+    /p:DebugSymbols=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_RUNNING_IN_CONTAINER=true
 
 RUN mkdir -p logs
 

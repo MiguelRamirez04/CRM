@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "services": {
+    "web": {
+      "type": "web",
+      "name": "back-crm",
+      "env": "docker",
+      "dockerfilePath": "back_crm/dockerfile",
+      "dockerContext": "back_crm",
+      "healthCheckPath": "/health",
+      "autoDeploy": true,
+      "plan": "free",
+      "branch": "main",
+      "envVars": [
+        {
+          "key": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "key": "ConnectionStrings__DefaultConnection",
+          "value": "postgresql://postgres:TU_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require"
+        },
+        {
+          "key": "JwtSettings__SecretKey",
+          "value": "GENERA_UNA_CLAVE_SEGURA_DE_AL_MENOS_32_CARACTERES"
+        },
+        {
+          "key": "JwtSettings__Issuer",
+          "value": "CRM-API"
+        },
+        {
+          "key": "JwtSettings__Audience",
+          "value": "CRM-Client"
+        },
+        {
+          "key": "JwtSettings__ExpiryInMinutes",
+          "value": "60"
+        },
+        {
+          "key": "CorsSettings__AllowedOrigins__0",
+          "value": "https://tu-frontend-vercel.app"
+        }
+      ]
+    }
+  }
+}
