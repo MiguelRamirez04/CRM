@@ -1,10 +1,14 @@
+const runtimeEnv = (globalThis as typeof globalThis & {
+  process?: {
+    env?: Record<string, string | undefined>;
+  };
+}).process?.env;
+
 export const environment = {
   production: true,
 
-  apiUrl: typeof process !== 'undefined' && process.env && process.env.NG_APP_API_URL 
-    ? process.env.NG_APP_API_URL 
-    : 'https://tu-backend-production.com/api',
-  
+  apiUrl: runtimeEnv?.['NG_APP_API_URL'] || 'https://tu-backend-production.com/api',
+
   security: {
     useHttpOnlyCookies: true,
     csrfTokenHeader: 'X-CSRF-Token',
@@ -20,11 +24,11 @@ export const environment = {
       lockoutTime: 30 * 60 * 1000
     }
   },
-  
-  allowedOrigins: typeof process !== 'undefined' && process.env && process.env.NG_APP_ALLOWED_ORIGINS
-    ? process.env.NG_APP_ALLOWED_ORIGINS.split(',').filter((origin: string) => origin.trim().length > 0)
+
+  allowedOrigins: runtimeEnv?.['NG_APP_ALLOWED_ORIGINS']
+    ? runtimeEnv?.['NG_APP_ALLOWED_ORIGINS']?.split(',').filter((origin: string) => origin.trim().length > 0)
     : ['https://your-frontend-domain.com'],
-  
+
   logging: {
     level: 'error',
     logSecurityEvents: true
