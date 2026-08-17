@@ -7,7 +7,7 @@ const runtimeEnv = (globalThis as typeof globalThis & {
 export const environment = {
   production: true,
 
-  apiUrl: runtimeEnv?.['NG_APP_API_URL'] || 'https://tu-backend-production.com/api',
+  apiUrl: runtimeEnv?.['NG_APP_API_URL'] || 'https://back-crm-api.onrender.com',
 
   security: {
     useHttpOnlyCookies: true,
@@ -27,7 +27,7 @@ export const environment = {
 
   allowedOrigins: runtimeEnv?.['NG_APP_ALLOWED_ORIGINS']
     ? runtimeEnv?.['NG_APP_ALLOWED_ORIGINS']?.split(',').filter((origin: string) => origin.trim().length > 0)
-    : ['https://your-frontend-domain.com'],
+    : ['https://crm-nine-tau-43.vercel.app'],
 
   logging: {
     level: 'error',
