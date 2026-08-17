@@ -121,55 +121,18 @@ public static class MiddlewareExtensions
     /// <returns>El constructor de aplicación con headers de seguridad configurados</returns>
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app)
     {
-        // CONFIGURACIÓN DE MIDDLEWARE PERSONALIZADO:
-        // Utiliza app.Use() para crear middleware inline que se ejecuta en cada request
-        // El middleware configura headers de seguridad ANTES de procesar el request
-        // y permite que el pipeline continúe normalmente con await next()
         return app.Use(async (context, next) =>
         {
-            // HEADER X-FRAME-OPTIONS:
-            // PREVENCIÓN DE CLICKJACKING:
-            // DENY: Impide completamente que el sitio sea embebido en frames/iframes
-            // Protege contra ataques donde un sitio malicioso embebe tu aplicación
-            // en un frame invisible para capturar clics del usuario
-            context.Response.Headers["X-Frame-Options"] = "DENY";
+            if (!context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Headers["X-Frame-Options"] = "DENY";
+                context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+                context.Response.Headers["Content-Security-Policy"] =
+                    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
+                context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+            }
 
-            // HEADER X-CONTENT-TYPE-OPTIONS:
-            // PREVENCIÓN DE MIME SNIFFING:
-            // nosniff: Fuerza al navegador a respetar el Content-Type declarado
-            // Evita que el navegador "adivine" el tipo MIME basado en contenido
-            // Protege contra ataques donde se sube contenido malicioso como imagen
-            // pero se interpreta como JavaScript
-            context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-
-            // HEADER X-XSS-PROTECTION:
-            // PROTECCIÓN XSS BÁSICA:
-            // 1; mode=block: Habilita filtro XSS del navegador y bloquea página si detecta XSS
-            // Primera línea de defensa contra Cross-Site Scripting
-            // Aunque CSP es más efectivo, este header proporciona compatibilidad legacy
-            context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
-
-            // HEADER CONTENT-SECURITY-POLICY:
-            // POLÍTICA DE SEGURIDAD DE CONTENIDO (CSP):
-            // default-src 'self': Solo permite contenido del mismo origen por defecto
-            // script-src 'self' 'unsafe-inline': Permite scripts del mismo origen y inline
-            // style-src 'self' 'unsafe-inline': Permite estilos del mismo origen y inline
-            //
-            // NOTA: 'unsafe-inline' se incluye por compatibilidad, pero en producción
-            // se recomienda usar nonces o hashes para mayor seguridad
-            context.Response.Headers["Content-Security-Policy"] =
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'";
-
-            // HEADER REFERRER-POLICY:
-            // CONTROL DE INFORMACIÓN DE REFERENCIA:
-            // strict-origin-when-cross-origin: Envía referrer completo solo en mismo origen
-            // Envía solo origen en requests cross-origin
-            // Equilibra privacidad (menos información) con utilidad (origen conocido)
-            context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-
-            // EJECUCIÓN DEL SIGUIENTE MIDDLEWARE:
-            // Después de configurar todos los headers de seguridad, permite que el pipeline
-            // continúe normalmente. Los headers se enviarán con la respuesta final
             await next();
         });
     }
