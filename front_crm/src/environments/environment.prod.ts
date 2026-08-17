@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
 
-  apiUrl: 'https://tu-backend-production.com/api',
+  apiUrl: 'https://back-crm-api.onrender.com',
   
   // Configuración de seguridad para producción
   security: {
@@ -31,7 +31,7 @@ export const environment = {
   
   // URLs permitidas para CORS (solo producción)
   allowedOrigins: [
-    'https://your-frontend-domain.com'
+    'https://crm-nine-tau-43.vercel.app/'
   ],
   
   // Logging mínimo en producción
