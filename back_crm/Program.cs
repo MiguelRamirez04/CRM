@@ -51,7 +51,7 @@ if (useRedis)
 }
 else
 {
-    builder.Services.AddScoped<ICacheService, back_cabs.CRM.Services.Shared.NoOpCacheService>();
+    builder.Services.AddScoped<ICacheService, back_cabs.CRM.services.NoOpCacheService>();
 }
 
 // Configurar Serilog temprano para capturar logs de startup
